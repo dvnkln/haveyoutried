@@ -2,7 +2,7 @@ import { INCIDENTS } from '../../config';
 import { progressScore } from '../../core/incidents';
 import { PATCH_DEPARTMENTS } from '../../content/incidents';
 import { shuffle } from '../../util';
-import { h, juice, SHAKE, setText } from '../dom';
+import { cssZoom, h, juice, SHAKE, setText } from '../dom';
 import type { GameApi, Minigame } from './types';
 
 const CFG = INCIDENTS.games.patch;
@@ -79,7 +79,8 @@ export function patchGame(): Minigame {
   const anchor = (el: HTMLElement, side: 'left' | 'right') => {
     const b = board.getBoundingClientRect();
     const r = el.getBoundingClientRect();
-    return { x: (side === 'right' ? r.right : r.left) - b.left, y: r.top + r.height / 2 - b.top };
+    const z = cssZoom(board);
+    return { x: ((side === 'right' ? r.right : r.left) - b.left) / z, y: (r.top + r.height / 2 - b.top) / z };
   };
   const curve = (a: { x: number; y: number }, z: { x: number; y: number }) => {
     const dx = Math.max(30, (z.x - a.x) / 2);
@@ -188,7 +189,8 @@ export function patchGame(): Minigame {
         const from = leftEls.get(selected);
         if (!from) return;
         const b = board.getBoundingClientRect();
-        temp.setAttribute('d', curve(anchor(from, 'right'), { x: e.clientX - b.left, y: e.clientY - b.top }));
+        const z = cssZoom(board);
+        temp.setAttribute('d', curve(anchor(from, 'right'), { x: (e.clientX - b.left) / z, y: (e.clientY - b.top) / z }));
       };
       const up = (e: PointerEvent) => {
         if (!dragging) return;

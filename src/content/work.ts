@@ -103,3 +103,126 @@ export const MEMES: { top: string; bottom: string }[] = [
   { top: 'Ich: kurz Memes gucken.', bottom: 'Die Warteschlange: *starrt*' },
 ];
 export const MEME_ACCOUNTS: string[] = ['@sysadmin_memes', '@it_crowd_fans', '@dns_was_it', '@ticketqueue', '@bofh_daily'];
+
+/**
+ * Abschluss-Spruch im Ticketverlauf („Lösung“): passt zum Programm, das gerade offen war.
+ * Platzhalter: {who} = Anrufer/Abteilung, {target} = Gerät oder PC.
+ */
+export const DONE_LINES: Record<'mail' | 'ticket' | 'term' | 'chat' | 'call' | 'rdp' | 'web' | 'search', string[]> = {
+  mail: [
+    '{who}: Mail raus. Lesebestätigung: abgelehnt.',
+    '{who}: Mail raus. Auto-Reply: „Bin im Urlaub bis 2027“.',
+    '{who}: Mail beantwortet. Antwort darauf: „Und jetzt?“',
+    '{who}: Mail raus. Kam als Spam an. Beim Empfänger.',
+    '{who}: „Danke!!“ an alle. 340 Leute. Allen antworten.',
+    '{who} hat die Mail ausgedruckt. Und eingescannt. Und gemailt.',
+    '{who}: Mail raus. Signatur länger als die Mail.',
+  ],
+  ticket: [
+    '{who}: Ticket gelöst. Kunde: „Geht immer noch nicht.“',
+    '{who}: Ticket auf „Gelöst“. Wiedereröffnet in 3 … 2 …',
+    '{who}: Ticket geschlossen: „Works as designed“.',
+    '{who}: Ticket geschlossen. Zufriedenheit: ★☆☆☆☆',
+    '{who}: Ticket gelöst. Ursache: Layer 8.',
+    '{who}: Ticket als Duplikat geschlossen. Von sich selbst.',
+    '{who}: Ticket an Level 2 eskaliert. Level 2 ist Kaffee holen.',
+  ],
+  term: [
+    'Befehl lief durch. Exit 0. Keiner weiß warum.',
+    'Befehl lief durch. Hoffentlich auf dem richtigen Server.',
+    'Fertig. Kein Fehler. Verdächtig.',
+    'Fertig. 3 Warnungen. Alle ignoriert. Wie geplant.',
+    'Erledigt. History gelöscht. Sicher ist sicher.',
+    'Läuft wieder. Nicht anfassen. Auch nicht angucken.',
+  ],
+  chat: [
+    '{who} hat 👍 reagiert. Gespräch beendet.',
+    '{who} tippt … tippt … schickt ein GIF.',
+    '{who}: „ok“. Kleingeschrieben. Ohne Punkt. Bedrohlich.',
+    '{who} ist jetzt „abwesend“. Seit 2 Sekunden.',
+    '{who} antwortet mit Sprachnachricht. 4 Minuten.',
+    '{who}: „Ah, war der Stecker.“',
+  ],
+  call: [
+    '{who}: Call beendet. 45 Minuten, davon 40 „Hört ihr mich?“',
+    '{who}: Call beendet. Hätte eine Mail sein können.',
+    '{who}: Call beendet. Du warst die ganze Zeit stumm.',
+    '{who}: Call beendet. Follow-up-Termin: noch ein Call.',
+    '{who}: Call beendet. Die Katze war das Highlight.',
+    '{who} hat den Call verlassen. Mitten in deinem Satz.',
+  ],
+  rdp: [
+    '{target} repariert. {who}: „War schon immer so.“',
+    '{target} neu gestartet. Updates: 1 von 147.',
+    '{target}: Drucker wieder da. Für 10 Minuten.',
+    '{target} aufgeräumt. 12.000 Desktop-Icons. Behalten: alle.',
+    '{target}: Fehler weg. Grund: Rätsel.',
+    '{target}: {who} hat währenddessen weitergeklickt.',
+  ],
+  web: [
+    '{target}: Einstellung gespeichert. Neustart nötig. Natürlich.',
+    '{target}: gespeichert. Webinterface sagt „Error“, geht aber.',
+    '{target}: Firmware aktualisiert. Ein Lämpchen leuchtet jetzt orange.',
+    '{target}: Passwort geändert. Steht jetzt auf dem Post-it.',
+    '{target}: läuft. Konfig gesichert auf: Desktop/neu(3).txt',
+    '{target}: gespeichert. Doku? Kommt. Irgendwann.',
+  ],
+  search: [
+    '{who}: Lösung gefunden. Forum, 2009. Hat funktioniert.',
+    '{who}: Lösung gefunden. Stack Overflow, akzeptierte Antwort: falsch.',
+    'Gegoogelt. Ergebnis: „Hast du es neu gestartet?“',
+    '{who}: Antwort gefunden. Auf Seite 3. Niemand geht auf Seite 3.',
+    'Gesucht. Fund: dein eigenes Ticket von 2021.',
+    '{who}: Lösung: GitHub-Issue, „closed as won’t fix“.',
+  ],
+};
+
+
+/** Interne Notizen im Ticketverlauf: was wirklich passiert ist. {who} = Melder:in, {target} = Gerät */
+export const TICKET_NOTES: string[] = [
+  '{who} hat dreimal neu gestartet. Zweimal davon den Monitor.',
+  'Problem trat nur auf, wenn ich nicht hingeschaut habe.',
+  'Stecker war drin. Andere Seite nicht.',
+  'Beim Fernzugriff hat {who} die ganze Zeit die Maus festgehalten.',
+  '{who} hat das Passwort am Telefon buchstabiert. Laut. Im Großraumbüro.',
+  'Hab nichts gemacht. Ging dann. Als „gelöst durch IT“ markiert.',
+  'Fehler nicht reproduzierbar. {who} auch nicht erreichbar.',
+  'Laut {who} „seit gestern“. Laut Logs seit 2019.',
+  'Ursache: Kaffee. In der Tastatur.',
+  '{who} hat vorher „was im Internet gefunden“. Und ausgeführt.',
+  'Screenshot erhalten. Abfotografiert. Mit Blitz. Vom Handy der Kollegin.',
+  'Ticket war eigentlich für die Kantine. Trotzdem gelöst.',
+  'Dritte Meldung diese Woche. Gleiches Problem. Gleiche Lösung. Gleicher Mensch.',
+  '{who} wollte wissen, ob „das Internet“ heute geht. Ja.',
+  'Problem saß vor dem Bildschirm. Höflich umformuliert.',
+  'Bei mir ging’s. Bei {who} jetzt auch. Keine Fragen.',
+  'Workaround dokumentiert. In meinem Kopf.',
+  'Aufwand: 2 Minuten Lösung, 25 Minuten Small Talk.',
+  'Drucker hat sich entschuldigt. Glaube ich zumindest.',
+  '{who} hat „Allen antworten“ benutzt. 340 Leute wissen jetzt Bescheid.',
+  'Hab Caps Lock ausgemacht. Ticket gelöst. Respekt verdient.',
+  'Neustart verweigert wegen „wichtiger offener Tabs“ (147).',
+  'Hinweis an mich: nie wieder „Das dauert nur kurz“ sagen.',
+  'Laut {who} hat „der Computer das selbst gemacht“. Korrekt: Update.',
+  '{target} lief mit Admin/Admin. Jetzt Admin/Admin2. Fortschritt.',
+  'Bitte nicht wiedereröffnen. Bitte. Bitte.',
+  'Eskalation an den Chef vermieden. Durch Kekse.',
+  'Wiki-Artikel dazu existiert. Hat keiner gelesen. Ich auch nicht.',
+  '{who} fragte, ob ich „mal eben“ noch den privaten Laptop anschauen kann.',
+  'Hat am Ende doch mit Aus- und Einschalten funktioniert. Wie immer.',
+];
+
+/** Status im Ticketverlauf */
+export const TICKET_STATES: string[] = ['Gelöst', 'Geschlossen', 'Gelöst (vorläufig)', 'Gelöst (hoffentlich)', 'Erledigt', 'Wartet auf Rückmeldung (ewig)'];
+
+/** VIP-Tickets (rote Post-its) im Verlauf: wer und was */
+export const VIP_TICKETS: { who: string; subject: string }[] = [
+  { who: 'Chef', subject: 'Beamer im Vorstandsraum: „Kein Signal“. Meeting in 2 Min.' },
+  { who: 'Geschäftsführung', subject: 'Das Internet ist weg. (WLAN aus.)' },
+  { who: 'Chef', subject: 'Excel rechnet falsch. (Zelle als Text formatiert.)' },
+  { who: 'Vorstand', subject: 'Passwort vergessen. Zum vierten Mal. Heute.' },
+  { who: 'Chef', subject: 'Drucker druckt nicht. Vor dem Kunden.' },
+  { who: 'Geschäftsführung', subject: 'Handy synchronisiert nicht. Ist das Handy der Frau.' },
+  { who: 'Chef', subject: 'PowerPoint ist weg! (minimiert)' },
+  { who: 'Vorstand', subject: 'Bitte sofort: neues iPad. Grund: „Farbe“.' },
+];

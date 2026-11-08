@@ -14,8 +14,8 @@ test('Kern-Loop: tippen, kaufen, produzieren, speichern', async ({ page }) => {
 
   await page.goto('/');
   await expect(page.locator('.close-btn')).toBeVisible();
-  // Log läuft im Hintergrund mit (App „Log“), auf dem Desktop steht das Arbeitsfenster
-  await expect(page.locator('.log .line').first()).toBeAttached();
+  // Ticketverlauf läuft im Hintergrund mit (App „Tickets“), auf dem Desktop steht das Arbeitsfenster
+  await expect(page.locator('.history')).toBeAttached();
   await expect(page.locator('.work')).toBeVisible();
 
   // Button liegt in der unteren Bildschirmhälfte (Daumenzone)
@@ -24,7 +24,16 @@ test('Kern-Loop: tippen, kaufen, produzieren, speichern', async ({ page }) => {
 
   for (let i = 0; i < 20; i++) await page.locator('.close-btn').tap();
   await expect(page.locator('.counter-value')).toHaveText('20');
-  await expect(page.locator('.last-closed')).toContainText('#INC-004731');
+  // Statuszeile wechselt erst, wenn die Antwort abgeschickt ist (Enter)
+  await page.locator('.key[data-key="Q"]').tap();
+  await page.locator('.close-btn').tap();
+  // abgeschickt: Stempel im Fenster, Statuszeile zeigt weiter das Ticket
+  await expect(page.locator('.work')).toHaveClass(/sent/);
+  await expect(page.locator('.last-closed')).toContainText('#INC-');
+  // Ticketverlauf: genau eine Karte für das abgeschickte Ticket, mit interner Notiz
+  await expect(page.locator('.history .hist')).toHaveCount(1);
+  await expect(page.locator('.history .hist-note')).not.toBeEmpty();
+  await expect(page.locator('.history .hist-solution')).not.toBeEmpty();
   await shot(page, '1-queue');
 
   await page.getByRole('button', { name: /Infra/ }).tap();
@@ -168,7 +177,10 @@ test('Zufallsevent: Pager → Entscheidung → Ergebnis', async ({ page, context
   await shot(page, '11-result');
   await result.locator('.btn').tap();
   await expect(pager).not.toHaveClass(/alert/);
-  await expect(page.locator('.log')).toContainText('pager[911]: ALERT');
+  // Pager-Einsatz landet als Karte im Ticketverlauf
+  const card = page.locator('.history .hist').filter({ hasText: 'Pager' });
+  await expect(card).toHaveCount(1);
+  await expect(card.locator('.hist-reply')).not.toBeEmpty();
   expect(errors).toEqual([]);
 });
 
@@ -180,9 +192,9 @@ for (const id of ['raid', 'spam', 'services', 'loggrep', 'network', 'patch']) {
     await page.goto(`/?incident=${id}`);
     await page.clock.runFor(1_500);
 
-    const alert = page.locator('.nag-card.nag-problem');
+    const alert = page.locator('.incident[data-state="crit"] .mon-detail');
     await expect(alert).toBeVisible();
-    await expect(alert.locator('.nag-title')).toContainText('** PROBLEM Service Alert:');
+    await expect(alert.locator('.nag-title')).toContainText('** PROBLEM:');
     await expect(alert).toContainText('Assigned to: you');
     const take = page.locator('.nag-take');
     await expect(take).toBeDisabled(); // Sperre gegen Fehlgriffe
@@ -207,7 +219,7 @@ for (const id of ['raid', 'spam', 'services', 'loggrep', 'network', 'patch']) {
     await page.clock.runFor(1_000);
     await ack.click();
     await expect(page.locator('.incident')).toBeHidden();
-    await expect(page.locator('.log')).toContainText('icinga2[2342]: SERVICE ALERT');
+    await expect(page.locator('.history .hist').filter({ hasText: 'CRITICAL' })).toHaveCount(1);
 
     const width = await page.evaluate(() => document.documentElement.scrollWidth);
     expect(width).toBeLessThanOrEqual(360);
@@ -217,15 +229,15 @@ for (const id of ['raid', 'spam', 'services', 'loggrep', 'network', 'patch']) {
 
 test('Reload während eines Incidents gilt als Eskalation, kein sofortiger neuer Incident', async ({ page }) => {
   await page.goto('/?incident=raid');
-  await expect(page.locator('.nag-card.nag-problem')).toBeVisible({ timeout: 5_000 });
-  // Seite hinter dem Overlay ist gesperrt
-  expect(await page.evaluate(() => document.getElementById('app')!.inert)).toBe(true);
+  await expect(page.locator('.incident[data-state="crit"] .mon-detail')).toBeVisible({ timeout: 5_000 });
+  // Incident läuft im Monitor, der Rest des Tischs ist gesperrt
+  expect(await page.evaluate(() => document.querySelector<HTMLElement>('.keyboard-wrap')!.inert)).toBe(true);
   await page.goto('/');
-  await expect(page.locator('.log')).toContainText('escalated (admin disconnected)');
   await expect(page.locator('.buff-bad')).toBeVisible();
+  await expect(page.locator('.history .hist').filter({ hasText: 'Eskaliert (Admin weg)' })).toHaveCount(1);
   await page.waitForTimeout(2_000);
   await expect(page.locator('.incident')).toBeHidden();
-  expect(await page.evaluate(() => document.getElementById('app')!.inert)).toBe(false);
+  expect(await page.evaluate(() => document.querySelector<HTMLElement>('.keyboard-wrap')!.inert)).toBe(false);
 });
 
 test('Patchkabel: Antippen-Antippen und Ziehen verbinden, Uplink straft', async ({ page }) => {
@@ -360,7 +372,7 @@ test('Tastatur: jede Taste zählt, auch Sondertasten, physische Tasten und die M
   // Tippen schreibt eine echte Antwort ins Arbeitsfenster (Mail, Ticket oder Terminal)
   for (const k of ['W', 'E']) await page.locator(`.key[data-key="${k}"]`).tap();
   await expect(page.locator('.typed')).toHaveText(/^.{4,}$/);
-  await expect(page.locator('.work')).toHaveAttribute('data-kind', /mail|ticket|term/);
+  await expect(page.locator('.work')).toHaveAttribute('data-kind', /mail|ticket|term|chat|call|rdp|web|search/);
 
   // physische Tastatur (Desktop): Buchstaben und unbekannte Zeichen zählen, Auto-Repeat nicht
   await page.locator('body').press('x');
@@ -377,7 +389,7 @@ test('Tastatur: jede Taste zählt, auch Sondertasten, physische Tasten und die M
   // Gummiente quietscht nur
   await page.locator('.duck').tap();
   await expect(page.locator('.counter-value')).toHaveText('12');
-  await expect(page.locator('.log .line').last()).toContainText('duckd');
+  await expect(page.locator('.quip').last()).toBeVisible();
 
   // Maus antippen zählt dagegen wie ein Tastendruck
   await page.locator('.mouse').tap();

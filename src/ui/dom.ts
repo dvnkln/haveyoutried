@@ -64,3 +64,30 @@ export const SHAKE: Keyframe[] = [
   { transform: 'translateX(-2px)' },
   { transform: 'translateX(0)' },
 ];
+
+const quips = new WeakMap<Element, HTMLElement>();
+/** Kleine Sprechblase über einem Gegenstand (Ente, Maus, Papierkorb); verschwindet von selbst. */
+export function quip(anchor: Element, text: string, ms = 3_400): void {
+  quips.get(anchor)?.remove();
+  // „duckd[42]: quack“ → „quack“: in der Blase braucht es keinen Prozessnamen
+  const el = h('div', { class: 'quip', role: 'status', text: text.replace(/^[\w-]+\[[^\]]*\]: /, '') });
+  document.body.append(el);
+  quips.set(anchor, el);
+  const r = anchor.getBoundingClientRect();
+  const w = el.offsetWidth;
+  el.style.left = `${Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2))}px`;
+  el.style.top = `${Math.max(8, r.top - el.offsetHeight - 8)}px`;
+  el.style.setProperty('--tail', `${Math.min(w - 14, Math.max(14, r.left + r.width / 2 - parseFloat(el.style.left)))}px`);
+  setTimeout(() => {
+    el.classList.add('out');
+    setTimeout(() => el.remove(), 250);
+  }, ms);
+}
+
+/**
+ * Effektiver CSS-Zoom eines Elements (z. B. verkleinertes Minispiel). Bildschirm-Pixel
+ * (clientX, getBoundingClientRect) durch diesen Wert teilen, bevor sie als Länge im Element landen.
+ */
+export function cssZoom(el: Element): number {
+  return (el as Element & { currentCSSZoom?: number }).currentCSSZoom ?? 1;
+}

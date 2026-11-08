@@ -1,8 +1,8 @@
 import { CONFIG } from '../config';
 import { CALLBACK_LINES, CALLERS, situationalCalls, type Call } from '../content/callers';
 import { URGENT_LABELS, URGENT_TEXT } from '../content/events';
+import { TICKET_NOTES, VIP_TICKETS } from '../content/work';
 import { ALTF4_LINES, COMBO_LINES, PANIC_LINES } from '../content/props';
-import { CLOSE_REASONS } from '../content/syslog';
 import { clickTicket } from '../core/actions';
 import { rates } from '../core/economy';
 import { claimUrgent } from '../core/events';
@@ -10,10 +10,11 @@ import { incidentRunning } from '../core/incidents';
 import { bumpFlag, type GameState } from '../core/state';
 import { pick, randInt } from '../util';
 import type { AppContext } from './app';
-import { h, juice, NUDGE, setFlag, setText } from './dom';
+import { h, juice, NUDGE, quip, setFlag, setText } from './dom';
 import { formatNumber } from './format';
 import type { Fx } from './juice';
 import { describeEffect } from './pager';
+import { nextTicketNo, ticketId } from './history';
 import { createWork } from './work';
 
 const PHONE_SVG = `<svg viewBox="0 0 64 58">
@@ -29,14 +30,27 @@ const PHONE_SVG = `<svg viewBox="0 0 64 58">
     <circle cx="32" cy="47.5" r="1.6"/><circle cx="26.4" cy="44.3" r="1.6"/><circle cx="26.4" cy="37.7" r="1.6"/>
   </g>
   <circle cx="32" cy="41" r="3" fill="#ff9aa2" stroke="var(--ink)" stroke-width="1.6"/>
+  <g class="am">
+    <rect x="44" y="34" width="10" height="7" rx="1.5" fill="#4b4453" stroke="var(--ink)" stroke-width="1.4"/>
+    <circle cx="47" cy="37.5" r="1.3" fill="#d9d0e8"/><circle cx="51" cy="37.5" r="1.3" fill="#d9d0e8"/>
+    <circle class="am-led" cx="49" cy="47" r="2.4" fill="#ff5b5b" stroke="var(--ink)" stroke-width="1.3"/>
+    <text x="15.5" y="45" text-anchor="middle" font-family="Fredoka, sans-serif" font-size="6" font-weight="700" fill="var(--ink)">AB</text>
+  </g>
   <path d="M19 26 v-4 h6 v4 M39 26 v-4 h6 v4" fill="#ff8a94" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round"/>
   <g class="handset">
     <path d="M9 18 c0 -9 6 -13 12 -13 h22 c6 0 12 4 12 13 c0 3 -2 5 -5 5 h-5 c-3 0 -4 -2 -4 -4 v-3 h-16 v3 c0 2 -1 4 -4 4 h-5 c-3 0 -5 -2 -5 -5Z" fill="#ff8a94" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round"/>
     <path d="M22 9 h20" stroke="#ffc2c8" stroke-width="2.5" stroke-linecap="round"/>
   </g>
+  <g class="headset">
+    <path d="M13 22 c0 -22 38 -22 38 0" fill="none" stroke="var(--ink)" stroke-width="5" stroke-linecap="round"/>
+    <path d="M13 22 c0 -22 38 -22 38 0" fill="none" stroke="#7fa6e6" stroke-width="2.4" stroke-linecap="round"/>
+    <rect x="7" y="15" width="10" height="13" rx="4" fill="#a0c4ff" stroke="var(--ink)" stroke-width="2.2"/>
+    <rect x="47" y="15" width="10" height="13" rx="4" fill="#a0c4ff" stroke="var(--ink)" stroke-width="2.2"/>
+    <path d="M12 27 c2 6 8 7 14 6" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="27" cy="33" r="2.6" fill="var(--mint)" stroke="var(--ink)" stroke-width="1.6"/>
+  </g>
 </svg>`;
 
-const ticketId = (no: number) => `#INC-${String(no).padStart(6, '0')}`;
 
 /** Ab so vielen Anschlägen in Folge zeigt sich die Combo-Anzeige. */
 const COMBO_SHOW = 10;
@@ -95,7 +109,6 @@ const ROWS: KeyDef[][] = [
 export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, screen: () => HTMLElement) {
   let call: Call | null = null;
   let callerLeft = randInt(CONFIG.callerTicketsMin, CONFIG.callerTicketsMax);
-  let lastClickLog = 0;
   let callerUntil = 0;
   const recent: string[] = [];
   let combo = 0;
@@ -222,7 +235,18 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
       const res = claimUrgent(ctx.state, rates(ctx.state));
       const p = fx.rel(el);
       fx.floater(p.x + p.w / 2, p.y, describeEffect(res), true);
-      ctx.log.write('ok', `helpdesk[1337]: ${URGENT_TEXT[res.effect] ?? 'VIP-Ticket gelöst.'}`);
+      const vip = pick(VIP_TICKETS);
+      ctx.history.add({
+        id: ticketId(nextTicketNo(ctx.state.clicks)),
+        subject: vip.subject,
+        who: vip.who,
+        channel: 'Post-it am Monitor',
+        prio: el.textContent?.replace(/!/g, '').trim() || 'DRINGEND',
+        status: 'Sofort gelöst (natürlich)',
+        note: pick(TICKET_NOTES).replaceAll('{who}', vip.who).replaceAll('{target}', 'Chef-Laptop'),
+        solution: `${URGENT_TEXT[res.effect] ?? 'VIP-Ticket gelöst.'} (${describeEffect(res)})`,
+        vip: true,
+      });
       ctx.sfx.unlock();
       ctx.sfx.milestone();
       ctx.haptic('milestone');
@@ -251,28 +275,27 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
 
   // --- Anschlag ---
   const lastGag: Record<string, number> = {};
-  const gag = (key: string, level: 'info' | 'warn', lines: string[], now: number) => {
+  const gag = (key: string, level: 'info' | 'warn', lines: string[], now: number, anchor: Element) => {
     if (now - (lastGag[key] ?? -Infinity) < GAG_COOLDOWN_MS) return;
     lastGag[key] = now;
-    ctx.log.write(level, pick(lines));
+    const line = pick(lines);
+    ctx.log.write(level, line);
+    quip(anchor, line);
   };
 
   const hit = (keyEl: HTMLElement) => {
     const def = keyEl.dataset.key ?? '';
     ctx.sfx.unlock();
     const value = clickTicket(ctx.state);
-    const no = CONFIG.ticketNumberOffset + ctx.state.clicks;
-    const reason = pick(CLOSE_REASONS);
-    work.setLast(`${ticketId(no)} → ${reason}`);
 
     // Eingabezeile: Enter schickt ab, Alt+F4 verwirft, alles andere tippt weiter
     const now = performance.now();
     if (def === 'ENTER') work.send();
     else if (def === 'F4') {
       work.newTask(); // Fenster zu, nächste Aufgabe
-      gag('F4', 'warn', ALTF4_LINES, now);
+      gag('F4', 'warn', ALTF4_LINES, now, keyEl);
     } else {
-      if (def === 'CAPSLOCK') gag('CAPSLOCK', 'info', PANIC_LINES, now);
+      if (def === 'CAPSLOCK') gag('CAPSLOCK', 'info', PANIC_LINES, now, keyEl);
       work.typeMore();
     }
     work.afterKey();
@@ -289,10 +312,6 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
 
     ctx.sfx.tap();
     ctx.haptic('tap');
-    if (now - lastClickLog > CONFIG.clickLogMinMs) {
-      lastClickLog = now;
-      ctx.log.write('info', `helpdesk[1337]: ${ticketId(no)} closed (${reason})`);
-    }
     // Ruhiger Start: erst ein bisschen tippen, dann klingelt zum ersten Mal das Telefon
     if (!started) {
       if (ctx.state.clicks >= CONFIG.onboardingClicks) begin();
@@ -432,11 +451,11 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
     phone,
     keyboard: keyboardWrap,
     work: work.el,
+    lastClosed: work.last,
     /** Platz für den Prompt (root@firma:~$) vor dem Getippten im Terminal */
     promptSlot: work.promptSlot,
     start() {
       work.newTask();
-      work.setLast('Warteschlange: voll. Wie immer.');
       if (ctx.state.clicks >= CONFIG.onboardingClicks) {
         started = true;
         showCall(chooseCall(), true);
@@ -448,6 +467,9 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
     /** Upgrades an der Tastatur sichtbar machen */
     render(s: GameState) {
       setFlag(keyboardWrap, 'mech', !!s.upgrades.keyboard);
+      // Telefon-Upgrades: eingebauter Anrufbeantworter, Headset statt Hörer
+      setFlag(phone, 'has-am', !!s.upgrades.answering);
+      setFlag(phone, 'has-headset', !!s.upgrades.headset);
       // Neulinge: am Anfang und nach längerer Pause zeigen, wo getippt wird
       const idle = performance.now() - lastHit;
       const invite = s.clicks < HINT_UNTIL_CLICKS && (s.clicks < 3 || idle > HINT_IDLE_MS);

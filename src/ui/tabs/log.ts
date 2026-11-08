@@ -1,22 +1,17 @@
-import type { AppContext, Tab } from '../app';
+import type { Tab } from '../app';
 import { h } from '../dom';
 
-/** App „Log“: das Syslog zum Nachlesen. Läuft im Hintergrund immer mit. */
+/** App „Tickets“: Verlauf der erledigten Fenster, VIP-Post-its, Pager-Einsätze und Incidents, neueste oben. */
 export function logTab(): Tab {
-  let ctx: AppContext;
   return {
     id: 'log',
-    label: 'Log',
-    icon: '>_',
-    mount(c) {
-      ctx = c;
-      return h('div', { class: 'logapp' }, [ctx.log.el]);
+    label: 'Tickets',
+    icon: '#',
+    mount(ctx) {
+      return h('div', { class: 'histapp' }, [ctx.history.el]);
     },
     render() {
-      /* ereignisgetrieben */
-    },
-    onShow() {
-      ctx.log.scrollToEnd();
+      /* ereignisgetrieben; neueste Karte oben, das Fenster öffnet immer ganz oben */
     },
   };
 }

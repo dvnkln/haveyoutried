@@ -22,8 +22,15 @@ export const UPGRADE_TEXT: Record<string, UpgradeText> = {
     name: 'Anrufbeantworter mit Ansage',
     desc: '„Hallo, IT. Haben Sie es schon aus- und wieder eingeschaltet?“ Löst 40 % aller Anrufe, ohne dass jemand abhebt.',
   },
+  headset: {
+    name: 'Headset mit Mute-Taste',
+    desc: 'Beide Hände frei zum Tippen. Die Mute-Taste rettet dich in jedem Call, in dem du gerade „Kann der nicht einfach…“ sagen wolltest.',
+  },
   basement: { name: 'Büro im Keller', desc: 'Kein Fenster, kein Handyempfang, keine Besucher. Die Produktivität ist beängstigend.' },
-  monitor2: { name: 'Zweiter Monitor', desc: 'Links das Ticket, rechts Stack Overflow. Endlich Multitasking.' },
+  monitor2: {
+    name: 'Neuer Monitor: HYT-3000 PRO',
+    desc: '17 Zoll Röhre, platingrau, blaue Power-LED. Wiegt 23 kg, der Tisch biegt sich. Flimmert nur noch dienstags.',
+  },
   macro: { name: 'Textbaustein', desc: 'Strg+Alt+R: „Haben Sie es schon aus- und wieder eingeschaltet?“' },
   duck: { name: 'Rubber Duck', desc: 'Hört zu. Urteilt nicht. Löst die Hälfte aller Probleme durch Schweigen.' },
 

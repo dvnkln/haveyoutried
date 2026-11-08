@@ -309,3 +309,4 @@ export const PATCH_DEPARTMENTS: { name: string; vlan: string }[] = [
   { name: 'Drucker 3. OG', vlan: 'PRINT' },
   { name: 'Kaffeemaschine', vlan: 'IOT-KAFFEE' },
 ];
+

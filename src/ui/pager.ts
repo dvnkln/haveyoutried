@@ -41,7 +41,7 @@ export function createPager(ctx: AppContext): { el: HTMLElement; device: HTMLEle
   const showResult = (res: NonNullable<ReturnType<typeof resolveEvent>>, eventTitle: string) => {
     showModal({
       title: eventTitle,
-      className: `modal-result mood-${res.mood}`,
+      className: `modal-result modal-pager mood-${res.mood}`,
       body: [res.outcome.text, h('p', { class: 'effect-line', text: describeEffect(res) })],
       actions: [{ label: res.mood === 'bad' ? 'Seufz.' : 'Weiter im Text', primary: true }],
       armDelayMs: 300,
@@ -55,8 +55,8 @@ export function createPager(ctx: AppContext): { el: HTMLElement; device: HTMLEle
     active.opened = true;
     ctx.sfx.tick();
     showModal({
-      title: `PAGER: ${def.title}`,
-      className: 'modal-event',
+      title: def.title,
+      className: 'modal-event modal-pager',
       body: [def.text],
       stacked: true,
       armDelayMs: 450,
@@ -81,10 +81,28 @@ export function createPager(ctx: AppContext): { el: HTMLElement; device: HTMLEle
   // Der Pager als Gerät auf dem Schreibtisch: Ruhe = Uhrzeit, Alarm = Titel + Countdown, Antippen öffnet
   const lcdTitle = h('span', { class: 'pd-title' });
   const lcdCount = h('span', { class: 'pd-count' });
+  // Restzeit als LCD-Balken, der leerläuft
+  const lcdFill = h('span', { class: 'pd-fill' });
   const device = h('button', { class: 'pager-device', type: 'button', 'aria-label': 'Pager' }, [
-    h('span', { class: 'pd-lcd' }, [lcdTitle, lcdCount]),
+    h('span', { class: 'pd-lcd' }, [lcdTitle, h('span', { class: 'pd-row' }, [h('span', { class: 'pd-bar' }, [lcdFill]), lcdCount])]),
     h('span', { class: 'pd-led', 'aria-hidden': 'true' }),
   ]);
+  // Eskalation: 1 = piept, 2 = nervt, 3 = brennt (Pager hüpft, Becher klirrt, Dauerpiepen)
+  let level = 0;
+  let lastBeep = 0;
+  const setLevel = (next: number) => {
+    if (next === level) return;
+    const up = next > level;
+    level = next;
+    device.dataset.level = String(level);
+    el.dataset.level = String(level);
+    document.getElementById('app')?.classList.toggle('pager-panic', level >= 3);
+    if (up && level >= 2) {
+      lastBeep = performance.now();
+      ctx.sfx.pager();
+      ctx.haptic(level >= 3 ? 'error' : 'unlock');
+    }
+  };
   device.addEventListener('click', () => {
     const a = ctx.state.events.active;
     if (a && !a.opened) open();
@@ -100,6 +118,7 @@ export function createPager(ctx: AppContext): { el: HTMLElement; device: HTMLEle
       setFlag(device, 'alert', show);
       device.setAttribute('aria-label', show ? `Pager: ${eventDef(a!.id)?.title ?? ''}` : 'Pager');
       if (!a || !show) {
+        setLevel(0);
         const d = new Date();
         setText(lcdTitle, `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`);
         setText(lcdCount, '');
@@ -111,9 +130,19 @@ export function createPager(ctx: AppContext): { el: HTMLElement; device: HTMLEle
       const left = Math.ceil(leftMs / 1_000);
       setText(countdown, `${left}s`);
       setText(lcdCount, `${left}s`);
-      fill.style.transform = `scaleX(${Math.min(1, leftMs / CONFIG.eventExpireMs)})`;
+      const frac = Math.min(1, leftMs / CONFIG.eventExpireMs);
+      fill.style.transform = `scaleX(${frac})`;
+      lcdFill.style.transform = `scaleX(${frac})`;
       setFlag(el, 'urgent', left <= 10);
       setFlag(device, 'urgent', left <= 10);
+      setLevel(frac > 0.6 ? 1 : frac > 0.3 ? 2 : 3);
+      // in der letzten Phase alle paar Sekunden nachpiepen
+      const now = performance.now();
+      if (level >= 3 && now - lastBeep > 3_500 && !document.hidden) {
+        lastBeep = now;
+        ctx.sfx.pager();
+        ctx.haptic('unlock');
+      }
     },
   };
 }

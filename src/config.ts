@@ -66,6 +66,7 @@ export const UPGRADES: readonly UpgradeDef[] = [
   { id: 'mouse', cost: 25_000, unlock: { kind: 'clicks', n: 750 }, effect: { kind: 'click', mult: 2 } },
   { id: 'keyboard', cost: 1_000, unlock: { kind: 'clicks', n: 200 }, effect: { kind: 'click', mult: 2 } },
   { id: 'answering', cost: 5_000, unlock: { kind: 'clicks', n: 500 }, effect: { kind: 'click', mult: 2 } },
+  { id: 'headset', cost: 40_000, unlock: { kind: 'clicks', n: 600 }, effect: { kind: 'click', mult: 1.5 } },
   { id: 'basement', cost: 600_000, unlock: { kind: 'total', n: 200_000 }, effect: { kind: 'global', mult: 1.1 } },
   { id: 'monitor2', cost: 15_000, unlock: { kind: 'total', n: 5_000 }, effect: { kind: 'clickPps', fraction: 0.01 } },
   { id: 'macro', cost: 100_000, unlock: { kind: 'clicks', n: 1_000 }, effect: { kind: 'click', mult: 3 } },
@@ -243,8 +244,6 @@ export const CONFIG = {
   /** Abstand zwischen Ambient-Syslog-Zeilen in ms */
   ambientLogMinMs: 2_500,
   ambientLogMaxMs: 7_000,
-  /** Klick-Logzeilen höchstens so oft */
-  clickLogMinMs: 1_200,
   logMaxLines: 100,
   // Zufallsevents (Zeiten in Spielzeit, laufen offline nicht weiter)
   eventFirstMs: 3 * 60_000,

@@ -5,11 +5,12 @@ import { productionPerSec, rates } from '../core/economy';
 import { addTickets } from '../core/state';
 import type { Sfx } from './audio';
 import { createDesk } from './desk';
-import { h, juice, POP, setFlag, setText } from './dom';
+import { h, juice, POP, quip, setFlag, setText } from './dom';
 import { formatNumber, formatRate } from './format';
 import type { HapticKind } from './haptics';
 import { Fx } from './juice';
 import type { SysLog } from './log';
+import type { TicketHistory } from './history';
 import { createPager } from './pager';
 import { createProps } from './props';
 import { createToaster } from './toast';
@@ -21,6 +22,8 @@ import { pick } from '../util';
 export interface AppContext {
   state: GameState;
   log: SysLog;
+  /** App „Tickets“: erledigte Fenster, Pager, Incidents */
+  history: TicketHistory;
   saver: Saver;
   sfx: Sfx;
   haptic: (kind: HapticKind) => void;
@@ -96,20 +99,22 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
   const screen = h('div', { class: 'screen' });
   const desk = createDesk(ctx, fx, () => root, () => screen);
   desk.promptSlot.replaceChildren(promptUser, ':~$ ');
-  screen.append(h('div', { class: 'desktop' }, [icons, desk.work]), h('div', { class: 'scanlines', 'aria-hidden': 'true' }));
+  screen.append(h('div', { class: 'desktop' }, [icons, desk.work, desk.lastClosed]), h('div', { class: 'scanlines', 'aria-hidden': 'true' }));
 
   const led = h('span', { class: 'led', 'aria-hidden': 'true' });
+  // Monitor-Upgrade: neues Modell statt zweitem Bildschirm
+  const brand = h('span', { class: 'brand', text: 'HYT-2000' });
   const monitor = h('div', { class: 'monitor' }, [
     screen,
-    h('div', { class: 'chin' }, [h('span', { class: 'vents', 'aria-hidden': 'true' }), h('span', { class: 'brand', text: 'HYT-2000' }), led]),
+    h('div', { class: 'chin' }, [h('span', { class: 'vents', 'aria-hidden': 'true' }), brand, led]),
     h('div', { class: 'frost', 'aria-hidden': 'true' }),
   ]);
   const monitorArea = h('section', { class: 'monitor-area' }, [
     props.cables,
-    props.answering,
-    props.monitor2,
+    props.dust,
+    props.kNote,
     props.beacon,
-    props.plant,
+    props.poster,
     monitor,
     desk.phone,
     ...props.notes,
@@ -120,7 +125,9 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
   const pager = createPager(ctx);
   const deskbar = h('div', { class: 'deskbar' }, [
     desk.callerEl,
+    props.plant,
     h('div', { class: 'mug-spot' }, [props.mug, props.book]),
+    props.mate,
     pager.device,
   ]);
   // Maus rechts neben der Tastatur
@@ -164,14 +171,18 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
     const fill = Math.min(1, trashCount / TRASH_FULL);
     if (fill < 1) {
       ctx.sfx.tick();
-      ctx.log.write('info', `trash[99]: ${Math.round(fill * 100)} % voll. Erst leeren, wenn er überquillt. So steht es in der Hausordnung.`);
+      const msg = `${Math.round(fill * 100)} % voll. Erst leeren, wenn er überquillt. So steht es in der Hausordnung.`;
+      ctx.log.write('info', `trash[99]: ${msg}`);
+      quip(trash, msg);
       return;
     }
     const r = rates(ctx.state);
     const bonus = Math.max(r.pps * TRASH_BONUS_SEC, r.click * TRASH_BONUS_CLICKS);
     addTickets(ctx.state, bonus);
     trashCount = 0;
-    ctx.log.write('info', pick(TRASH_LINES));
+    const line = pick(TRASH_LINES);
+    ctx.log.write('info', line);
+    quip(trash, `${line} Altpapier-Pfand: +${formatNumber(bonus)} Tickets.`);
     ctx.log.write('ok', `trash[99]: Altpapier-Pfand eingelöst: +${formatNumber(bonus)} Tickets.`);
     const p = fx.rel(trash);
     fx.floater(p.x + p.w / 2, p.y + p.h / 2, `+${formatNumber(bonus)}`, true);
@@ -297,6 +308,8 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
       desk.render(s);
       setFlag(root, 'basement', !!s.upgrades.basement);
       setFlag(monitor, 'frozen', !!s.upgrades.freeze);
+      setFlag(monitor, 'pro', !!s.upgrades.monitor2);
+      setText(brand, s.upgrades.monitor2 ? 'HYT-3000 PRO' : 'HYT-2000');
 
       // Boost-Chips: nur neu bauen, wenn sich die Menge ändert
       const buffs = s.buffs;

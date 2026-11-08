@@ -127,3 +127,60 @@ export const TRASH_LINES: string[] = [
   'trash[99]: Der Papierkorb ist voll. Wie dein Postfach. Und dein Kalender.',
   'trash[99]: Gefunden: die Doku von 2014. Gelöscht von: dir.',
 ];
+
+/**
+ * Ironische Motivationsposter an der Wand: eins pro Generator, jede Upgrade-Stufe
+ * macht es edler (angeklebt → schwarzer Rahmen → Goldrahmen) und bringt einen neuen Spruch.
+ */
+export const POSTERS: Record<'bash' | 'cron' | 'ansible' | 'k8s' | 'agent', { title: string; glyph: string; color: string; lines: [string, string, string] }> = {
+  bash: {
+    title: 'AUTOMATISIERUNG',
+    glyph: '#!',
+    color: '#a0c4ff',
+    lines: [
+      'Warum 5 Minuten klicken, wenn man 5 Stunden skripten kann?',
+      'Jedes Skript beginnt mit „nur ganz kurz“. Und endet mit 400 Zeilen.',
+      'Wer Fehler ignoriert, hat keine. (set -e hat das jetzt beendet.)',
+    ],
+  },
+  cron: {
+    title: 'GEDULD',
+    glyph: '*/5',
+    color: '#ffd166',
+    lines: [
+      'Läuft jede Nacht um 3. Seit 2011. Niemand weiß, was.',
+      'Erfolg ist, wenn keiner merkt, dass es läuft. Oder ob.',
+      'Manche Jobs laufen fünfmal gleichzeitig. Das nennt man Teamgeist.',
+    ],
+  },
+  ansible: {
+    title: 'KONSISTENZ',
+    glyph: 'YAML',
+    color: '#9be3c1',
+    lines: [
+      'Jetzt ist es überall gleich kaputt.',
+      'Ein Leerzeichen zu viel trennt Genie von Wahnsinn.',
+      'Zweimal ausgeführt, gleiches Ergebnis. Erzähl es deinen Enkeln.',
+    ],
+  },
+  k8s: {
+    title: 'SKALIERUNG',
+    glyph: 'k8s',
+    color: '#cdb4db',
+    lines: [
+      'Ein Problem. Jetzt verteilt auf 40 Pods.',
+      'Wenn es nicht läuft, starte es neu. Für immer. Automatisch.',
+      'Niemand versteht das Netzwerk. Aber es ist verschlüsselt.',
+    ],
+  },
+  agent: {
+    title: 'INNOVATION',
+    glyph: 'AI',
+    color: '#f4a261',
+    lines: [
+      'Halluziniert schneller als jeder Praktikant.',
+      'Der Mensch bleibt im Loop. Er klickt „OK“.',
+      'Erfindet RFCs jetzt nur noch freitags.',
+    ],
+  },
+};

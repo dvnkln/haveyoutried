@@ -1,4 +1,3 @@
-import { CONFIG } from '../config';
 import type { Call } from '../content/callers';
 import {
   CALL_LINES,
@@ -15,17 +14,33 @@ import {
   TICKET_PRIOS,
   WEB_DEVICES,
   WEB_LINES,
+  DONE_LINES,
+  TICKET_NOTES,
+  TICKET_STATES,
 } from '../content/work';
 import { pick, randInt, weightedPick } from '../util';
 import type { AppContext } from './app';
 import { h, setText } from './dom';
+import { nextTicketNo, ticketId } from './history';
 
 /** Ohne Anschlag so lange, dann wird heimlich durch Memes gescrollt */
 const IDLE_MEMES_MS = 15_000;
 /** So viele Zeichen des Getippten bleiben sichtbar (der Anfang rutscht raus) */
 const TYPED_VISIBLE = 88;
 
-const ticketId = (no: number) => `#INC-${String(no).padStart(6, '0')}`;
+/** Kanal im Ticketverlauf */
+const CHANNELS: Record<Kind, string> = {
+  mail: 'Mail',
+  ticket: 'Ticketsystem',
+  term: 'Shell',
+  chat: 'Firmen-Chat',
+  call: 'Videocall',
+  rdp: 'Fernwartung {target}',
+  web: 'Webinterface {target}',
+  search: 'Websuche',
+};
+/** so lange bleibt ein abgeschicktes Fenster mit „Gesendet“ stehen */
+const SENT_HOLD_MS = 1_100;
 const initials = (who: string) =>
   who
     .split(/[\s-]+/)
@@ -40,6 +55,8 @@ interface Task {
   kind: Kind;
   who: string;
   subject: string;
+  /** ganzer Anliegen-Text (subject ist gekürzt) */
+  full: string;
   no: number;
   /** Gerät, PC oder Ähnliches, je nach Programm */
   target: string;
@@ -217,10 +234,19 @@ const KINDS = Object.keys(PROGRAMS) as Kind[];
  * Wer eine Weile nichts tippt, scrollt heimlich durch Memes.
  */
 export function createWork(ctx: AppContext, currentCall: () => Call | null) {
-  let task: Task = { kind: 'ticket', who: '', subject: '', no: 0, target: '' };
+  let task: Task = { kind: 'ticket', who: '', subject: '', full: '', no: 0, target: '' };
   let reply = '';
   let typedLen = 0;
   let memes = false;
+  /** Antwort fertig: Fenster bleibt kurz mit „Gesendet“ stehen, dann kommt das nächste */
+  let sentTimer = 0;
+  /** eine Zeile: passt der Text nicht, wird die Schrift kleiner statt abgeschnitten */
+  const setStatus = (text: string) => {
+    setText(last, text);
+    last.style.fontSize = '';
+    for (let size = 11; size > 8 && last.scrollWidth > last.clientWidth + 1; size -= 0.5) last.style.fontSize = `${size - 0.5}px`;
+  };
+  const fill = (t: string) => t.replaceAll('{who}', task.who).replaceAll('{target}', task.target);
 
   const title = h('span', { class: 'work-title' });
   const head = h('div', { class: 'work-head' });
@@ -235,17 +261,19 @@ export function createWork(ctx: AppContext, currentCall: () => Call | null) {
     head,
     h('div', { class: 'work-body' }, [label, promptSlot, typedEl, h('span', { class: 'cursor', text: '▌' })]),
     extra,
-    last,
     h('div', { class: 'meme-window' }, [feed]),
   ]);
 
   const showTyped = () => {
+    last.style.setProperty('--p', reply ? (typedLen / reply.length).toFixed(3) : '0');
     const t = reply.slice(0, typedLen);
     setText(typedEl, t.length > TYPED_VISIBLE ? `…${t.slice(-TYPED_VISIBLE)}` : t);
   };
 
   /** Nächste Aufgabe: anderes Programm, Antwort an den aktuellen Anrufer */
   const newTask = () => {
+    clearTimeout(sentTimer);
+    sentTimer = 0;
     let kind = weightedPick(KINDS, (k) => PROGRAMS[k].weight);
     if (kind === task.kind) kind = weightedPick(KINDS.filter((k) => k !== task.kind), (k) => PROGRAMS[k].weight);
     const call = currentCall();
@@ -256,7 +284,8 @@ export function createWork(ctx: AppContext, currentCall: () => Call | null) {
       kind,
       who,
       subject: line.length > 42 ? `${line.slice(0, 40)}…` : line,
-      no: CONFIG.ticketNumberOffset + ctx.state.clicks + randInt(3, 40),
+      full: line,
+      no: nextTicketNo(ctx.state.clicks),
       target: kind === 'rdp' ? pick(RDP_PCS) : pick(WEB_DEVICES),
     };
     const prog = PROGRAMS[kind];
@@ -267,12 +296,35 @@ export function createWork(ctx: AppContext, currentCall: () => Call | null) {
     head.replaceChildren(...prog.head(task));
     extra.replaceChildren(...(prog.extra?.(task) ?? []));
     setText(label, prog.label ?? '');
+    el.classList.remove('sent');
+    // Statuszeile: Ticketnummer und Betreff, Füllstand zeigt den Fortschritt der Antwort
+    setStatus(`${ticketId(task.no)} · ${task.subject}`);
     showTyped();
   };
 
+  /** Abschicken: „Gesendet“-Stempel im Fenster, Karte mit Abschluss-Spruch in den Ticketverlauf, kurz danach das nächste */
   const send = () => {
-    if (typedLen > 0) ctx.log.write('ok', PROGRAMS[task.kind].log(task, reply));
-    newTask();
+    if (sentTimer) return;
+    if (typedLen === 0) return newTask();
+    typedLen = reply.length;
+    showTyped();
+    ctx.log.write('ok', PROGRAMS[task.kind].log(task, reply));
+    ctx.history.add({
+      id: ticketId(task.no),
+      subject: task.full,
+      who: task.who,
+      channel: fill(CHANNELS[task.kind]),
+      prio: pick(TICKET_PRIOS),
+      status: pick(TICKET_STATES),
+      reply,
+      note: fill(pick(TICKET_NOTES)),
+      solution: fill(pick(DONE_LINES[task.kind])),
+    });
+    el.classList.add('sent');
+    sentTimer = window.setTimeout(() => {
+      sentTimer = 0;
+      newTask();
+    }, SENT_HOLD_MS);
   };
 
   // --- Memes beim Nichtstun ---
@@ -304,22 +356,22 @@ export function createWork(ctx: AppContext, currentCall: () => Call | null) {
 
   return {
     el,
+    /** Zuletzt geschlossenes Ticket: eine feste Zeile unter dem Fenster, gleich für alle Programme */
+    last,
     promptSlot,
     newTask,
     send,
     /** Ein Anschlag tippt ein paar Zeichen; mit Textbaustein ganze Wörter. Ende = abschicken. */
     typeMore() {
-      if (typedLen >= reply.length) return send();
+      if (sentTimer) return;
       const step = ctx.state.upgrades.macro ? randInt(6, 10) : randInt(2, 4);
       typedLen = Math.min(reply.length, typedLen + step);
+      if (typedLen >= reply.length) send();
     },
     /** Nach jedem Anschlag: Memes zu, Anzeige auffrischen */
     afterKey() {
       if (memes) leaveMemes();
       showTyped();
-    },
-    setLast(text: string) {
-      setText(last, text);
     },
     /** Pro Frame: lange nichts getippt → Memes */
     idle(sinceLastKeyMs: number) {

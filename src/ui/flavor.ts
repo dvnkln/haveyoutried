@@ -22,13 +22,15 @@ import { availableUpgrades, isUnlocked } from '../core/economy';
 import type { GameState } from '../core/state';
 import { pick, randInt, weightedPick } from '../util';
 import type { App, AppContext } from './app';
+import { nextTicketNo, ticketId } from './history';
+import { describeEffect } from './pager';
 
 /** Ab so vielen gleichzeitig freigeschalteten Achievements gibt es nur eine Sammelmeldung. */
 const BULK_ACHIEVEMENTS = 3;
 
-/** Verbindet Spielereignisse mit Syslog, Sound und Haptik und streut Ambient-Rauschen ein. */
+/** Verbindet Spielereignisse mit Syslog, Ticketverlauf, Sound und Haptik und streut Ambient-Rauschen ein. */
 export function startFlavor(ctx: AppContext, app: App): void {
-  const { state, log, sfx, haptic } = ctx;
+  const { state, log, history, sfx, haptic } = ctx;
 
   bus.on('buy', ({ id, owned }) => {
     log.write('info', pick(GENERATOR_TEXT[id].buyLog), { n: owned });
@@ -63,6 +65,19 @@ export function startFlavor(ctx: AppContext, app: App): void {
     if (res.option < 0) log.write('warn', `pager[911]: no ack within ${CONFIG.eventExpireMs / 1_000}s. escalated to: nobody.`);
     log.write(res.mood === 'bad' ? 'warn' : 'info', `pager[911]: ${res.outcome.text}`);
     if (res.outcome.log) log.template(res.outcome.log);
+    const def = eventDef(res.eventId);
+    const ignored = res.option < 0;
+    history.add({
+      id: ticketId(nextTicketNo(state.clicks)),
+      subject: def?.title ?? res.eventId,
+      who: 'Pager',
+      channel: 'Piepen, Vibrieren, Panik',
+      prio: ignored ? 'war mal hoch' : 'sofort',
+      status: ignored ? 'Eskaliert an: niemand' : res.mood === 'good' ? 'Gelöst' : res.mood === 'bad' ? 'Gelöst (irgendwie)' : 'Geschlossen',
+      reply: ignored ? undefined : def?.options[res.option]?.label,
+      note: ignored ? `Kein ACK innerhalb von ${CONFIG.eventExpireMs / 1_000} s. Ich war „kurz Kaffee holen“.` : res.outcome.text,
+      solution: describeEffect(res),
+    });
     if (res.mood === 'good') sfx.good();
     else if (res.mood === 'bad') sfx.error();
   });
@@ -72,8 +87,20 @@ export function startFlavor(ctx: AppContext, app: App): void {
     const t = INCIDENT_TEXT[id];
     log.write('crit', `icinga2[2342]: SERVICE ALERT: ${t.host};${t.service};CRITICAL;HARD;3;${t.info}`);
   });
-  bus.on('incidentResolved', ({ id, score, abandoned }) => {
+  bus.on('incidentResolved', ({ id, score, results, abandoned }) => {
     const t = INCIDENT_TEXT[id];
+    const solved = !abandoned && isSolved(score);
+    const effects = results.map(describeEffect).join(', ');
+    history.add({
+      id: ticketId(nextTicketNo(state.clicks)),
+      subject: `${t.host}/${t.service}: ${t.info}`,
+      who: 'nagmon',
+      channel: 'Monitoring',
+      prio: 'CRITICAL',
+      status: abandoned ? 'Eskaliert (Admin weg)' : solved ? 'Gelöst' : 'Eskaliert an: Kollege',
+      note: abandoned ? 'Mitten im Incident weg gewesen. Der Kollege hat übernommen und erzählt es allen.' : pick(solved ? t.good : t.bad),
+      solution: `${solved ? `RECOVERY: ${t.okInfo}` : 'Kollege hat übernommen. Und den Ruhm.'} (Leistung ${Math.round(score * 100)} %${effects ? `; ${effects}` : ''})`,
+    });
     if (abandoned) {
       log.write('warn', `icinga2[2342]: SERVICE NOTIFICATION: kollege;${t.host};${t.service};CRITICAL;escalated (admin disconnected)`);
       log.write('info', 'helpdesk[1337]: du warst plötzlich weg. Der Kollege hat übernommen und erzählt es allen.');

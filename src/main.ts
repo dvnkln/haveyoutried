@@ -16,6 +16,7 @@ import { formatDuration, formatNumber } from './ui/format';
 import { createHaptics } from './ui/haptics';
 import { Sfx } from './ui/audio';
 import { SysLog } from './ui/log';
+import { TicketHistory } from './ui/history';
 import { showModal } from './ui/modal';
 import { infraTab } from './ui/tabs/infra';
 import { logTab } from './ui/tabs/log';
@@ -29,6 +30,7 @@ const loaded = loadGame(now);
 const state = loaded ?? createInitialState(now);
 const startReport = loaded ? applyOfflineProgress(state, now) : null;
 
+const history = new TicketHistory();
 const log = new SysLog();
 const haptic = createHaptics(() => state.settings.haptics);
 const sfx = new Sfx(() => state.settings);
@@ -38,12 +40,16 @@ for (const type of ['pointerdown', 'pointerup', 'touchend', 'keydown'] as const)
 }
 const saver = new Saver(
   () => state,
-  () => log.write('crit', 'kernel: EXT4-fs error: /dev/localStorage remounted read-only. savegame NOT written.'),
+  () => {
+    log.write('crit', 'kernel: EXT4-fs error: /dev/localStorage remounted read-only. savegame NOT written.');
+    // Das Log sieht keiner mehr: Speicherfehler muss sichtbar sein
+    app.toast('Speichern fehlgeschlagen', '/dev/localStorage ist schreibgeschützt. Fortschritt wird gerade nicht gesichert.');
+  },
 );
 
 const root = document.getElementById('app');
 if (!root) throw new Error('#app fehlt');
-const ctx = { state, log, saver, sfx, haptic };
+const ctx = { state, log, history, saver, sfx, haptic };
 const app = mountApp(root, ctx, [logTab(), infraTab(), upgradesTab(), careerTab(), systemTab()]);
 startFlavor(ctx, app);
 mountIncidentOverlay(ctx);

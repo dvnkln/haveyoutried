@@ -24,46 +24,112 @@ const GAMES: Record<IncidentId, () => Minigame> = {
   patch: patchGame,
 };
 
-const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const p2 = (n: number) => String(n).padStart(2, '0');
 
-/** Kurzname der lokalen Zeitzone: CET/CEST wie in deutschen Monitoring-Mails, sonst was Intl liefert. */
-function tzName(d: Date): string {
-  const off = d.getTimezoneOffset();
-  if (off === -60) return 'CET';
-  if (off === -120) return 'CEST';
-  try {
-    return new Intl.DateTimeFormat('en-US', { timeZoneName: 'short' }).formatToParts(d).find((p) => p.type === 'timeZoneName')?.value ?? 'UTC';
-  } catch {
-    return off === 0 ? 'UTC' : `UTC${off < 0 ? '+' : '-'}${Math.abs(off / 60)}`;
-  }
-}
+type RowState = 'crit' | 'warn' | 'ok' | 'esc';
+const STATE_LABEL: Record<RowState, string> = { crit: 'CRITICAL', warn: 'WARNING', ok: 'OK', esc: 'ESCALATED' };
 
-/** Datum wie in Nagios/Icinga-Mails: „Sun Nov 8 09:41:03 CET 2026“ */
-function nagiosDate(d = new Date()): string {
-  return `${DAYS[d.getDay()]} ${MONTHS[d.getMonth()]} ${d.getDate()} ${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())} ${tzName(d)} ${d.getFullYear()}`;
-}
+/** Eine Zeile der Service-Liste: Status-Badge, Host/Service, Dauer, Plugin-Ausgabe */
+const monRow = (state: RowState, host: string, service: string, output: string, since: string, main = false) =>
+  h('div', { class: `mon-row s-${state}${main ? ' main' : ''}` }, [
+    h('span', { class: 'mon-state' }, [h('b', { text: STATE_LABEL[state] }), h('small', { text: since })]),
+    h('span', { class: 'mon-what' }, [
+      h('span', { class: 'mon-svc' }, [h('b', { text: service }), ` auf ${host}`]),
+      h('span', { class: 'mon-out', text: output }),
+    ]),
+  ]);
 
-const line = (label: string, value: string, cls = '') =>
-  h('div', { class: `nag-line ${cls}`.trim() }, [h('span', { class: 'nag-key', text: `${label}:` }), ` ${value}`]);
+/** Zähler oben: so sehen Monitoring-Startseiten immer aus */
+const summary = (crit: number, warn: number) =>
+  h('div', { class: 'mon-summary' }, [
+    h('span', { class: `mon-chip s-crit${crit ? '' : ' zero'}`, text: `${crit} Critical` }),
+    h('span', { class: 'mon-chip s-warn', text: `${warn} Warning` }),
+    h('span', { class: 'mon-chip s-ok', text: '147 OK' }),
+    h('span', { class: 'mon-chip s-unk', text: '1 Unknown (seit 2019)' }),
+  ]);
 
 /**
  * Vollbild-Overlay für Incidents: Monitoring-Alarm (Vorwarnung) → Minispiel → RECOVERY.
  * Eigene rAF-Schleife: pausiert mit dem Tab, damit Hintergrundzeit nicht zählt.
  */
 export function mountIncidentOverlay(ctx: AppContext): void {
-  const root = h('div', { class: 'incident', hidden: '', role: 'alertdialog', 'aria-modal': 'true' });
-  document.body.append(root);
+  // Läuft direkt im Röhrenmonitor auf dem Tisch: Monitoring-Oberfläche füllt den Bildschirm, der Rest wird dunkel
+  const clock = h('span', { class: 'mon-clock' });
+  const body = h('div', { class: 'mon-body' });
+  const root = h('div', { class: 'incident', hidden: '', role: 'alertdialog', 'aria-modal': 'true' }, [
+    h('div', { class: 'mon-top' }, [
+      h('span', { class: 'mon-logo', text: 'nag' }),
+      h('span', { class: 'mon-logo-2', text: 'mon' }),
+      h('span', { class: 'mon-nav', text: 'Probleme' }),
+      clock,
+      h('span', { class: 'mon-user', text: 'you' }),
+    ]),
+    body,
+  ]);
+  const tickClock = () => {
+    const d = new Date();
+    setText(clock, `${p2(d.getHours())}:${p2(d.getMinutes())}`);
+  };
+  /** Inhalt im Monitor tauschen (Alarm → Spiel → Ergebnis) */
+  const screen = (state: 'crit' | 'ok' | 'esc', ...children: HTMLElement[]) => {
+    root.dataset.state = state;
+    body.replaceChildren(...children);
+    body.scrollTop = 0;
+  };
   const app = document.getElementById('app');
+  const spot = h('div', { class: 'inc-spot', 'aria-hidden': 'true' });
+  /** Alarm und Ergebnis im Monitor (Rest abgedunkelt), das Spiel selbst bildschirmfüllend */
+  const inMonitor = (on: boolean) => {
+    const screenEl = document.querySelector<HTMLElement>('#app .screen');
+    if (on && screenEl) {
+      if (root.parentElement !== screenEl) screenEl.append(root);
+      document.body.append(spot);
+      placeSpot();
+    } else {
+      if (root.parentElement !== document.body) document.body.append(root);
+      spot.remove();
+    }
+  };
+  const placeSpot = () => {
+    const r = root.parentElement?.getBoundingClientRect();
+    if (!r || root.hidden) return;
+    Object.assign(spot.style, { left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px` });
+  };
+  window.addEventListener('resize', placeSpot);
+  /** alles außer dem Monitor-Bildschirm stilllegen */
+  let frozen: HTMLElement[] = [];
+  // Uhr läuft mit, solange der Monitor nagmon zeigt
+  let clockTimer = 0;
   const show = () => {
+    tickClock();
+    clearInterval(clockTimer);
+    clockTimer = window.setInterval(tickClock, 5_000);
+    // offenes App-Fenster zu, sonst verdeckt es den Monitor
+    const sheet = document.querySelector<HTMLElement>('.sheet');
+    if (sheet && !sheet.hidden) document.querySelector<HTMLElement>('.sheet-close')?.click();
+    inMonitor(true);
     root.hidden = false;
-    if (app) app.inert = true;
+    frozen = [];
+    // vom Bildschirm aus nach oben: jeweils die Geschwister stilllegen
+    for (let el: HTMLElement | null = root; el && el !== app && el.parentElement; el = el.parentElement) {
+      for (const sib of el.parentElement.children) {
+        if (sib !== el && sib instanceof HTMLElement && !sib.inert) {
+          sib.inert = true;
+          frozen.push(sib);
+        }
+      }
+    }
+    app?.classList.add('incident-on');
+    placeSpot();
   };
   const hide = () => {
+    clearInterval(clockTimer);
     root.hidden = true;
-    root.replaceChildren();
-    if (app) app.inert = false;
+    body.replaceChildren();
+    for (const el of frozen) el.inert = false;
+    frozen = [];
+    app?.classList.remove('incident-on');
+    spot.remove();
   };
 
   const run = (id: IncidentId) => {
@@ -73,20 +139,18 @@ export function mountIncidentOverlay(ctx: AppContext): void {
 
     // --- Phase 1: Monitoring-Alarm, wartet auf manuelles Übernehmen ---
     const take = h('button', { class: 'btn btn-danger nag-ack nag-take', type: 'button', text: pick(TAKE_LABELS), disabled: '' });
-    const alert = h('div', { class: 'nag-card nag-problem' }, [
-      h('div', { class: 'nag-title', text: `** PROBLEM Service Alert: ${text.host}/${text.service} is CRITICAL **` }),
-      line('Notification Type', 'PROBLEM'),
-      line('Host', text.host),
-      line('Service', text.service),
-      line('State', 'CRITICAL', 'nag-crit'),
-      line('Info', text.info),
-      line('Date/Time', nagiosDate()),
-      h('div', { class: 'nag-assign', text: 'Assigned to: you' }),
-      h('div', { class: 'nag-task' }, [h('span', { class: 'nag-key', text: 'Aufgabe: ' }), text.goal]),
-      take,
+    const alert = h('div', { class: 'mon-page' }, [
+      summary(1, 2),
+      h('div', { class: 'mon-table' }, [monRow('crit', text.host, text.service, text.info, '0m 03s', true)]),
+      h('div', { class: 'mon-detail' }, [
+        h('div', { class: 'nag-title', text: `** PROBLEM: ${text.host}/${text.service} is CRITICAL **` }),
+        h('div', { class: 'nag-assign', text: 'Assigned to: you' }),
+        h('div', { class: 'nag-task' }, [h('span', { class: 'nag-key', text: 'Aufgabe: ' }), text.goal]),
+        take,
+      ]),
     ]);
     root.classList.remove('playing');
-    root.replaceChildren(alert);
+    screen('crit', alert);
     show();
     ctx.sfx.alarm();
     ctx.haptic('milestone');
@@ -112,6 +176,21 @@ export function mountIncidentOverlay(ctx: AppContext): void {
     const stage = h('div', { class: 'inc-stage' });
     const gameRoot = h('div', { class: 'inc-game-root' });
     stage.append(gameRoot);
+    /** Spielfeld passt sich dem Monitor an: zu hohe Spiele werden verkleinert statt den Monitor zu strecken */
+    const fit = () => {
+      if (!gameRoot.isConnected) return;
+      gameRoot.style.zoom = '';
+      // mehrfach messen: gestreckte Flex-Inhalte ändern ihre Höhe mit dem Zoom
+      let z = 1;
+      for (let i = 0; i < 4; i++) {
+        const need = gameRoot.scrollHeight;
+        const avail = gameRoot.clientHeight;
+        if (need <= avail + 1) break;
+        z = Math.max(0.45, z * (avail / need) * 0.99);
+        gameRoot.style.zoom = String(z);
+      }
+    };
+    window.addEventListener('resize', fit);
     const startGame = () => {
       clearInterval(nag);
       elapsed = 0;
@@ -119,11 +198,14 @@ export function mountIncidentOverlay(ctx: AppContext): void {
       phase = 'ready';
       readyLeft = INCIDENTS.readyMs;
       root.classList.add('playing');
-      root.replaceChildren(
+      inMonitor(false);
+      screen(
+        'crit',
         h('div', { class: 'inc-game' }, [
           h('div', { class: 'inc-head' }, [
             h('span', { class: 'inc-tag', text: 'CRITICAL' }),
             h('span', { class: 'inc-name', text: `${text.host}/${text.service}` }),
+            h('span', { class: 'inc-ack', text: 'ACK' }),
           ]),
           bar,
           status,
@@ -140,37 +222,52 @@ export function mountIncidentOverlay(ctx: AppContext): void {
         sfx: ctx.sfx,
         haptic: ctx.haptic,
       });
+      requestAnimationFrame(fit);
+      // nach Schriftladen und Countdown noch einmal
+      setTimeout(fit, 400);
+      setTimeout(fit, INCIDENTS.readyMs + 100);
     };
 
     // --- Phase 3: RECOVERY ---
     const finish = () => {
       phase = 'done';
       root.classList.remove('playing');
+      inMonitor(true);
       const score = game.score();
       const results = resolveIncident(ctx.state, id, score, rates(ctx.state));
       const good = isSolved(score);
       const ack = h('button', { class: 'btn btn-primary nag-ack nag-close', type: 'button', text: pick(good ? DONE_LABELS.good : DONE_LABELS.bad), disabled: '' });
       setTimeout(() => (ack.disabled = false), 600);
       ack.addEventListener('click', () => {
+        window.removeEventListener('resize', fit);
         ctx.sfx.tick();
         hide();
         endIncident();
       });
-      root.replaceChildren(
-        h('div', { class: `nag-card ${good ? 'nag-recovery' : 'nag-problem'}` }, [
-          h('div', {
-            class: 'nag-title',
-            text: good
-              ? `** RECOVERY Service Alert: ${text.host}/${text.service} is OK **`
-              : `** ESCALATION: ${text.host}/${text.service} – assigned to: Kollege **`,
-          }),
-          line('Notification Type', good ? 'RECOVERY' : 'ESCALATION'),
-          line('State', good ? 'OK' : 'CRITICAL (Kollege kümmert sich)', good ? 'nag-ok' : 'nag-crit'),
-          line('Info', good ? text.okInfo : text.info),
-          line('Leistung', `${Math.round(score * 100)} %`),
-          h('p', { class: 'nag-comment', text: pick(good ? text.good : text.bad) }),
-          ...results.map((r) => h('div', { class: `effect-line mood-${r.mood}`, text: describeEffect(r) })),
-          ack,
+      const pct = Math.round(score * 100);
+      screen(
+        good ? 'ok' : 'esc',
+        h('div', { class: 'mon-page' }, [
+          summary(good ? 0 : 1, 2),
+          h('div', { class: 'mon-table' }, [
+            monRow(good ? 'ok' : 'esc', text.host, text.service, good ? text.okInfo : 'eskaliert an: Kollege', good ? '0m 01s' : '0m 00s', true),
+          ]),
+          h('div', { class: `mon-detail ${good ? 'nag-recovery' : 'nag-problem'}` }, [
+            h('div', {
+              class: 'nag-title',
+              text: good
+                ? `** RECOVERY: ${text.host}/${text.service} is OK **`
+                : `** ESCALATION: ${text.host}/${text.service} → Kollege **`,
+            }),
+            h('div', { class: 'mon-perf' }, [
+              h('span', { class: 'nag-key', text: 'Leistung' }),
+              h('span', { class: 'mon-perf-bar' }, [h('span', { class: 'mon-perf-fill', style: `width:${pct}%` })]),
+              h('b', { text: `${pct} %` }),
+            ]),
+            h('p', { class: 'nag-comment', text: pick(good ? text.good : text.bad) }),
+            ...results.map((r) => h('div', { class: `effect-line mood-${r.mood}`, text: describeEffect(r) })),
+            ack,
+          ]),
         ]),
       );
       if (good) ctx.sfx.good();
