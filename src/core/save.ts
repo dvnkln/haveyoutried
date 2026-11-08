@@ -3,6 +3,9 @@ import { BUY_AMOUNTS, TAP_SOUND_IDS, createInitialState, SAVE_VERSION, type BuyA
 
 export const SAVE_KEY = 'hyt.save';
 
+/** Nachfrist für ein beim Laden gefundenes Pager-Event */
+const EVENT_GRACE_MS = 15_000;
+
 /** Migrationen: Index = Version, von der aus migriert wird. */
 const migrations: Record<number, (raw: Record<string, unknown>) => Record<string, unknown>> = {
   // 1: (raw) => ({ ...raw, version: 2, ... }),
@@ -62,9 +65,20 @@ export function deserialize(json: string, now: number): GameState | null {
       Number.isFinite(b.mult) &&
       Number.isFinite(b.remainingMs),
   );
-  if (state.events.active && !(isPlain(state.events.active) && typeof state.events.active.id === 'string')) {
-    state.events.active = null;
+  // Pager-Event: Dialog kann nach dem Laden nicht mehr offen sein → wieder als Pager zeigen,
+  // mit gültigem Ablauf (sonst blockiert ein „offenes“ Event alle weiteren für immer)
+  const act = state.events.active as unknown;
+  if (act !== null) {
+    if (isPlain(act) && typeof act.id === 'string') {
+      const t = state.stats.playTimeMs;
+      const exp = typeof act.expiresAt === 'number' && Number.isFinite(act.expiresAt) ? act.expiresAt : t;
+      state.events.active = { id: act.id, opened: false, expiresAt: Math.max(exp, t + EVENT_GRACE_MS) };
+    } else {
+      state.events.active = null;
+    }
   }
+  // Lautstärke auf 0..1 begrenzen
+  state.settings.volume = Math.min(1, Math.max(0, state.settings.volume));
   // alte Klang-IDs (mx, pop, …) auf den Standard-Switch abbilden
   if (!(TAP_SOUND_IDS as readonly string[]).includes(state.settings.tapSound)) state.settings.tapSound = 'blue';
   return state;
@@ -110,13 +124,18 @@ export class Saver {
     this.timer ??= setInterval(() => this.saveNow(), CONFIG.autosaveMs);
   }
 
+  /** Fehler nur einmal melden, solange das Speichern am Stück scheitert */
+  private failing = false;
+
   saveNow(): boolean {
     if (this.disabled) return false;
     try {
       localStorage.setItem(SAVE_KEY, serialize(this.getState()));
+      this.failing = false;
       return true;
     } catch (e) {
-      this.onError(e);
+      if (!this.failing) this.onError(e);
+      this.failing = true;
       return false;
     }
   }
@@ -137,13 +156,14 @@ export class Saver {
     }
   }
 
+  /** Import: erst schreiben, nur bei Erfolg das Autosave stoppen (sonst läuft es normal weiter). */
   replaceWith(state: GameState): boolean {
-    this.disable();
     try {
       localStorage.setItem(SAVE_KEY, serialize(state));
-      return true;
     } catch {
       return false;
     }
+    this.disable();
+    return true;
   }
 }

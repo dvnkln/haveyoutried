@@ -29,6 +29,8 @@ export function maxAffordable(baseCost: number, owned: number, money: number): n
   const first = baseCost * g ** owned;
   let n = Math.floor(Math.log((money * (g - 1)) / first + 1) / Math.log(g));
   while (n > 0 && bulkCost(baseCost, owned, n) > money) n--;
+  // Rundung kann die Formel knapp unter die echte Grenze drücken
+  while (bulkCost(baseCost, owned, n + 1) <= money) n++;
   return n;
 }
 
@@ -53,7 +55,16 @@ export function upgradeDef(id: string): UpgradeDef {
   return def;
 }
 
-const owns = (state: GameState) => UPGRADES.filter((u) => state.upgrades[u.id]);
+// Gekaufte Upgrades zwischenspeichern: die Multiplikatoren werden pro Frame oft abgefragt.
+// Upgrades kommen nur hinzu, darum reicht als Schlüssel Objekt + Anzahl.
+let ownsCache: { ref: Record<string, true>; count: number; list: UpgradeDef[] } | null = null;
+function owns(state: GameState): UpgradeDef[] {
+  const count = Object.keys(state.upgrades).length;
+  if (!ownsCache || ownsCache.ref !== state.upgrades || ownsCache.count !== count) {
+    ownsCache = { ref: state.upgrades, count, list: UPGRADES.filter((u) => state.upgrades[u.id]) };
+  }
+  return ownsCache.list;
+}
 
 export function isUpgradeUnlocked(state: GameState, def: UpgradeDef): boolean {
   const u = def.unlock;

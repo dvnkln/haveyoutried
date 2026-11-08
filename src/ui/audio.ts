@@ -119,18 +119,22 @@ export class Sfx {
 
   constructor(private settings: () => SoundSettings) {}
 
-  /** Muss aus einer Nutzergeste heraus aufgerufen werden (Browser-Autoplay-Regeln). */
-  unlock(): void {
+  /**
+   * Muss aus einer Nutzergeste heraus aufgerufen werden (Browser-Autoplay-Regeln).
+   * Das Promise erfüllt sich, sobald die Engine läuft – wer direkt danach einen
+   * Klang braucht (Vorschau, Bestätigung), wartet darauf.
+   */
+  unlock(): Promise<void> {
     // Sound aus: Engine gar nicht erst starten bzw. pausieren
     // (manche Android-Geräte unterdrücken Vibration, solange Audio läuft)
     if (!this.settings().sound) {
       if (this.ctx?.state === 'running') void this.ctx.suspend().catch(() => {});
-      return;
+      return Promise.resolve();
     }
     if (!this.ctx) {
       const Ctor: AudioCtor | undefined =
         window.AudioContext ?? (window as unknown as { webkitAudioContext?: AudioCtor }).webkitAudioContext;
-      if (!Ctor) return;
+      if (!Ctor) return Promise.resolve();
       const ctx = new Ctor();
       const comp = ctx.createDynamicsCompressor();
       comp.threshold.value = -12;
@@ -146,7 +150,8 @@ export class Sfx {
       this.master = master;
       this.noise = noise;
     }
-    if (this.ctx.state === 'suspended') void this.ctx.resume().catch(() => {});
+    if (this.ctx.state === 'suspended') return this.ctx.resume().catch(() => {});
+    return Promise.resolve();
   }
 
   /** Zustand der Audio-Engine für die Diagnose */

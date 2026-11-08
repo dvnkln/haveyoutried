@@ -9,9 +9,6 @@ const PATTERNS: Record<HapticKind, number | number[]> = {
   unlock: [20, 70, 20],
 };
 
-/** iOS kann nur „Tick“; Muster = Anzahl Ticks. */
-const IOS_TICKS: Record<HapticKind, number> = { tap: 1, buy: 2, milestone: 3, error: 2, unlock: 2 };
-
 const canVibrate = () => typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function';
 
 const isIOS = () =>
@@ -44,15 +41,12 @@ function createIOSHaptics(): (kind: HapticKind) => void {
   label.append(input);
   document.body.append(label);
 
-  const tickNow = (n: number) => {
-    for (let i = 0; i < n; i++) {
-      if (i === 0) label.click();
-      else setTimeout(() => label.click(), i * 90);
-    }
-  };
+  // Nur ein Tick pro Ereignis: weitere Ticks per setTimeout lägen außerhalb
+  // der Nutzergeste und würden von WebKit ignoriert.
+  const tick = () => label.click();
 
   let inPointerDown = false;
-  let pending = 0;
+  let pending = false;
   document.addEventListener(
     'pointerdown',
     () => {
@@ -62,16 +56,15 @@ function createIOSHaptics(): (kind: HapticKind) => void {
     { capture: true, passive: true },
   );
   const flush = () => {
-    if (pending > 0) tickNow(pending);
-    pending = 0;
+    if (pending) tick();
+    pending = false;
   };
   document.addEventListener('pointerup', flush, { capture: true, passive: true });
   document.addEventListener('touchend', flush, { capture: true, passive: true });
 
-  return (kind) => {
-    const n = IOS_TICKS[kind];
-    if (inPointerDown) pending = Math.max(pending, n);
-    else tickNow(n);
+  return () => {
+    if (inPointerDown) pending = true;
+    else tick();
   };
 }
 

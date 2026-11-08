@@ -1,3 +1,4 @@
+import { CONFIG } from '../../config';
 import { exportSave, importSave } from '../../core/save';
 import type { AppContext, Tab } from '../app';
 import { h, setText } from '../dom';
@@ -133,15 +134,13 @@ export function systemTab(): Tab {
       });
       soundBtn.addEventListener('click', () => {
         ctx.state.settings.sound = !ctx.state.settings.sound;
-        ctx.sfx.unlock();
-        ctx.sfx.tick();
+        void ctx.sfx.unlock().then(() => ctx.sfx.tick());
       });
       for (const b of tapButtons) {
         b.el.addEventListener('click', () => {
           ctx.state.settings.tapSound = b.id;
           ctx.state.settings.sound = true;
-          ctx.sfx.unlock();
-          ctx.sfx.preview(b.id);
+          void ctx.sfx.unlock().then(() => ctx.sfx.preview(b.id));
         });
       }
       volume.value = String(ctx.state.settings.volume);
@@ -149,8 +148,7 @@ export function systemTab(): Tab {
         ctx.state.settings.volume = Number(volume.value);
       });
       volume.addEventListener('change', () => {
-        ctx.sfx.unlock();
-        ctx.sfx.buy();
+        void ctx.sfx.unlock().then(() => ctx.sfx.buy());
       });
 
       return h('div', { class: 'system' }, [
@@ -187,7 +185,7 @@ export function systemTab(): Tab {
         ]),
         h('p', {
           class: 'hint',
-          text: 'Autosave alle 10 s. Zufallsevents und „Kündigen“ folgen nach dem Change-Freeze.',
+          text: `Autosave alle ${CONFIG.autosaveMs / 1_000} s. „Kündigen und neu anfangen“ folgt nach dem Change-Freeze.`,
         }),
       ]);
     },

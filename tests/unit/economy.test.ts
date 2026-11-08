@@ -19,7 +19,17 @@ describe('Kosten', () => {
     expect(bulkCost(100, 5, 10)).toBe(sum);
   });
 
-  it('maxAffordable ist exakt (n leistbar, n+1 nicht)', () => {
+  it('maxAffordable: exakt passender Betrag kauft genau so viele', () => {
+    for (const base of [15, 100, 1_100, 12_000, 130_000, 1_400_000, 20_000_000]) {
+      for (const owned of [0, 7, 33, 120]) {
+        for (const n of [1, 2, 10, 37, 100]) {
+          expect(maxAffordable(base, owned, bulkCost(base, owned, n))).toBe(n);
+        }
+      }
+    }
+  });
+
+    it('maxAffordable ist exakt (n leistbar, n+1 nicht)', () => {
     for (const money of [0, 14, 15, 16, 100, 1234, 1e6, 1e12, 1e30]) {
       for (const owned of [0, 3, 50]) {
         const n = maxAffordable(15, owned, money);

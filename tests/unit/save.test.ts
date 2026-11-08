@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { deserialize, exportSave, importSave, serialize } from '../../src/core/save';
 import { createInitialState } from '../../src/core/state';
 
@@ -49,5 +49,72 @@ describe('Spielstand', () => {
     const s = createInitialState(1);
     s.upgrades = { 'kaffeemaschine-ü': true };
     expect(importSave(exportSave(s), 2)).toEqual(s);
+  });
+});
+
+describe('Laden: Pager-Event und Lautstärke werden normalisiert', () => {
+  const load = (extra: Record<string, unknown>) =>
+    deserialize(JSON.stringify({ version: 1, stats: { playTimeMs: 100_000 }, ...extra }), 0)!;
+
+  it('„Dialog offen“ aus dem Spielstand wird wieder ein normaler Pager mit Nachfrist', () => {
+    const s = load({ events: { nextAt: 1, active: { id: 'dns', expiresAt: 90_000, opened: true } } });
+    expect(s.events.active).toEqual({ id: 'dns', opened: false, expiresAt: 115_000 });
+  });
+
+  it('kaputtes Event bekommt einen gültigen Ablauf oder fliegt raus', () => {
+    expect(load({ events: { active: { id: 'dns' } } }).events.active!.expiresAt).toBe(115_000);
+    expect(load({ events: { active: { id: 'dns', expiresAt: 'bald', opened: 'ja' } } }).events.active!.opened).toBe(false);
+    expect(load({ events: { active: { nope: 1 } } }).events.active).toBeNull();
+    expect(load({ events: { active: 'dns' } }).events.active).toBeNull();
+  });
+
+  it('Lautstärke wird auf 0..1 begrenzt', () => {
+    expect(load({ settings: { volume: 50 } }).settings.volume).toBe(1);
+    expect(load({ settings: { volume: -3 } }).settings.volume).toBe(0);
+    expect(load({ settings: { volume: 0.3 } }).settings.volume).toBe(0.3);
+  });
+});
+
+describe('Saver', () => {
+  const store = new Map<string, string>();
+  let full = false;
+  const mockStorage = {
+    getItem: (k: string) => store.get(k) ?? null,
+    setItem: (k: string, v: string) => {
+      if (full) throw new Error('QuotaExceededError');
+      store.set(k, v);
+    },
+    removeItem: (k: string) => void store.delete(k),
+  };
+
+  it('fehlgeschlagener Import lässt das Autosave weiterlaufen', async () => {
+    const { Saver } = await import('../../src/core/save');
+    vi.stubGlobal('localStorage', mockStorage);
+    const s = createInitialState(0);
+    const saver = new Saver(() => s);
+    full = true;
+    expect(saver.replaceWith(createInitialState(1))).toBe(false);
+    full = false;
+    expect(saver.saveNow()).toBe(true);
+    vi.unstubAllGlobals();
+  });
+
+  it('dauerhafter Speicherfehler wird nur einmal gemeldet', async () => {
+    const { Saver } = await import('../../src/core/save');
+    vi.stubGlobal('localStorage', mockStorage);
+    const errors: unknown[] = [];
+    const saver = new Saver(() => createInitialState(0), (e) => errors.push(e));
+    full = true;
+    saver.saveNow();
+    saver.saveNow();
+    saver.saveNow();
+    expect(errors).toHaveLength(1);
+    full = false;
+    saver.saveNow();
+    full = true;
+    saver.saveNow();
+    expect(errors).toHaveLength(2); // nach Erholung wieder melden
+    full = false;
+    vi.unstubAllGlobals();
   });
 });

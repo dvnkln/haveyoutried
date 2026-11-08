@@ -53,7 +53,7 @@ export function startFlavor(ctx: AppContext, app: App): void {
   });
 
   bus.on('eventResolved', (res) => {
-    if (res.option < 0) log.write('warn', 'pager[911]: no ack within 45s. escalated to: nobody.');
+    if (res.option < 0) log.write('warn', `pager[911]: no ack within ${CONFIG.eventExpireMs / 1_000}s. escalated to: nobody.`);
     log.write(res.mood === 'bad' ? 'warn' : 'info', `pager[911]: ${res.outcome.text}`);
     if (res.outcome.log) log.template(res.outcome.log);
     if (res.mood === 'good') sfx.good();
