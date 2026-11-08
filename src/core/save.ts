@@ -1,5 +1,5 @@
 import { CONFIG } from '../config';
-import { BUY_AMOUNTS, createInitialState, SAVE_VERSION, type BuyAmount, type GameState } from './state';
+import { BUY_AMOUNTS, TAP_SOUND_IDS, createInitialState, SAVE_VERSION, type BuyAmount, type GameState } from './state';
 
 export const SAVE_KEY = 'hyt.save';
 
@@ -53,6 +53,8 @@ export function deserialize(json: string, now: number): GameState | null {
   // Union-Typ, den der generische Merge nicht abdeckt
   const amount = isPlain(data.settings) ? data.settings.buyAmount : undefined;
   state.settings.buyAmount = BUY_AMOUNTS.includes(amount as BuyAmount) ? (amount as BuyAmount) : 1;
+  // alte Klang-IDs (mx, pop, …) auf den Standard-Switch abbilden
+  if (!(TAP_SOUND_IDS as readonly string[]).includes(state.settings.tapSound)) state.settings.tapSound = 'blue';
   return state;
 }
 

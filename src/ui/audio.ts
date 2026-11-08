@@ -1,27 +1,121 @@
-import { CONFIG } from '../config';
-
 /**
  * Synthetisierte Soundeffekte (Web Audio, keine Assets).
- * Leitidee: kurz, knackig, leicht variiert – und beim schnellen Tippen
- * steigt eine Pentatonik-Melodie auf und ab, damit Serien „klingen“.
+ * Der Klick ist ein Cherry-MX-Switch nach Wahl: nur gefiltertes Rauschen,
+ * jeder Anschlag leicht anders, Drücken und Loslassen getrennt.
  */
 
-type AudioCtor = typeof AudioContext;
+import { TAP_SOUND_IDS } from '../core/state';
 
-// Pentatonik über gut zwei Oktaven (G4 … C7)
-const PENTA = [392, 440, 523.25, 587.33, 659.25, 783.99, 880, 1046.5, 1174.66, 1318.51, 1567.98, 1760, 2093];
+type AudioCtor = typeof AudioContext;
 
 export interface SoundSettings {
   sound: boolean;
   volume: number;
+  tapSound: string;
 }
+
+/** Ein Geräuschanteil: gefiltertes Rauschen mit zufälliger Frequenz und Dauer. */
+interface Band {
+  freq: [number, number];
+  gain: number;
+  q: number;
+  dur: [number, number];
+  type?: BiquadFilterType;
+}
+
+interface SwitchProfile {
+  label: string;
+  hint: string;
+  /** Klick des Click-Jackets beim Drücken (nur klickende Switches) */
+  click?: Band;
+  /** Kratzen am taktilen Druckpunkt */
+  bump?: Band;
+  /** Taste setzt unten auf */
+  bottom: Band;
+  /** Zeit zwischen Druckbeginn und Aufsetzen in s */
+  travel: [number, number];
+  /** Klick beim Hochfahren (klickende Switches) */
+  releaseClick?: Band;
+  /** Stößel schlägt beim Loslassen oben an */
+  top: Band;
+  /** harter Kunststoff-Transient für Definition auf Handy-Lautsprechern */
+  tick: number;
+}
+
+const b = (freq: [number, number], gain: number, q: number, dur: [number, number], type?: BiquadFilterType): Band => ({
+  freq,
+  gain,
+  q,
+  dur,
+  type,
+});
+
+/** Profile nach Klangcharakter der echten Switches. Frequenzen bewusst über ~500 Hz (Handy-Lautsprecher). */
+export const SWITCHES = {
+  blue: {
+    label: 'MX Blue',
+    hint: 'klickend',
+    click: b([4300, 5800], 0.5, 3, [0.007, 0.012]),
+    bottom: b([1150, 1750], 0.32, 2, [0.014, 0.024]),
+    travel: [0.006, 0.014],
+    releaseClick: b([3600, 4900], 0.24, 2.6, [0.006, 0.01]),
+    top: b([1300, 1900], 0.08, 2, [0.01, 0.014]),
+    tick: 0.2,
+  },
+  green: {
+    label: 'MX Green',
+    hint: 'klickend, schwer',
+    click: b([3500, 4700], 0.62, 3, [0.009, 0.014]),
+    bottom: b([950, 1450], 0.42, 2, [0.016, 0.026]),
+    travel: [0.009, 0.017],
+    releaseClick: b([3200, 4300], 0.36, 2.6, [0.008, 0.012]),
+    top: b([1200, 1700], 0.14, 2, [0.01, 0.014]),
+    tick: 0.22,
+  },
+  brown: {
+    label: 'MX Brown',
+    hint: 'taktil, leise',
+    bump: b([5500, 7500], 0.07, 0.8, [0.015, 0.025], 'highpass'),
+    bottom: b([1100, 1600], 0.42, 2, [0.016, 0.026]),
+    travel: [0.01, 0.018],
+    top: b([1500, 2300], 0.16, 2.2, [0.008, 0.012]),
+    tick: 0.1,
+  },
+  red: {
+    label: 'MX Red',
+    hint: 'linear, leicht',
+    bottom: b([1200, 1800], 0.4, 1.8, [0.014, 0.022]),
+    travel: [0.004, 0.009],
+    top: b([1600, 2400], 0.15, 2, [0.006, 0.01]),
+    tick: 0.12,
+  },
+  black: {
+    label: 'MX Black',
+    hint: 'linear, schwer',
+    bottom: b([850, 1250], 0.52, 2, [0.018, 0.03]),
+    travel: [0.008, 0.014],
+    top: b([1700, 2600], 0.26, 2.4, [0.006, 0.01]),
+    tick: 0.14,
+  },
+  silent: {
+    label: 'MX Silent Red',
+    hint: 'gedämpft',
+    bottom: b([600, 900], 0.5, 0.7, [0.02, 0.032], 'lowpass'),
+    travel: [0.004, 0.009],
+    top: b([800, 1100], 0.06, 0.7, [0.01, 0.016], 'lowpass'),
+    tick: 0,
+  },
+} satisfies Record<(typeof TAP_SOUND_IDS)[number], SwitchProfile>;
+
+export type SwitchId = (typeof TAP_SOUND_IDS)[number];
+const DEFAULT_SWITCH: SwitchId = 'blue';
+
+const profile = (id: string): SwitchProfile => SWITCHES[id as SwitchId] ?? SWITCHES[DEFAULT_SWITCH];
 
 export class Sfx {
   private ctx: AudioContext | null = null;
   private master: GainNode | null = null;
   private noise: AudioBuffer | null = null;
-  private combo = 0;
-  private lastTap = 0;
 
   constructor(private settings: () => SoundSettings) {}
 
@@ -115,29 +209,53 @@ export class Sfx {
 
   // --- Effekte ---
 
-  /** Ticket schließen: Tastenklacken + Bass-Plopp + Melodieton der Serie. */
-  tap(): void {
+  /** Zufall im Bereich [a, b] */
+  private rnd(a: number, b: number): number {
+    return a + Math.random() * (b - a);
+  }
+
+  private band(t: number, x: Band, level: number, freqScale = 1): void {
+    this.hiss(t, x.gain * level, this.rnd(...x.dur), x.type ?? 'bandpass', this.rnd(...x.freq) * freqScale, x.q);
+  }
+
+  /** Taste drücken („Ticket schließen“). */
+  tap(id = this.settings().tapSound): void {
     const r = this.ready();
     if (!r) return;
-    const nowMs = performance.now();
-    this.combo = nowMs - this.lastTap < CONFIG.comboWindowMs ? this.combo + 1 : 0;
-    this.lastTap = nowMs;
+    const p = profile(id);
+    const t = r.t + this.rnd(0, 0.004);
+    const level = this.rnd(0.8, 1.1);
+    // ab und zu eine „größere“ Taste: tiefer, mit Stabilisator-Klappern
+    const big = Math.random() < 0.1;
 
-    const v = 1 + (Math.random() - 0.5) * 0.08;
-    this.hiss(r.t, 0.35, 0.028, 'bandpass', 3200 * v, 1.2);
-    this.tone('sine', 170 * v, 55, r.t, 0.55, 0.09);
-
-    // Ping-Pong durch die Pentatonik
-    const span = PENTA.length - 1;
-    const pos = this.combo % (span * 2);
-    const idx = pos <= span ? pos : span * 2 - pos;
-    const note = PENTA[idx] ?? PENTA[0]!;
-    this.tone('triangle', note, note, r.t, 0.07 + Math.min(this.combo, 20) * 0.002, 0.14);
-    // jede 10. Serie: kleiner Glitzer
-    if (this.combo > 0 && this.combo % 10 === 0) {
-      this.tone('sine', note * 2, note * 2, r.t + 0.05, 0.06, 0.25);
-      this.hiss(r.t + 0.05, 0.05, 0.12, 'highpass', 7000);
+    if (p.click) {
+      this.band(t, p.click, level);
+      // zweite, leicht versetzte Klickkomponente = mehr Mechanik, weniger „sauber“
+      this.hiss(t + this.rnd(0.001, 0.003), p.click.gain * 0.45 * level, 0.006, 'highpass', this.rnd(6500, 8500), 0.7);
     }
+    if (p.bump) this.band(t, p.bump, level);
+
+    const tb = t + this.rnd(...p.travel);
+    this.band(tb, p.bottom, level * (big ? 1.4 : 1), big ? 0.6 : 1);
+    if (p.tick > 0) this.hiss(tb, p.tick * level, 0.004, 'highpass', this.rnd(4500, 6000), 0.7);
+    if (big) this.hiss(tb + this.rnd(0.008, 0.014), 0.12, 0.01, 'bandpass', this.rnd(2500, 3200), 3);
+  }
+
+  /** Taste loslassen. */
+  release(id = this.settings().tapSound): void {
+    const r = this.ready();
+    if (!r) return;
+    const p = profile(id);
+    const t = r.t + this.rnd(0, 0.006);
+    const level = this.rnd(0.7, 1);
+    if (p.releaseClick) this.band(t, p.releaseClick, level);
+    this.band(t + this.rnd(0.002, 0.006), p.top, level);
+  }
+
+  /** Vorschau: einmal drücken und loslassen. */
+  preview(id: string): void {
+    this.tap(id);
+    setTimeout(() => this.release(id), 95);
   }
 
   /** Generator gekauft: zweitöniges „Ka-ching“. */

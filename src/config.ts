@@ -111,8 +111,4 @@ export const CONFIG = {
   logMaxLines: 100,
   /** Erste Ticketnummer */
   ticketNumberOffset: 4_711,
-
-  // Sound
-  /** Klicks innerhalb dieses Abstands zählen als Serie (Tonhöhe steigt) */
-  comboWindowMs: 450,
 } as const;

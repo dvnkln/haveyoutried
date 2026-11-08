@@ -2,6 +2,9 @@ import { GENERATORS, type GeneratorId } from '../config';
 
 export const SAVE_VERSION = 1;
 
+/** Cherry-Switch-Klänge; Profile in ui/audio.ts */
+export const TAP_SOUND_IDS = ['blue', 'green', 'brown', 'red', 'black', 'silent'] as const;
+
 export type BuyAmount = 1 | 10 | 100 | 'max';
 export const BUY_AMOUNTS: readonly BuyAmount[] = [1, 10, 100, 'max'];
 
@@ -33,7 +36,7 @@ export interface GameState {
   // ---
 
   stats: { startedAt: number; playTimeMs: number; offlineTickets: number };
-  settings: { haptics: boolean; sound: boolean; volume: number; buyAmount: BuyAmount };
+  settings: { haptics: boolean; sound: boolean; volume: number; tapSound: string; buyAmount: BuyAmount };
   /** Wall-Clock des letzten Ticks, Basis für Offline-Progress */
   lastTick: number;
 }
@@ -54,7 +57,7 @@ export function createInitialState(now: number): GameState {
     prestige: { experience: 0, jobs: 0 },
     events: { nextAt: 0, active: null },
     stats: { startedAt: now, playTimeMs: 0, offlineTickets: 0 },
-    settings: { haptics: true, sound: true, volume: 0.7, buyAmount: 1 },
+    settings: { haptics: true, sound: true, volume: 0.7, tapSound: 'blue', buyAmount: 1 },
     lastTick: now,
   };
 }

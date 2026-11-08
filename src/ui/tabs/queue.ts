@@ -116,12 +116,15 @@ export function queueTab(): Tab {
         const r = desk.getBoundingClientRect();
         close(e.clientX - r.left, e.clientY - r.top);
       });
+      // Loslassen: zweiter Teil des Tastenklicks
+      button.addEventListener('pointerup', () => ctx.sfx.release());
       // Tastatur (Enter/Space) erzeugt click mit detail 0
       button.addEventListener('click', (e) => {
         if (e.detail !== 0) return;
         const r = button.getBoundingClientRect();
         const d = desk.getBoundingClientRect();
         close(r.left - d.left + r.width / 2, r.top - d.top + r.height / 2);
+        setTimeout(() => ctx.sfx.release(), 80);
       });
       button.addEventListener('contextmenu', (e) => e.preventDefault());
 

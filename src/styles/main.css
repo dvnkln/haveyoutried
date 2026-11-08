@@ -695,3 +695,43 @@ button {
   min-height: var(--touch);
   accent-color: var(--green);
 }
+
+.setting-col {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.seg-wrap {
+  grid-template-columns: repeat(2, 1fr);
+  margin-bottom: 0;
+}
+.seg-wrap .seg-btn {
+  border-bottom: 1px solid var(--line);
+}
+.seg-wrap .seg-btn:nth-child(2n) {
+  border-right: 0;
+}
+.seg-wrap .seg-btn:nth-last-child(-n + 2) {
+  border-bottom: 0;
+}
+.switch-btn {
+  min-height: 52px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+.switch-hint {
+  font-size: 11px;
+  color: var(--fg-dim);
+}
+.vib-result {
+  min-height: 0;
+  margin: 6px 0 0;
+  word-break: break-word;
+}
+.setting-col + .setting {
+  margin-top: 16px;
+}

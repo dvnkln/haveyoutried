@@ -32,6 +32,13 @@ describe('Spielstand', () => {
     expect(s.settings.buyAmount).toBe(1);
   });
 
+  it('alte Klang-IDs werden zu MX Blue, gültige Switches bleiben', () => {
+    const load = (tapSound: string) => deserialize(JSON.stringify({ version: 1, settings: { tapSound } }), 0)!.settings.tapSound;
+    expect(load('mx')).toBe('blue');
+    expect(load('pop')).toBe('blue');
+    expect(load('brown')).toBe('brown');
+  });
+
   it('ungültiges JSON → null', () => {
     expect(deserialize('{nope', 0)).toBeNull();
     expect(deserialize('[]', 0)).toBeNull();

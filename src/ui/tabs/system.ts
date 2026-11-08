@@ -2,6 +2,8 @@ import { exportSave, importSave } from '../../core/save';
 import type { AppContext, Tab } from '../app';
 import { h, setText } from '../dom';
 import { formatDuration, formatNumber } from '../format';
+import { SWITCHES } from '../audio';
+import { TAP_SOUND_IDS } from '../../core/state';
 import { hapticSupport } from '../haptics';
 import { showModal } from '../modal';
 
@@ -22,6 +24,15 @@ export function systemTab(): Tab {
   const hapticBtn = h('button', { class: 'btn toggle', type: 'button', role: 'switch' });
   const soundBtn = h('button', { class: 'btn toggle', type: 'button', role: 'switch' });
   const volume = h('input', { class: 'volume', type: 'range', min: '0', max: '1', step: '0.1', 'aria-label': 'Lautstärke' });
+  const tapButtons = TAP_SOUND_IDS.map((id) => ({
+    id,
+    el: h('button', { class: 'seg-btn switch-btn', type: 'button', role: 'radio', 'aria-label': `Cherry ${SWITCHES[id].label}` }, [
+      h('span', { class: 'switch-name', text: SWITCHES[id].label }),
+      h('span', { class: 'switch-hint', text: SWITCHES[id].hint }),
+    ]),
+  }));
+  const vibTest = h('button', { class: 'btn', type: 'button', text: 'Testen' });
+  const vibResult = h('p', { class: 'hint vib-result' });
   const HAPTIC_HINT = {
     vibrate: 'Vibriert beim Tippen und Kaufen. Merkst du nichts? System-Vibration oder Energiesparmodus prüfen.',
     ios: 'iPhone: Safari erlaubt nur ein leichtes Klicken (ab iOS 18). Mehr gibt Apple nicht her.',
@@ -126,6 +137,33 @@ export function systemTab(): Tab {
         ctx.sfx.unlock();
         ctx.sfx.tick();
       });
+      for (const b of tapButtons) {
+        b.el.addEventListener('click', () => {
+          ctx.state.settings.tapSound = b.id;
+          ctx.state.settings.sound = true;
+          ctx.sfx.unlock();
+          ctx.sfx.preview(b.id);
+        });
+      }
+      vibTest.addEventListener('click', () => {
+        let result: boolean | 'fehlt' = 'fehlt';
+        try {
+          if (typeof navigator.vibrate === 'function') result = navigator.vibrate(200);
+        } catch {
+          result = false;
+        }
+        const active = (navigator as Navigator & { userActivation?: { hasBeenActive: boolean } }).userActivation?.hasBeenActive;
+        const verdict =
+          result === true
+            ? 'Chrome hat den Befehl angenommen. Spürst du nichts, schaltet Android die Vibration ab: Einstellungen → Ton & Vibration → Vibration & Haptik (Berührungs-Feedback), Bitte-nicht-stören, Energiesparmodus.'
+            : result === false
+              ? 'Chrome hat die Vibration abgelehnt.'
+              : 'Dieser Browser hat keine Vibrations-Schnittstelle.';
+        setText(
+          vibResult,
+          `vibrate(200) → ${String(result)} · HTTPS: ${window.isSecureContext ? 'ja' : 'nein'} · Geste: ${String(active ?? '?')}. ${verdict}`,
+        );
+      });
       volume.value = String(ctx.state.settings.volume);
       volume.addEventListener('input', () => {
         ctx.state.settings.volume = Number(volume.value);
@@ -148,10 +186,16 @@ export function systemTab(): Tab {
           soundBtn,
         ]),
         h('div', { class: 'setting' }, [h('div', { text: 'Lautstärke' }), volume]),
+        h('div', { class: 'setting-col' }, [
+          h('div', { text: 'Tastatur-Switch (Klang beim Tippen)' }),
+          h('div', { class: 'seg seg-wrap', role: 'radiogroup', 'aria-label': 'Klick-Sound' }, tapButtons.map((b) => b.el)),
+        ]),
         h('div', { class: 'setting' }, [
           h('div', {}, [h('div', { text: 'Vibration' }), h('div', { class: 'hint', text: HAPTIC_HINT[hapticSupport()] })]),
           hapticBtn,
         ]),
+        h('div', { class: 'setting' }, [h('div', { text: 'Vibration testen (200 ms)' }), vibTest]),
+        vibResult,
 
         h('div', { class: 'section-title', text: '# Spielstand' }),
         h('div', { class: 'actions' }, [
@@ -185,6 +229,11 @@ export function systemTab(): Tab {
         btn.classList.toggle('active', on);
       }
       volume.disabled = !s.settings.sound;
+      for (const b of tapButtons) {
+        const on = s.settings.tapSound === b.id;
+        b.el.classList.toggle('active', on);
+        b.el.setAttribute('aria-checked', String(on));
+      }
     },
   };
 }
