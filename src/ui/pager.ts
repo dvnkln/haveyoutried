@@ -26,7 +26,7 @@ export function describeEffect(r: EffectResult): string {
  * Pager-Leiste oben über dem Inhalt. Erscheint bei einem Event, Tippen öffnet
  * den Entscheidungsdialog. Liegt als Overlay über den Panels, damit nichts springt.
  */
-export function createPager(ctx: AppContext): { el: HTMLElement; render(): void } {
+export function createPager(ctx: AppContext): { el: HTMLElement; device: HTMLElement; render(): void } {
   const title = h('span', { class: 'pager-title' });
   const countdown = h('span', { class: 'pager-count' });
   // Füllung läuft leer = verbleibende Zeit
@@ -78,19 +78,42 @@ export function createPager(ctx: AppContext): { el: HTMLElement; render(): void 
   };
   el.addEventListener('click', open);
 
+  // Der Pager als Gerät auf dem Schreibtisch: Ruhe = Uhrzeit, Alarm = Titel + Countdown, Antippen öffnet
+  const lcdTitle = h('span', { class: 'pd-title' });
+  const lcdCount = h('span', { class: 'pd-count' });
+  const device = h('button', { class: 'pager-device', type: 'button', 'aria-label': 'Pager' }, [
+    h('span', { class: 'pd-lcd' }, [lcdTitle, lcdCount]),
+    h('span', { class: 'pd-led', 'aria-hidden': 'true' }),
+  ]);
+  device.addEventListener('click', () => {
+    const a = ctx.state.events.active;
+    if (a && !a.opened) open();
+  });
+
   return {
     el,
+    device,
     render() {
       const a = ctx.state.events.active;
       const show = !!a && !a.opened;
       if (el.hidden === show) el.hidden = !show;
-      if (!a || !show) return;
+      setFlag(device, 'alert', show);
+      device.setAttribute('aria-label', show ? `Pager: ${eventDef(a!.id)?.title ?? ''}` : 'Pager');
+      if (!a || !show) {
+        const d = new Date();
+        setText(lcdTitle, `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`);
+        setText(lcdCount, '');
+        return;
+      }
+      setText(lcdTitle, eventDef(a.id)?.title ?? a.id);
       setText(title, eventDef(a.id)?.title ?? a.id);
       const leftMs = Math.max(0, a.expiresAt - ctx.state.stats.playTimeMs);
       const left = Math.ceil(leftMs / 1_000);
       setText(countdown, `${left}s`);
+      setText(lcdCount, `${left}s`);
       fill.style.transform = `scaleX(${Math.min(1, leftMs / CONFIG.eventExpireMs)})`;
       setFlag(el, 'urgent', left <= 10);
+      setFlag(device, 'urgent', left <= 10);
     },
   };
 }

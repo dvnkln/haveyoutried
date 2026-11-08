@@ -28,14 +28,24 @@ const PLANT = `<svg viewBox="0 0 44 56">
   <rect x="9" y="30" width="26" height="6" rx="2" fill="#f0a77e" ${INK}/>
 </svg>`;
 
-const MUG = `<svg viewBox="0 0 44 48">
-  <g class="steam" fill="none" stroke="var(--ink-soft)" stroke-width="2" stroke-linecap="round">
-    <path d="M14 14 c-3 -4 3 -6 0 -11"/><path d="M21 14 c-3 -4 3 -6 0 -11"/><path d="M28 14 c-3 -4 3 -6 0 -11"/>
+/** Klassische IT-Tassensprüche (zweizeilig, passend für den Becher) */
+const MUG_SLOGANS: [string, string][] = [
+  ['ES WAR', 'DNS'],
+  ['SUDO', 'KAFFEE'],
+  ['404', 'KAFFEE'],
+  ['WORKS ON', 'MY MUG'],
+  ['KEIN', 'BACKUP'],
+  ['LAYER 8', 'INSIDE'],
+];
+const mugSvg = ([a, b]: [string, string]) => `<svg viewBox="0 0 56 60">
+  <g class="steam" fill="none" stroke="var(--ink-soft)" stroke-width="2.2" stroke-linecap="round">
+    <path d="M17 16 c-3 -4 3 -6 0 -11"/><path d="M26 16 c-3 -4 3 -6 0 -11"/><path d="M35 16 c-3 -4 3 -6 0 -11"/>
   </g>
-  <path d="M32 24 h4 a6 6 0 0 1 0 12 h-4" fill="none" stroke="var(--ink)" stroke-width="3"/>
-  <path d="M8 18 h26 v22 a6 6 0 0 1 -6 6 h-14 a6 6 0 0 1 -6 -6Z" fill="#fffaf0" ${INK}/>
-  <path d="M15 28 c0 -3 4 -3 4 0 c0 -3 4 -3 4 0 c0 3 -4 5 -4 6 c0 -1 -4 -3 -4 -6Z" fill="#ff8fa3"/>
-  <ellipse cx="21" cy="18" rx="13" ry="2.5" fill="#8a5a3c" ${INK}/>
+  <path d="M43 28 h4 a8 8 0 0 1 0 16 h-4" fill="none" stroke="var(--ink)" stroke-width="3.5"/>
+  <path d="M7 20 h37 v30 a8 8 0 0 1 -8 8 h-21 a8 8 0 0 1 -8 -8Z" fill="#fffaf0" ${INK}/>
+  <ellipse cx="25.5" cy="20" rx="18.5" ry="3" fill="#8a5a3c" ${INK}/>
+  <text x="25.5" y="35" text-anchor="middle" font-family="Fredoka, sans-serif" font-size="7.5" font-weight="700" fill="var(--ink)">${a}</text>
+  <text x="25.5" y="45" text-anchor="middle" font-family="Fredoka, sans-serif" font-size="8.5" font-weight="700" fill="#d64545">${b}</text>
 </svg>`;
 
 const DUCK = `<svg viewBox="0 0 48 42">
@@ -110,6 +120,8 @@ const MOUSE = `<svg viewBox="0 0 40 46">
     <path d="M6 40 h10" stroke="#fffaf0" stroke-width="2" stroke-linecap="round" opacity=".7"/>
   </g>
   <path class="mouse-body" d="M12 26 a8 8 0 0 1 16 0 v8 a8 8 0 0 1 -16 0Z" stroke="var(--ink)" stroke-width="2.2"/>
+  <path class="mbtn mbtn-l" d="M12.6 27 v-1 a7.4 7.4 0 0 1 7.4 -7.4 v8.4Z"/>
+  <path class="mbtn mbtn-r" d="M20 18.6 a7.4 7.4 0 0 1 7.4 7.4 v1 h-7.4Z"/>
   <path d="M20 18 v8 M12 27 h16" stroke="var(--ink)" stroke-width="1.6"/>
   <rect class="wheel" x="18.6" y="20" width="2.8" height="4.5" rx="1.4" fill="var(--ink)"/>
 </svg>`;
@@ -162,7 +174,7 @@ export function createProps(ctx: AppContext) {
   cables.append(cableTag);
 
   // --- Upgrades zum Anfassen ---
-  const mug = svg(MUG, 'prop mug');
+  const mug = svg(mugSvg(pick(MUG_SLOGANS)), 'prop mug');
   const duck = svg(DUCK, 'prop duck', 'button');
   duck.setAttribute('type', 'button');
   duck.setAttribute('aria-label', 'Gummiente');
@@ -176,10 +188,22 @@ export function createProps(ctx: AppContext) {
   const mouse = svg(MOUSE, 'prop mouse', 'button');
   mouse.setAttribute('type', 'button');
   mouse.setAttribute('aria-label', 'Maus');
-  mouse.addEventListener('click', () => {
-    ctx.sfx.tick();
-    juice(mouse, [{ transform: 'translateY(0)' }, { transform: 'translateY(2px) scale(.96)' }, { transform: 'translateY(0)' }], 160, true);
-    ctx.log.write('info', pick(MOUSE_LINES));
+  // Antippen zählt als Ticket (das macht die Tastatur-Tippfläche); hier nur Klick-Optik und ab und zu ein Spruch
+  let lastMouseLine = -Infinity;
+  // Antippen drückt die Maustaste auf der getroffenen Seite
+  let clickTimer = 0;
+  mouse.addEventListener('pointerdown', (e) => {
+    const r = mouse.getBoundingClientRect();
+    const side = e.clientX < r.left + r.width / 2 ? 'click-l' : 'click-r';
+    mouse.classList.remove('click-l', 'click-r');
+    mouse.classList.add(side);
+    clearTimeout(clickTimer);
+    clickTimer = window.setTimeout(() => mouse.classList.remove(side), 110);
+    const now = performance.now();
+    if (now - lastMouseLine > 30_000) {
+      lastMouseLine = now;
+      ctx.log.write('info', pick(MOUSE_LINES));
+    }
   });
   // Mauspad und ergonomische Maus: Upgrades, die man am Tisch sieht
   bus.on('upgrade', ({ id }) => {

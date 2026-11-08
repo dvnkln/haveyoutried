@@ -148,8 +148,9 @@ test('Zufallsevent: Pager → Entscheidung → Ergebnis', async ({ page, context
   }, JSON.stringify(save));
 
   await page.goto('/');
-  const pager = page.locator('.pager');
-  await expect(pager).toBeVisible({ timeout: 5_000 });
+  // Pager liegt als Gerät auf dem Tisch (Banner nur bei offenem App-Fenster)
+  const pager = page.locator('.pager-device');
+  await expect(pager).toHaveClass(/alert/, { timeout: 5_000 });
   await expect(pager).toContainText(/\d+s/);
   await shot(page, '9-pager');
   await pager.tap();
@@ -166,7 +167,7 @@ test('Zufallsevent: Pager → Entscheidung → Ergebnis', async ({ page, context
   await expect(result.locator('.effect-line')).not.toBeEmpty();
   await shot(page, '11-result');
   await result.locator('.btn').tap();
-  await expect(pager).toBeHidden();
+  await expect(pager).not.toHaveClass(/alert/);
   await expect(page.locator('.log')).toContainText('pager[911]: ALERT');
   expect(errors).toEqual([]);
 });
@@ -338,7 +339,7 @@ test('Karriere: kündigen, neue Firma, Achievement-Toast', async ({ page, contex
   expect(errors).toEqual([]);
 });
 
-test('Tastatur: jede Taste zählt, auch Sondertasten und physische Tasten; Ente zählt nicht', async ({ page, context }) => {
+test('Tastatur: jede Taste zählt, auch Sondertasten, physische Tasten und die Maus; Ente zählt nicht', async ({ page, context }) => {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
   // Rubber Duck gekauft: steht dann auf dem Tisch
@@ -377,5 +378,9 @@ test('Tastatur: jede Taste zählt, auch Sondertasten und physische Tasten; Ente 
   await page.locator('.duck').tap();
   await expect(page.locator('.counter-value')).toHaveText('12');
   await expect(page.locator('.log .line').last()).toContainText('duckd');
+
+  // Maus antippen zählt dagegen wie ein Tastendruck
+  await page.locator('.mouse').tap();
+  await expect(page.locator('.counter-value')).toHaveText('13');
   expect(errors).toEqual([]);
 });

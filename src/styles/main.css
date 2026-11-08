@@ -3499,11 +3499,12 @@ button {
   border: 0;
 }
 
-/* Maus auf dem Mauspad, rechts auf dem Tisch */
+/* Maus auf dem Mauspad, rechts neben der Tastatur */
 .mouse {
   position: relative;
   pointer-events: auto;
   flex: 0 0 auto;
+  align-self: center;
   width: 38px;
   height: 44px;
   padding: 0;
@@ -3523,4 +3524,940 @@ button {
 }
 .mouse.ergo .mouse-body {
   fill: var(--mint);
+}
+
+/* ---------- Arbeitsfenster: weitere Programme ---------- */
+.work-label {
+  margin-right: 5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+.work-label:empty {
+  display: none;
+}
+.work[data-kind='chat'] .work-bar {
+  background: #ffe1e1;
+}
+.work[data-kind='call'] .work-bar {
+  background: #e7dcf0;
+}
+.work[data-kind='rdp'] .work-bar {
+  background: #cfe0ff;
+}
+.work[data-kind='web'] .work-bar {
+  background: #d9f5e6;
+}
+
+/* Videocall: drei Kacheln */
+.call-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+}
+.call-tile {
+  position: relative;
+  height: 50px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border: 1.5px solid var(--ink);
+  border-radius: 8px;
+  background: #3a3f4b;
+  color: #fffaf0;
+  overflow: hidden;
+}
+.call-avatar {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid var(--ink);
+  border-radius: 50%;
+  background: var(--peach);
+  color: var(--ink);
+  font-size: 9.5px;
+  font-weight: 700;
+}
+.call-me .call-avatar {
+  background: #cfc7b8;
+}
+.call-room .call-avatar {
+  background: var(--sky);
+}
+.call-name {
+  max-width: 100%;
+  padding: 0 3px;
+  font-size: 9px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- Browser-Rahmen (Websuche, Webinterface) ---------- */
+.work-extra:empty {
+  display: none;
+}
+.work[data-kind='search'],
+.work[data-kind='web'] {
+  background: #fff;
+}
+.work[data-kind='search'] .work-head,
+.work[data-kind='web'] .work-head {
+  padding: 0;
+  border-bottom: 0;
+}
+.browser {
+  background: #ece6f5;
+  border-bottom: 1.5px solid var(--ink);
+}
+.br-tabs {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  padding: 3px 6px 0;
+}
+.br-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 70%;
+  padding: 2px 8px;
+  border: 1.5px solid var(--ink);
+  border-bottom: 0;
+  border-radius: 7px 7px 0 0;
+  background: #fff;
+  font-size: 10px;
+  font-weight: 600;
+}
+.br-tab-title {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.br-x,
+.br-new {
+  color: var(--ink-soft);
+  font-size: 11px;
+}
+.br-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 6px 4px;
+  background: #fff;
+  border-top: 1.5px solid var(--ink);
+  margin-top: -1.5px;
+}
+.br-nav {
+  flex: 0 0 auto;
+  font-size: 11px;
+  color: var(--ink-soft);
+  letter-spacing: 0.1em;
+}
+.br-url {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  gap: 5px;
+  padding: 1px 8px;
+  border: 1.5px solid var(--ink);
+  border-radius: 10px;
+  background: #f4efe6;
+  font-size: 10.5px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.br-lock {
+  flex: 0 0 auto;
+  color: #2f9e6a;
+}
+.br-url.insecure .br-lock {
+  color: #d64545;
+  font-weight: 700;
+}
+.br-addr {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Websuche: Logo, runde Suchleiste, Treffer */
+.search-logo {
+  padding: 5px 0 1px;
+  text-align: center;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.sl0 {
+  color: #3a6fd8;
+}
+.sl1 {
+  color: #e04848;
+}
+.sl2 {
+  color: #e0a100;
+}
+.sl3 {
+  color: #2f9e6a;
+}
+.work[data-kind='search'] .work-body {
+  flex: 0 0 auto;
+  margin: 3px 12px;
+  padding: 3px 12px;
+  border: 2px solid var(--ink);
+  border-radius: 16px;
+  box-shadow: 0 2px 0 rgba(61, 44, 46, 0.25);
+  white-space: nowrap;
+  overflow: hidden;
+}
+.work[data-kind='search'] .work-body::before {
+  content: '⌕ ';
+  color: var(--ink-soft);
+}
+.search-hits {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  padding: 3px 12px;
+}
+.search-hit {
+  margin-top: 3px;
+  line-height: 1.25;
+}
+.hit-url {
+  display: block;
+  font-size: 9px;
+  color: #2f9e6a;
+}
+.hit-text {
+  display: block;
+  font-size: 11px;
+  color: #3a6fd8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Webinterface: Geräte-Adminseite im Browser */
+.web-page {
+  padding: 4px 10px 2px;
+}
+.web-brand {
+  padding: 2px 8px;
+  border: 1.5px solid var(--ink);
+  border-radius: 6px;
+  background: #3a3f4b;
+  color: #fffaf0;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.web-login {
+  margin-top: 3px;
+  font-size: 10px;
+  color: var(--ink-soft);
+}
+.work[data-kind='web'] .work-body {
+  flex: 0 0 auto;
+  margin: 2px 10px;
+  padding: 3px 8px;
+  border: 1.5px solid var(--ink);
+  border-radius: 4px;
+  background: #fffdf5;
+  font-family: var(--font);
+  font-size: 11.5px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.web-actions {
+  display: flex;
+  gap: 6px;
+  padding: 3px 10px;
+}
+.web-btn {
+  padding: 1px 10px;
+  border: 1.5px solid var(--ink);
+  border-radius: 4px;
+  background: #e9e3d8;
+  font-size: 10.5px;
+  font-weight: 600;
+}
+.web-btn.save {
+  background: var(--mint);
+}
+.web-foot {
+  padding: 0 10px 3px;
+  font-size: 8.5px;
+  color: var(--ink-soft);
+}
+
+/* ---------- Fernwartung: Remotedesktop ---------- */
+.work[data-kind='rdp'] {
+  background: linear-gradient(160deg, #4f86e8, #2f5fb8);
+}
+.work[data-kind='rdp'] .work-head {
+  padding: 0;
+  border-bottom: 0;
+}
+.rdp-conn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 78%;
+  margin: 0 auto;
+  padding: 1px 8px 2px;
+  border: 1.5px solid var(--ink);
+  border-top: 0;
+  border-radius: 0 0 8px 8px;
+  background: #dfe8fb;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.rdp-pin {
+  font-size: 9px;
+}
+.rdp-win {
+  margin-left: auto;
+  letter-spacing: 0.15em;
+}
+.rdp-desk {
+  position: relative;
+  display: flex;
+  gap: 8px;
+  padding: 5px 8px 2px;
+}
+.rdp-icons {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.rdp-icon {
+  padding: 0 4px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 8.5px;
+  white-space: nowrap;
+}
+.rdp-icon::before {
+  content: '▣ ';
+}
+.rdp-dialog {
+  flex: 1;
+  min-width: 0;
+  align-self: flex-start;
+  border: 1.5px solid var(--ink);
+  border-radius: 5px;
+  background: #fffaf0;
+  overflow: hidden;
+  font-size: 10px;
+}
+.rdp-dtitle {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 5px;
+  background: #cfe0ff;
+  border-bottom: 1.5px solid var(--ink);
+  font-weight: 700;
+}
+.rdp-dbody {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 5px;
+}
+.rdp-err {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.rdp-ok {
+  flex: 0 0 auto;
+  margin-left: auto;
+  padding: 0 6px;
+  border: 1.5px solid var(--ink);
+  border-radius: 4px;
+  background: #e9e3d8;
+  font-weight: 700;
+}
+/* „Ausführen“-Dialog: hier wird getippt */
+.work[data-kind='rdp'] .work-body {
+  flex: 0 0 auto;
+  margin: 4px 22% 4px 8px;
+  padding: 16px 6px 4px;
+  position: relative;
+  border: 1.5px solid var(--ink);
+  border-radius: 5px;
+  background: #fffaf0;
+  font-family: var(--font);
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.work[data-kind='rdp'] .work-body::before {
+  content: 'Ausführen';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  padding: 0 5px;
+  background: #cfe0ff;
+  border-bottom: 1.5px solid var(--ink);
+  font: 700 10px / 1.4 var(--font-ui);
+}
+.work[data-kind='rdp'] .work-extra {
+  margin-top: auto;
+}
+.rdp-taskbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 5px;
+  background: #2e2a3b;
+  color: #ece6f5;
+  font-size: 9.5px;
+}
+.rdp-start {
+  padding: 0 7px;
+  border-radius: 4px;
+  background: #5cc77f;
+  color: var(--ink);
+  font-weight: 700;
+}
+.rdp-task {
+  padding: 0 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.15);
+}
+.rdp-clock {
+  margin-left: auto;
+}
+.work[data-kind='rdp'] .last-closed {
+  display: none;
+}
+
+/* ---------- Chat: Messenger-Oberfläche ---------- */
+.work[data-kind='chat'] .work-head {
+  padding: 0;
+  border-bottom: 0;
+}
+.av {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid var(--ink);
+  border-radius: 50%;
+  background: var(--peach);
+  font-size: 9.5px;
+  font-weight: 700;
+}
+.av.small {
+  width: 20px;
+  height: 20px;
+  font-size: 8px;
+}
+.chat-top {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 9px;
+  border-bottom: 1.5px dashed var(--line);
+}
+.chat-name {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.chat-status {
+  font-size: 9.5px;
+  font-weight: 500;
+  color: #2f9e6a;
+}
+.chat-msg {
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+  padding: 6px 9px 2px;
+}
+.chat-bubble {
+  max-width: 85%;
+  padding: 4px 9px 3px;
+  border: 1.5px solid var(--ink);
+  border-radius: 10px 10px 10px 2px;
+  background: #f4efe6;
+  font-size: 11.5px;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+.chat-time {
+  margin-left: 6px;
+  font-size: 8.5px;
+  color: var(--ink-soft);
+}
+/* Eingabefeld mit Senden-Knopf */
+.work[data-kind='chat'] .work-body {
+  flex: 0 0 auto;
+  margin-top: auto;
+  margin: auto 8px 4px;
+  padding: 4px 34px 4px 10px;
+  position: relative;
+  border: 1.5px solid var(--ink);
+  border-radius: 14px;
+  background: #fff;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.work[data-kind='chat'] .typed:empty::before {
+  content: 'Nachricht schreiben …';
+  color: var(--ink-soft);
+}
+.work[data-kind='chat'] .work-body::after {
+  content: '➤';
+  position: absolute;
+  right: 3px;
+  top: 50%;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  transform: translateY(-50%);
+  border: 1.5px solid var(--ink);
+  border-radius: 50%;
+  background: var(--sky);
+  font-size: 10px;
+}
+
+/* ---------- Memes beim Nichtstun ---------- */
+.meme-window {
+  display: none;
+}
+.work[data-kind='memes'] > :not(.work-bar):not(.meme-window) {
+  display: none;
+}
+.work[data-kind='memes'] .work-bar {
+  background: #f3e1ff;
+}
+.work[data-kind='memes'] .meme-window {
+  display: block;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background: #faf6ff;
+}
+.meme-feed {
+  animation: meme-scroll 28s linear infinite;
+}
+@keyframes meme-scroll {
+  to {
+    transform: translateY(-50%);
+  }
+}
+.meme {
+  margin: 8px 9px;
+  padding: 7px 10px 8px;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  box-shadow: 0 3px 0 rgba(61, 44, 46, 0.4);
+}
+.meme-0 {
+  background: #fff3c4;
+}
+.meme-1 {
+  background: #d6e6ff;
+}
+.meme-2 {
+  background: #ffe1e1;
+}
+.meme-3 {
+  background: #d9f5e6;
+}
+.meme-acc {
+  font-size: 9.5px;
+  color: var(--ink-soft);
+}
+.meme-top,
+.meme-bottom {
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 1.25;
+}
+.meme-bottom {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1.5px dashed rgba(61, 44, 46, 0.3);
+}
+.meme-likes {
+  margin-top: 4px;
+  font-size: 10px;
+  color: #d64545;
+}
+@media (prefers-reduced-motion: reduce) {
+  .meme-feed {
+    animation-duration: 120s;
+  }
+}
+
+/* Tastatur und Maus nebeneinander */
+.keyboard-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.keyboard-wrap .keyboard {
+  flex: 1;
+  min-width: 0;
+}
+/* sehr schmale Handys: kein Platz neben der Tastatur */
+@media (max-width: 339px) {
+  .keyboard-wrap .mouse {
+    display: none;
+  }
+}
+
+/* ---------- Mail-Programm ---------- */
+.work[data-kind='mail'] .work-head {
+  padding: 0;
+  border-bottom: 0;
+}
+.mail-tools {
+  display: flex;
+  gap: 4px;
+  padding: 3px 6px;
+  background: #eef4ff;
+  border-bottom: 1.5px solid var(--ink);
+}
+.mail-tool {
+  padding: 0 6px;
+  border: 1.5px solid var(--ink);
+  border-radius: 5px;
+  background: #fff;
+  font-size: 9.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.mail-fields {
+  padding: 3px 9px;
+  border-bottom: 1.5px dashed var(--line);
+}
+.mail-fields .work-val {
+  flex: 1;
+  padding: 0 5px;
+  border-bottom: 1px solid var(--line);
+}
+.mail-sig {
+  padding: 0 9px 3px;
+  font-size: 9.5px;
+  font-style: italic;
+  color: var(--ink-soft);
+}
+
+/* ---------- Ticketsystem: Web-App ---------- */
+.work[data-kind='ticket'] {
+  background: #f6f2ea;
+}
+.work[data-kind='ticket'] .work-head {
+  padding: 0;
+  border-bottom: 0;
+}
+.tk-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 8px;
+  background: #3f8f86;
+  border-bottom: 1.5px solid var(--ink);
+  color: #fff;
+  font-size: 10px;
+}
+.tk-app {
+  font-weight: 700;
+}
+.tk-queue {
+  padding: 0 6px;
+  border-radius: 6px;
+  background: #ff8e8e;
+  color: var(--ink);
+  font-weight: 700;
+}
+.tk-card {
+  margin: 4px 7px 0;
+  padding: 4px 7px;
+  border: 1.5px solid var(--ink);
+  border-radius: 8px;
+  background: #fff;
+}
+.tk-chips {
+  display: flex;
+  gap: 4px;
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+.tk-chips > span {
+  flex: 0 0 auto;
+  padding: 0 5px;
+  border: 1.5px solid var(--ink);
+  border-radius: 6px;
+  font-size: 9.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.tk-id {
+  background: var(--butter);
+  font-family: var(--font);
+}
+.tk-status {
+  background: var(--sky);
+}
+.tk-prio {
+  background: #ffd3d6;
+  color: #a33a3a;
+}
+.tk-who {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 3px;
+  font-size: 10px;
+  color: var(--ink-soft);
+}
+.tk-problem {
+  margin-top: 3px;
+  padding: 1px 6px;
+  border-left: 3px solid #3f8f86;
+  background: #f4efe6;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.work[data-kind='ticket'] .work-body {
+  flex: 1 0 auto;
+  margin: 4px 7px 2px;
+  padding: 3px 7px;
+  border: 1.5px solid var(--ink);
+  border-radius: 6px;
+  background: #fff;
+  font-size: 11.5px;
+}
+.work[data-kind='ticket'] .work-label {
+  display: block;
+  font-size: 9.5px;
+}
+.tk-actions {
+  display: flex;
+  gap: 4px;
+  padding: 0 7px 3px;
+}
+.tk-btn {
+  padding: 0 8px;
+  border: 1.5px solid var(--ink);
+  border-radius: 5px;
+  background: #fff;
+  font-size: 9.5px;
+  font-weight: 700;
+}
+.tk-btn-0 {
+  background: var(--mint);
+}
+.tk-btn-2 {
+  background: #ffd3d6;
+}
+
+/* ---------- Tastatur schematisch und kleiner, Maus größer (Verhältnis wie am echten Tisch) ---------- */
+:root {
+  --key-h: 30px;
+}
+.keyboard-wrap .keyboard {
+  gap: 2px;
+  padding: 5px;
+  border-width: 2.5px;
+  border-radius: 12px;
+}
+.keyboard-wrap .key {
+  border-width: 1.5px;
+  border-radius: 5px;
+  font-size: 9.5px;
+  font-weight: 600;
+  padding-bottom: 2px;
+  box-shadow: inset 0 -2.5px 0 var(--key-edge);
+}
+.keyboard-wrap .key-mod,
+.keyboard-wrap .key-small {
+  font-size: 7px;
+  letter-spacing: -0.02em;
+}
+.keyboard-wrap .key-altf4,
+.keyboard-wrap .key[data-key='ALTGRAPH'] {
+  font-size: 6px;
+}
+.keyboard-wrap .enter-arrow {
+  font-size: 13px;
+}
+.keyboard-wrap .key-enter .key-small {
+  font-size: 7.5px;
+}
+.keyboard-wrap .key.down {
+  transform: translateY(1.5px);
+  box-shadow: inset 0 -1px 0 var(--key-edge);
+}
+.keyboard-wrap .mouse {
+  width: 60px;
+  height: 70px;
+}
+@media (max-height: 680px) {
+  :root {
+    --key-h: 27px;
+  }
+}
+/* Maustasten: nur die getroffene Taste drückt sich ein */
+.mouse .mbtn {
+  fill: transparent;
+  transition: fill 0.05s;
+}
+.mouse.click-l .mbtn-l,
+.mouse.click-r .mbtn-r {
+  fill: rgba(61, 44, 46, 0.28);
+}
+
+/* ---------- Pager als Gerät auf dem Tisch ---------- */
+/* Banner oben nur, wenn ein App-Fenster den Tisch verdeckt */
+#app:not(.sheet-open) > .pager {
+  display: none !important;
+}
+.pager-device {
+  position: relative;
+  flex: 0 0 auto;
+  align-self: flex-end;
+  width: 68px;
+  height: 46px;
+  margin-bottom: 2px;
+  padding: 6px 6px 8px;
+  border: 2.5px solid var(--ink);
+  border-radius: 10px 10px 12px 12px;
+  background: linear-gradient(180deg, #5a5262, #3f3947);
+  box-shadow: inset 0 -4px 0 #2e2a33, 0 3px 0 rgba(61, 44, 46, 0.4);
+  transform: rotate(-4deg);
+}
+.pd-lcd {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+  padding: 0 4px;
+  border: 1.5px solid var(--ink);
+  border-radius: 4px;
+  background: #9fb38c;
+  color: #2e3a26;
+  font: 700 8px / 1.15 var(--font);
+  overflow: hidden;
+  text-align: left;
+}
+.pd-title,
+.pd-count {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pd-led {
+  position: absolute;
+  top: -5px;
+  right: 8px;
+  width: 9px;
+  height: 9px;
+  border: 1.5px solid var(--ink);
+  border-radius: 50%;
+  background: #6b6372;
+}
+.pager-device.alert {
+  animation: pd-buzz 1.4s ease-in-out infinite;
+}
+.pager-device.alert .pd-lcd {
+  background: #d7f59a;
+}
+.pager-device.alert .pd-led {
+  background: #ff5b5b;
+  animation: am-blink 0.6s steps(2, jump-none) infinite;
+}
+.pager-device.urgent {
+  animation-duration: 0.6s;
+}
+@keyframes pd-buzz {
+  0%,
+  70%,
+  100% {
+    transform: rotate(-4deg);
+  }
+  75% {
+    transform: rotate(-7deg) translateX(-1px);
+  }
+  80% {
+    transform: rotate(-1deg) translateX(1px);
+  }
+  85% {
+    transform: rotate(-6deg);
+  }
+  90% {
+    transform: rotate(-2deg);
+  }
+}
+
+/* Becher größer, mit Spruch; Sprechblase mit mehr Platz */
+.mug-spot {
+  width: 56px;
+}
+.mug {
+  width: 52px;
+  height: 56px;
+}
+.book {
+  width: 54px;
+  height: 22px;
+}
+.caller {
+  height: 90px;
+}
+.caller-says {
+  -webkit-line-clamp: 4;
+}
+@media (max-height: 680px) {
+  .caller {
+    height: 70px;
+  }
+  .caller-says {
+    -webkit-line-clamp: 2;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pager-device.alert,
+  .pager-device.alert .pd-led {
+    animation: none;
+  }
+}
+/* Toasts oben unter der Wand: verdecken weder Tisch (Pager, Anrufer) noch Tastatur */
+.toasts {
+  top: calc(66px + var(--safe-top));
+  bottom: auto;
+}
+.toast.out {
+  transform: translateY(-8px);
 }

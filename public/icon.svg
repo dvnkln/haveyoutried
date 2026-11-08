@@ -1,6 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="12" fill="#0b0f0b"/>
-  <circle cx="32" cy="34" r="16" fill="none" stroke="#33ff66" stroke-width="5" stroke-linecap="round" stroke-dasharray="80 21" transform="rotate(-62 32 34)"/>
-  <path d="M32 12v20" stroke="#33ff66" stroke-width="5" stroke-linecap="round"/>
-  <rect x="40" y="46" width="12" height="4" fill="#ffb000"/>
+  <rect width="64" height="64" rx="14" fill="#f9e8cf"/>
+  <g transform="translate(32 33) scale(1) translate(-32 -33)">
+    <rect x="9" y="11" width="46" height="40" rx="6" fill="#f3e7d0" stroke="#3d2c2e" stroke-width="3"/>
+    <rect x="14" y="16" width="36" height="26" rx="4" fill="#bfe6dc" stroke="#3d2c2e" stroke-width="2.5"/>
+    <path d="M26.5 23.5 a8 8 0 1 0 11 0" fill="none" stroke="#2f9e6a" stroke-width="3" stroke-linecap="round"/>
+    <path d="M32 20.5 v8" stroke="#2f9e6a" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="48" cy="46.5" r="1.8" fill="#5be38d" stroke="#3d2c2e" stroke-width="1"/>
+    <path d="M24 51 h16 l2 4 h-20Z" fill="#cdb995" stroke="#3d2c2e" stroke-width="2.5" stroke-linejoin="round"/>
+  </g>
 </svg>

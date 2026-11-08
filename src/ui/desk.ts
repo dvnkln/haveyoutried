@@ -1,7 +1,7 @@
 import { CONFIG } from '../config';
 import { CALLBACK_LINES, CALLERS, situationalCalls, type Call } from '../content/callers';
 import { URGENT_LABELS, URGENT_TEXT } from '../content/events';
-import { ALTF4_LINES, COMBO_LINES, PANIC_LINES, REPLIES_CMD, REPLIES_TEXT, TICKET_PRIOS } from '../content/props';
+import { ALTF4_LINES, COMBO_LINES, PANIC_LINES } from '../content/props';
 import { CLOSE_REASONS } from '../content/syslog';
 import { clickTicket } from '../core/actions';
 import { rates } from '../core/economy';
@@ -14,6 +14,7 @@ import { h, juice, NUDGE, setFlag, setText } from './dom';
 import { formatNumber } from './format';
 import type { Fx } from './juice';
 import { describeEffect } from './pager';
+import { createWork } from './work';
 
 const PHONE_SVG = `<svg viewBox="0 0 64 58">
   <g class="ring" fill="none" stroke="var(--ink)" stroke-width="2.2" stroke-linecap="round">
@@ -46,8 +47,6 @@ const GAG_COOLDOWN_MS = 20_000;
 /** Bis zu so vielen Klicks erscheint der Tipp-Hinweis bei längerer Pause wieder */
 const HINT_UNTIL_CLICKS = 60;
 const HINT_IDLE_MS = 20_000;
-/** So viele Zeichen der getippten Zeile passen sichtbar ins Terminal */
-const TYPED_VISIBLE = 44;
 
 interface KeyDef {
   /** Taste auf der physischen Tastatur (KeyboardEvent.key in Großbuchstaben) */
@@ -115,77 +114,8 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
   });
   const callerEl = h('div', { class: 'caller' }, [bubble]);
 
-  // --- Arbeitsfenster: mal Mail, mal Ticketsystem, mal Terminal. Tippen schreibt die Antwort. ---
-  type WorkKind = 'mail' | 'ticket' | 'term';
-  const KINDS: WorkKind[] = ['mail', 'ticket', 'term'];
-  let kind: WorkKind = 'ticket';
-  let reply = '';
-  let typedLen = 0;
-  let taskWho = '';
-  let taskSubject = '';
-  let taskNo = 0;
-  const workTitle = h('span', { class: 'work-title' });
-  const workHead = h('div', { class: 'work-head' });
-  const promptSlot = h('span', { class: 'typed-prompt', text: '$ ' });
-  const typedEl = h('span', { class: 'typed' });
-  const last = h('div', { class: 'last-closed', 'aria-live': 'polite' });
-  const work = h('div', { class: 'work' }, [
-    h('div', { class: 'work-bar' }, [h('span', { class: 'term-dots', 'aria-hidden': 'true' }), workTitle]),
-    workHead,
-    h('div', { class: 'work-body' }, [promptSlot, typedEl, h('span', { class: 'cursor', text: '▌' })]),
-    last,
-  ]);
-  const showTyped = () => {
-    const t = reply.slice(0, typedLen);
-    setText(typedEl, t.length > TYPED_VISIBLE * 2 ? `…${t.slice(-TYPED_VISIBLE * 2)}` : t);
-  };
-  const row = (label: string, value: string, cls = '') =>
-    h('div', { class: `work-row ${cls}`.trim() }, [h('span', { class: 'work-key', text: label }), h('span', { class: 'work-val', text: value })]);
-
-  /** Nächste Aufgabe: anderes Programm, Antwort an den aktuellen Anrufer */
-  const newTask = () => {
-    let next = pick(KINDS);
-    if (next === kind && Math.random() < 0.7) next = pick(KINDS.filter((k) => k !== kind));
-    kind = next;
-    reply = pick(kind === 'term' ? REPLIES_CMD : REPLIES_TEXT);
-    typedLen = 0;
-    // vor dem ersten Anruf: der Chef wundert sich über die volle Warteschlange
-    taskWho = call?.who.replace(/ \(Rückruf\)$/, '') ?? 'Chef';
-    const line = call?.line ?? 'Warum ist die Warteschlange so voll?';
-    taskSubject = line.length > 42 ? `${line.slice(0, 40)}…` : line;
-    taskNo = CONFIG.ticketNumberOffset + ctx.state.clicks + randInt(3, 40);
-    work.dataset.kind = kind;
-    if (kind === 'mail') {
-      setText(workTitle, 'Posteingang (4.812 ungelesen)');
-      workHead.replaceChildren(row('An:', taskWho), row('Betreff:', `Re: ${taskSubject}`));
-    } else if (kind === 'ticket') {
-      setText(workTitle, 'Ticketsystem 3.1 (Legacy)');
-      workHead.replaceChildren(
-        row(ticketId(taskNo), `Prio: ${pick(TICKET_PRIOS)}`, 'work-ticket'),
-        row('Kunde:', taskWho),
-        row('Problem:', taskSubject),
-      );
-    } else {
-      setText(workTitle, 'Terminal — bash');
-      workHead.replaceChildren(h('div', { class: 'work-comment', text: `# ${taskWho}: ${taskSubject}` }));
-    }
-    showTyped();
-  };
-
-  const sendReply = () => {
-    if (typedLen > 0) {
-      if (kind === 'mail') ctx.log.write('ok', `mail[25]: Re: ${taskSubject} → ${taskWho}: „${reply}“`);
-      else if (kind === 'ticket') ctx.log.write('ok', `ticket[8080]: ${ticketId(taskNo)} kommentiert: „${reply}“`);
-      else ctx.log.write('ok', `you@helpdesk:~$ ${reply}`);
-    }
-    newTask();
-  };
-  /** Ein Anschlag tippt ein paar Zeichen; mit Textbaustein ganze Wörter. Ende = abschicken. */
-  const typeMore = () => {
-    if (typedLen >= reply.length) return sendReply();
-    const step = ctx.state.upgrades.macro ? randInt(6, 10) : randInt(2, 4);
-    typedLen = Math.min(reply.length, typedLen + step);
-  };
+  // --- Arbeitsfenster auf dem Desktop (Mail, Ticket, Shell, Chat, Call, RDP, Web, Suche) ---
+  const work = createWork(ctx, () => call);
 
   // --- Tastatur ---
   const keys = new Map<string, HTMLButtonElement>();
@@ -327,25 +257,25 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
     ctx.log.write(level, pick(lines));
   };
 
-  const hit = (keyEl: HTMLButtonElement) => {
+  const hit = (keyEl: HTMLElement) => {
     const def = keyEl.dataset.key ?? '';
     ctx.sfx.unlock();
     const value = clickTicket(ctx.state);
     const no = CONFIG.ticketNumberOffset + ctx.state.clicks;
     const reason = pick(CLOSE_REASONS);
-    setText(last, `${ticketId(no)} → ${reason}`);
+    work.setLast(`${ticketId(no)} → ${reason}`);
 
     // Eingabezeile: Enter schickt ab, Alt+F4 verwirft, alles andere tippt weiter
     const now = performance.now();
-    if (def === 'ENTER') sendReply();
+    if (def === 'ENTER') work.send();
     else if (def === 'F4') {
-      newTask(); // Fenster zu, nächste Aufgabe
+      work.newTask(); // Fenster zu, nächste Aufgabe
       gag('F4', 'warn', ALTF4_LINES, now);
     } else {
       if (def === 'CAPSLOCK') gag('CAPSLOCK', 'info', PANIC_LINES, now);
-      typeMore();
+      work.typeMore();
     }
-    showTyped();
+    work.afterKey();
 
     // Effekte: Zahl steigt von der Taste auf, ab und zu ein Schnipsel
     const k = fx.rel(keyEl, true);
@@ -428,6 +358,13 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
   // pointerdown statt click: schneller, und jeder Finger zählt.
   keyboardWrap.addEventListener('pointerdown', (e) => {
     if (e.button !== 0) return;
+    // Maus antippen zählt auch: dann klickt die Maus, keine Taste geht runter
+    const mouse = (e.target as Element).closest<HTMLElement>('.mouse');
+    if (mouse) {
+      e.preventDefault();
+      hit(mouse);
+      return;
+    }
     const el = (e.target as Element).closest<HTMLButtonElement>('.key') ?? nearestKey(e.clientX, e.clientY);
     e.preventDefault();
     pointerKeys.set(e.pointerId, el);
@@ -494,12 +431,12 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
     /** Tischtelefon links neben dem Monitor */
     phone,
     keyboard: keyboardWrap,
-    work,
+    work: work.el,
     /** Platz für den Prompt (root@firma:~$) vor dem Getippten im Terminal */
-    promptSlot,
+    promptSlot: work.promptSlot,
     start() {
-      newTask();
-      setText(last, 'Warteschlange: voll. Wie immer.');
+      work.newTask();
+      work.setLast('Warteschlange: voll. Wie immer.');
       if (ctx.state.clicks >= CONFIG.onboardingClicks) {
         started = true;
         showCall(chooseCall(), true);
@@ -516,6 +453,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
       const invite = s.clicks < HINT_UNTIL_CLICKS && (s.clicks < 3 || idle > HINT_IDLE_MS);
       if (hint.hidden === invite) hint.hidden = !invite;
       setFlag(keyboardWrap, 'inviting', invite);
+      if (started) work.idle(idle);
       if (anyKey) {
         setText(anyKey, s.upgrades.macro ? 'Makro' : 'Any');
         setFlag(anyKey, 'key-macro', !!s.upgrades.macro);

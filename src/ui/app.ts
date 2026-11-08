@@ -117,11 +117,14 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
   ]);
 
   // --- Schreibtisch ---
+  const pager = createPager(ctx);
   const deskbar = h('div', { class: 'deskbar' }, [
     desk.callerEl,
     h('div', { class: 'mug-spot' }, [props.mug, props.book]),
-    props.mouse,
+    pager.device,
   ]);
+  // Maus rechts neben der Tastatur
+  desk.keyboard.append(props.mouse);
 
   // --- App-Fenster (Sheet) ---
   const sheetIcon = h('span', { class: 'app-tile', 'aria-hidden': 'true' });
@@ -133,7 +136,6 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
     sheetBody,
   ]);
 
-  const pager = createPager(ctx);
   const toaster = createToaster();
 
   const mounted = tabs.map((tab) => {
