@@ -27,8 +27,9 @@ test('Kern-Loop: tippen, kaufen, produzieren, speichern', async ({ page }) => {
   // Statuszeile wechselt erst, wenn die Antwort abgeschickt ist (Enter)
   await page.locator('.key[data-key="Q"]').tap();
   await page.locator('.close-btn').tap();
-  // abgeschickt: Stempel im Fenster, Statuszeile zeigt weiter das Ticket
-  await expect(page.locator('.work')).toHaveClass(/sent/);
+  // abgeschickt: Erfolgsstempel (bleibt im DOM, also kein Wettlauf mit der kurzen Pause), Statuszeile zeigt weiter das Ticket
+  await expect(page.locator('.solved-stamp')).toHaveClass(/show/);
+  await expect(page.locator('.solved-stamp')).toContainText('✓');
   await expect(page.locator('.last-closed')).toContainText('#INC-');
   // Ticketverlauf: genau eine Karte für das abgeschickte Ticket, mit interner Notiz
   await expect(page.locator('.history .hist')).toHaveCount(1);

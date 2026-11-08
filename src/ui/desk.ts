@@ -4,12 +4,12 @@ import { topicPool } from '../content/topics';
 import { URGENT_LABELS, URGENT_TEXT } from '../content/events';
 import { VIP_TICKETS } from '../content/work';
 import { ALTF4_LINES, COMBO_LINES, PANIC_LINES } from '../content/props';
-import { clickTicket } from '../core/actions';
+import { clickTicket, solveTicket } from '../core/actions';
 import { rates } from '../core/economy';
 import { claimUrgent } from '../core/events';
 import { incidentRunning } from '../core/incidents';
 import { bumpFlag, type GameState } from '../core/state';
-import { pick, randInt } from '../util';
+import { fill, pick, randInt } from '../util';
 import type { AppContext } from './app';
 import { h, juice, NUDGE, quip, setFlag, setText } from './dom';
 import { formatNumber } from './format';
@@ -129,7 +129,21 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
   const callerEl = h('div', { class: 'caller' }, [bubble]);
 
   // --- Arbeitsfenster auf dem Desktop (Mail, Ticket, Shell, Chat, Call, RDP, Web, Suche) ---
-  const work = createWork(ctx, () => call);
+  // Gelöst: Bonus steigt aus dem Stempel auf, an Meilensteinen der Serie Konfetti und Fanfare
+  const work = createWork(
+    ctx,
+    () => call,
+    (streak, stamp) => {
+      const { bonus, milestone } = solveTicket(ctx.state, streak);
+      const p = fx.rel(stamp);
+      fx.floater(p.x + p.w / 2, p.y, `+${formatNumber(bonus)}`, true);
+      if (milestone) {
+        fx.confetti(p.x + p.w / 2, p.y + p.h / 2, 26);
+        ctx.sfx.milestone();
+        ctx.haptic('milestone');
+      }
+    },
+  );
 
   // --- Tastatur ---
   const keys = new Map<string, HTMLButtonElement>();
@@ -253,7 +267,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
         prio: el.textContent?.replace(/!/g, '').trim() || 'DRINGEND',
         status: 'Sofort gelöst (natürlich)',
         cause: vip.cause,
-        note: pick(topicPool(vip.topic, 'notes')).replaceAll('{who}', vip.who),
+        note: fill(pick(topicPool(vip.topic, 'notes')), { who: vip.who }),
         solution: `${URGENT_TEXT[res.effect] ?? 'VIP-Ticket gelöst.'} (${describeEffect(res)})`,
         vip: true,
       });
@@ -328,7 +342,8 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
       return;
     }
     // Wechsel erst nach genug Tickets UND genug Lesezeit
-    if (--callerLeft <= 0 && now >= callerUntil) showCall(chooseCall());
+    // nächster Anruf erst, wenn der aktuelle seine Antwort hat (sonst geht er verloren)
+    if (--callerLeft <= 0 && now >= callerUntil && work.isAnswered(call)) showCall(chooseCall());
   };
 
   /** Nach dem ruhigen Start: erster Anruf (klingelt), Dringend-Tickets ab jetzt */

@@ -5,10 +5,17 @@ import { VIP_TICKETS } from '../../src/content/work';
 import { createInitialState } from '../../src/core/state';
 
 describe('Themen der Tickets', () => {
-  it('jedes Thema außer „allgemein“ hat Inhalt für alle Felder', () => {
-    for (const [topic, t] of Object.entries(TOPICS)) {
-      if (topic === 'allgemein') continue;
-      for (const [field, list] of Object.entries(t)) expect(list.length, `${topic}.${field}`).toBeGreaterThan(0);
+  it('jedes Thema außer „allgemein“ hat Notizen, Geräte nur thematisch', () => {
+    for (const [topic, t] of Object.entries(TOPICS)) if (topic !== 'allgemein') expect(t.notes.length, topic).toBeGreaterThan(0);
+    expect(GENERIC.devices).toEqual([]);
+  });
+
+  it('Themen mit technischen Anliegen haben mindestens ein Werkzeug', () => {
+    const fixTopics = new Set(CALLERS.flatMap((c) => c.lines.filter((l) => l.fix).map((l) => l.topic)));
+    fixTopics.delete('allgemein');
+    for (const topic of fixTopics) {
+      const t = TOPICS[topic];
+      expect(t.cmds.length + t.rdp.length + t.devices.length + t.searches.length, topic).toBeGreaterThan(0);
     }
   });
 

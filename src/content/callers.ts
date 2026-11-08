@@ -171,7 +171,7 @@ export const CALLERS: Caller[] = [
     face: '(ʘ‿ʘ)',
     who: 'Datenschutz',
     lines: [
-      q('server', 'Haben wir Logfiles? Löschen. Alle. Sofort. Nein, warte: Aufbewahrungspflicht!', 'Datenschutz trifft Aufbewahrungspflicht', 'Logs bleiben 90 Tage, dann automatisch weg. Beide Gesetze zufrieden. Ich auch.'),
+      f('server', 'Haben wir Logfiles? Löschen. Alle. Sofort. Nein, warte: Aufbewahrungspflicht!', 'Datenschutz trifft Aufbewahrungspflicht', 'Logs bleiben 90 Tage, dann automatisch weg. Beide Gesetze zufrieden. Ich auch.'),
       f('drucker', 'Wer hat den Drucker im Flur ins Internet gehängt? Der hat jetzt Instagram.', 'Drucker mit öffentlicher IP', 'Drucker ist wieder nur im Firmennetz. Sein Instagram-Account hatte übrigens mehr Follower als unserer.'),
       q('passwort', 'Ist „Passwort123“ DSGVO-konform?', 'Passwort123', 'Konform vielleicht. Sicher nicht. Bitte ändern. Heute noch.'),
       f('sicherheit', 'Die Kaffeemaschine sammelt Daten. Wer hat dem zugestimmt?', 'Smarte Kaffeemaschine', 'Niemand. Die Telemetrie ist aus. Die Maschine weiß jetzt nicht mehr, wie viel Sie trinken. Ich schon.'),
@@ -213,7 +213,7 @@ export const CALLERS: Caller[] = [
     lines: [
       q('netz', 'Der Chef braucht WLAN im Aufzug. Bis morgen.', 'Physik (Aufzug = Faradayscher Käfig)', 'Der Aufzug ist ein Metallkasten. Da geht kein WLAN durch. Bis morgen auch nicht.'),
       f('passwort', 'Der Chef hat sein Passwort vergessen. Er sagt, Sie kennen es doch bestimmt.', 'Passwort vergessen (Chef)', 'Ich kenne es nicht, das ist der Sinn von Passwörtern. Er hat ein neues. Bitte persönlich abholen.'),
-      q('hardware', 'Können Sie den Beamer im Vorstandszimmer anmachen? Er sagt „No Signal“. Das Signal ist doch da!', 'Falscher HDMI-Eingang', 'Eingang stand auf HDMI 1, das Kabel steckt in HDMI 2. Jetzt geht’s. Signal war tatsächlich da. Nur woanders.'),
+      f('hardware', 'Können Sie den Beamer im Vorstandszimmer anmachen? Er sagt „No Signal“. Das Signal ist doch da!', 'Falscher HDMI-Eingang', 'Eingang stand auf HDMI 1, das Kabel steckt in HDMI 2. Jetzt geht’s. Signal war tatsächlich da. Nur woanders.'),
       q('mail', 'Der Chef will, dass seine Mails „lauter“ sind. Geht das?', 'Wunsch nach lauten Mails', 'Mails haben keine Lautstärke. Ich kann sie als „Wichtig“ markieren. Das ignorieren dann alle in Rot.'),
     ],
   },
@@ -223,7 +223,7 @@ export const CALLERS: Caller[] = [
     lines: [
       q('sicherheit', 'Ab Montag verbieten wir USB. Und Bluetooth. Und Tastaturen.', 'Sicherheit über alles', 'Gerne. Ohne Tastaturen bitte auch keine Tickets mehr. Win-win.'),
       q('passwort', 'Ihr Passwort „correct horse battery staple“ steht in vier Wörterbüchern. Abgelehnt.', 'xkcd 936', 'Okay. Dann „correct horse battery staple 2“. Spaß. Ich nehme ein neues.'),
-      q('sicherheit', 'Ich habe den Server vom Netz genommen. Jetzt ist er sicher.', 'Sicherheit durch Nichterreichbarkeit', 'Sicher ist er. Nur nutzen kann ihn auch keiner. Ich steck ihn wieder ein, wir patchen ihn zusammen.'),
+      f('sicherheit', 'Ich habe den Server vom Netz genommen. Jetzt ist er sicher.', 'Sicherheit durch Nichterreichbarkeit', 'Sicher ist er. Nur nutzen kann ihn auch keiner. Ich steck ihn wieder ein, wir patchen ihn zusammen.'),
       q('sicherheit', 'Ich hab einen Phishing-Test gemacht. Ich bin selbst drauf reingefallen.', 'Eigener Phishing-Test', 'Sehr glaubwürdiger Test also. Passwort neu, und ich sag es niemandem. Vielleicht.'),
     ],
   },
@@ -239,7 +239,7 @@ export const CALLERS: Caller[] = [
     face: '(ーー;)',
     who: 'Betriebsrat',
     lines: [
-      q('office', 'Die neue Software zählt, wie oft ich klicke? Das ist mitbestimmungspflichtig.', 'Telemetrie ab Werk', 'Stimmt. Die Klickzählung ist aus. Die Software war nur neugierig.'),
+      f('office', 'Die neue Software zählt, wie oft ich klicke? Das ist mitbestimmungspflichtig.', 'Telemetrie ab Werk', 'Stimmt. Die Klickzählung ist aus. Die Software war nur neugierig.'),
       q('office', 'Der Bildschirmschoner geht nach 5 Minuten an. Das ist Leistungskontrolle.', 'Sicherheitsrichtlinie', 'Der Bildschirmschoner schützt nur vor neugierigen Blicken. Er zählt nichts. Ehrenwort.'),
       q('drucker', 'Wer hat entschieden, dass der Drucker „Dieter“ heißt? Wurde das abgestimmt?', 'Drucker eigenmächtig benannt', 'Das war ich. Ich beantrage hiermit eine Abstimmung. Mein Vorschlag bleibt Dieter.'),
     ],
@@ -268,7 +268,7 @@ export const CALLERS: Caller[] = [
     lines: [
       q('allgemein', 'Früher hatten wir einen Großrechner. Der ging nie kaputt. Er hat aber auch nichts gemacht.', 'Nostalgie', 'Der steht übrigens noch im Keller. Er macht immer noch nichts. Zuverlässig.'),
       q('office', 'Wo ist der Knopf zum Speichern? Die Diskette?', 'Diskette als Symbol', 'Genau, die Diskette. Oder Strg+S. Echte Disketten brauchen Sie nicht mehr. Bitte.'),
-      q('drucker', 'Ich drucke meine Mails aus und hefte sie ab. Der Drucker ist schon wieder leer.', 'Mails werden ausgedruckt', 'Toner ist nachgefüllt. Ich zeige Ihnen gern mal, wie man Mails in Ordner verschiebt. Digitale.'),
+      f('drucker', 'Ich drucke meine Mails aus und hefte sie ab. Der Drucker ist schon wieder leer.', 'Mails werden ausgedruckt', 'Toner ist nachgefüllt. Ich zeige Ihnen gern mal, wie man Mails in Ordner verschiebt. Digitale.'),
     ],
   },
 ];

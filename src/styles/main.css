@@ -5295,8 +5295,25 @@ button {
   opacity: 0;
   transform: translate(-50%, -50%) rotate(-8deg);
 }
-.solved-stamp .ss-streak:empty {
+.solved-stamp {
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.solved-stamp .ss-streak:empty,
+.solved-stamp .ss-line:empty {
   display: none;
+}
+/* Meilenstein der Serie: Spruch unter dem Stempel, Stempel etwas größer und länger sichtbar */
+.solved-stamp .ss-line {
+  flex-basis: 100%;
+  text-align: center;
+  font-size: 13px;
+}
+.solved-stamp.big {
+  font-size: 22px;
+}
+.solved-stamp.show.big {
+  animation-duration: 1.4s;
 }
 .solved-stamp .ss-streak {
   padding: 0 6px;
@@ -5744,6 +5761,24 @@ body > .incident.playing {
 }
 .work.sent + .last-closed {
   background: #9be3c1;
+}
+/* laufende Serie gelöster Tickets: Abzeichen rechts in der Statuszeile */
+.desktop > .last-closed {
+  position: relative;
+}
+.desktop > .last-closed[data-streak]:not([data-streak='']) {
+  padding-right: 40px;
+}
+.desktop > .last-closed[data-streak]:not([data-streak=''])::after {
+  content: attr(data-streak);
+  position: absolute;
+  right: 2px;
+  top: 1px;
+  padding: 0 6px;
+  border-radius: 6px;
+  background: #23915c;
+  color: #fff;
+  font: 700 11px / 14px var(--font-ui);
 }
 
 /* ---------- Ticketverlauf: jede Karte ein Ticket ---------- */

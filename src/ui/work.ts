@@ -1,6 +1,7 @@
+import { SOLVE } from '../config';
 import { CALLERS, QUEUE_LINE, type Call, type Line } from '../content/callers';
-import { CALL_LINES, CHAT_LINES, MEME_ACCOUNTS, MEMES, RDP_ERRORS, SEARCH_RESULTS, TICKET_PRIOS, WEB_GENERIC, DONE_LINES, TICKET_STATES } from '../content/work';
-import { DEVICE_SETTINGS, GENERIC, TALK_NOTES, topicPool, type Device, type Topic } from '../content/topics';
+import { STREAK_LINES, CALL_LINES, CHAT_LINES, MEME_ACCOUNTS, MEMES, RDP_ERRORS, SEARCH_RESULTS, TICKET_PRIOS, WEB_GENERIC, DONE_LINES, TICKET_STATES } from '../content/work';
+import { DEVICE_SETTINGS, TALK_NOTES, TOPICS, topicPool, type Device, type Topic } from '../content/topics';
 import { pick, randInt, weightedPick } from '../util';
 import type { AppContext } from './app';
 import { h, setText } from './dom';
@@ -42,23 +43,18 @@ const pcOf = (who: string) =>
 const withPrefix = (prefixes: readonly string[], answer: string, share: number) => [Math.random() < share ? `${pick(prefixes)} ${answer}` : answer];
 /** Antworten geht immer */
 const TALK: Kind[] = ['mail', 'ticket', 'chat', 'call'];
-/** Wo man technisch ran muss: welche Werkzeuge zum Thema passen */
-const TECH: Record<Topic, Kind[]> = {
-  drucker: ['term', 'rdp', 'web', 'search'],
-  passwort: ['term', 'rdp', 'web'],
-  netz: ['term', 'rdp', 'web', 'search'],
-  mail: ['term', 'rdp', 'web'],
-  office: ['rdp', 'search'],
-  hardware: ['rdp', 'search'],
-  server: ['term', 'web', 'search'],
-  sicherheit: ['term', 'web'],
-  wunsch: ['rdp', 'web'],
-  allgemein: ['rdp', 'search'],
+/** Werkzeuge, die zum Thema passen: genau die, für die das Thema Texte hat */
+const techFor = (topic: Topic): Kind[] => {
+  const t = TOPICS[topic];
+  return [
+    ...(t.cmds.length ? (['term'] as const) : []),
+    ...(t.rdp.length ? (['rdp'] as const) : []),
+    ...(t.devices.length ? (['web'] as const) : []),
+    ...(t.searches.length ? (['search'] as const) : []),
+  ];
 };
 /** so lange bleibt ein gelöstes Ticket stehen; der nächste Anschlag wartet nicht darauf */
 const SENT_HOLD_MS = 450;
-/** Tickets in Folge, wenn zwischen zwei Lösungen höchstens so viel Zeit liegt */
-const STREAK_GAP_MS = 6_000;
 /** Erfolgsstempel: meistens „Gelöst!“, ab und zu Abwechslung */
 const STAMPS = ['Gelöst!', 'Gelöst!', 'Gelöst!', 'Ticket gelöst!', 'Erledigt!', 'Gefixt!', 'Läuft wieder!'];
 const initials = (who: string) =>
@@ -80,6 +76,10 @@ interface Task {
   no: number;
   /** das Anliegen: Thema, Ursache, passende Antwort */
   line: Line;
+  /** Anruf, zu dem das Ticket gehört (null = Warteschlange) */
+  call: Call | null;
+  /** Gerät im Webinterface */
+  device: Device | null;
   /** Gerät, PC oder Ähnliches, je nach Programm */
   target: string;
 }
@@ -226,7 +226,7 @@ const PROGRAMS: Record<Kind, Program> = {
       h('div', { class: 'web-actions' }, [h('span', { class: 'web-btn save', text: 'Speichern' }), h('span', { class: 'web-btn', text: 'Abbrechen' })]),
       h('div', { class: 'web-foot', text: '© 2009 · Firmware 1.0 · Best viewed with IE 6' }),
     ],
-    lines: (t) => (Math.random() < 0.25 ? WEB_GENERIC : (DEVICE_SETTINGS[t.target as Device] ?? WEB_GENERIC)),
+    lines: (t) => (Math.random() < 0.25 || !t.device ? WEB_GENERIC : DEVICE_SETTINGS[t.device]),
     log: (t, x) => `web[80]: ${t.target}: ${x} – gespeichert`,
   },
   search: {
@@ -255,15 +255,20 @@ const PROGRAMS: Record<Kind, Program> = {
  * Fernwartung, Webinterface und Websuche. Jeder Anschlag tippt die Antwort weiter, Enter schickt ab.
  * Wer eine Weile nichts tippt, scrollt heimlich durch Memes.
  */
-export function createWork(ctx: AppContext, currentCall: () => Call | null) {
-  let task: Task = { kind: 'ticket', who: '', subject: '', full: '', no: 0, line: QUEUE_LINE, target: '' };
+export function createWork(
+  ctx: AppContext,
+  currentCall: () => Call | null,
+  /** gelöst: Serie und Stempel (für Bonus und Effekte am Schreibtisch) */
+  onSolved: (streak: number, stamp: HTMLElement) => void,
+) {
+  let task: Task = { kind: 'ticket', who: '', subject: '', full: '', no: 0, line: QUEUE_LINE, call: null, device: null, target: '' };
   let reply = '';
   let typedLen = 0;
   let memes = false;
   /** Antwort fertig: Fenster bleibt kurz mit „Gelöst!“ stehen, dann kommt das nächste */
   let sentTimer = 0;
+  /** gelöste Tickets in Folge; reißt nach SOLVE.breakMs ohne Anschlag */
   let streak = 0;
-  let lastSolved = -Infinity;
   /** eine Zeile: passt der Text nicht, wird die Schrift kleiner statt abgeschnitten */
   const setStatus = (text: string) => {
     setText(last, text);
@@ -271,21 +276,24 @@ export function createWork(ctx: AppContext, currentCall: () => Call | null) {
     for (let size = 11; size > 8 && last.scrollWidth > last.clientWidth + 1; size -= 0.5) last.style.fontSize = `${size - 0.5}px`;
   };
   const fill = (t: string) => t.replaceAll('{who}', task.who).replaceAll('{target}', task.target);
-  /** Anruf, der schon eine Antwort bekommen hat */
+  /** Anruf, dessen Antwort abgeschickt ist */
   let answered: Call | null = null;
-  /** zuletzt aus der Warteschlange gezogen, damit sich Betreffe nicht gleich wiederholen */
-  const recentQueue: string[] = [];
-  /** Ticket aus der Warteschlange: jemand anderes als der aktuelle Anrufer */
-  const queued = (notWho: string) => {
-    const others = CALLERS.filter((c) => !notWho.startsWith(c.who));
+  /** zuletzt bearbeitete Anliegen (Anrufe und Warteschlange), damit sich Betreffe nicht gleich wiederholen */
+  const recent: string[] = [];
+  const remember = (text: string) => {
+    recent.push(text);
+    if (recent.length > 20) recent.shift();
+  };
+  /** Ticket aus der Warteschlange: jemand anderes als der aktuelle Anrufer, nichts gerade Bearbeitetes */
+  const queued = (current: Call) => {
+    const others = CALLERS.filter((c) => !current.who.startsWith(c.who));
+    const taken = (l: Line) => recent.includes(l.text) || l.text === current.text || l.text === current.about;
     let c = pick(others);
     let line = pick(c.lines);
-    for (let i = 0; i < 6 && recentQueue.includes(line.text); i++) {
+    for (let i = 0; i < 8 && taken(line); i++) {
       c = pick(others);
       line = pick(c.lines);
     }
-    recentQueue.push(line.text);
-    if (recentQueue.length > 20) recentQueue.shift();
     return { who: c.who, line };
   };
 
@@ -301,7 +309,8 @@ export function createWork(ctx: AppContext, currentCall: () => Call | null) {
   const stamp = h('div', { class: 'solved-stamp', 'aria-hidden': 'true' });
   const stampText = h('span', { class: 'ss-text' });
   const stampStreak = h('span', { class: 'ss-streak' });
-  stamp.append(stampText, stampStreak);
+  const stampLine = h('span', { class: 'ss-line' });
+  stamp.append(stampText, stampStreak, stampLine);
   const el = h('div', { class: 'work' }, [
     h('div', { class: 'work-bar' }, [h('span', { class: 'term-dots', 'aria-hidden': 'true' }), title]),
     head,
@@ -322,19 +331,18 @@ export function createWork(ctx: AppContext, currentCall: () => Call | null) {
     clearTimeout(sentTimer);
     sentTimer = 0;
     const call = currentCall();
-    // Erst bekommt der Anrufer seine Antwort, danach geht es mit der Warteschlange weiter
-    const fromQueue = !!call && call === answered;
-    if (call) answered = call;
-    const q = fromQueue ? queued(call.who) : null;
+    // Erst bekommt der Anrufer seine Antwort (zählt erst beim Abschicken), danach geht es mit der Warteschlange weiter
+    const q = call && call === answered ? queued(call) : null;
     // vor dem ersten Anruf: der Chef wundert sich über die volle Warteschlange
     const who = q?.who ?? call?.who.replace(/ \(Rückruf\)$/, '') ?? 'Chef';
     const line = q?.line ?? call ?? QUEUE_LINE;
     // Rückruf: Betreff bleibt das ursprüngliche Anliegen
     const text = q ? line.text : (call?.about ?? line.text);
     // Fragen werden beantwortet, Probleme auch mit passendem Werkzeug gelöst
-    const kinds = line.fix ? [...TALK, ...TECH[line.topic]] : TALK;
+    const kinds = line.fix ? [...TALK, ...techFor(line.topic)] : TALK;
     const choices = kinds.length > 1 ? kinds.filter((k) => k !== task.kind) : kinds;
     const kind = weightedPick(choices, (k) => PROGRAMS[k].weight);
+    const device = kind === 'web' ? pick(TOPICS[line.topic].devices) : null;
     task = {
       kind,
       who,
@@ -342,7 +350,9 @@ export function createWork(ctx: AppContext, currentCall: () => Call | null) {
       full: text,
       no: nextTicketNo(ctx.state.clicks),
       line,
-      target: kind === 'rdp' ? pcOf(who) : pick(topicPool(line.topic, 'devices')),
+      call: q ? null : call,
+      device,
+      target: device ?? pcOf(who),
     };
     const prog = PROGRAMS[kind];
     reply = pick(prog.lines(task));
@@ -359,17 +369,23 @@ export function createWork(ctx: AppContext, currentCall: () => Call | null) {
   };
 
   /** Erfolg! Stempel springt auf, ab dem zweiten Ticket in Folge mit Zähler und höherem Ton */
+  const setStreak = (n: number) => {
+    streak = n;
+    last.dataset.streak = n >= 2 ? `×${n}` : '';
+  };
   const celebrate = () => {
-    const now = performance.now();
-    streak = now - lastSolved < STREAK_GAP_MS ? streak + 1 : 1;
-    lastSolved = now;
+    setStreak(streak + 1);
+    const line = STREAK_LINES[streak] ?? '';
     setText(stampText, `✓ ${pick(STAMPS)}`);
     setText(stampStreak, streak >= 2 ? `×${streak}` : '');
-    stamp.classList.remove('show');
+    setText(stampLine, line);
+    stamp.classList.remove('show', 'big');
     void stamp.offsetWidth; // Animation neu starten
     stamp.classList.add('show');
+    if (line) stamp.classList.add('big');
     ctx.sfx.solved(streak);
     ctx.haptic('tap');
+    onSolved(streak, stamp);
   };
 
   /** Abschicken: Erfolgsstempel, Karte mit Abschluss-Spruch in den Ticketverlauf, kurz danach das nächste */
@@ -379,6 +395,8 @@ export function createWork(ctx: AppContext, currentCall: () => Call | null) {
     if (typedLen === 0) return newTask();
     typedLen = reply.length;
     showTyped();
+    if (task.call) answered = task.call;
+    remember(task.full);
     ctx.log.write('ok', PROGRAMS[task.kind].log(task, reply));
     ctx.history.add({
       id: ticketId(task.no),
@@ -391,7 +409,7 @@ export function createWork(ctx: AppContext, currentCall: () => Call | null) {
       replyLabel: REPLY_LABELS[task.kind],
       cause: task.line.cause,
       // Fragen: Notiz zum Gespräch; Probleme: Notiz zur Reparatur
-      note: fill(pick(task.line.fix ? topicPool(task.line.topic, 'notes') : Math.random() < 0.7 ? TALK_NOTES : GENERIC.notes)),
+      note: fill(pick(task.line.fix ? topicPool(task.line.topic, 'notes') : TALK_NOTES)),
       solution: fill(pick(DONE_LINES[task.kind])),
     });
     el.classList.add('sent');
@@ -431,6 +449,8 @@ export function createWork(ctx: AppContext, currentCall: () => Call | null) {
 
   return {
     el,
+    /** Hat dieser Anruf seine Antwort schon bekommen? Vorher geht das Telefon nicht weiter. */
+    isAnswered: (c: Call | null) => !c || c === answered,
     /** Zuletzt geschlossenes Ticket: eine feste Zeile unter dem Fenster, gleich für alle Programme */
     last,
     promptSlot,
@@ -451,6 +471,7 @@ export function createWork(ctx: AppContext, currentCall: () => Call | null) {
     },
     /** Pro Frame: lange nichts getippt → Memes */
     idle(sinceLastKeyMs: number) {
+      if (streak > 0 && sinceLastKeyMs > SOLVE.breakMs) setStreak(0);
       if (!memes && sinceLastKeyMs > IDLE_MEMES_MS) enterMemes();
     },
   };

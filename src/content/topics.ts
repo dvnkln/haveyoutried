@@ -3,6 +3,7 @@
 
 export type Topic = 'drucker' | 'passwort' | 'netz' | 'mail' | 'office' | 'hardware' | 'server' | 'sicherheit' | 'wunsch' | 'allgemein';
 
+/** Leere Liste = Werkzeug passt nicht zum Thema (z. B. keine Shell bei Wünschen) */
 export interface TopicText {
   /** Befehle im Terminal */
   cmds: string[];
@@ -49,7 +50,7 @@ export const TOPICS: Record<Topic, TopicText> = {
   passwort: {
     cmds: ['passwd chef  # zum dritten Mal diese Woche', 'faillog -u petra', 'pwgen 16 1  # nicht aufschreiben!'],
     rdp: ['lusrmgr.msc', 'control userpasswords2', 'net user /domain'],
-    searches: ['konto gesperrt nach fehlversuchen entsperren', 'sicheres passwort das man sich merken kann', 'passwort zurücksetzen ohne altes passwort'],
+    searches: [],
     devices: ['Benutzerverwaltung'],
     notes: [
       '{who} hat das Passwort am Telefon buchstabiert. Laut. Im Großraumbüro.',
@@ -70,10 +71,10 @@ export const TOPICS: Record<Topic, TopicText> = {
     ],
   },
   mail: {
-    cmds: ['mailq | tail -1', 'postsuper -d ALL deferred  # tschüss', 'grep "reply-all" /var/log/mail.log | wc -l'],
-    rdp: ['outlook.exe /safe', 'outlook.exe /resetnavpane', 'control mlcfg32.cpl'],
-    searches: ['outlook startet nur im abgesicherten modus', 'outlook hängt beim start', 'allen antworten deaktivieren firmenweit'],
-    devices: ['Mailserver'],
+    cmds: [],
+    rdp: [],
+    searches: [],
+    devices: [],
     notes: [
       '{who} hat „Allen antworten“ benutzt. 340 Leute wissen jetzt Bescheid.',
       'Mail-Regeln von {who} aufgeräumt: 47 Stück. Alle hießen „Neu“.',
@@ -81,7 +82,7 @@ export const TOPICS: Record<Topic, TopicText> = {
     ],
   },
   office: {
-    cmds: ['find /home -name "*FINAL*" | wc -l', 'libreoffice --headless --convert-to pdf  # Rettung', 'ls -la ~/Desktop | wc -l  # 12.000'],
+    cmds: [],
     rdp: ['excel.exe /safe', 'winword.exe /a', '%appdata%\\Microsoft\\Excel\\XLSTART'],
     searches: ['office fehler ohne fehlermeldung', 'update rückgängig machen ohne dass es jemand merkt', 'datei nicht gespeichert wiederherstellen'],
     devices: ['Lizenzportal'],
@@ -95,7 +96,7 @@ export const TOPICS: Record<Topic, TopicText> = {
     cmds: ['lsusb  # was hängt da alles dran?', 'dmesg | tail', 'sensors  # 94 °C, alles normal'],
     rdp: ['devmgmt.msc', 'shutdown /r /t 0', 'desk.cpl'],
     searches: ['gerät geht nicht an obwohl an', 'wackelkontakt finden ohne zu fluchen', 'garantie abgelaufen was nun'],
-    devices: ['Beamer Vorstandsraum', 'USV Serverraum'],
+    devices: [],
     notes: [
       '{who} hat beim Warten Kekse über die Tastatur gekrümelt. Wir sehen uns wieder.',
       '{who} hat dreimal neu gestartet. Zweimal davon den Monitor.',
@@ -105,7 +106,7 @@ export const TOPICS: Record<Topic, TopicText> = {
   },
   server: {
     cmds: ['uptime  # 1.284 Tage. Nicht anfassen.', 'ssh root@srv-legacy01  # bitte bitte bitte', 'systemctl status nginx', 'df -h /  # 100 %. Natürlich.'],
-    rdp: ['services.msc', 'eventvwr.msc', 'taskmgr'],
+    rdp: [],
     searches: ['dienst startet nicht nach update', 'server neu starten ohne dass es jemand merkt', 'log fehler finden 40000 zeilen'],
     devices: ['USV Serverraum', 'NAS Buchhaltung'],
     notes: [
@@ -117,8 +118,8 @@ export const TOPICS: Record<Topic, TopicText> = {
   },
   sicherheit: {
     cmds: ['grep "Failed password" /var/log/auth.log | wc -l', 'ss -tlnp  # was ist hier alles offen?!', 'chmod 600 ~/.ssh/id_rsa'],
-    rdp: ['wf.msc', 'mrt.exe', 'gpupdate /force'],
-    searches: ['sicherheitsrichtlinie freundlich erklären', 'phishing erkennen für chefs', 'wie sage ich nein ohne nein zu sagen'],
+    rdp: [],
+    searches: [],
     devices: ['Firewall', 'Kaffeemaschine (IoT)'],
     notes: [
       'Gerät lief mit Admin/Admin. Jetzt Admin/Admin2. Fortschritt.',
@@ -128,9 +129,9 @@ export const TOPICS: Record<Topic, TopicText> = {
     ],
   },
   wunsch: {
-    cmds: ['sudo -l -U werkstudent  # nein.', 'echo "nein" > /dev/chef', 'cat /etc/sudoers | grep -c azubi  # 0, bleibt so'],
+    cmds: [],
     rdp: ['appwiz.cpl', 'lusrmgr.msc', 'gpedit.msc'],
-    searches: ['blockchain ticketsystem sinnvoll', 'wlan im aufzug möglich', 'nein sagen zum chef höflich'],
+    searches: [],
     devices: ['Lizenzportal', 'Benutzerverwaltung'],
     notes: [
       'Eingerichtet. {who} fragte gleich nach dem nächsten Wunsch.',
@@ -146,12 +147,12 @@ export const TOPICS: Record<Topic, TopicText> = {
   },
 };
 
-/** Passt zu jedem Thema */
+/** Passt zu jedem Thema (Geräte nie: die müssen zum Anliegen passen) */
 export const GENERIC: TopicText = {
   cmds: ['git blame praktikant.sh', 'grep -i "error" /var/log/syslog | wc -l', 'rm -rf /tmp/*  # nur /tmp. Wirklich nur /tmp.', 'echo "Problem gelöst" > /dev/chef', 'history | grep -c sudo'],
   rdp: ['taskmgr', 'cleanmgr /sagerun:1', '%temp%  (4,2 GB. Seit 2016.)'],
   searches: ['fehler 0x8007045d', 'hat es jemand schon mal aus und eingeschaltet', 'wie erkläre ich das dem chef'],
-  devices: ['Drucker 3. OG', 'Switch Keller', 'NAS Buchhaltung', 'Kaffeemaschine (IoT)'],
+  devices: [],
   notes: [
     'Workaround dokumentiert. In meinem Kopf.',
     'Bitte nicht wiedereröffnen. Bitte. Bitte.',
@@ -174,6 +175,9 @@ export const TALK_NOTES: string[] = [
   'Eskalation an den Chef vermieden. Durch Kekse.',
   '{who} fragte noch, ob ich „mal eben“ den privaten Laptop anschauen kann.',
   'Aufwand: 2 Minuten Antwort, 25 Minuten Small Talk.',
+  '{who} hat sich bedankt. Schriftlich. Ich bin gerührt.',
+  'Dritte Anfrage dieser Art diese Woche. Gleicher Mensch.',
+  'Bitte nicht wiedereröffnen. Bitte. Bitte.',
 ];
 
 /** So oft kommt ein Text aus dem Thema statt aus dem Allgemeinen (wenn das Thema welche hat) */

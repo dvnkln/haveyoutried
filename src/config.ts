@@ -200,6 +200,21 @@ export const PRESTIGE = {
   bonusPerPoint: 0.02,
 };
 
+/** Gelöste Tickets im Arbeitsfenster: Bonus, der mit der Serie wächst */
+export const SOLVE = {
+  /** Grundbonus: so viele Sekunden Produktion bzw. so viele Klicks, je nachdem, was mehr ist */
+  bonusSec: 1.5,
+  bonusClicks: 4,
+  /** je Ticket in Folge +10 % Bonus, höchstens ×3 */
+  perStreak: 0.1,
+  maxStreakMult: 3,
+  /** Serie reißt, wenn so lange keine Taste gedrückt wird */
+  breakMs: 4_000,
+  /** Meilensteine der Serie: Extra-Bonus (Sekunden Produktion bzw. Klicks) */
+  milestoneSec: 15,
+  milestoneClicks: 40,
+};
+
 export const ACHIEVEMENTS_CFG = {
   /** Bonus je freigeschaltetem Achievement auf Produktion und Klicks */
   bonusPerAchievement: 0.01,

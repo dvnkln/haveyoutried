@@ -57,9 +57,12 @@ mountIncidentOverlay(ctx);
 // Seite während eines Incidents geschlossen → gilt als eskaliert
 settleAbandoned(state, rates(state));
 
-// Testhilfe: ?incident=raid|spam|services startet das Minispiel direkt
-const forced = new URLSearchParams(location.search).get('incident');
-if (forced && isIncidentId(forced)) setTimeout(() => startIncident(state, forced), 1_200);
+// Nur im Test-Build (vite build --mode e2e): ?incident=raid|spam|… startet das Minispiel direkt.
+// Im normalen Build fällt der Block samt Abfrage komplett weg.
+if (import.meta.env.MODE === 'e2e') {
+  const forced = new URLSearchParams(location.search).get('incident');
+  if (forced && isIncidentId(forced)) setTimeout(() => startIncident(state, forced), 1_200);
+}
 
 for (const line of BOOT_LINES) log.template(line);
 if (loaded) log.write('info', 'helpdesk[1337]: savegame restored from /var/lib/helpdesk');

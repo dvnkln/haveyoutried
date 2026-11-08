@@ -10,7 +10,8 @@ export default defineConfig({
     browserName: 'chromium',
   },
   webServer: {
-    command: 'npm run build && npx vite preview --host 127.0.0.1 --port 4173 --strictPort',
+    // Test-Build: enthält die ?incident=-Testlinks, die im normalen Build fehlen
+    command: 'npx tsc --noEmit && npx vite build --mode e2e --outDir dist-e2e && npx vite preview --outDir dist-e2e --host 127.0.0.1 --port 4173 --strictPort',
     url: 'http://127.0.0.1:4173',
     reuseExistingServer: false,
     timeout: 120_000,

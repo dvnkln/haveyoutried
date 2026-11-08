@@ -159,3 +159,12 @@ export const VIP_TICKETS: { who: string; subject: string; topic: Topic; cause: s
   { who: 'Chef', topic: 'office', subject: 'PowerPoint ist weg!', cause: 'Fenster minimiert' },
   { who: 'Vorstand', topic: 'wunsch', subject: 'Bitte sofort: neues iPad. Grund: „Farbe“.', cause: 'Farbe' },
 ];
+
+/** Meilensteine einer Serie gelöster Tickets: Spruch unter dem Stempel */
+export const STREAK_LINES: Record<number, string> = {
+  5: 'Läuft bei dir!',
+  10: 'Die Warteschlange hat Angst.',
+  20: 'Moss wäre stolz.',
+  42: 'Die Antwort auf alles.',
+  100: 'Ludicrous Speed!',
+};
