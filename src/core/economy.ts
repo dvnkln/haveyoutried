@@ -1,5 +1,7 @@
-import { ACHIEVEMENTS_CFG, CONFIG, GENERATORS, PRESTIGE, UPGRADES, type GeneratorDef, type GeneratorId, type UpgradeDef } from '../config';
+import { CONFIG, GENERATORS, UPGRADES, type GeneratorDef, type GeneratorId, type UpgradeDef } from '../config';
+import { achievementMultiplier } from './achievements';
 import { buffMultiplier } from './events';
+import { prestigeMultiplier } from './prestige';
 import type { BuyAmount, GameState } from './state';
 
 const g = CONFIG.costGrowth;
@@ -97,9 +99,7 @@ export function globalMultiplier(state: GameState): number {
   let m = 1;
   for (const u of owns(state)) if (u.effect.kind === 'global') m *= u.effect.mult;
   // Berufserfahrung (Prestige) und Achievements
-  m *= 1 + state.prestige.experience * PRESTIGE.bonusPerPoint;
-  m *= 1 + Object.keys(state.achievements).length * ACHIEVEMENTS_CFG.bonusPerAchievement;
-  return m;
+  return m * prestigeMultiplier(state) * achievementMultiplier(state);
 }
 
 export function clickValue(state: GameState): number {

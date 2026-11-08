@@ -1,8 +1,9 @@
-import { ACHIEVEMENTS_CFG, PRESTIGE } from '../../config';
+import { PRESTIGE } from '../../config';
 import { ACHIEVEMENTS } from '../../content/achievements';
 import { companyOf, FAREWELLS } from '../../content/companies';
-import { achievementCount } from '../../core/achievements';
-import { canQuit, prestigeGain, quitJob, ticketsForNextPoint } from '../../core/prestige';
+import { achievementCount, achievementMultiplier } from '../../core/achievements';
+import { incidentRunning } from '../../core/incidents';
+import { canQuit, experienceBonus, prestigeGain, prestigeMultiplier, quitJob, ticketsForNextPoint } from '../../core/prestige';
 import { pick } from '../../util';
 import type { AppContext, Tab } from '../app';
 import { h, setDisabled, setText } from '../dom';
@@ -26,7 +27,7 @@ export function careerTab(): Tab {
 
   const achTitle = h('div', { class: 'section-title' });
   const achList = h('ul', { class: 'achievements' });
-  let achSig = '';
+  let achShown = -1;
 
   const confirmQuit = () => {
     const s = ctx.state;
@@ -38,7 +39,7 @@ export function careerTab(): Tab {
         h('p', {}, [
           'Dafür bekommst du ',
           h('strong', { class: 'hl', text: `+${g} Berufserfahrung` }),
-          ` (dann ${pct((s.prestige.experience + g) * PRESTIGE.bonusPerPoint)} Bonus auf alles).`,
+          ` (dann ${pct(experienceBonus(s.prestige.experience + g))} Bonus auf alles).`,
         ]),
         'Weg sind: Tickets, Infrastruktur, Upgrades, laufende Boosts.',
         'Bleiben: Berufserfahrung, Achievements, Statistik, Einstellungen.',
@@ -49,6 +50,7 @@ export function careerTab(): Tab {
           danger: true,
           onClick: () => {
             if (!quitJob(ctx.state)) return;
+            ctx.saver.saveNow(); // sonst macht Schließen vor dem Autosave die Kündigung rückgängig
             ctx.sfx.milestone();
             ctx.haptic('milestone');
             const c = companyOf(ctx.state.prestige.company);
@@ -68,7 +70,7 @@ export function careerTab(): Tab {
   const rebuildAchievements = () => {
     const s = ctx.state;
     const n = achievementCount(s);
-    setText(achTitle, `# Achievements (${n}/${ACHIEVEMENTS.length}) · +${pct(n * ACHIEVEMENTS_CFG.bonusPerAchievement)} auf alles`);
+    setText(achTitle, `# Achievements (${n}/${ACHIEVEMENTS.length}) · +${pct(achievementMultiplier(s) - 1)} auf alles`);
     achList.replaceChildren(
       ...ACHIEVEMENTS.map((a) => {
         const done = !!s.achievements[a.id];
@@ -90,6 +92,7 @@ export function careerTab(): Tab {
     icon: '[★]',
     mount(c) {
       ctx = c;
+      seenAchievements = achievementCount(c.state); // Badge nur für wirklich Neues
       quitBtn.addEventListener('click', confirmQuit);
       return h('div', { class: 'system career' }, [
         h('div', { class: 'section-title', text: '# Lebenslauf' }),
@@ -116,21 +119,23 @@ export function careerTab(): Tab {
       const g = prestigeGain(s);
       setText(company, companyOf(s.prestige.company).name);
       setText(jobs, String(s.prestige.jobs + 1));
-      setText(exp, `${s.prestige.experience} (+${pct(s.prestige.experience * PRESTIGE.bonusPerPoint)})`);
+      setText(exp, `${s.prestige.experience} (+${pct(prestigeMultiplier(s) - 1)})`);
       setText(gain, `+${g}`);
       setText(next, `${formatNumber(ticketsForNextPoint(s))} Tickets gesamt`);
       setDisabled(quitBtn, !canQuit(s));
       setText(
         quitHint,
-        g >= 1
-          ? 'Arbeitszeugnis: „stets bemüht“. Reicht für den nächsten Job.'
-          : s.prestige.experience > 0
-            ? `Gerade erst angefangen. Noch ${formatNumber(Math.max(0, ticketsForNextPoint(s) - s.ticketsAllTime))} Tickets bis zur nächsten Berufserfahrung.`
-            : `Noch zu wenig Erfahrung für ein gutes Arbeitszeugnis. Erster Punkt ab ${formatNumber(PRESTIGE.ticketsPerPoint)} Tickets.`,
+        g >= 1 && incidentRunning()
+          ? 'Erst den Incident lösen. Mitten im Brand kündigt man nicht (zumindest nicht schriftlich).'
+          : g >= 1
+            ? 'Arbeitszeugnis: „stets bemüht“. Reicht für den nächsten Job.'
+            : s.prestige.experience > 0
+              ? `Gerade erst angefangen. Noch ${formatNumber(Math.max(0, ticketsForNextPoint(s) - s.ticketsAllTime))} Tickets bis zur nächsten Berufserfahrung.`
+              : `Noch zu wenig Erfahrung für ein gutes Arbeitszeugnis. Erster Punkt ab ${formatNumber(PRESTIGE.ticketsPerPoint)} Tickets.`,
       );
-      const sig = Object.keys(s.achievements).join();
-      if (sig !== achSig) {
-        achSig = sig;
+      const n = achievementCount(s);
+      if (n !== achShown) {
+        achShown = n;
         rebuildAchievements();
       }
     },

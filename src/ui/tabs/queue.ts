@@ -60,10 +60,13 @@ export function queueTab(): Tab {
     return { face: caller.face, who: caller.who, line: fresh(caller.lines) };
   };
 
-  const showCall = (c: Call, sound = true) => {
+  /** initial = Anrufer beim Seitenstart: kein Klingeln, zählt nicht als angehört */
+  const showCall = (c: Call, initial = false) => {
     call = c;
-    bumpFlag(ctx.state, 'callers');
-    if (c.who.endsWith('(Rückruf)')) bumpFlag(ctx.state, 'callbacks');
+    if (!initial) {
+      bumpFlag(ctx.state, 'callers');
+      if (c.who.endsWith('(Rückruf)')) bumpFlag(ctx.state, 'callbacks');
+    }
     recent.push(c.line);
     if (recent.length > 30) recent.shift();
     setText(face, c.face);
@@ -73,7 +76,7 @@ export function queueTab(): Tab {
     callerLeft = randInt(CONFIG.callerTicketsMin, CONFIG.callerTicketsMax);
     if (c.reply) ctx.log.template(c.reply);
     juice(bubble, NUDGE, 260);
-    if (sound) ctx.sfx.ring();
+    if (!initial) ctx.sfx.ring();
   };
 
   const spawnFloater = (x: number, y: number, value: number, label?: string) => {
@@ -158,7 +161,7 @@ export function queueTab(): Tab {
     icon: '>_',
     mount(c) {
       ctx = c;
-      showCall(chooseCall(), false);
+      showCall(chooseCall(), true);
       setText(btnSub, ticketId(CONFIG.ticketNumberOffset + ctx.state.clicks + 1));
       setText(last, 'Warteschlange: voll. Wie immer.');
 

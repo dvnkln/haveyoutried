@@ -2,6 +2,7 @@ import { GENERATORS, PRESTIGE } from '../config';
 import { COMPANIES } from '../content/companies';
 import { pick } from '../util';
 import { bus } from './bus';
+import { scheduleNext } from './events';
 import { incidentRunning } from './incidents';
 import { bumpFlag, type GameState } from './state';
 
@@ -23,7 +24,12 @@ export function ticketsForNextPoint(state: GameState): number {
 
 /** Bonusfaktor aus Berufserfahrung (Produktion und Klicks). */
 export function prestigeMultiplier(state: GameState): number {
-  return 1 + state.prestige.experience * PRESTIGE.bonusPerPoint;
+  return 1 + experienceBonus(state.prestige.experience);
+}
+
+/** Bonusanteil für eine Menge Berufserfahrung (0.1 = +10 %). */
+export function experienceBonus(experience: number): number {
+  return experience * PRESTIGE.bonusPerPoint;
 }
 
 export function canQuit(state: GameState): boolean {
@@ -51,6 +57,7 @@ export function quitJob(state: GameState, rnd: () => number = Math.random): numb
   state.upgrades = {};
   state.buffs = [];
   state.events.active = null;
+  scheduleNext(state); // sonst piept es am ersten Arbeitstag sofort
   state.incidents.active = '';
 
   bumpFlag(state, `company:${state.prestige.company}`);

@@ -170,3 +170,44 @@ describe('Neue Achievements und Zähler', () => {
     expect(ids).toEqual(expect.arrayContaining(['callers100', 'callbacks10']));
   });
 });
+
+describe('Review-Fixes Karriere', () => {
+  it('nach dem Kündigen piept der Pager nicht sofort', () => {
+    const s = createInitialState(0);
+    s.ticketsAllTime = 1e8;
+    s.stats.playTimeMs = 500_000;
+    s.events.nextAt = 0; // überfällig
+    quitJob(s, () => 0);
+    expect(s.events.nextAt).toBeGreaterThan(s.stats.playTimeMs);
+  });
+
+  it('Uhrzeit-Achievements brauchen Aktivität', () => {
+    const s = createInitialState(0);
+    const night = new Date(2026, 10, 9, 3, 14);
+    expect(checkAchievements(s, night, false)).not.toContain('pi');
+    expect(s.achievements.pi).toBeUndefined();
+    const got = checkAchievements(s, night, true);
+    expect(got).toContain('pi');
+    expect(got).toContain('night');
+  });
+
+  it('Achievement-Bonus folgt neuen Freischaltungen trotz Zwischenspeicher', () => {
+    const s = createInitialState(0);
+    const before = clickValue(s);
+    s.clicks = 1;
+    checkAchievements(s, new Date(2026, 10, 10, 12, 0), false);
+    expect(s.achievements.first).toBeDefined();
+    expect(clickValue(s)).toBeGreaterThan(before);
+  });
+
+  it('meldet die Größe des Durchgangs mit (für die Sammelmeldung)', () => {
+    const s = createInitialState(0);
+    s.clicks = 10_000;
+    const seen: number[] = [];
+    const off = bus.on('achievement', (e) => seen.push(e.batch));
+    const got = checkAchievements(s, new Date(2026, 10, 10, 12, 0), false);
+    off();
+    expect(got.length).toBeGreaterThan(1);
+    expect(seen).toEqual(got.map(() => got.length));
+  });
+});

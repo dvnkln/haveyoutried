@@ -8,6 +8,8 @@ export interface AchievementDef {
   desc: string;
   /** geheim: Name und Beschreibung erst nach dem Freischalten sichtbar */
   hidden?: boolean;
+  /** Uhrzeit-Achievements: nur, wenn der Spieler gerade aktiv ist */
+  needsActivity?: boolean;
   check: (s: GameState, now: Date) => boolean;
 }
 
@@ -42,6 +44,9 @@ const a = (
   check: AchievementDef['check'],
   hidden = false,
 ): AchievementDef => ({ id, name, desc, check, hidden });
+
+/** Achievement, das nur beim aktiven Spielen zählt (Uhrzeit allein reicht nicht). */
+const live = (def: AchievementDef): AchievementDef => ({ ...def, needsActivity: true });
 
 export const ACHIEVEMENTS: AchievementDef[] = [
   // --- Tickets & Klicks ---
@@ -105,16 +110,16 @@ export const ACHIEVEMENTS: AchievementDef[] = [
 
   // --- Geheim ---
   a('weekend', 'Wochenende', '8 Stunden am Stück weg gewesen. Es lief auch ohne dich. Leider.', (s) => flag(s, 'offline:capped') > 0, true),
-  a('night', 'Nachtschicht', 'Zwischen 0 und 5 Uhr gespielt.', (_s, d) => d.getHours() < 5, true),
-  a('fridayLate', 'Freitag, 16:55', 'Freitag kurz vor Feierabend noch Tickets geschlossen.', (_s, d) => d.getDay() === 5 && d.getHours() === 16 && d.getMinutes() >= 55, true),
+  live(a('night', 'Nachtschicht', 'Zwischen 0 und 5 Uhr gespielt.', (_s, d) => d.getHours() < 5, true)),
+  live(a('fridayLate', 'Freitag, 16:55', 'Freitag kurz vor Feierabend noch Tickets geschlossen.', (_s, d) => d.getDay() === 5 && d.getHours() === 16 && d.getMinutes() >= 55, true)),
   a('silent', 'Großraumbüro-tauglich', 'Den Sound ausgeschaltet. Die Kollegen danken.', (s) => !s.settings.sound, true),
   a('loud', 'Großraumbüro-Terror', 'MX Blue auf voller Lautstärke. Die Kollegen planen etwas.', (s) => s.settings.sound && s.settings.volume >= 1 && s.settings.tapSound === 'blue', true),
   a('silentRed', 'Leisetreter', 'Auf MX Silent Red gewechselt. Feigling.', (s) => s.settings.tapSound === 'silent', true),
-  a('leet', '1337 h4x0r', 'Um 13:37 Uhr gespielt.', (_s, d) => at(d, 13, 37), true),
-  a('pi', 'π-hole', 'Um 3:14 Uhr gespielt. Nachts. Warum?', (_s, d) => at(d, 3, 14), true),
-  a('monday', 'Montagmorgen, 7:59', 'Montag vor 8 Uhr schon Tickets geschlossen.', (_s, d) => d.getDay() === 1 && d.getHours() < 8, true),
-  a('sunday', 'Sonntagsdienst', 'Am Sonntag gespielt. Rufbereitschaft wird nicht vergütet.', (_s, d) => d.getDay() === 0, true),
-  a('xmas', 'Weihnachtsbereitschaft', 'An Heiligabend Tickets geschlossen. Der Drucker hat dir ein Lied gedruckt.', (_s, d) => d.getMonth() === 11 && d.getDate() === 24, true),
-  a('nye', 'Jahreswechsel im Serverraum', 'Silvester nach 23 Uhr gespielt. Das Feuerwerk ist der Brandmelder.', (_s, d) => d.getMonth() === 11 && d.getDate() === 31 && d.getHours() >= 23, true),
+  live(a('leet', '1337 h4x0r', 'Um 13:37 Uhr gespielt.', (_s, d) => at(d, 13, 37), true)),
+  live(a('pi', 'π-hole', 'Um 3:14 Uhr gespielt. Nachts. Warum?', (_s, d) => at(d, 3, 14), true)),
+  live(a('monday', 'Montagmorgen, 7:59', 'Montag vor 8 Uhr schon Tickets geschlossen.', (_s, d) => d.getDay() === 1 && d.getHours() < 8, true)),
+  live(a('sunday', 'Sonntagsdienst', 'Am Sonntag gespielt. Rufbereitschaft wird nicht vergütet.', (_s, d) => d.getDay() === 0, true)),
+  live(a('xmas', 'Weihnachtsbereitschaft', 'An Heiligabend Tickets geschlossen. Der Drucker hat dir ein Lied gedruckt.', (_s, d) => d.getMonth() === 11 && d.getDate() === 24, true)),
+  live(a('nye', 'Jahreswechsel im Serverraum', 'Silvester nach 23 Uhr gespielt. Das Feuerwerk ist der Brandmelder.', (_s, d) => d.getMonth() === 11 && d.getDate() === 31 && d.getHours() >= 23, true)),
   a('chaos', 'Ausnahmezustand', 'Drei Boosts oder Bremsen gleichzeitig aktiv.', (s) => s.buffs.length >= 3, true),
 ];

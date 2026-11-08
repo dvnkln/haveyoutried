@@ -23,6 +23,9 @@ import type { GameState } from '../core/state';
 import { pick, randInt, weightedPick } from '../util';
 import type { App, AppContext } from './app';
 
+/** Ab so vielen gleichzeitig freigeschalteten Achievements gibt es nur eine Sammelmeldung. */
+const BULK_ACHIEVEMENTS = 3;
+
 /** Verbindet Spielereignisse mit Syslog, Sound und Haptik und streut Ambient-Rauschen ein. */
 export function startFlavor(ctx: AppContext, app: App): void {
   const { state, log, sfx, haptic } = ctx;
@@ -81,20 +84,40 @@ export function startFlavor(ctx: AppContext, app: App): void {
     }
   });
 
-  bus.on('achievement', ({ id }) => {
+  // Viele auf einmal (alter Spielstand, Kündigen): eine Sammelmeldung statt 30 Sounds und Toasts.
+  const bulk: string[] = [];
+  bus.on('achievement', ({ id, batch }) => {
     const def = ACHIEVEMENTS.find((a) => a.id === id);
-    if (!def) return;
-    log.write('ok', `achievementd[777]: unlocked "${def.name}"`);
-    app.toast(`Achievement: ${def.name}`, def.desc);
+    if (batch <= BULK_ACHIEVEMENTS) {
+      if (!def) return;
+      log.write('ok', `achievementd[777]: unlocked "${def.name}"`);
+      app.toast(`Achievement: ${def.name}`, def.desc);
+      sfx.milestone();
+      haptic('milestone');
+      return;
+    }
+    bulk.push(def?.name ?? id);
+    if (bulk.length < batch) return;
+    log.write('ok', `achievementd[777]: ${batch} achievements unlocked (backlog import): ${bulk.join(', ')}`);
+    app.toast(`${batch} Achievements auf einmal`, 'Nachgetragen aus der Personalakte. Details im Karriere-Tab.');
     sfx.milestone();
     haptic('milestone');
+    bulk.length = 0;
   });
   bus.on('jobQuit', ({ gained, company }) => {
     const c = companyOf(company);
     log.write('warn', `hr[201]: Kündigung eingegangen. Resturlaub: 0 Tage. Berufserfahrung +${gained}.`);
     log.write('info', `login[1]: welcome to ${c.host}. ${c.welcome}`);
   });
-  setInterval(() => checkAchievements(state), ACHIEVEMENTS_CFG.checkMs);
+  // Uhrzeit-Achievements nur, wenn kürzlich geklickt wurde (nicht bei offenem Tab über Nacht)
+  let lastClickAt = -Infinity;
+  bus.on('click', () => {
+    lastClickAt = performance.now();
+  });
+  setInterval(
+    () => checkAchievements(state, new Date(), performance.now() - lastClickAt < ACHIEVEMENTS_CFG.activeWindowMs),
+    ACHIEVEMENTS_CFG.checkMs,
+  );
 
   bus.on('buffEnded', ({ id }) => {
     log.write('info', `helpdesk[1337]: ${BUFF_LABELS[id] ?? id} vorbei. Zurück zum Normalbetrieb.`);
@@ -130,9 +153,18 @@ function watchUnlocks(
   onItem: (kind: 'generator' | 'upgrade', name: string) => void,
   onAny: () => void,
 ): void {
-  const seenGen = new Set(GENERATORS.filter((g) => isUnlocked(state, g.id)).map((g) => g.id));
-  const seenUpg = new Set(availableUpgrades(state).map((u) => u.id));
-  for (const id of Object.keys(state.upgrades)) seenUpg.add(id);
+  const seenGen = new Set<string>();
+  const seenUpg = new Set<string>();
+  const seed = () => {
+    seenGen.clear();
+    seenUpg.clear();
+    for (const g of GENERATORS) if (isUnlocked(state, g.id)) seenGen.add(g.id);
+    for (const u of availableUpgrades(state)) seenUpg.add(u.id);
+    for (const id of Object.keys(state.upgrades)) seenUpg.add(id);
+  };
+  seed();
+  // Nach dem Kündigen ist alles wieder gesperrt: neu freischalten soll wieder gemeldet werden
+  bus.on('jobQuit', seed);
 
   setInterval(() => {
     let any = false;

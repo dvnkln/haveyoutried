@@ -76,7 +76,7 @@ function pickEvent(state: GameState, now: Date): GameEventDef | null {
   return pool.length > 0 ? weightedPick(pool, (e) => e.weight?.(state, now) ?? 1, random) : null;
 }
 
-function scheduleNext(state: GameState): void {
+export function scheduleNext(state: GameState): void {
   const t = state.stats.playTimeMs;
   state.events.nextAt = t + CONFIG.eventMinMs + random() * (CONFIG.eventMaxMs - CONFIG.eventMinMs);
 }

@@ -202,6 +202,8 @@ export const ACHIEVEMENTS_CFG = {
   bonusPerAchievement: 0.01,
   /** Prüfintervall in ms */
   checkMs: 1_000,
+  /** Uhrzeit-Achievements zählen nur, wenn der letzte Klick höchstens so lange her ist */
+  activeWindowMs: 60_000,
 };
 
 export const CONFIG = {
