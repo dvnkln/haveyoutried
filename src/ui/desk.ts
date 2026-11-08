@@ -1,7 +1,8 @@
 import { CONFIG } from '../config';
-import { CALLBACK_LINES, CALLERS, situationalCalls, type Call } from '../content/callers';
+import { CALLBACK_LINES, CALLERS, situationalCalls, type Call, type Line } from '../content/callers';
+import { topicPool } from '../content/topics';
 import { URGENT_LABELS, URGENT_TEXT } from '../content/events';
-import { TICKET_NOTES, VIP_TICKETS } from '../content/work';
+import { VIP_TICKETS } from '../content/work';
 import { ALTF4_LINES, COMBO_LINES, PANIC_LINES } from '../content/props';
 import { clickTicket } from '../core/actions';
 import { rates } from '../core/economy';
@@ -170,22 +171,30 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
   for (const el of keyboard.querySelectorAll<HTMLElement>('.key')) el.style.setProperty('--i', String(i++ % 14));
   const keyboardWrap = h('div', { class: 'keyboard-wrap' }, [hint, keyboard]);
 
-  const fresh = (lines: string[]) => {
-    const unused = lines.filter((l) => !recent.includes(l));
+  const fresh = (lines: Line[]) => {
+    const unused = lines.filter((l) => !recent.includes(l.text));
     return pick(unused.length > 0 ? unused : lines);
   };
+
 
   const chooseCall = (): Call => {
     // Rückruf: gleiche Person, neues Leid
     if (call && Math.random() < CONFIG.callerCallbackChance) {
-      return { face: call.face, who: `${call.who.replace(/ \(Rückruf\)$/, '')} (Rückruf)`, line: pick(CALLBACK_LINES) };
+      // gleiches Anliegen wie vorher, nur genervter
+      return {
+        ...call,
+        who: `${call.who.replace(/ \(Rückruf\)$/, '')} (Rückruf)`,
+        text: pick(CALLBACK_LINES),
+        about: call.about ?? call.text,
+        reply: undefined,
+      };
     }
-    const situational = situationalCalls(ctx.state, new Date()).filter((c) => !recent.includes(c.line));
+    const situational = situationalCalls(ctx.state, new Date()).filter((c) => !recent.includes(c.text));
     if (situational.length > 0 && Math.random() < CONFIG.callerSituationalChance) return pick(situational);
 
     let caller = pick(CALLERS);
     while (CALLERS.length > 1 && caller.who === call?.who) caller = pick(CALLERS);
-    return { face: caller.face, who: caller.who, line: fresh(caller.lines) };
+    return { face: caller.face, who: caller.who, ...fresh(caller.lines) };
   };
 
   /** initial = Anrufer beim Seitenstart: kein Klingeln, zählt nicht als angehört */
@@ -195,12 +204,12 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
       bumpFlag(ctx.state, 'callers');
       if (c.who.endsWith('(Rückruf)')) bumpFlag(ctx.state, 'callbacks');
     }
-    recent.push(c.line);
+    recent.push(c.text);
     if (recent.length > 30) recent.shift();
     setText(face, c.face);
     setText(who, c.who);
-    setText(says, c.line);
-    callerUntil = performance.now() + CONFIG.callerMinShowMs + c.line.length * CONFIG.callerShowMsPerChar;
+    setText(says, c.text);
+    callerUntil = performance.now() + CONFIG.callerMinShowMs + c.text.length * CONFIG.callerShowMsPerChar;
     callerLeft = randInt(CONFIG.callerTicketsMin, CONFIG.callerTicketsMax);
     if (c.reply) ctx.log.template(c.reply);
     juice(bubble, NUDGE, 260);
@@ -243,7 +252,8 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
         channel: 'Post-it am Monitor',
         prio: el.textContent?.replace(/!/g, '').trim() || 'DRINGEND',
         status: 'Sofort gelöst (natürlich)',
-        note: pick(TICKET_NOTES).replaceAll('{who}', vip.who).replaceAll('{target}', 'Chef-Laptop'),
+        cause: vip.cause,
+        note: pick(topicPool(vip.topic, 'notes')).replaceAll('{who}', vip.who),
         solution: `${URGENT_TEXT[res.effect] ?? 'VIP-Ticket gelöst.'} (${describeEffect(res)})`,
         vip: true,
       });

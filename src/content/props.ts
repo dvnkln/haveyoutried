@@ -67,46 +67,6 @@ export const PANIC_LINES: string[] = [
 /** Schild an der Wand („Arbeitstage ohne Unfall“). */
 export const INCIDENT_SIGN = 'Minuten ohne Incident';
 
-/** Antworten, die als Mail oder Ticket-Kommentar getippt werden. */
-export const REPLIES_TEXT: string[] = [
-  'Haben Sie es schon mal aus- und wieder eingeschaltet?',
-  'Ist der Stecker drin? Beide Enden?',
-  'Bitte starten Sie neu und melden Sie sich, falls es wieder auftritt.',
-  'Das ist ein bekanntes Problem. Der Fix kommt im nächsten Release.',
-  'Bei mir funktioniert es.',
-  'Haben Sie schon im Wiki nachgeschaut? (Wir haben kein Wiki.)',
-  'Könnten Sie mir einen Screenshot schicken? Nicht abfotografiert.',
-  'Das liegt am Cache. Bitte leeren. Nein, den anderen Cache.',
-  'Ich habe Ihnen die Rechte gegeben. Bitte niemandem sagen.',
-  'Das Passwort darf nicht „Passwort“ sein. Auch nicht „Passwort1“.',
-  'Ihr Drucker hat keine Gefühle. Er ist nur gemein.',
-  'Ich schicke einen Kollegen. Er heißt Mo. Er ist der Kollege.',
-  'Das ist kein Bug, das ist ein undokumentiertes Feature.',
-  'Bitte nicht auf „Allen antworten“ klicken. Danke.',
-  'Ticket an Level 2 eskaliert. Level 2 bin auch ich.',
-  'Wir haben das Problem identifiziert. Es sitzt vor dem Bildschirm.',
-  'Ich habe es mir angesehen. Jetzt geht es. Ich habe nichts gemacht.',
-  'Bitte beschreiben Sie das Problem genauer als „geht nicht“.',
-];
-
-/** Befehle, die im Terminal getippt werden. */
-export const REPLIES_CMD: string[] = [
-  'sudo systemctl restart drucker.service',
-  'ping -c 4 8.8.8.8',
-  'git blame praktikant.sh',
-  'grep -i "error" /var/log/syslog | wc -l',
-  'kill -9 $(pgrep outlook)',
-  'chmod -R 755 /home/chef  # nicht 777!',
-  'dig +short intranet.local  # es ist DNS',
-  'ssh root@srv-legacy01  # bitte bitte bitte',
-  'apt update && apt upgrade -y  # Freitag, 16:55',
-  'uptime  # 1.284 Tage. Nicht anfassen.',
-  'rm -rf /tmp/*  # nur /tmp. Wirklich nur /tmp.',
-  'docker ps -a | grep -c Exited',
-  'echo "Problem gelöst" > /dev/chef',
-  'passwd chef  # zum dritten Mal diese Woche',
-];
-
 /** Prioritäten im Ticketsystem */
 export const TICKET_PRIOS: string[] = ['niedrig', 'mittel', 'hoch', 'sehr hoch', 'CHEF', 'gestern'];
 

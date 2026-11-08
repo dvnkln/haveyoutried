@@ -96,32 +96,35 @@ const CABLES = `<svg viewBox="0 0 300 60" preserveAspectRatio="none">
  * Ohne Upgrade die alte kastige Büromaus (grau wie die Gummitastatur),
  * mit Upgrade die runde ergonomische (cremefarben, Mint wie die Enter-Taste).
  */
-const MOUSE = `<svg viewBox="0 0 40 46">
-  <path class="m-cable" d="M20 14 c0 -6 -2 -9 4 -12" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linecap="round"/>
+const MOUSE = `<svg viewBox="0 -10 40 64">
   <g class="pad">
-    <rect x="1.5" y="15" width="37" height="29.5" rx="6" fill="#7fa6e6"/>
-    <rect x="1.5" y="15" width="37" height="27" rx="6" fill="#a0c4ff"/>
-    <rect x="1.5" y="15" width="37" height="29.5" rx="6" fill="none" stroke="var(--ink)" stroke-width="2"/>
-    <path d="M6 39 h9" stroke="#fffaf0" stroke-width="2" stroke-linecap="round" opacity=".7"/>
+    <rect x="1.5" y="3" width="37" height="49.5" rx="7" fill="#7fa6e6"/>
+    <rect x="1.5" y="3" width="37" height="47" rx="7" fill="#a0c4ff"/>
+    <rect x="1.5" y="3" width="37" height="49.5" rx="7" fill="none" stroke="var(--ink)" stroke-width="2"/>
+    <path d="M6 46 h10" stroke="#fffaf0" stroke-width="2" stroke-linecap="round" opacity=".7"/>
   </g>
+  <!-- Mauskörper 1,45-fach (neben der Tastatur sonst zu winzig); Konturen per CSS nicht mitskaliert, daher in Bildschirm-Pixeln -->
+  <g class="m-body" transform="translate(20 26.5) scale(1.45) translate(-20 -26.5)">
+  <path class="m-cable" d="M20 14 c0 -6 -2 -9 4 -12" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linecap="round"/>
   <g class="m-old">
     <rect x="10.5" y="14" width="19" height="26" rx="3.5" fill="#cfc7b8"/>
     <rect x="10.5" y="14" width="19" height="23.5" rx="3.5" fill="#f1ede6"/>
     <path class="mbtn mbtn-l" d="M10.5 24 v-6.5 a3.5 3.5 0 0 1 3.5 -3.5 h6 v10Z"/>
     <path class="mbtn mbtn-r" d="M20 14 h6 a3.5 3.5 0 0 1 3.5 3.5 v6.5 h-9.5Z"/>
-    <path d="M10.5 24 h19 M20 14 v10" stroke="var(--ink)" stroke-width="1.4"/>
-    <rect x="10.5" y="14" width="19" height="26" rx="3.5" fill="none" stroke="var(--ink)" stroke-width="2"/>
+    <path d="M10.5 24 h19 M20 14 v10" stroke="var(--ink)" stroke-width="2.1"/>
+    <rect x="10.5" y="14" width="19" height="26" rx="3.5" fill="none" stroke="var(--ink)" stroke-width="3"/>
   </g>
   <g class="m-ergo">
     <path d="M20 12.5 c6.5 0 9.5 4.5 9.5 10.5 v8 c0 6 -4 9.5 -9.5 9.5 c-5.5 0 -9.5 -3.5 -9.5 -9.5 v-8 c0 -6 3 -10.5 9.5 -10.5Z" fill="var(--key-edge)"/>
     <path d="M20 12.5 c6.5 0 9.5 4.5 9.5 10.5 v6 c0 6 -4 9 -9.5 9 c-5.5 0 -9.5 -3 -9.5 -9 v-6 c0 -6 3 -10.5 9.5 -10.5Z" fill="var(--key)"/>
     <path class="mbtn mbtn-l" d="M10.5 23.5 c0 -6 3 -10.5 9.5 -10.5 v10.5Z"/>
     <path class="mbtn mbtn-r" d="M20 13 c6.5 0 9.5 4.5 9.5 10.5 h-9.5Z"/>
-    <path d="M10.5 31 c-2 -1 -2.5 -6 0 -7" fill="var(--mint)" stroke="var(--ink)" stroke-width="1.4"/>
-    <path d="M10.5 23.5 h19 M20 12.5 v11" stroke="var(--ink)" stroke-width="1.4"/>
-    <path d="M20 12.5 c6.5 0 9.5 4.5 9.5 10.5 v8 c0 6 -4 9.5 -9.5 9.5 c-5.5 0 -9.5 -3.5 -9.5 -9.5 v-8 c0 -6 3 -10.5 9.5 -10.5Z" fill="none" stroke="var(--ink)" stroke-width="2"/>
+    <path d="M10.5 31 c-2 -1 -2.5 -6 0 -7" fill="var(--mint)" stroke="var(--ink)" stroke-width="2.1"/>
+    <path d="M10.5 23.5 h19 M20 12.5 v11" stroke="var(--ink)" stroke-width="2.1"/>
+    <path d="M20 12.5 c6.5 0 9.5 4.5 9.5 10.5 v8 c0 6 -4 9.5 -9.5 9.5 c-5.5 0 -9.5 -3.5 -9.5 -9.5 v-8 c0 -6 3 -10.5 9.5 -10.5Z" fill="none" stroke="var(--ink)" stroke-width="3"/>
   </g>
-  <rect class="wheel" x="18.4" y="16" width="3.2" height="5" rx="1.2" stroke="var(--ink)" stroke-width="1.2"/>
+  <rect class="wheel" x="18.4" y="16" width="3.2" height="5" rx="1.2" stroke="var(--ink)" stroke-width="1.8"/>
+  </g>
 </svg>`;
 
 /** Motivationsposter: schwarzes Passepartout, Bild mit Symbol, großer Titel – Rahmen je nach Stufe per CSS */

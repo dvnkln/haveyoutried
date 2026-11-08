@@ -347,6 +347,17 @@ export class Sfx {
     }
   }
 
+  /** Ticket gelöst: kurzes helles „Pling“, das mit jeder Lösung in Folge eine Stufe höher klettert. */
+  solved(streak = 1): void {
+    const r = this.ready();
+    if (!r) return;
+    // Dur-Tonleiter ab C6, nach einer Oktave wieder von vorn
+    const steps = [0, 2, 4, 5, 7, 9, 11, 12];
+    const f = 1046.5 * 2 ** (steps[(streak - 1) % steps.length]! / 12);
+    this.tone('triangle', f, f, r.t, 0.09, 0.12);
+    this.tone('sine', f * 1.5, f * 1.5, r.t + 0.05, 0.06, 0.18);
+  }
+
   /** Gutes Event-Ergebnis */
   good(): void {
     this.upgrade();

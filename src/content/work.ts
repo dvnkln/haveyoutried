@@ -1,46 +1,28 @@
+import type { Topic } from './topics';
+
 // Inhalte für das Arbeitsfenster auf dem Desktop: was getippt wird und was drumherum steht.
-export { REPLIES_CMD, REPLIES_TEXT, TICKET_PRIOS } from './props';
+export { TICKET_PRIOS } from './props';
 
-/** Chat im Firmen-Messenger: kurze Antworten */
+/** Chat im Firmen-Messenger: Einstieg vor der eigentlichen Antwort */
 export const CHAT_LINES: string[] = [
-  'Bin dran.',
-  'Hast du es schon neu gestartet?',
-  'Kannst du kurz deinen Bildschirm teilen?',
-  'Bin in 5 Minuten da. (IT-Minuten.)',
-  'Ein Daumen hoch reicht als Antwort, danke.',
-  'Geht’s jetzt? Super, ich schließe das Ticket.',
-  'Ich ruf dich an. Nein, doch nicht. Ich schreib.',
-  'Bitte keine Sprachnachrichten. Bitte.',
-  'Steht im Wiki. Also, stünde.',
-  'Ich hab dich auf „Abwesend“ gesehen. Ich weiß, dass du da bist.',
+  'Moin!',
+  'Kurz und knapp:',
+  'Hab deine 14 „Hallo?“ gesehen.',
+  'Bitte keine Sprachnachrichten. Also:',
+  'Ich hab dich auf „Abwesend“ gesehen. Trotzdem:',
+  'Bin dran. Und:',
 ];
 
-/** Videocall: was man sagt (meistens stummgeschaltet) */
+/** Videocall: was man vor der eigentlichen Antwort sagt */
 export const CALL_LINES: string[] = [
-  'Sie sind noch stummgeschaltet.',
-  'Können Sie meinen Bildschirm sehen?',
-  'Nein, das andere Fenster.',
-  'Ich höre Sie … jetzt nicht mehr.',
-  'Bitte einmal raus und wieder rein.',
-  'Ihr Hintergrund ist ein Strand. Schön.',
-  'Wer tippt da so laut? Ach, ich.',
-  'Ich glaube, Sie haben eingefroren. Oder nachgedacht.',
-  'Das hätte auch eine Mail sein können.',
+  'Sie sind noch stummgeschaltet. … Jetzt.',
+  'Hören Sie mich? … Gut.',
+  'Nein, das andere Fenster. Egal:',
+  'Sie sind eingefroren. … Ah, wieder da.',
+  'Ihr Hintergrund ist ein Strand. Schön. Also:',
+  'Wer tippt da so laut? Ach, ich. Also:',
 ];
 
-/** Fernwartung per RDP: Befehle im „Ausführen“-Dialog */
-export const RDP_LINES: string[] = [
-  'control printers',
-  'gpupdate /force',
-  'services.msc',
-  'eventvwr.msc',
-  'taskmgr',
-  'cleanmgr /sagerun:1',
-  'ipconfig /flushdns',
-  'shutdown /r /t 0',
-  '%temp%  (4,2 GB. Seit 2016.)',
-];
-export const RDP_PCS: string[] = ['PC-BUCHH-07', 'LAPTOP-CHEF', 'PC-EMPFANG', 'NB-AZUBI-02', 'PC-LAGER-1', 'PC-VERTRIEB-3'];
 export const RDP_ERRORS: string[] = [
   'Fehler 0x80070005: Zugriff verweigert.',
   'Ein unbekannter Fehler ist aufgetreten. Unbekannt.',
@@ -49,31 +31,16 @@ export const RDP_ERRORS: string[] = [
   'Drucker „HP-3OG“ ist offline. Seit immer.',
 ];
 
-/** Webinterface von Geräten: was eingestellt wird */
-export const WEB_LINES: string[] = [
+/** Webinterface: Einstellungen, die es auf jedem Gerät gibt (Gerätespezifisches in topics.ts) */
+export const WEB_GENERIC: string[] = [
   'Passwort: admin → neues Passwort: admin2',
-  'Toner-Warnung: deaktiviert',
-  'Firmware: 2.0.1-final-final',
-  'SNMP-Community: public (natürlich)',
   'Neustart planen: Freitag 23:59',
-  'Energiesparmodus: aus (wegen Beschwerden)',
   'Zeitzone: endlich nicht mehr 1970',
   'Admin-Zugang aus dem Internet: AUS. Wer hat den angemacht?',
+  'SNMP-Community: public (natürlich)',
 ];
-export const WEB_DEVICES: string[] = ['Drucker 3. OG', 'Switch Keller', 'NAS Buchhaltung', 'Router Filiale', 'USV Serverraum', 'Kaffeemaschine (IoT)'];
 
-/** Websuche: Suchanfragen und die üblichen Treffer */
-export const SEARCH_LINES: string[] = [
-  'drucker druckt nur leere seiten',
-  'outlook startet nur im abgesicherten modus',
-  'dns einfach erklärt für chef',
-  'excel datei nicht gespeichert wiederherstellen',
-  'fehler 0x8007045d',
-  'wie lange dauert ein raid rebuild wirklich',
-  'kann man teams firmenweit deinstallieren',
-  'wlan geht nur am fenster',
-  'warum ist es immer dns',
-];
+/** Websuche: die üblichen Treffer (Suchanfragen je Thema in topics.ts) */
 export const SEARCH_RESULTS: string[] = [
   'Forum, 2009: „Gleiches Problem.“ Keine Antwort.',
   'Stack Overflow: Als Duplikat geschlossen.',
@@ -123,9 +90,9 @@ export const DONE_LINES: Record<'mail' | 'ticket' | 'term' | 'chat' | 'call' | '
     '{who}: Ticket auf „Gelöst“. Wiedereröffnet in 3 … 2 …',
     '{who}: Ticket geschlossen: „Works as designed“.',
     '{who}: Ticket geschlossen. Zufriedenheit: ★☆☆☆☆',
-    '{who}: Ticket gelöst. Ursache: Layer 8.',
+    '{who}: Ticket gelöst. Danke-Mail erhalten. Gerahmt.',
     '{who}: Ticket als Duplikat geschlossen. Von sich selbst.',
-    '{who}: Ticket an Level 2 eskaliert. Level 2 ist Kaffee holen.',
+    '{who}: Ticket gelöst. Level 2 war Kaffee holen, also selbst gemacht.',
   ],
   term: [
     'Befehl lief durch. Exit 0. Keiner weiß warum.',
@@ -141,7 +108,7 @@ export const DONE_LINES: Record<'mail' | 'ticket' | 'term' | 'chat' | 'call' | '
     '{who}: „ok“. Kleingeschrieben. Ohne Punkt. Bedrohlich.',
     '{who} ist jetzt „abwesend“. Seit 2 Sekunden.',
     '{who} antwortet mit Sprachnachricht. 4 Minuten.',
-    '{who}: „Ah, war der Stecker.“',
+    '{who}: „ok“. Dann: „danke“. Dann: „aber …“. Dann nichts mehr.',
   ],
   call: [
     '{who}: Call beendet. 45 Minuten, davon 40 „Hört ihr mich?“',
@@ -154,7 +121,7 @@ export const DONE_LINES: Record<'mail' | 'ticket' | 'term' | 'chat' | 'call' | '
   rdp: [
     '{target} repariert. {who}: „War schon immer so.“',
     '{target} neu gestartet. Updates: 1 von 147.',
-    '{target}: Drucker wieder da. Für 10 Minuten.',
+    '{target}: läuft wieder. Für mindestens 10 Minuten.',
     '{target} aufgeräumt. 12.000 Desktop-Icons. Behalten: alle.',
     '{target}: Fehler weg. Grund: Rätsel.',
     '{target}: {who} hat währenddessen weitergeklickt.',
@@ -163,7 +130,7 @@ export const DONE_LINES: Record<'mail' | 'ticket' | 'term' | 'chat' | 'call' | '
     '{target}: Einstellung gespeichert. Neustart nötig. Natürlich.',
     '{target}: gespeichert. Webinterface sagt „Error“, geht aber.',
     '{target}: Firmware aktualisiert. Ein Lämpchen leuchtet jetzt orange.',
-    '{target}: Passwort geändert. Steht jetzt auf dem Post-it.',
+    '{target}: gespeichert. Admin-Passwort steht trotzdem auf dem Post-it.',
     '{target}: läuft. Konfig gesichert auf: Desktop/neu(3).txt',
     '{target}: gespeichert. Doku? Kommt. Irgendwann.',
   ],
@@ -178,51 +145,17 @@ export const DONE_LINES: Record<'mail' | 'ticket' | 'term' | 'chat' | 'call' | '
 };
 
 
-/** Interne Notizen im Ticketverlauf: was wirklich passiert ist. {who} = Melder:in, {target} = Gerät */
-export const TICKET_NOTES: string[] = [
-  '{who} hat dreimal neu gestartet. Zweimal davon den Monitor.',
-  'Problem trat nur auf, wenn ich nicht hingeschaut habe.',
-  'Stecker war drin. Andere Seite nicht.',
-  'Beim Fernzugriff hat {who} die ganze Zeit die Maus festgehalten.',
-  '{who} hat das Passwort am Telefon buchstabiert. Laut. Im Großraumbüro.',
-  'Hab nichts gemacht. Ging dann. Als „gelöst durch IT“ markiert.',
-  'Fehler nicht reproduzierbar. {who} auch nicht erreichbar.',
-  'Laut {who} „seit gestern“. Laut Logs seit 2019.',
-  'Ursache: Kaffee. In der Tastatur.',
-  '{who} hat vorher „was im Internet gefunden“. Und ausgeführt.',
-  'Screenshot erhalten. Abfotografiert. Mit Blitz. Vom Handy der Kollegin.',
-  'Ticket war eigentlich für die Kantine. Trotzdem gelöst.',
-  'Dritte Meldung diese Woche. Gleiches Problem. Gleiche Lösung. Gleicher Mensch.',
-  '{who} wollte wissen, ob „das Internet“ heute geht. Ja.',
-  'Problem saß vor dem Bildschirm. Höflich umformuliert.',
-  'Bei mir ging’s. Bei {who} jetzt auch. Keine Fragen.',
-  'Workaround dokumentiert. In meinem Kopf.',
-  'Aufwand: 2 Minuten Lösung, 25 Minuten Small Talk.',
-  'Drucker hat sich entschuldigt. Glaube ich zumindest.',
-  '{who} hat „Allen antworten“ benutzt. 340 Leute wissen jetzt Bescheid.',
-  'Hab Caps Lock ausgemacht. Ticket gelöst. Respekt verdient.',
-  'Neustart verweigert wegen „wichtiger offener Tabs“ (147).',
-  'Hinweis an mich: nie wieder „Das dauert nur kurz“ sagen.',
-  'Laut {who} hat „der Computer das selbst gemacht“. Korrekt: Update.',
-  '{target} lief mit Admin/Admin. Jetzt Admin/Admin2. Fortschritt.',
-  'Bitte nicht wiedereröffnen. Bitte. Bitte.',
-  'Eskalation an den Chef vermieden. Durch Kekse.',
-  'Wiki-Artikel dazu existiert. Hat keiner gelesen. Ich auch nicht.',
-  '{who} fragte, ob ich „mal eben“ noch den privaten Laptop anschauen kann.',
-  'Hat am Ende doch mit Aus- und Einschalten funktioniert. Wie immer.',
-];
-
 /** Status im Ticketverlauf */
-export const TICKET_STATES: string[] = ['Gelöst', 'Geschlossen', 'Gelöst (vorläufig)', 'Gelöst (hoffentlich)', 'Erledigt', 'Wartet auf Rückmeldung (ewig)'];
+export const TICKET_STATES: string[] = ['Gelöst', 'Geschlossen', 'Gelöst (vorläufig)', 'Gelöst (hoffentlich)', 'Erledigt', 'Geschlossen (bevor es wieder aufgeht)'];
 
-/** VIP-Tickets (rote Post-its) im Verlauf: wer und was */
-export const VIP_TICKETS: { who: string; subject: string }[] = [
-  { who: 'Chef', subject: 'Beamer im Vorstandsraum: „Kein Signal“. Meeting in 2 Min.' },
-  { who: 'Geschäftsführung', subject: 'Das Internet ist weg. (WLAN aus.)' },
-  { who: 'Chef', subject: 'Excel rechnet falsch. (Zelle als Text formatiert.)' },
-  { who: 'Vorstand', subject: 'Passwort vergessen. Zum vierten Mal. Heute.' },
-  { who: 'Chef', subject: 'Drucker druckt nicht. Vor dem Kunden.' },
-  { who: 'Geschäftsführung', subject: 'Handy synchronisiert nicht. Ist das Handy der Frau.' },
-  { who: 'Chef', subject: 'PowerPoint ist weg! (minimiert)' },
-  { who: 'Vorstand', subject: 'Bitte sofort: neues iPad. Grund: „Farbe“.' },
+/** VIP-Tickets (rote Post-its) im Verlauf: wer, was, Thema und die eine wahre Ursache */
+export const VIP_TICKETS: { who: string; subject: string; topic: Topic; cause: string }[] = [
+  { who: 'Chef', topic: 'hardware', subject: 'Beamer im Vorstandsraum: „Kein Signal“. Meeting in 2 Min.', cause: 'Falscher HDMI-Eingang' },
+  { who: 'Geschäftsführung', topic: 'netz', subject: 'Das Internet ist weg.', cause: 'WLAN-Schalter am Laptop aus' },
+  { who: 'Chef', topic: 'office', subject: 'Excel rechnet falsch.', cause: 'Zelle als Text formatiert' },
+  { who: 'Vorstand', topic: 'passwort', subject: 'Passwort vergessen. Zum vierten Mal. Heute.', cause: 'Neues Passwort nicht notiert (gut so, aber …)' },
+  { who: 'Chef', topic: 'drucker', subject: 'Drucker druckt nicht. Vor dem Kunden.', cause: 'Drucker im falschen Stockwerk ausgewählt' },
+  { who: 'Geschäftsführung', topic: 'mail', subject: 'Handy synchronisiert keine Mails. Ist das Handy der Frau.', cause: 'Falsches Konto (das der Frau)' },
+  { who: 'Chef', topic: 'office', subject: 'PowerPoint ist weg!', cause: 'Fenster minimiert' },
+  { who: 'Vorstand', topic: 'wunsch', subject: 'Bitte sofort: neues iPad. Grund: „Farbe“.', cause: 'Farbe' },
 ];

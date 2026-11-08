@@ -22,7 +22,7 @@ import { availableUpgrades, isUnlocked } from '../core/economy';
 import type { GameState } from '../core/state';
 import { pick, randInt, weightedPick } from '../util';
 import type { App, AppContext } from './app';
-import { nextTicketNo, ticketId } from './history';
+import { nextAlarmId } from './history';
 import { describeEffect } from './pager';
 
 /** Ab so vielen gleichzeitig freigeschalteten Achievements gibt es nur eine Sammelmeldung. */
@@ -68,13 +68,14 @@ export function startFlavor(ctx: AppContext, app: App): void {
     const def = eventDef(res.eventId);
     const ignored = res.option < 0;
     history.add({
-      id: ticketId(nextTicketNo(state.clicks)),
+      id: nextAlarmId(),
       subject: def?.title ?? res.eventId,
       who: 'Pager',
       channel: 'Piepen, Vibrieren, Panik',
       prio: ignored ? 'war mal hoch' : 'sofort',
       status: ignored ? 'Eskaliert an: niemand' : res.mood === 'good' ? 'Gelöst' : res.mood === 'bad' ? 'Gelöst (irgendwie)' : 'Geschlossen',
       reply: ignored ? undefined : def?.options[res.option]?.label,
+      replyLabel: 'Entscheidung',
       note: ignored ? `Kein ACK innerhalb von ${CONFIG.eventExpireMs / 1_000} s. Ich war „kurz Kaffee holen“.` : res.outcome.text,
       solution: describeEffect(res),
     });
@@ -92,7 +93,7 @@ export function startFlavor(ctx: AppContext, app: App): void {
     const solved = !abandoned && isSolved(score);
     const effects = results.map(describeEffect).join(', ');
     history.add({
-      id: ticketId(nextTicketNo(state.clicks)),
+      id: nextAlarmId(),
       subject: `${t.host}/${t.service}: ${t.info}`,
       who: 'nagmon',
       channel: 'Monitoring',

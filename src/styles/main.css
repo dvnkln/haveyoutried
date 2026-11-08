@@ -4259,7 +4259,11 @@ button {
 }
 .keyboard-wrap .mouse {
   width: 60px;
-  height: 70px;
+  height: 96px;
+}
+/* Konturen bleiben trotz Vergrößerung so dünn wie bei den Tasten */
+.mouse .m-body * {
+  vector-effect: non-scaling-stroke;
 }
 @media (max-height: 680px) {
   :root {
@@ -5271,33 +5275,98 @@ button {
   margin: 10px 0 8px;
 }
 
-/* Abgeschickt: Stempel über dem Fenster, bis das nächste kommt */
-.work.sent::after {
-  content: '✓ Gesendet';
+/* Gelöst: Stempel springt auf und blendet über dem nächsten Ticket aus (Dopamin, kurz) */
+.solved-stamp {
   position: absolute;
   left: 50%;
   top: 50%;
   z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   padding: 4px 12px;
   border: 3px solid #23915c;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.92);
   color: #23915c;
   font: 700 18px / 1.2 var(--font-ui);
   white-space: nowrap;
   pointer-events: none;
+  opacity: 0;
   transform: translate(-50%, -50%) rotate(-8deg);
-  animation: sent-stamp 0.3s cubic-bezier(0.2, 0.8, 0.3, 1.5);
 }
-@keyframes sent-stamp {
-  from {
+.solved-stamp .ss-streak:empty {
+  display: none;
+}
+.solved-stamp .ss-streak {
+  padding: 0 6px;
+  border-radius: 6px;
+  background: #23915c;
+  color: #fff;
+  font-size: 14px;
+}
+/* Ring, der beim Aufsetzen nach außen läuft */
+.solved-stamp::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border: 3px solid #23915c;
+  border-radius: 12px;
+  opacity: 0;
+}
+.solved-stamp.show {
+  animation: solved-stamp 0.7s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+}
+.solved-stamp.show::before {
+  animation: solved-ring 0.4s ease-out;
+}
+@keyframes solved-stamp {
+  0% {
     opacity: 0;
-    transform: translate(-50%, -50%) rotate(-8deg) scale(1.8);
+    transform: translate(-50%, -50%) rotate(-8deg) scale(1.9);
+  }
+  16% {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(-8deg) scale(0.92);
+  }
+  26% {
+    transform: translate(-50%, -50%) rotate(-8deg) scale(1.06);
+  }
+  34%,
+  70% {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(-8deg) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -62%) rotate(-8deg) scale(1);
+  }
+}
+@keyframes solved-ring {
+  from {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.35, 1.8);
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .work.sent::after {
+  .solved-stamp.show {
+    animation: solved-fade 0.7s forwards;
+  }
+  .solved-stamp.show::before {
     animation: none;
+  }
+  @keyframes solved-fade {
+    0%,
+    70% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
   }
 }
 
@@ -5727,6 +5796,10 @@ body > .incident.playing {
   gap: 2px 12px;
   padding: 0 10px 8px;
   font-size: 11.5px;
+}
+/* Ursache ist länger: eigene Zeile */
+.hist-meta .hist-cause {
+  flex-basis: 100%;
 }
 .tk-label {
   margin-right: 4px;

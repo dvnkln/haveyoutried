@@ -16,8 +16,12 @@ export interface TicketCard {
   channel: string;
   prio: string;
   status: string;
-  /** Antwort an die Melder:in (das Getippte) */
+  /** das Getippte: Antwort, Befehl, Suche … */
   reply?: string;
+  /** Überschrift dazu, Standard „Antwort“ */
+  replyLabel?: string;
+  /** woran es lag */
+  cause?: string;
   /** interne Notiz des Bearbeiters: hier steht, was wirklich passiert ist */
   note: string;
   /** Lösung / Abschluss mit Pointe */
@@ -37,6 +41,10 @@ export function nextTicketNo(clicks: number): number {
   lastNo = Math.max(lastNo + randInt(1, 3), CONFIG.ticketNumberOffset + clicks + randInt(3, 40));
   return lastNo;
 }
+
+let lastAlarm = randInt(100, 900);
+/** Pager und Incidents sind keine Tickets aus der Warteschlange: eigene Nummernreihe */
+export const nextAlarmId = () => `#ALARM-${String(++lastAlarm).padStart(4, '0')}`;
 
 const clock = (d = new Date()) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 
@@ -64,8 +72,13 @@ export class TicketHistory {
         h('span', { class: 'hist-time', text: clock() }),
       ]),
       h('div', { class: 'hist-subject', text: t.subject }),
-      h('div', { class: 'hist-meta' }, [field('Von', t.who), field('Kanal', t.channel), field('Prio', t.prio)]),
-      ...(t.reply ? [h('div', { class: 'hist-block hist-reply' }, [h('span', { class: 'tk-label', text: 'Antwort' }), h('p', { text: t.reply })])] : []),
+      h('div', { class: 'hist-meta' }, [
+        field('Von', t.who),
+        field('Per', t.channel),
+        field('Prio', t.prio),
+        ...(t.cause ? [field('Ursache', t.cause, 'hist-cause')] : []),
+      ]),
+      ...(t.reply ? [h('div', { class: 'hist-block hist-reply' }, [h('span', { class: 'tk-label', text: t.replyLabel ?? 'Antwort' }), h('p', { text: t.reply })])] : []),
       h('div', { class: 'hist-block hist-note' }, [h('span', { class: 'tk-label', text: 'Interne Notiz' }), h('p', { text: t.note })]),
       h('div', { class: 'hist-block hist-solution' }, [h('span', { class: 'tk-label', text: 'Lösung' }), h('p', { text: t.solution })]),
     ]);
