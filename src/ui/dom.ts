@@ -55,6 +55,12 @@ export const POP: Keyframe[] = [
   { transform: 'scale(1.18)' },
   { transform: 'scale(1)' },
 ];
+/** Dezent, für breite Elemente (darf nicht über den Rand wachsen) */
+export const NUDGE: Keyframe[] = [
+  { transform: 'scale(.97)', opacity: 0.4 },
+  { transform: 'scale(1.03)', opacity: 1 },
+  { transform: 'scale(1)' },
+];
 export const SHAKE: Keyframe[] = [
   { transform: 'translateX(0)' },
   { transform: 'translateX(-4px) rotate(-.6deg)' },

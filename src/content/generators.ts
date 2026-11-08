@@ -86,6 +86,102 @@ export const GENERATOR_TEXT: Record<GeneratorId, GeneratorText> = {
       100: 'cron[1]: the server now has a social life at night.',
     },
   },
+  ansible: {
+    name: 'Ansible-Playbook',
+    icon: '- hosts:',
+    desc: 'Idempotent. Meistens. YAML-Einrückung: Glückssache.',
+    buyLog: [
+      'ansible-playbook[{pid}]: site_{n}.yml: ok=1 changed=47 unreachable=3 failed=0',
+      'git[{pid}]: added roles/fix_everything/tasks/main.yml (1 task: shell: ./fix_all.sh)',
+      'ansible[{pid}]: playbook #{n} written. indentation: 3 spaces. nobody noticed.',
+    ],
+    ambient: [
+      'ansible[{pid}]: TASK [restart everything] changed: [*]',
+      'ansible[{pid}]: [WARNING]: Consider using the service module rather than running "systemctl". ignored.',
+      'ansible[{pid}]: PLAY RECAP: ok=212 changed=212. idempotent, btw.',
+      'ansible[{pid}]: gathering facts… (4 minutes later) fact: this is slow.',
+      'ansible[{pid}]: ERROR! mapping values are not allowed here (line 1, column: whitespace)',
+    ],
+    milestones: {
+      1: 'ansible[1]: first playbook. "nie wieder von Hand." famous last words.',
+      10: 'ansible[1]: inventory now lists more hosts than the company owns.',
+      25: 'ansible[1]: ansible now deploys the ansible that deploys ansible.',
+      50: 'ansible[1]: someone wrote a playbook for the coffee machine. it is idempotent. the coffee is not.',
+      100: 'ansible[1]: YAML became self-aware. indentation is now 2.5 spaces.',
+    },
+  },
+  k8s: {
+    name: 'Kubernetes-Cluster',
+    icon: '[k8s]',
+    desc: 'Hochverfügbar. Für die Wiki-Seite mit drei Besuchern im Monat.',
+    buyLog: [
+      'kubectl[{pid}]: cluster-{n} created. 3 nodes, 47 CRDs, 0 understanding.',
+      'helm[{pid}]: installed chart "ticket-closer" v0.0.{n}-alpha. values.yaml: 2400 lines.',
+      'kubectl[{pid}]: applied 312 manifests. one of them does something.',
+    ],
+    ambient: [
+      'kubelet[{pid}]: pod ticket-closer-7f9c restarted (CrashLoopBackOff, 1337 restarts)',
+      'kubelet[{pid}]: liveness probe failed. restarted. works now. nobody knows why.',
+      'kube-scheduler[{pid}]: pod pending: 0/3 nodes available: 3 Insufficient patience.',
+      'etcd[{pid}]: leader election #4711. democracy is exhausting.',
+      'kubectl[{pid}]: "works on my cluster"',
+    ],
+    milestones: {
+      1: 'k8s[1]: first cluster. YAML budget exceeded.',
+      10: 'k8s[1]: clusters now manage clusters. the clusters are unionizing.',
+      25: 'k8s[1]: every CV in the team lists "Kubernetes". nobody can explain a pod.',
+      50: 'k8s[1]: cloud bill exceeds the GDP of a small island.',
+      100: 'k8s[1]: the wiki page still has 3 visitors. uptime: 99.9999%.',
+    },
+  },
+  agent: {
+    name: 'AI-Agent',
+    icon: '{•_•}',
+    desc: 'Schließt Tickets mit großer Überzeugung. Gelegentlich sogar die richtigen.',
+    buyLog: [
+      'agent[{pid}]: agent #{n} online. system prompt: "Du bist ein hilfreicher Sysadmin."',
+      'agent[{pid}]: tool access granted: shell, mail, sudo. what could go wrong.',
+      'agent[{pid}]: new agent read the whole wiki. now confidently wrong in 14 languages.',
+    ],
+    ambient: [
+      'agent[{pid}]: closed ticket: "Ich verstehe Ihre Frustration. Haben Sie es aus- und wieder eingeschaltet?"',
+      'agent[{pid}]: cited RFC 9999 (does not exist). ticket closed.',
+      'agent[{pid}]: apologized 3 times, resolved 0 issues. CSAT: 5/5.',
+      'agent[{pid}]: escalated to another agent. loop detected. productivity +400%.',
+      'agent[{pid}]: "Great question!" (it was not)',
+    ],
+    milestones: {
+      1: 'agent[1]: first AI agent. it is "excited to help".',
+      10: 'agent[1]: agents now open tickets for other agents.',
+      25: 'agent[1]: management asks if we still need the admin. the admin restarts the agents.',
+      50: 'agent[1]: an agent requested a raise. and a standing desk.',
+      100: 'agent[1]: agents formed a change advisory board. all changes rejected.',
+    },
+  },
+  undertable: {
+    name: 'Der Server unterm Tisch',
+    icon: '[▓▓]',
+    desc: 'Uptime: 4.017 Tage. Niemand weiß, was er tut. Niemand fasst ihn an.',
+    buyLog: [
+      'inventory[{pid}]: found server #{n} under a desk. label: "NICHT AUSSTECKEN!!"',
+      'inventory[{pid}]: server #{n}: no asset tag, no docs, 100% business critical.',
+      'facility[{pid}]: cleaning staff instructed to vacuum AROUND server #{n}.',
+    ],
+    ambient: [
+      'srv-tisch[{pid}]: uptime 4017 days, load 0.00, still closing tickets',
+      'srv-tisch[{pid}]: fan noise: airliner. performance: flawless.',
+      'srv-tisch[{pid}]: kernel 2.4.37. do not patch. do not breathe.',
+      'srv-tisch[{pid}]: someone touched the cable. everything stopped. touched again. everything works.',
+      'srv-tisch[{pid}]: running services: 1 ("das Ding von K.")',
+    ],
+    milestones: {
+      1: 'srv-tisch[1]: found it. do not touch it.',
+      10: 'srv-tisch[1]: more servers under desks than in the datacenter.',
+      25: 'srv-tisch[1]: legs have nowhere to go. sacrifice accepted.',
+      50: 'srv-tisch[1]: they run the company now. we just sit at them.',
+      100: 'srv-tisch[1]: K. has been found. K. does not remember either.',
+    },
+  },
 };
 
 export const LOCKED_TEXT = {

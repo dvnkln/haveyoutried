@@ -1,21 +1,95 @@
-export type HapticKind = 'tap' | 'buy' | 'milestone' | 'error';
+export type HapticKind = 'tap' | 'buy' | 'milestone' | 'error' | 'unlock';
 
+/** Android & Co.: Vibration API. Unter ~15 ms spüren viele Geräte gar nichts. */
 const PATTERNS: Record<HapticKind, number | number[]> = {
-  tap: 8,
-  buy: [12, 40, 12],
-  milestone: [30, 50, 30, 50, 80],
-  error: [60, 40, 60],
+  tap: 15,
+  buy: [25, 40, 25],
+  milestone: [40, 60, 40, 60, 90],
+  error: [80, 50, 80],
+  unlock: [20, 70, 20],
 };
 
-export const hapticsSupported = () => typeof navigator !== 'undefined' && 'vibrate' in navigator;
+/** iOS kann nur „Tick“; Muster = Anzahl Ticks. */
+const IOS_TICKS: Record<HapticKind, number> = { tap: 1, buy: 2, milestone: 3, error: 2, unlock: 2 };
+
+const canVibrate = () => typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function';
+
+const isIOS = () =>
+  typeof navigator !== 'undefined' &&
+  (/iPhone|iPad|iPod/.test(navigator.userAgent) ||
+    (navigator.userAgent.includes('Macintosh') && navigator.maxTouchPoints > 1));
+
+export type HapticSupport = 'vibrate' | 'ios' | 'none';
+
+export function hapticSupport(): HapticSupport {
+  if (canVibrate()) return 'vibrate';
+  if (isIOS()) return 'ios';
+  return 'none';
+}
+
+/**
+ * iOS (Safari ab 18) hat keine Vibration API, gibt aber beim Umschalten eines
+ * <input type="checkbox" switch> einen haptischen Tick. Den lösen wir per
+ * label.click() aus. Funktioniert nur innerhalb einer Nutzergeste; pointerdown
+ * zählt in WebKit nicht sicher dazu, darum werden Ticks aus pointerdown bis
+ * zum pointerup/touchend aufgeschoben.
+ */
+function createIOSHaptics(): (kind: HapticKind) => void {
+  const label = document.createElement('label');
+  label.setAttribute('aria-hidden', 'true');
+  label.style.display = 'none';
+  const input = document.createElement('input');
+  input.type = 'checkbox';
+  input.setAttribute('switch', '');
+  label.append(input);
+  document.body.append(label);
+
+  const tickNow = (n: number) => {
+    for (let i = 0; i < n; i++) {
+      if (i === 0) label.click();
+      else setTimeout(() => label.click(), i * 90);
+    }
+  };
+
+  let inPointerDown = false;
+  let pending = 0;
+  document.addEventListener(
+    'pointerdown',
+    () => {
+      inPointerDown = true;
+      setTimeout(() => (inPointerDown = false), 0);
+    },
+    { capture: true, passive: true },
+  );
+  const flush = () => {
+    if (pending > 0) tickNow(pending);
+    pending = 0;
+  };
+  document.addEventListener('pointerup', flush, { capture: true, passive: true });
+  document.addEventListener('touchend', flush, { capture: true, passive: true });
+
+  return (kind) => {
+    const n = IOS_TICKS[kind];
+    if (inPointerDown) pending = Math.max(pending, n);
+    else tickNow(n);
+  };
+}
 
 export function createHaptics(isEnabled: () => boolean): (kind: HapticKind) => void {
+  const support = hapticSupport();
+  if (support === 'none') return () => {};
+
+  const fire =
+    support === 'ios'
+      ? createIOSHaptics()
+      : (kind: HapticKind) => {
+          try {
+            navigator.vibrate(PATTERNS[kind]);
+          } catch {
+            /* manche Browser werfen ohne Nutzergeste */
+          }
+        };
   return (kind) => {
-    if (!isEnabled() || !hapticsSupported()) return;
-    try {
-      navigator.vibrate(PATTERNS[kind]);
-    } catch {
-      /* manche Browser werfen ohne User-Geste */
-    }
+    if (isEnabled()) fire(kind);
   };
 }

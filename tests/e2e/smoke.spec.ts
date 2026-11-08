@@ -66,3 +66,54 @@ test('Offline-Progress wird auf 8 h gedeckelt', async ({ page, context }) => {
   await expect(modal).toBeHidden();
   expect(await tickets(page)).toBeGreaterThanOrEqual(28.8);
 });
+
+test('Upgrades: Badge, Kauf, Wirkung; Sound-Schalter', async ({ page, context }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  const save = { version: 1, tickets: 5000, ticketsTotal: 5000, clicks: 30, lastTick: Date.now() };
+  await context.addInitScript((json) => {
+    if (!sessionStorage.getItem('seeded')) {
+      localStorage.setItem('hyt.save', json);
+      sessionStorage.setItem('seeded', '1');
+    }
+  }, JSON.stringify(save));
+
+  await page.goto('/');
+  const tab = page.getByRole('tab', { name: /Upgrades/ });
+  await expect(tab).toHaveClass(/has-badge/);
+  await tab.tap();
+  await page.locator('button[data-upgrade="coffee"]').tap();
+  await expect(page.locator('.upgrades-done')).toContainText('Kaffeemaschine');
+  await shot(page, '5-upgrades');
+
+  await page.getByRole('tab', { name: /Queue/ }).tap();
+  await page.locator('.close-btn').tap();
+  // Kaffeemaschine: ein Klick = 2 Tickets
+  await expect(page.locator('.floater').last()).toHaveText('+2');
+
+  await page.locator('.sound-btn').tap();
+  await expect(page.locator('.sound-btn')).toHaveAttribute('aria-pressed', 'false');
+  await page.getByRole('tab', { name: /System/ }).tap();
+  await shot(page, '6-system');
+  expect(errors).toEqual([]);
+});
+
+test('Layout bleibt bildschirmbreit, auch bei langen Texten', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('.close-btn').tap();
+  const r = await page.evaluate(() => {
+    document.querySelector('.last-closed')!.textContent = '#INC-004769 → ' + 'Bekanntes Problem, Fix kommt im nächsten Release '.repeat(3);
+    document.querySelector('.counter-value')!.textContent = '999.99e123';
+    document.querySelector('.caller-who')!.textContent = 'X'.repeat(80);
+    const navs = [...document.querySelectorAll('.nav-btn')];
+    return {
+      vw: document.documentElement.clientWidth,
+      sw: document.documentElement.scrollWidth,
+      lastTabRight: navs[navs.length - 1]!.getBoundingClientRect().right,
+      soundRight: document.querySelector('.sound-btn')!.getBoundingClientRect().right,
+    };
+  });
+  expect(r.sw).toBe(r.vw);
+  expect(r.lastTabRight).toBeLessThanOrEqual(r.vw);
+  expect(r.soundRight).toBeLessThanOrEqual(r.vw);
+});

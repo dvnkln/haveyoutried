@@ -1,6 +1,7 @@
 import type { Saver } from '../core/save';
 import type { GameState } from '../core/state';
 import { productionPerSec } from '../core/economy';
+import type { Sfx } from './audio';
 import { h, juice, POP, setFlag, setText } from './dom';
 import { formatNumber, formatRate } from './format';
 import type { HapticKind } from './haptics';
@@ -10,10 +11,11 @@ export interface AppContext {
   state: GameState;
   log: SysLog;
   saver: Saver;
+  sfx: Sfx;
   haptic: (kind: HapticKind) => void;
 }
 
-/** Ein Tab der Bottom-Nav. Phase 2: Upgrades/Achievements = ein Eintrag mehr. */
+/** Ein Tab der Bottom-Nav. Phase 2: Achievements = ein Eintrag mehr. */
 export interface Tab {
   id: string;
   label: string;
@@ -21,6 +23,8 @@ export interface Tab {
   mount(ctx: AppContext): HTMLElement;
   render(): void;
   onShow?(): void;
+  /** Punkt an der Nav, z. B. „hier gibt es was zu kaufen“ */
+  badge?(): boolean;
 }
 
 export interface App {
@@ -31,14 +35,25 @@ export interface App {
 export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
   const tickets = h('span', { class: 'counter-value', text: '0' });
   const rate = h('span', { class: 'rate', text: '+0.0/s' });
+  const soundBtn = h('button', { class: 'sound-btn', type: 'button', 'aria-label': 'Sound an/aus' });
+  soundBtn.addEventListener('click', () => {
+    ctx.state.settings.sound = !ctx.state.settings.sound;
+    ctx.sfx.unlock();
+    ctx.sfx.tick();
+    ctx.haptic('tap');
+  });
+
   const header = h('header', { class: 'top' }, [
-    h('div', { class: 'prompt' }, [
-      h('span', { class: 'prompt-user', text: 'root@helpdesk' }),
-      h('span', { text: ':~# ' }),
-      h('span', { class: 'prompt-title', text: 'Have You Tried…' }),
+    h('div', { class: 'top-text' }, [
+      h('div', { class: 'prompt' }, [
+        h('span', { class: 'prompt-user', text: 'root@helpdesk' }),
+        h('span', { text: ':~# ' }),
+        h('span', { class: 'prompt-title', text: 'Have You Tried…' }),
+      ]),
+      h('div', { class: 'counter' }, [tickets, h('span', { class: 'counter-unit', text: ' Tickets' })]),
+      rate,
     ]),
-    h('div', { class: 'counter' }, [tickets, h('span', { class: 'counter-unit', text: ' Tickets' })]),
-    rate,
+    soundBtn,
   ]);
 
   const main = h('main', { class: 'panels' });
@@ -50,6 +65,7 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
     const btn = h('button', { class: 'nav-btn', type: 'button', role: 'tab', 'aria-controls': panel.id }, [
       h('span', { class: 'nav-icon', text: tab.icon }),
       h('span', { class: 'nav-label', text: tab.label }),
+      h('span', { class: 'nav-badge', 'aria-hidden': 'true' }),
     ]);
     main.append(panel);
     nav.append(btn);
@@ -70,7 +86,10 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
   };
   for (const m of mounted) {
     m.btn.addEventListener('click', () => {
-      if (active !== m) ctx.haptic('tap');
+      if (active !== m) {
+        ctx.haptic('tap');
+        ctx.sfx.tick();
+      }
       select(m.tab.id);
     });
   }
@@ -82,6 +101,11 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
     render() {
       setText(tickets, formatNumber(ctx.state.tickets));
       setText(rate, `+${formatRate(productionPerSec(ctx.state))}/s`);
+      const soundOn = ctx.state.settings.sound;
+      setText(soundBtn, soundOn ? '♪' : '♪̸');
+      setFlag(soundBtn, 'off', !soundOn);
+      soundBtn.setAttribute('aria-pressed', String(soundOn));
+      for (const m of mounted) setFlag(m.btn, 'has-badge', m.tab.badge?.() ?? false);
       active?.tab.render();
     },
     popCounter() {

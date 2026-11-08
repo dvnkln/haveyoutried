@@ -1,17 +1,33 @@
 import { CONFIG, GENERATORS } from '../config';
 import { GENERATOR_TEXT } from '../content/generators';
-import { AMBIENT, MILESTONE_FALLBACK } from '../content/syslog';
+import {
+  AMBIENT,
+  BOFH_EXCUSES,
+  GENERATOR_UNLOCK_LINE,
+  MILESTONE_FALLBACK,
+  UPGRADE_AVAILABLE_LINE,
+  UPGRADE_BUY_LINES,
+} from '../content/syslog';
+import { UPGRADE_TEXT } from '../content/upgrades';
 import { bus } from '../core/bus';
+import { availableUpgrades, isUnlocked } from '../core/economy';
 import type { GameState } from '../core/state';
 import { pick, randInt } from '../util';
-import type { App } from './app';
-import type { HapticKind } from './haptics';
-import type { SysLog } from './log';
+import type { App, AppContext } from './app';
 
-/** Verbindet Spielereignisse mit Syslog-Zeilen und streut Ambient-Rauschen ein. */
-export function startFlavor(state: GameState, log: SysLog, app: App, haptic: (k: HapticKind) => void): void {
+/** Verbindet Spielereignisse mit Syslog, Sound und Haptik und streut Ambient-Rauschen ein. */
+export function startFlavor(ctx: AppContext, app: App): void {
+  const { state, log, sfx, haptic } = ctx;
+
   bus.on('buy', ({ id, owned }) => {
     log.write('info', pick(GENERATOR_TEXT[id].buyLog), { n: owned });
+    sfx.buy();
+  });
+
+  bus.on('upgrade', ({ id }) => {
+    log.template(pick(UPGRADE_BUY_LINES), { name: UPGRADE_TEXT[id]?.name ?? id });
+    sfx.upgrade();
+    app.popCounter();
   });
 
   bus.on('milestone', ({ id, owned }) => {
@@ -21,22 +37,63 @@ export function startFlavor(state: GameState, log: SysLog, app: App, haptic: (k:
     else log.template(MILESTONE_FALLBACK(text.name, owned));
     if (owned > 1) {
       app.popCounter();
+      sfx.milestone();
       haptic('milestone');
     }
   });
 
+  watchUnlocks(state, (kind, name) => {
+    log.template(kind === 'generator' ? GENERATOR_UNLOCK_LINE(name) : UPGRADE_AVAILABLE_LINE(name));
+  }, () => {
+    sfx.unlockPing();
+    haptic('unlock');
+  });
+
   const ambient = () => {
     const running = GENERATORS.filter((g) => state.generators[g.id].owned > 0);
-    if (running.length > 0 && Math.random() < 0.45) {
+    const r = Math.random();
+    if (running.length > 0 && r < 0.4) {
       // gewichtet nach Bestand
       const total = running.reduce((sum, g) => sum + state.generators[g.id].owned, 0);
-      let r = Math.random() * total;
-      const g = running.find((g) => (r -= state.generators[g.id].owned) < 0) ?? running[0]!;
+      let x = Math.random() * total;
+      const g = running.find((g) => (x -= state.generators[g.id].owned) < 0) ?? running[0]!;
       log.write('info', pick(GENERATOR_TEXT[g.id].ambient));
+    } else if (r < 0.52) {
+      log.write('info', `bofh[666]: excuse of the day: ${pick(BOFH_EXCUSES)}`);
     } else {
       log.template(pick(AMBIENT));
     }
     setTimeout(ambient, randInt(CONFIG.ambientLogMinMs, CONFIG.ambientLogMaxMs));
   };
   setTimeout(ambient, randInt(CONFIG.ambientLogMinMs, CONFIG.ambientLogMaxMs));
+}
+
+/** Meldet neu sichtbare Generatoren und Upgrades (einmal pro Sitzung, nicht beim Start). */
+function watchUnlocks(
+  state: GameState,
+  onItem: (kind: 'generator' | 'upgrade', name: string) => void,
+  onAny: () => void,
+): void {
+  const seenGen = new Set(GENERATORS.filter((g) => isUnlocked(state, g.id)).map((g) => g.id));
+  const seenUpg = new Set(availableUpgrades(state).map((u) => u.id));
+  for (const id of Object.keys(state.upgrades)) seenUpg.add(id);
+
+  setInterval(() => {
+    let any = false;
+    for (const g of GENERATORS) {
+      if (!seenGen.has(g.id) && isUnlocked(state, g.id)) {
+        seenGen.add(g.id);
+        onItem('generator', GENERATOR_TEXT[g.id].name);
+        any = true;
+      }
+    }
+    for (const u of availableUpgrades(state)) {
+      if (!seenUpg.has(u.id)) {
+        seenUpg.add(u.id);
+        onItem('upgrade', UPGRADE_TEXT[u.id]?.name ?? u.id);
+        any = true;
+      }
+    }
+    if (any) onAny();
+  }, 500);
 }

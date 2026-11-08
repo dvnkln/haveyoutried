@@ -11,10 +11,12 @@ import { h } from './ui/dom';
 import { startFlavor } from './ui/flavor';
 import { formatDuration, formatNumber } from './ui/format';
 import { createHaptics } from './ui/haptics';
+import { Sfx } from './ui/audio';
 import { SysLog } from './ui/log';
 import { showModal } from './ui/modal';
 import { infraTab } from './ui/tabs/infra';
 import { queueTab } from './ui/tabs/queue';
+import { upgradesTab } from './ui/tabs/upgrades';
 import { systemTab } from './ui/tabs/system';
 import { pick } from './util';
 
@@ -25,6 +27,11 @@ const startReport = loaded ? applyOfflineProgress(state, now) : null;
 
 const log = new SysLog();
 const haptic = createHaptics(() => state.settings.haptics);
+const sfx = new Sfx(() => state.settings);
+// Audio darf erst nach einer Nutzergeste starten; iOS will dafür teils touchend
+for (const type of ['pointerdown', 'pointerup', 'touchend', 'keydown'] as const) {
+  document.addEventListener(type, () => sfx.unlock(), { capture: true, passive: true });
+}
 const saver = new Saver(
   () => state,
   () => log.write('crit', 'kernel: EXT4-fs error: /dev/localStorage remounted read-only. savegame NOT written.'),
@@ -32,8 +39,9 @@ const saver = new Saver(
 
 const root = document.getElementById('app');
 if (!root) throw new Error('#app fehlt');
-const app = mountApp(root, { state, log, saver, haptic }, [queueTab(), infraTab(), systemTab()]);
-startFlavor(state, log, app, haptic);
+const ctx = { state, log, saver, sfx, haptic };
+const app = mountApp(root, ctx, [queueTab(), infraTab(), upgradesTab(), systemTab()]);
+startFlavor(ctx, app);
 
 for (const line of BOOT_LINES) log.template(line);
 if (loaded) log.write('info', 'helpdesk[1337]: savegame restored from /var/lib/helpdesk');

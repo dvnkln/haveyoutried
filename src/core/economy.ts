@@ -1,4 +1,4 @@
-import { CONFIG, GENERATORS, type GeneratorDef, type GeneratorId } from '../config';
+import { CONFIG, GENERATORS, UPGRADES, type GeneratorDef, type GeneratorId, type UpgradeDef } from '../config';
 import type { BuyAmount, GameState } from './state';
 
 const g = CONFIG.costGrowth;
@@ -44,18 +44,57 @@ export function priceFor(state: GameState, id: GeneratorId, amount: BuyAmount): 
   return { n, cost: bulkCost(def.baseCost, state.generators[id].owned, n) };
 }
 
-// --- Modifier-Pipeline. Phase 2: Upgrades und Berufserfahrung hängen sich hier ein. ---
+// --- Upgrades ---
 
-export function generatorMultiplier(_state: GameState, _id: GeneratorId): number {
-  return 1;
+export function upgradeDef(id: string): UpgradeDef {
+  const def = UPGRADES.find((u) => u.id === id);
+  if (!def) throw new Error(`unknown upgrade: ${id}`);
+  return def;
 }
 
-export function globalMultiplier(_state: GameState): number {
-  return 1;
+const owns = (state: GameState) => UPGRADES.filter((u) => state.upgrades[u.id]);
+
+export function isUpgradeUnlocked(state: GameState, def: UpgradeDef): boolean {
+  const u = def.unlock;
+  switch (u.kind) {
+    case 'owned':
+      return state.generators[u.gen].owned >= u.n;
+    case 'clicks':
+      return state.clicks >= u.n;
+    case 'total':
+      return state.ticketsTotal >= u.n;
+  }
+}
+
+/** Freigeschaltet und noch nicht gekauft, nach Preis sortiert. */
+export function availableUpgrades(state: GameState): UpgradeDef[] {
+  return UPGRADES.filter((u) => !state.upgrades[u.id] && isUpgradeUnlocked(state, u)).sort(
+    (a, b) => a.cost - b.cost,
+  );
+}
+
+// --- Modifier-Pipeline. Phase 2: Berufserfahrung (Prestige) hängt sich hier ein. ---
+
+export function generatorMultiplier(state: GameState, id: GeneratorId): number {
+  let m = 1;
+  for (const u of owns(state)) if (u.effect.kind === 'gen' && u.effect.gen === id) m *= u.effect.mult;
+  return m;
+}
+
+export function globalMultiplier(state: GameState): number {
+  let m = 1;
+  for (const u of owns(state)) if (u.effect.kind === 'global') m *= u.effect.mult;
+  return m;
 }
 
 export function clickValue(state: GameState): number {
-  return CONFIG.clickValue * globalMultiplier(state);
+  let mult = 1;
+  let ppsFraction = 0;
+  for (const u of owns(state)) {
+    if (u.effect.kind === 'click') mult *= u.effect.mult;
+    else if (u.effect.kind === 'clickPps') ppsFraction += u.effect.fraction;
+  }
+  return CONFIG.clickValue * mult * globalMultiplier(state) + productionPerSec(state) * ppsFraction;
 }
 
 export function generatorProduction(state: GameState, id: GeneratorId): number {

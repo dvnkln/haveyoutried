@@ -57,6 +57,7 @@ export function infraTab(): Tab {
         ctx.haptic('buy');
         juice(el, SHAKE, 260);
       } else {
+        ctx.sfx.error();
         ctx.haptic('error');
       }
     });
@@ -94,7 +95,7 @@ export function infraTab(): Tab {
         list,
         h('p', {
           class: 'hint',
-          text: 'Ansible, Kubernetes & „der Server unterm Tisch“: warten auf das nächste Wartungsfenster.',
+          text: 'Weitere Infrastruktur: in Planung seit 2019. Budget: beantragt.',
         }),
       ]);
     },

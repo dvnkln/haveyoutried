@@ -33,7 +33,7 @@ export interface GameState {
   // ---
 
   stats: { startedAt: number; playTimeMs: number; offlineTickets: number };
-  settings: { haptics: boolean; buyAmount: BuyAmount };
+  settings: { haptics: boolean; sound: boolean; volume: number; buyAmount: BuyAmount };
   /** Wall-Clock des letzten Ticks, Basis für Offline-Progress */
   lastTick: number;
 }
@@ -54,7 +54,7 @@ export function createInitialState(now: number): GameState {
     prestige: { experience: 0, jobs: 0 },
     events: { nextAt: 0, active: null },
     stats: { startedAt: now, playTimeMs: 0, offlineTickets: 0 },
-    settings: { haptics: true, buyAmount: 1 },
+    settings: { haptics: true, sound: true, volume: 0.7, buyAmount: 1 },
     lastTick: now,
   };
 }

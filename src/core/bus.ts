@@ -5,6 +5,7 @@ export interface GameEvents {
   click: { value: number; ticketNo: number };
   buy: { id: GeneratorId; amount: number; owned: number };
   milestone: { id: GeneratorId; owned: number };
+  upgrade: { id: string };
 }
 
 type Handler<T> = (payload: T) => void;
