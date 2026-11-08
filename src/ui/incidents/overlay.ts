@@ -10,12 +10,18 @@ import { describeEffect } from '../pager';
 import { raidGame } from './raid';
 import { servicesGame } from './services';
 import { spamGame } from './spam';
+import { logGrepGame } from './loggrep';
+import { networkGame } from './network';
+import { patchGame } from './patch';
 import type { Minigame } from './types';
 
 const GAMES: Record<IncidentId, () => Minigame> = {
   raid: raidGame,
   spam: spamGame,
   services: servicesGame,
+  loggrep: logGrepGame,
+  network: networkGame,
+  patch: patchGame,
 };
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];

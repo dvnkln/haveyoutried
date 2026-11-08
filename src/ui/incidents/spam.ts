@@ -1,19 +1,11 @@
 import { INCIDENTS } from '../../config';
 import { MAILS, type Mail } from '../../content/incidents';
+import { shuffle } from '../../util';
 import { h, juice, SHAKE, setText } from '../dom';
 import type { GameApi, Minigame } from './types';
 
 const CFG = INCIDENTS.games.spam;
 const SWIPE_PX = 70;
-
-function shuffle<T>(items: readonly T[], rnd = Math.random): T[] {
-  const a = [...items];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(rnd() * (i + 1));
-    [a[i], a[j]] = [a[j]!, a[i]!];
-  }
-  return a;
-}
 
 /** Spiellogik ohne DOM. */
 export class SpamSim {

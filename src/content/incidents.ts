@@ -60,6 +60,51 @@ export const INCIDENT_TEXT: Record<IncidentId, IncidentText> = {
       'Die Ursache hat sich am Ende selbst erholt. Du nimmst das trotzdem auf deine Kappe.',
     ],
   },
+  loggrep: {
+    host: 'app01',
+    service: 'ERROR-RATE',
+    info: 'error rate 37 % (threshold 5 %)',
+    okInfo: 'error rate 0.2 %',
+    goal: 'Tippe neue, echte Fehler (FATAL/CRIT) an, bevor sie oben rausscrollen. Die üblichen ERRORs sind seit 2014 da – ignorieren.',
+    good: [
+      'Ursache im Log gefunden. Du hast sogar den Stacktrace bis zum Ende gelesen. Respekt.',
+      'grep -v "known issue" | grep FATAL – und schon war es offensichtlich.',
+    ],
+    bad: [
+      'Im Rauschen untergegangen. Der Kollege hat „tail -f“ gemacht und es sofort gesehen. Sagt er.',
+      'Du hast die falsche ERROR-Zeile gefixt. Die war seit 2014 kaputt und hat niemanden gestört.',
+    ],
+  },
+  network: {
+    host: 'admin-pc',
+    service: 'PING',
+    info: 'packet loss 100 %, rta n/a',
+    okInfo: 'packet loss 0 %, rta 0.4 ms',
+    goal: 'Dein eigener Rechner ist offline – keine Tickets mehr. Arbeite dich von unten nach oben durch (OSI!). Falsche Reihenfolge kostet Zeit.',
+    good: [
+      'Netz wieder da. Systematisch von Layer 1 nach oben. Wie im Lehrbuch. Das Lehrbuch ist von 2003.',
+      'Online. Die Queue ist in der Zwischenzeit nicht kürzer geworden. Komisch.',
+    ],
+    bad: [
+      'Ein Kollege hat dein Kabel wieder eingesteckt. Er erzählt es gerade in der Teeküche.',
+      'Nach 20 Minuten Wireshark: Das Kabel war ab. Du nimmst ein Ticket für dich selbst auf.',
+    ],
+  },
+  patch: {
+    host: 'sw-core01',
+    service: 'PORTS',
+    info: '12 ports down after Aufräumaktion (Immobilienmanagement)',
+    okInfo: 'all access ports up',
+    goal: 'Dose links mit dem passenden Switch-Port rechts verbinden: antippen + antippen oder ziehen. Finger weg vom Uplink!',
+    good: [
+      'Alles gepatcht. Diesmal sogar beschriftet. Das hält bis zur nächsten Aufräumaktion.',
+      'Ports up. Das Immobilienmanagement hat versprochen, nie wieder „Kabel zu ordnen“.',
+    ],
+    bad: [
+      'Halb gepatcht. Der Drucker im 3. OG ist jetzt im VLAN der Geschäftsführung. Viel Spaß.',
+      'Kabelsalat. Ein Kollege hat es mit Kabelbindern „gelöst“. Für immer.',
+    ],
+  },
 };
 
 /** Button-Texte zum Übernehmen eines Incidents (zufällig) */
@@ -154,3 +199,106 @@ export const ROOT_CAUSES: { id: string; weight: number }[] = [
 
 /** Warnungen ohne Zusammenhang (Störer) */
 export const NOISE_WARNINGS = ['disk 87 %', 'cert expires in 12 days', 'load 4.2', 'swap 61 %', 'NTP offset 0.8 s'];
+
+// --- Log-Grep ---
+
+/** Normales Rauschen und bekannte Fehler, die man ignorieren soll */
+export const LOG_DECOYS = [
+  'INFO  ticket-api: GET /health 200 (2 ms)',
+  'INFO  cron: job cleanup finished (0 files)',
+  'WARN  disk /boot 91 % (seit 2019)',
+  'ERROR printer03: paper jam (known issue #12)',
+  'ERROR deprecated config option "use_legacy" (seit 2014)',
+  'INFO  sshd: session opened for user praktikant',
+  'WARN  slow query 2.1 s (wie immer)',
+  'ERROR ACPI: [\\_SB_.PCI0] namespace lookup failure (harmless)',
+  'INFO  ldap: bind ok for svc-helpdesk',
+  'ERROR mail: greylisted by gmx.de (known issue #88)',
+  'WARN  certificate expires in 29 days',
+  'INFO  nginx: 304 Not Modified /favicon.ico',
+  'ERROR java: NullPointerException in LegacyReport (ignored since 2014)',
+  'INFO  backup: skipped (we believe in it)',
+];
+
+/** Echte neue Fehler – die muss man erwischen */
+export const LOG_TARGETS = [
+  'FATAL ticket-api: connection pool exhausted (db01:5432)',
+  'CRIT  kernel: EXT4-fs error on /var – remounted read-only',
+  'FATAL app: OutOfMemoryError – Java heap space',
+  'CRIT  db01: too many connections (max 100)',
+  'FATAL ticket-api: Segmentation fault (core dumped)',
+  'CRIT  nfs: server fs02 not responding, still trying',
+  'FATAL auth: LDAP bind failed – invalid credentials (svc-helpdesk)',
+];
+
+// --- Netzwerkausfall ---
+
+export interface NetStep {
+  id: string;
+  label: string;
+  /** Terminal-Ausgabe, wenn der Schritt dran war */
+  output: string;
+}
+
+export interface NetScenario {
+  id: string;
+  steps: NetStep[];
+}
+
+const step = (id: string, label: string, output: string): NetStep => ({ id, label, output });
+
+/** Mögliche Ursachen, jeweils die richtige Reihenfolge von unten nach oben */
+export const NET_SCENARIOS: NetScenario[] = [
+  {
+    id: 'cable',
+    steps: [
+      step('cable', 'Kabel prüfen', 'Kabel hängt lose raus. Spuren vom Staubsauger.'),
+      step('plug', 'Kabel einstecken', '*klick*'),
+      step('led', 'Link-LED prüfen', 'Link up, 1000 Mbit/s full duplex'),
+      step('gw', 'Gateway anpingen', '64 bytes from 10.0.0.1: time=0.4 ms'),
+    ],
+  },
+  {
+    id: 'dhcp',
+    steps: [
+      step('cable', 'Kabel prüfen', 'Kabel steckt.'),
+      step('led', 'Link-LED prüfen', 'Link up.'),
+      step('ip', 'IP-Adresse prüfen', 'inet 169.254.13.37 – das ist APIPA. Kein DHCP.'),
+      step('dhcp', 'DHCP erneuern', 'DHCPACK: 10.0.0.42/24, gw 10.0.0.1'),
+      step('gw', 'Gateway anpingen', '64 bytes from 10.0.0.1: time=0.5 ms'),
+    ],
+  },
+  {
+    id: 'dns',
+    steps: [
+      step('cable', 'Kabel prüfen', 'Kabel steckt.'),
+      step('led', 'Link-LED prüfen', 'Link up.'),
+      step('ip', 'IP-Adresse prüfen', 'inet 10.0.0.42/24 – passt.'),
+      step('gw', 'Gateway anpingen', '64 bytes from 10.0.0.1: time=0.4 ms'),
+      step('dns', 'DNS testen (nslookup)', ';; connection timed out; no servers could be reached'),
+      step('dnsfix', 'DNS-Server eintragen', 'nameserver 10.0.0.53 – Auflösung klappt. Es war DNS.'),
+    ],
+  },
+];
+
+/** Buttons, die nie helfen */
+export const NET_DISTRACTORS: { id: string; label: string; reply: string }[] = [
+  { id: 'reboot', label: 'Rechner neu starten', reply: 'Neustart. 4 Minuten Updates. Immer noch offline.' },
+  { id: 'escalate', label: 'Ticket ans Netzwerkteam', reply: 'Das Netzwerkteam bist du.' },
+  { id: 'yell', label: 'Router anschreien', reply: 'Hat gutgetan. Hilft aber nicht.' },
+  { id: 'wifi', label: 'Ins Gäste-WLAN', reply: 'Gäste-WLAN-Passwort steht am Empfang. Der Empfang ist nicht erreichbar.' },
+];
+
+// --- Patchkabel ---
+
+/** Abteilungen: Dose (links) zeigt den Namen, der Switch-Port (rechts) nur das VLAN-Kürzel */
+export const PATCH_DEPARTMENTS: { name: string; vlan: string }[] = [
+  { name: 'Buchhaltung', vlan: 'BUHA' },
+  { name: 'Vertrieb', vlan: 'SALES' },
+  { name: 'Marketing', vlan: 'MKTG' },
+  { name: 'Personal', vlan: 'HR' },
+  { name: 'Empfang', vlan: 'EMPF' },
+  { name: 'Chefetage', vlan: 'GF' },
+  { name: 'Drucker 3. OG', vlan: 'PRINT' },
+  { name: 'Kaffeemaschine', vlan: 'IOT-KAFFEE' },
+];

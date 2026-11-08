@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { PATCH_DEPARTMENTS } from '../../src/content/incidents';
 
 const SHOTS = process.env.SHOTS_DIR;
 const shot = async (page: import('@playwright/test').Page, name: string) => {
@@ -161,7 +162,7 @@ test('Zufallsevent: Pager → Entscheidung → Ergebnis', async ({ page, context
   expect(errors).toEqual([]);
 });
 
-for (const id of ['raid', 'spam', 'services']) {
+for (const id of ['raid', 'spam', 'services', 'loggrep', 'network', 'patch']) {
   test(`Incident ${id}: Alarm → Spiel → Ergebnis`, async ({ page }) => {
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
@@ -215,4 +216,46 @@ test('Reload während eines Incidents gilt als Eskalation, kein sofortiger neuer
   await page.waitForTimeout(2_000);
   await expect(page.locator('.incident')).toBeHidden();
   expect(await page.evaluate(() => document.getElementById('app')!.inert)).toBe(false);
+});
+
+test('Patchkabel: Antippen-Antippen und Ziehen verbinden, Uplink straft', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.clock.install();
+  await page.goto('/?incident=patch');
+  await page.clock.runFor(2_500);
+  await page.clock.runFor(1_500);
+  await page.locator('.nag-take').click();
+  await page.clock.runFor(3_200);
+
+  const vlan = (dept: string) => PATCH_DEPARTMENTS.find((d) => d.name === dept)!.vlan;
+  const lefts = page.locator('.port-left');
+  const n = await lefts.count();
+
+  // Uplink: Strafe, nichts verbunden
+  await lefts.nth(0).click();
+  await page.locator('.port-right.uplink').click();
+  await expect(page.locator('.patch-info')).toContainText('Spanning Tree');
+
+  for (let i = 0; i < n; i++) {
+    const dept = (await lefts.nth(i).locator('.port-label').textContent())!;
+    const right = page.locator('.port-right', { hasText: `VLAN ${vlan(dept)}` });
+    if (i % 2 === 0) {
+      await lefts.nth(i).click();
+      await right.click();
+    } else {
+      const a = (await lefts.nth(i).boundingBox())!;
+      const b = (await right.boundingBox())!;
+      await page.mouse.move(a.x + a.width / 2, a.y + a.height / 2);
+      await page.mouse.down();
+      await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2, { steps: 5 });
+      await page.mouse.up();
+    }
+    await expect(lefts.nth(i)).toHaveClass(/done/);
+  }
+  await expect(page.locator('.patch-cable')).toHaveCount(n);
+  await shot(page, 'inc-patch-played');
+  await page.clock.runFor(500);
+  await expect(page.locator('.nag-recovery')).toBeVisible();
+  expect(errors).toEqual([]);
 });

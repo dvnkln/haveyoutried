@@ -102,7 +102,7 @@ export type EventEffectId = keyof typeof EVENT_EFFECTS;
 
 // --- Incidents (Minispiele nach Monitoring-Alarm) ---
 
-export const INCIDENT_IDS = ['raid', 'spam', 'services'] as const;
+export const INCIDENT_IDS = ['raid', 'spam', 'services', 'loggrep', 'network', 'patch'] as const;
 export type IncidentId = (typeof INCIDENT_IDS)[number];
 
 /** Ab dieser Leistung gilt ein Incident als gelöst (RECOVERY statt ESCALATION) */
@@ -152,6 +152,33 @@ export const INCIDENTS = {
       rounds: 4,
       /** Zeitstrafe für Neustart des falschen Dienstes */
       wrongPenaltyMs: 1_500,
+    },
+    loggrep: {
+      durationMs: 25_000,
+      /** so viele echte Fehler tauchen auf */
+      rounds: 5,
+      /** Abstand neuer Logzeilen, wird schneller */
+      intervalStartMs: 800,
+      intervalEndMs: 450,
+      /** Nachsicht: kurz nach dem Nachrücken zählt die Zeile unter dem Fehler auch als Treffer */
+      shiftGraceMs: 350,
+      /** sichtbare Zeilen; fällt der Fehler oben raus, ist er verpasst */
+      window: 9,
+      /** Störzeilen vor dem echten Fehler (min..max) */
+      decoysMin: 3,
+      decoysMax: 7,
+      wrongPenaltyMs: 1_000,
+    },
+    network: {
+      durationMs: 25_000,
+      wrongPenaltyMs: 1_500,
+    },
+    patch: {
+      durationMs: 25_000,
+      cables: 5,
+      wrongPenaltyMs: 1_200,
+      /** Kabel auf den Uplink: Broadcast-Sturm */
+      uplinkPenaltyMs: 3_000,
     },
   },
 } as const;
