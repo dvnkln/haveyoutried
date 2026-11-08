@@ -105,7 +105,11 @@ export type EventEffectId = keyof typeof EVENT_EFFECTS;
 export const INCIDENT_IDS = ['raid', 'spam', 'services'] as const;
 export type IncidentId = (typeof INCIDENT_IDS)[number];
 
+/** Ab dieser Leistung gilt ein Incident als gelöst (RECOVERY statt ESCALATION) */
+const INCIDENT_GOOD_MIN = 0.4;
+
 export const INCIDENTS = {
+  goodMin: INCIDENT_GOOD_MIN,
   /** Spielzeit bis zum ersten Incident, danach zufällig min..max */
   firstMs: 5 * 60_000,
   minMs: 6 * 60_000,
@@ -124,7 +128,7 @@ export const INCIDENTS = {
   rewards: [
     { min: 0.95, effects: ['win', 'flow'] },
     { min: 0.8, effects: ['win'] },
-    { min: 0.4, effects: ['tip'] },
+    { min: INCIDENT_GOOD_MIN, effects: ['tip'] },
     { min: 0, effects: ['fire'] },
   ] as { min: number; effects: EventEffectId[] }[],
   games: {

@@ -5,9 +5,12 @@ import { bus } from '../../src/core/bus';
 import { rates } from '../../src/core/economy';
 import {
   _resetIncidentRuntime,
+  endIncident,
   incidentRunning,
+  isSolved,
   resolveIncident,
   rewardFor,
+  settleAbandoned,
   startIncident,
   updateIncidents,
 } from '../../src/core/incidents';
@@ -53,20 +56,71 @@ describe('Incident-Planung', () => {
     s.events.nextAt = 1e12;
     s.incidents.nextAt = 1e12;
     s.events.active = { id: 'dns', expiresAt: 20_000, opened: false };
-    startIncident('raid');
+    startIncident(s, 'raid');
     tick(s, 5, 5_000);
     expect(s.events.active!.expiresAt).toBe(25_000);
   });
 
-  it('Auflösung: Effekte nach Score, Statistik, nächster Termin', () => {
+  it('Start: sofort festgehalten und neu geplant', () => {
     const s = createInitialState(0);
-    startIncident('spam');
+    s.stats.playTimeMs = 1_000;
+    startIncident(s, 'spam');
+    expect(s.incidents.active).toBe('spam');
+    expect(s.incidents.lastId).toBe('spam');
+    expect(s.incidents.nextAt).toBeGreaterThanOrEqual(1_000 + INCIDENTS.minMs);
+  });
+
+  it('Auflösung: Effekte nach Score, Statistik; Overlay bleibt aktiv bis endIncident', () => {
+    const s = createInitialState(0);
+    startIncident(s, 'spam');
     const res = resolveIncident(s, 'spam', 1, rates(s));
     expect(res.map((r) => r.effect)).toEqual(['win', 'flow']);
-    expect(incidentRunning()).toBeNull();
+    expect(s.incidents.active).toBe('');
     expect(s.incidents.seen.spam).toBe(1);
     expect(s.incidents.best.spam).toBe(1);
-    expect(s.incidents.nextAt).toBeGreaterThanOrEqual(INCIDENTS.minMs);
+    // Ergebniskarte noch offen: Pager weiter pausiert
+    expect(incidentRunning()).toBe('spam');
+    endIncident();
+    expect(incidentRunning()).toBeNull();
+  });
+
+  it('kein Pager-Event hinter der offenen Ergebniskarte', () => {
+    const s = createInitialState(0);
+    s.stats.playTimeMs = 10_000;
+    s.events.nextAt = 10_500;
+    s.incidents.nextAt = 1e12;
+    startIncident(s, 'raid');
+    resolveIncident(s, 'raid', 1, rates(s));
+    tick(s, 5, 5_000);
+    expect(s.events.active).toBeNull();
+    endIncident();
+    tick(s, 2, 7_000);
+    expect(s.events.active).not.toBeNull();
+  });
+
+  it('Reload während eines Incidents: wird beim Laden als eskaliert gewertet', () => {
+    const s = createInitialState(0);
+    startIncident(s, 'raid');
+    _resetIncidentRuntime(); // = Seite neu geladen
+    const seen: boolean[] = [];
+    const off = bus.on('incidentResolved', (e) => seen.push(e.abandoned));
+    const res = settleAbandoned(s, rates(s))!;
+    off();
+    expect(res.map((r) => r.effect)).toEqual(['fire']);
+    expect(seen).toEqual([true]);
+    expect(s.incidents.active).toBe('');
+    // und es startet nicht sofort ein neuer
+    s.stats.playTimeMs = 1_000;
+    s.events.nextAt = 1e12;
+    updateIncidents(s);
+    expect(incidentRunning()).toBeNull();
+    expect(settleAbandoned(s, rates(s))).toBeNull();
+  });
+
+  it('Erfolgsgrenze kommt aus der Config und passt zur Belohnungsstufe', () => {
+    expect(isSolved(INCIDENTS.goodMin)).toBe(true);
+    expect(isSolved(INCIDENTS.goodMin - 0.01)).toBe(false);
+    expect(rewardFor(INCIDENTS.goodMin - 0.01).effects).toEqual(['fire']);
   });
 
   it('Score-Stufen', () => {
@@ -110,7 +164,19 @@ describe('RAID', () => {
     const sim = new RaidSim();
     for (let t = 0; t < 10_000 && !sim.dead; t += 50) sim.update(50);
     expect(sim.dead).toBe(true);
-    expect(sim.score()).toBeLessThan(0.7);
+    expect(isSolved(sim.score())).toBe(false);
+  });
+
+  it('totes Array ist nie ein Erfolg, auch wenn es spät stirbt', () => {
+    const sim = new RaidSim();
+    // bis kurz vor Schluss alles retten, dann liegen lassen
+    for (let t = 0; t < INCIDENTS.games.raid.durationMs - 3_000; t += 50) {
+      sim.update(50);
+      sim.disks.forEach((d, i) => d === 'failed' && sim.replace(i));
+    }
+    for (let t = 0; t < 10_000 && !sim.dead; t += 50) sim.update(50);
+    expect(sim.dead).toBe(true);
+    expect(isSolved(sim.score())).toBe(false);
   });
 
   it('überlebt, wenn man sofort tauscht – gute Wertung', () => {

@@ -1,5 +1,6 @@
 import { INCIDENTS } from '../../config';
 import { NOISE_WARNINGS, ROOT_CAUSES, SERVICES, type ServiceDef } from '../../content/incidents';
+import { weightedPick } from '../../util';
 import { h, juice, SHAKE, setText } from '../dom';
 import type { GameApi, Minigame } from './types';
 
@@ -49,9 +50,7 @@ export class ServicesSim {
 
   private newRound(): void {
     const pool = ROOT_CAUSES.filter((r) => r.id !== this.root);
-    const total = pool.reduce((a, r) => a + r.weight, 0);
-    let x = this.rnd() * total;
-    this.root = (pool.find((r) => (x -= r.weight) < 0) ?? pool[0]!).id;
+    this.root = weightedPick(pool, (r) => r.weight, this.rnd).id;
     this.down = affectedBy(this.root);
     // 1–2 Störer unter den gesunden Diensten
     this.noise.clear();

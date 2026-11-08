@@ -84,3 +84,16 @@ describe('Inhalte vollständig', () => {
     expect(situationalCalls(createInitialState(0), friday).length).toBeGreaterThan(0);
   });
 });
+
+describe('weightedPick', () => {
+  it('respektiert Gewichte und ignoriert Gewicht 0', async () => {
+    const { weightedPick } = await import('../../src/util');
+    const items = ['a', 'b', 'c'];
+    const w = (x: string) => (x === 'a' ? 3 : x === 'b' ? 1 : 0);
+    expect(weightedPick(items, w, () => 0)).toBe('a');
+    expect(weightedPick(items, w, () => 0.74)).toBe('a');
+    expect(weightedPick(items, w, () => 0.76)).toBe('b');
+    expect(weightedPick(items, w, () => 0.9999)).toBe('b');
+    expect(() => weightedPick([], w)).toThrow();
+  });
+});

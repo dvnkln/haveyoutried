@@ -2,7 +2,7 @@ import { INCIDENTS, type IncidentId } from '../../config';
 import { DONE_LABELS, INCIDENT_TEXT, TAKE_LABELS } from '../../content/incidents';
 import { bus } from '../../core/bus';
 import { rates } from '../../core/economy';
-import { isIncidentId, resolveIncident } from '../../core/incidents';
+import { endIncident, isSolved, resolveIncident } from '../../core/incidents';
 import { pick } from '../../util';
 import type { AppContext } from '../app';
 import { h, setText } from '../dom';
@@ -22,10 +22,21 @@ const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const p2 = (n: number) => String(n).padStart(2, '0');
 
+/** Kurzname der lokalen Zeitzone: CET/CEST wie in deutschen Monitoring-Mails, sonst was Intl liefert. */
+function tzName(d: Date): string {
+  const off = d.getTimezoneOffset();
+  if (off === -60) return 'CET';
+  if (off === -120) return 'CEST';
+  try {
+    return new Intl.DateTimeFormat('en-US', { timeZoneName: 'short' }).formatToParts(d).find((p) => p.type === 'timeZoneName')?.value ?? 'UTC';
+  } catch {
+    return off === 0 ? 'UTC' : `UTC${off < 0 ? '+' : '-'}${Math.abs(off / 60)}`;
+  }
+}
+
 /** Datum wie in Nagios/Icinga-Mails: „Sun Nov 8 09:41:03 CET 2026“ */
 function nagiosDate(d = new Date()): string {
-  const tz = d.getTimezoneOffset() === -60 ? 'CET' : d.getTimezoneOffset() === -120 ? 'CEST' : 'UTC';
-  return `${DAYS[d.getDay()]} ${MONTHS[d.getMonth()]} ${d.getDate()} ${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())} ${tz} ${d.getFullYear()}`;
+  return `${DAYS[d.getDay()]} ${MONTHS[d.getMonth()]} ${d.getDate()} ${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())} ${tzName(d)} ${d.getFullYear()}`;
 }
 
 const line = (label: string, value: string, cls = '') =>
@@ -38,6 +49,16 @@ const line = (label: string, value: string, cls = '') =>
 export function mountIncidentOverlay(ctx: AppContext): void {
   const root = h('div', { class: 'incident', hidden: '', role: 'alertdialog', 'aria-modal': 'true' });
   document.body.append(root);
+  const app = document.getElementById('app');
+  const show = () => {
+    root.hidden = false;
+    if (app) app.inert = true;
+  };
+  const hide = () => {
+    root.hidden = true;
+    root.replaceChildren();
+    if (app) app.inert = false;
+  };
 
   const run = (id: IncidentId) => {
     const text = INCIDENT_TEXT[id];
@@ -60,7 +81,7 @@ export function mountIncidentOverlay(ctx: AppContext): void {
     ]);
     root.classList.remove('playing');
     root.replaceChildren(alert);
-    root.hidden = false;
+    show();
     ctx.sfx.alarm();
     ctx.haptic('milestone');
     // Button erst nach kurzer Sperre aktiv (gegen Fehlgriffe beim Dauertippen)
@@ -83,6 +104,8 @@ export function mountIncidentOverlay(ctx: AppContext): void {
     const bar = h('div', { class: 'inc-bar' }, [h('div', { class: 'inc-bar-fill' })]);
     const status = h('div', { class: 'inc-status' });
     const stage = h('div', { class: 'inc-stage' });
+    const gameRoot = h('div', { class: 'inc-game-root' });
+    stage.append(gameRoot);
     const startGame = () => {
       clearInterval(nag);
       elapsed = 0;
@@ -103,7 +126,9 @@ export function mountIncidentOverlay(ctx: AppContext): void {
         ]),
       );
       stage.append(readyEl);
-      game.mount(stage, {
+      // eingefroren: auch Tastatur sperren, nicht nur Touch
+      gameRoot.inert = true;
+      game.mount(gameRoot, {
         finish: () => (finished = true),
         penalize: (ms) => (penalty += ms),
         sfx: ctx.sfx,
@@ -117,13 +142,13 @@ export function mountIncidentOverlay(ctx: AppContext): void {
       root.classList.remove('playing');
       const score = game.score();
       const results = resolveIncident(ctx.state, id, score, rates(ctx.state));
-      const good = score >= 0.4;
+      const good = isSolved(score);
       const ack = h('button', { class: 'btn btn-primary nag-ack nag-close', type: 'button', text: pick(good ? DONE_LABELS.good : DONE_LABELS.bad), disabled: '' });
       setTimeout(() => (ack.disabled = false), 600);
       ack.addEventListener('click', () => {
         ctx.sfx.tick();
-        root.hidden = true;
-        root.replaceChildren();
+        hide();
+        endIncident();
       });
       root.replaceChildren(
         h('div', { class: `nag-card ${good ? 'nag-recovery' : 'nag-problem'}` }, [
@@ -164,6 +189,7 @@ export function mountIncidentOverlay(ctx: AppContext): void {
         setText(status, game.status());
         if (readyLeft <= 0) {
           phase = 'play';
+          gameRoot.inert = false;
           setTimeout(() => readyEl.remove(), 350);
           readyEl.classList.add('go');
         }
@@ -180,12 +206,12 @@ export function mountIncidentOverlay(ctx: AppContext): void {
     take.addEventListener('click', () => {
       ctx.sfx.tick();
       startGame();
+      last = performance.now();
+      requestAnimationFrame(frame);
     });
-    requestAnimationFrame(frame);
   };
 
   bus.on('incidentStart', ({ id }) => {
-    if (!isIncidentId(id)) return;
     // nicht über einen offenen Dialog legen: warten, bis er zu ist
     const tryStart = () => {
       if (document.querySelector('dialog[open]')) setTimeout(tryStart, 500);

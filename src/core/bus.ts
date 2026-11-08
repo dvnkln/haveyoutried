@@ -1,4 +1,4 @@
-import type { GeneratorId } from '../config';
+import type { GeneratorId, IncidentId } from '../config';
 import type { EffectResult, Resolution } from './events';
 
 /** Alle Ereignisse, die die Logik nach außen meldet (UI, Log, später Achievements). */
@@ -10,8 +10,9 @@ export interface GameEvents {
   eventIncoming: { id: string };
   eventResolved: Resolution;
   buffEnded: { id: string };
-  incidentStart: { id: string };
-  incidentResolved: { id: string; score: number; results: EffectResult[] };
+  incidentStart: { id: IncidentId };
+  /** abandoned = beim Laden gefunden (Seite während des Incidents geschlossen) */
+  incidentResolved: { id: IncidentId; score: number; results: EffectResult[]; abandoned: boolean };
 }
 
 type Handler<T> = (payload: T) => void;

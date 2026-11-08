@@ -1267,6 +1267,12 @@ button {
 .inc-stage {
   position: relative;
 }
+.inc-game-root {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
 /* Countdown über dem eingefrorenen Spielfeld; fängt alle Taps ab */
 .inc-ready {
   position: absolute;

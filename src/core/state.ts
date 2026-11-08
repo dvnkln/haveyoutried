@@ -51,8 +51,8 @@ export interface GameState {
   events: { nextAt: number; active: ActiveEvent | null; lastId: string; seen: Record<string, number> };
   /** laufende Boosts/Bremsen aus Events */
   buffs: Buff[];
-  /** Minispiel-Incidents; ein laufender Incident wird bewusst nicht gespeichert */
-  incidents: { nextAt: number; lastId: string; seen: Record<string, number>; best: Record<string, number> };
+  /** Minispiel-Incidents; `active` = gestartet, aber noch nicht gewertet (Reload = Eskalation) */
+  incidents: { nextAt: number; lastId: string; active: string; seen: Record<string, number>; best: Record<string, number> };
   // ---
 
   stats: { startedAt: number; playTimeMs: number; offlineTickets: number };
@@ -77,7 +77,7 @@ export function createInitialState(now: number): GameState {
     prestige: { experience: 0, jobs: 0 },
     events: { nextAt: 0, active: null, lastId: '', seen: {} },
     buffs: [],
-    incidents: { nextAt: 0, lastId: '', seen: {}, best: {} },
+    incidents: { nextAt: 0, lastId: '', active: '', seen: {}, best: {} },
     stats: { startedAt: now, playTimeMs: 0, offlineTickets: 0 },
     settings: { haptics: true, sound: true, volume: 0.7, tapSound: 'blue', buyAmount: 1 },
     lastTick: now,

@@ -1,5 +1,6 @@
 import { CONFIG, EVENT_EFFECTS, type EventEffectId } from '../config';
 import { EVENTS, type GameEventDef, type Outcome } from '../content/events';
+import { weightedPick } from '../util';
 import { bus } from './bus';
 import { addTickets, type Buff, type GameState } from './state';
 
@@ -67,24 +68,12 @@ export function applyEffect(
 }
 
 function pickOutcome(outcomes: Outcome[]): Outcome {
-  let r = random();
-  for (const o of outcomes) {
-    r -= o.chance ?? 1;
-    if (r < 0) return o;
-  }
-  return outcomes[outcomes.length - 1]!;
+  return weightedPick(outcomes, (o) => o.chance ?? 1, random);
 }
 
 function pickEvent(state: GameState, now: Date): GameEventDef | null {
   const pool = EVENTS.filter((e) => e.id !== state.events.lastId && (e.when?.(state) ?? true));
-  const weights = pool.map((e) => e.weight?.(state, now) ?? 1);
-  const total = weights.reduce((a, b) => a + b, 0);
-  let r = random() * total;
-  for (let i = 0; i < pool.length; i++) {
-    r -= weights[i]!;
-    if (r < 0) return pool[i]!;
-  }
-  return pool[0] ?? null;
+  return pool.length > 0 ? weightedPick(pool, (e) => e.weight?.(state, now) ?? 1, random) : null;
 }
 
 function scheduleNext(state: GameState): void {
@@ -163,9 +152,6 @@ export function resolveEvent(
 
 /** „!! DRINGEND !!“-Ticket erwischt. */
 export function claimUrgent(state: GameState, rates: { pps: number; click: number }): EffectResult {
-  const rewards = CONFIG.urgentRewards;
-  const total = rewards.reduce((a, r) => a + r.weight, 0);
-  let r = random() * total;
-  const pick = rewards.find((x) => (r -= x.weight) < 0) ?? rewards[0]!;
+  const pick = weightedPick(CONFIG.urgentRewards, (r) => r.weight, random);
   return applyEffect(state, pick.effect, rates);
 }

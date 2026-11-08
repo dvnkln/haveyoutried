@@ -12,11 +12,11 @@ import { UPGRADE_TEXT } from '../content/upgrades';
 import { BUFF_LABELS } from '../content/events';
 import { eventDef } from '../core/events';
 import { INCIDENT_TEXT } from '../content/incidents';
-import { isIncidentId } from '../core/incidents';
+import { isSolved } from '../core/incidents';
 import { bus } from '../core/bus';
 import { availableUpgrades, isUnlocked } from '../core/economy';
 import type { GameState } from '../core/state';
-import { pick, randInt } from '../util';
+import { pick, randInt, weightedPick } from '../util';
 import type { App, AppContext } from './app';
 
 /** Verbindet Spielereignisse mit Syslog, Sound und Haptik und streut Ambient-Rauschen ein. */
@@ -62,15 +62,19 @@ export function startFlavor(ctx: AppContext, app: App): void {
 
   // Incidents: Log im Icinga-Format (host;service;state;type;attempt;output)
   bus.on('incidentStart', ({ id }) => {
-    if (!isIncidentId(id)) return;
     const t = INCIDENT_TEXT[id];
     log.write('crit', `icinga2[2342]: SERVICE ALERT: ${t.host};${t.service};CRITICAL;HARD;3;${t.info}`);
   });
-  bus.on('incidentResolved', ({ id, score }) => {
-    if (!isIncidentId(id)) return;
+  bus.on('incidentResolved', ({ id, score, abandoned }) => {
     const t = INCIDENT_TEXT[id];
-    if (score >= 0.4) log.write('ok', `icinga2[2342]: SERVICE ALERT: ${t.host};${t.service};OK;HARD;1;${t.okInfo}`);
-    else log.write('warn', `icinga2[2342]: SERVICE NOTIFICATION: kollege;${t.host};${t.service};CRITICAL;escalated`);
+    if (abandoned) {
+      log.write('warn', `icinga2[2342]: SERVICE NOTIFICATION: kollege;${t.host};${t.service};CRITICAL;escalated (admin disconnected)`);
+      log.write('info', 'helpdesk[1337]: du warst plötzlich weg. Der Kollege hat übernommen und erzählt es allen.');
+    } else if (isSolved(score)) {
+      log.write('ok', `icinga2[2342]: SERVICE ALERT: ${t.host};${t.service};OK;HARD;1;${t.okInfo}`);
+    } else {
+      log.write('warn', `icinga2[2342]: SERVICE NOTIFICATION: kollege;${t.host};${t.service};CRITICAL;escalated`);
+    }
   });
 
   bus.on('buffEnded', ({ id }) => {
@@ -89,9 +93,7 @@ export function startFlavor(ctx: AppContext, app: App): void {
     const r = Math.random();
     if (running.length > 0 && r < 0.4) {
       // gewichtet nach Bestand
-      const total = running.reduce((sum, g) => sum + state.generators[g.id].owned, 0);
-      let x = Math.random() * total;
-      const g = running.find((g) => (x -= state.generators[g.id].owned) < 0) ?? running[0]!;
+      const g = weightedPick(running, (g) => state.generators[g.id].owned);
       log.write('info', pick(GENERATOR_TEXT[g.id].ambient));
     } else if (r < 0.52) {
       log.write('info', `bofh[666]: excuse of the day: ${pick(BOFH_EXCUSES)}`);

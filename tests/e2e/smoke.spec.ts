@@ -203,3 +203,16 @@ for (const id of ['raid', 'spam', 'services']) {
     expect(errors).toEqual([]);
   });
 }
+
+test('Reload während eines Incidents gilt als Eskalation, kein sofortiger neuer Incident', async ({ page }) => {
+  await page.goto('/?incident=raid');
+  await expect(page.locator('.nag-card.nag-problem')).toBeVisible({ timeout: 5_000 });
+  // Seite hinter dem Overlay ist gesperrt
+  expect(await page.evaluate(() => document.getElementById('app')!.inert)).toBe(true);
+  await page.goto('/');
+  await expect(page.locator('.log')).toContainText('escalated (admin disconnected)');
+  await expect(page.locator('.buff-bad')).toBeVisible();
+  await page.waitForTimeout(2_000);
+  await expect(page.locator('.incident')).toBeHidden();
+  expect(await page.evaluate(() => document.getElementById('app')!.inert)).toBe(false);
+});

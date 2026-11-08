@@ -74,7 +74,8 @@ export class RaidSim {
   }
 
   score(): number {
-    if (this.dead) return Math.min(0.7, (this.deadAt / this.cfg.durationMs) * 0.7);
+    // totes Array ist nie ein Erfolg: bleibt unter INCIDENTS.goodMin
+    if (this.dead) return Math.min(1, this.deadAt / this.cfg.durationMs) * INCIDENTS.goodMin * 0.9;
     const avg = this.replaced > 0 ? this.reactionSum / this.replaced : 0;
     const quality = Math.max(0, Math.min(1, 1 - (avg - 300) / 2_000));
     return 0.7 + 0.3 * quality;
@@ -107,6 +108,14 @@ export function raidGame(): Minigame {
           }
         });
         b.addEventListener('pointerup', () => gameApi.sfx.release());
+        // Tastatur (Enter/Space) erzeugt click mit detail 0
+        b.addEventListener('click', (e) => {
+          if (e.detail !== 0) return;
+          if (sim.replace(i)) {
+            gameApi.sfx.tap();
+            setTimeout(() => gameApi.sfx.release(), 80);
+          }
+        });
         return b;
       });
       root.append(h('div', { class: 'rack' }, buttons));
