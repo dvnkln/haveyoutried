@@ -53,6 +53,18 @@ export function deserialize(json: string, now: number): GameState | null {
   // Union-Typ, den der generische Merge nicht abdeckt
   const amount = isPlain(data.settings) ? data.settings.buyAmount : undefined;
   state.settings.buyAmount = BUY_AMOUNTS.includes(amount as BuyAmount) ? (amount as BuyAmount) : 1;
+  // Boosts: nur wohlgeformte Einträge übernehmen
+  state.buffs = (Array.isArray(state.buffs) ? state.buffs : []).filter(
+    (b) =>
+      isPlain(b) &&
+      typeof b.id === 'string' &&
+      (b.target === 'prod' || b.target === 'click') &&
+      Number.isFinite(b.mult) &&
+      Number.isFinite(b.remainingMs),
+  );
+  if (state.events.active && !(isPlain(state.events.active) && typeof state.events.active.id === 'string')) {
+    state.events.active = null;
+  }
   // alte Klang-IDs (mx, pop, …) auf den Standard-Switch abbilden
   if (!(TAP_SOUND_IDS as readonly string[]).includes(state.settings.tapSound)) state.settings.tapSound = 'blue';
   return state;

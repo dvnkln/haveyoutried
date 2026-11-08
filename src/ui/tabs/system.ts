@@ -161,7 +161,7 @@ export function systemTab(): Tab {
               : 'Dieser Browser hat keine Vibrations-Schnittstelle.';
         setText(
           vibResult,
-          `vibrate(200) → ${String(result)} · HTTPS: ${window.isSecureContext ? 'ja' : 'nein'} · Geste: ${String(active ?? '?')}. ${verdict}`,
+          `vibrate(200) → ${String(result)} · HTTPS: ${window.isSecureContext ? 'ja' : 'nein'} · Geste: ${String(active ?? '?')} · Audio: ${ctx.sfx.state()}. ${verdict}`,
         );
       });
       volume.value = String(ctx.state.settings.volume);

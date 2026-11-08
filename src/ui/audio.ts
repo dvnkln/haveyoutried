@@ -121,6 +121,12 @@ export class Sfx {
 
   /** Muss aus einer Nutzergeste heraus aufgerufen werden (Browser-Autoplay-Regeln). */
   unlock(): void {
+    // Sound aus: Engine gar nicht erst starten bzw. pausieren
+    // (manche Android-Geräte unterdrücken Vibration, solange Audio läuft)
+    if (!this.settings().sound) {
+      if (this.ctx?.state === 'running') void this.ctx.suspend().catch(() => {});
+      return;
+    }
     if (!this.ctx) {
       const Ctor: AudioCtor | undefined =
         window.AudioContext ?? (window as unknown as { webkitAudioContext?: AudioCtor }).webkitAudioContext;
@@ -141,6 +147,11 @@ export class Sfx {
       this.noise = noise;
     }
     if (this.ctx.state === 'suspended') void this.ctx.resume().catch(() => {});
+  }
+
+  /** Zustand der Audio-Engine für die Diagnose */
+  state(): string {
+    return this.ctx ? this.ctx.state : 'nicht gestartet';
   }
 
   /** Kontext, falls Sound an und Audio freigegeben; setzt die Lautstärke. */
@@ -310,6 +321,19 @@ export class Sfx {
       this.tone('sine', 425, 425, r.t + dt, 0.05, 0.07, undefined, 0.01);
       this.tone('sine', 850, 850, r.t + dt, 0.015, 0.07, undefined, 0.01);
     }
+  }
+
+  /** Pager: drei kurze, hohe Piepser. */
+  pager(): void {
+    const r = this.ready();
+    const lp = this.lowpass(5000);
+    if (!r || !lp) return;
+    for (const dt of [0, 0.13, 0.26]) this.tone('square', 2900, 2900, r.t + dt, 0.07, 0.07, lp, 0.004);
+  }
+
+  /** Gutes Event-Ergebnis */
+  good(): void {
+    this.upgrade();
   }
 
   /** Geht nicht: tiefes „Nope“. */

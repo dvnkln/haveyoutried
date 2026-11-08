@@ -6,6 +6,8 @@ import { h, juice, POP, setFlag, setText } from './dom';
 import { formatNumber, formatRate } from './format';
 import type { HapticKind } from './haptics';
 import type { SysLog } from './log';
+import { createPager } from './pager';
+import { BUFF_LABELS } from '../content/events';
 
 export interface AppContext {
   state: GameState;
@@ -35,6 +37,9 @@ export interface App {
 export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
   const tickets = h('span', { class: 'counter-value', text: '0' });
   const rate = h('span', { class: 'rate', text: '+0.0/s' });
+  const buffsEl = h('span', { class: 'buffs', 'aria-live': 'polite' });
+  let buffSig = '';
+  let buffChips: HTMLElement[] = [];
   const soundBtn = h('button', { class: 'sound-btn', type: 'button', 'aria-label': 'Sound an/aus' });
   soundBtn.addEventListener('click', () => {
     ctx.state.settings.sound = !ctx.state.settings.sound;
@@ -51,12 +56,14 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
         h('span', { class: 'prompt-title', text: 'Have You Tried…' }),
       ]),
       h('div', { class: 'counter' }, [tickets, h('span', { class: 'counter-unit', text: ' Tickets' })]),
-      rate,
+      h('div', { class: 'rate-row' }, [rate, buffsEl]),
     ]),
     soundBtn,
   ]);
 
   const main = h('main', { class: 'panels' });
+  const pager = createPager(ctx);
+  main.append(pager.el);
   const nav = h('nav', { class: 'bottom-nav', 'aria-label': 'Navigation' });
 
   const mounted = tabs.map((tab) => {
@@ -106,6 +113,20 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
       setFlag(soundBtn, 'off', !soundOn);
       soundBtn.setAttribute('aria-pressed', String(soundOn));
       for (const m of mounted) setFlag(m.btn, 'has-badge', m.tab.badge?.() ?? false);
+      pager.render();
+
+      // Boost-Chips: nur neu bauen, wenn sich die Menge ändert
+      const buffs = ctx.state.buffs;
+      const sig = buffs.map((b) => b.id).join();
+      if (sig !== buffSig) {
+        buffSig = sig;
+        buffChips = buffs.map((b) => h('span', { class: `buff ${b.mult >= 1 ? 'buff-good' : 'buff-bad'}` }));
+        buffsEl.replaceChildren(...buffChips);
+      }
+      buffs.forEach((b, i) => {
+        const chip = buffChips[i];
+        if (chip) setText(chip, `${BUFF_LABELS[b.id] ?? b.id} ×${b.mult} ${Math.ceil(b.remainingMs / 1_000)}s`);
+      });
       active?.tab.render();
     },
     popCounter() {

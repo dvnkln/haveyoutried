@@ -1,4 +1,5 @@
 import { CONFIG, GENERATORS, UPGRADES, type GeneratorDef, type GeneratorId, type UpgradeDef } from '../config';
+import { buffMultiplier } from './events';
 import type { BuyAmount, GameState } from './state';
 
 const g = CONFIG.costGrowth;
@@ -94,7 +95,7 @@ export function clickValue(state: GameState): number {
     if (u.effect.kind === 'click') mult *= u.effect.mult;
     else if (u.effect.kind === 'clickPps') ppsFraction += u.effect.fraction;
   }
-  return CONFIG.clickValue * mult * globalMultiplier(state) + productionPerSec(state) * ppsFraction;
+  return (CONFIG.clickValue * mult * globalMultiplier(state) + productionPerSec(state) * ppsFraction) * buffMultiplier(state, 'click');
 }
 
 export function generatorProduction(state: GameState, id: GeneratorId): number {
@@ -105,7 +106,7 @@ export function generatorProduction(state: GameState, id: GeneratorId): number {
 export function productionPerSec(state: GameState): number {
   let sum = 0;
   for (const def of GENERATORS) sum += generatorProduction(state, def.id);
-  return sum * globalMultiplier(state);
+  return sum * globalMultiplier(state) * buffMultiplier(state, 'prod');
 }
 
 export function isUnlocked(state: GameState, id: GeneratorId): boolean {
@@ -113,4 +114,9 @@ export function isUnlocked(state: GameState, id: GeneratorId): boolean {
     state.generators[id].owned > 0 ||
     state.ticketsTotal >= generatorDef(id).baseCost * CONFIG.unlockAtFraction
   );
+}
+
+/** Aktuelle Produktion und Klickwert, z. B. für Event-Effekte. */
+export function rates(state: GameState): { pps: number; click: number } {
+  return { pps: productionPerSec(state), click: clickValue(state) };
 }

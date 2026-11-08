@@ -8,6 +8,22 @@ export const TAP_SOUND_IDS = ['blue', 'green', 'brown', 'red', 'black', 'silent'
 export type BuyAmount = 1 | 10 | 100 | 'max';
 export const BUY_AMOUNTS: readonly BuyAmount[] = [1, 10, 100, 'max'];
 
+export interface ActiveEvent {
+  id: string;
+  /** Spielzeit, ab der „keine Reaktion“ gilt */
+  expiresAt: number;
+  /** Dialog wurde geöffnet → kein Ablauf mehr */
+  opened: boolean;
+}
+
+export interface Buff {
+  /** Effekt-ID aus EVENT_EFFECTS */
+  id: string;
+  target: 'prod' | 'click';
+  mult: number;
+  remainingMs: number;
+}
+
 export interface GeneratorState {
   owned: number;
 }
@@ -31,8 +47,10 @@ export interface GameState {
   achievements: Record<string, number>;
   /** „Kündigen und neuen Job anfangen“ */
   prestige: { experience: number; jobs: number };
-  /** Zufallsevents */
-  events: { nextAt: number; active: string | null };
+  /** Zufallsevents; Zeiten in Spielzeit (stats.playTimeMs) */
+  events: { nextAt: number; active: ActiveEvent | null; lastId: string; seen: Record<string, number> };
+  /** laufende Boosts/Bremsen aus Events */
+  buffs: Buff[];
   // ---
 
   stats: { startedAt: number; playTimeMs: number; offlineTickets: number };
@@ -55,9 +73,16 @@ export function createInitialState(now: number): GameState {
     upgrades: {},
     achievements: {},
     prestige: { experience: 0, jobs: 0 },
-    events: { nextAt: 0, active: null },
+    events: { nextAt: 0, active: null, lastId: '', seen: {} },
+    buffs: [],
     stats: { startedAt: now, playTimeMs: 0, offlineTickets: 0 },
     settings: { haptics: true, sound: true, volume: 0.7, tapSound: 'blue', buyAmount: 1 },
     lastTick: now,
   };
+}
+
+export function addTickets(state: GameState, amount: number): void {
+  state.tickets += amount;
+  state.ticketsTotal += amount;
+  state.ticketsAllTime += amount;
 }

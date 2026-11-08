@@ -22,7 +22,11 @@ export function applyOfflineProgress(state: GameState, now: number): OfflineRepo
     return null;
   }
   const creditedMs = Math.min(elapsedMs, CONFIG.offlineCapMs);
+  // Boosts pausieren offline (sonst wäre ein ×3 über 8 h ein Exploit)
+  const buffs = state.buffs;
+  state.buffs = [];
   const gained = tick(state, creditedMs / 1_000, now, false);
+  state.buffs = buffs;
   state.stats.offlineTickets += gained;
 
   if (elapsedMs < CONFIG.offlineReportMinMs) return null;

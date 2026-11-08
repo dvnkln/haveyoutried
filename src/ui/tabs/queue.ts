@@ -2,6 +2,10 @@ import { CONFIG } from '../../config';
 import { CALLBACK_LINES, CALLERS, situationalCalls, type Call } from '../../content/callers';
 import { CLOSE_REASONS } from '../../content/syslog';
 import { clickTicket } from '../../core/actions';
+import { URGENT_LABELS, URGENT_TEXT } from '../../content/events';
+import { rates } from '../../core/economy';
+import { claimUrgent } from '../../core/events';
+import { describeEffect } from '../pager';
 import { pick, randInt } from '../../util';
 import type { AppContext, Tab } from '../app';
 import { h, juice, NUDGE, setText, SQUASH } from '../dom';
@@ -69,14 +73,59 @@ export function queueTab(): Tab {
     if (sound) ctx.sfx.ring();
   };
 
-  const spawnFloater = (x: number, y: number, value: number) => {
+  const spawnFloater = (x: number, y: number, value: number, label?: string) => {
     if (floaters.childElementCount >= MAX_FLOATERS) floaters.firstElementChild?.remove();
-    const f = h('span', { class: 'floater', text: `+${formatNumber(value, value < 10 && value % 1 !== 0 ? 1 : 0)}` });
+    const text = label ?? `+${formatNumber(value, value < 10 && value % 1 !== 0 ? 1 : 0)}`;
+    const f = h('span', { class: label ? 'floater floater-big' : 'floater', text });
     f.style.left = `${x}px`;
     f.style.top = `${y}px`;
     f.style.setProperty('--drift', `${randInt(-24, 24)}px`);
     f.addEventListener('animationend', () => f.remove());
     floaters.append(f);
+  };
+
+  // --- „!! DRINGEND !!“-Tickets: tauchen kurz auf, schnell antippen lohnt sich ---
+  let urgentEl: HTMLButtonElement | null = null;
+
+  const scheduleUrgent = (delay = randInt(CONFIG.urgentMinMs, CONFIG.urgentMaxMs)) => {
+    setTimeout(spawnUrgent, delay);
+  };
+
+  const spawnUrgent = () => {
+    // nur wenn die Queue sichtbar ist und kein Dialog offen
+    const visible = !document.hidden && desk.offsetParent !== null && !document.querySelector('dialog[open]');
+    if (!visible || urgentEl) return scheduleUrgent(10_000);
+
+    const el = h('button', { class: 'urgent', type: 'button', text: pick(URGENT_LABELS) });
+    const deskRect = desk.getBoundingClientRect();
+    el.style.left = `${randInt(8, Math.max(8, deskRect.width - 150))}px`;
+    el.style.top = `${randInt(8, Math.max(8, deskRect.height - 60))}px`;
+    let claimed = false;
+    el.addEventListener('pointerdown', (e) => {
+      e.stopPropagation();
+      if (claimed) return;
+      claimed = true;
+      const res = claimUrgent(ctx.state, rates(ctx.state));
+      const r = desk.getBoundingClientRect();
+      spawnFloater(r.width / 2, e.clientY - r.top, 0, describeEffect(res));
+      ctx.log.write('ok', `helpdesk[1337]: ${URGENT_TEXT[res.effect] ?? 'VIP-Ticket gelöst.'}`);
+      ctx.sfx.unlock();
+      ctx.sfx.milestone();
+      ctx.haptic('milestone');
+      el.remove();
+    });
+    desk.append(el);
+    urgentEl = el;
+    ctx.sfx.unlockPing();
+
+    setTimeout(() => {
+      if (!claimed) {
+        el.remove();
+        ctx.log.write('info', 'helpdesk[1337]: VIP-Ticket unbeantwortet. An den Chef eskaliert. Der hat es gelöscht.');
+      }
+      urgentEl = null;
+      scheduleUrgent();
+    }, CONFIG.urgentVisibleMs);
   };
 
   const close = (x: number, y: number) => {
@@ -128,6 +177,7 @@ export function queueTab(): Tab {
       });
       button.addEventListener('contextmenu', (e) => e.preventDefault());
 
+      scheduleUrgent();
       return h('div', { class: 'queue' }, [ctx.log.el, desk]);
     },
     render() {

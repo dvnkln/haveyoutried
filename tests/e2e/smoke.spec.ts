@@ -117,3 +117,46 @@ test('Layout bleibt bildschirmbreit, auch bei langen Texten', async ({ page }) =
   expect(r.lastTabRight).toBeLessThanOrEqual(r.vw);
   expect(r.soundRight).toBeLessThanOrEqual(r.vw);
 });
+
+test('Zufallsevent: Pager → Entscheidung → Ergebnis', async ({ page, context }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  const save = {
+    version: 1,
+    tickets: 500,
+    ticketsTotal: 500,
+    generators: { bash: { owned: 5 } },
+    stats: { startedAt: Date.now(), playTimeMs: 60_000, offlineTickets: 0 },
+    events: { nextAt: 61_000, active: null, lastId: '', seen: {} },
+    lastTick: Date.now(),
+  };
+  await context.addInitScript((json) => {
+    if (!sessionStorage.getItem('seeded')) {
+      localStorage.setItem('hyt.save', json);
+      sessionStorage.setItem('seeded', '1');
+    }
+  }, JSON.stringify(save));
+
+  await page.goto('/');
+  const pager = page.locator('.pager');
+  await expect(pager).toBeVisible({ timeout: 5_000 });
+  await expect(pager).toContainText(/\d+s/);
+  await shot(page, '9-pager');
+  await pager.tap();
+
+  const dialog = page.locator('dialog.modal-event');
+  await expect(dialog).toBeVisible();
+  const first = dialog.locator('.modal-actions .btn').first();
+  await expect(first).toBeEnabled(); // nach Sperrzeit
+  await shot(page, '10-event');
+  await first.tap();
+
+  const result = page.locator('dialog.modal-result');
+  await expect(result).toBeVisible();
+  await expect(result.locator('.effect-line')).not.toBeEmpty();
+  await shot(page, '11-result');
+  await result.locator('.btn').tap();
+  await expect(pager).toBeHidden();
+  await expect(page.locator('.log')).toContainText('pager[911]: ALERT');
+  expect(errors).toEqual([]);
+});

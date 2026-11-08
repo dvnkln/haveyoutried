@@ -9,6 +9,8 @@ import {
   UPGRADE_BUY_LINES,
 } from '../content/syslog';
 import { UPGRADE_TEXT } from '../content/upgrades';
+import { BUFF_LABELS } from '../content/events';
+import { eventDef } from '../core/events';
 import { bus } from '../core/bus';
 import { availableUpgrades, isUnlocked } from '../core/economy';
 import type { GameState } from '../core/state';
@@ -40,6 +42,24 @@ export function startFlavor(ctx: AppContext, app: App): void {
       sfx.milestone();
       haptic('milestone');
     }
+  });
+
+  bus.on('eventIncoming', ({ id }) => {
+    log.write('crit', `pager[911]: ALERT: ${eventDef(id)?.title ?? id}`);
+    sfx.pager();
+    haptic('unlock');
+  });
+
+  bus.on('eventResolved', (res) => {
+    if (res.option < 0) log.write('warn', 'pager[911]: no ack within 45s. escalated to: nobody.');
+    log.write(res.mood === 'bad' ? 'warn' : 'info', `pager[911]: ${res.outcome.text}`);
+    if (res.outcome.log) log.template(res.outcome.log);
+    if (res.mood === 'good') sfx.good();
+    else if (res.mood === 'bad') sfx.error();
+  });
+
+  bus.on('buffEnded', ({ id }) => {
+    log.write('info', `helpdesk[1337]: ${BUFF_LABELS[id] ?? id} vorbei. Zurück zum Normalbetrieb.`);
   });
 
   watchUnlocks(state, (kind, name) => {

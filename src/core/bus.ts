@@ -1,4 +1,5 @@
 import type { GeneratorId } from '../config';
+import type { Resolution } from './events';
 
 /** Alle Ereignisse, die die Logik nach außen meldet (UI, Log, später Achievements). */
 export interface GameEvents {
@@ -6,6 +7,9 @@ export interface GameEvents {
   buy: { id: GeneratorId; amount: number; owned: number };
   milestone: { id: GeneratorId; owned: number };
   upgrade: { id: string };
+  eventIncoming: { id: string };
+  eventResolved: Resolution;
+  buffEnded: { id: string };
 }
 
 type Handler<T> = (payload: T) => void;

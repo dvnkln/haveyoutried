@@ -73,6 +73,33 @@ export const UPGRADES: readonly UpgradeDef[] = [
   ...generatorUpgrades,
 ];
 
+// --- Zufallsevents ---
+
+export type EventEffect =
+  | { kind: 'none' }
+  /** Sofort-Tickets: max(Klickwert × clicks, Produktion/s × sec) */
+  | { kind: 'tickets'; sec: number; clicks: number }
+  /** Verlust: frac des Kontostands, höchstens Produktion × sec (bzw. Klickwert × clicks) */
+  | { kind: 'lose'; frac: number; sec: number; clicks: number }
+  /** zeitlich begrenzter Multiplikator auf Produktion oder Klicks */
+  | { kind: 'buff'; target: 'prod' | 'click'; mult: number; sec: number };
+
+export const EVENT_EFFECTS = {
+  none: { kind: 'none' },
+  tip: { kind: 'tickets', sec: 60, clicks: 15 },
+  win: { kind: 'tickets', sec: 300, clicks: 40 },
+  jackpot: { kind: 'tickets', sec: 900, clicks: 100 },
+  lossSmall: { kind: 'lose', frac: 0.05, sec: 120, clicks: 10 },
+  loss: { kind: 'lose', frac: 0.1, sec: 300, clicks: 30 },
+  rush: { kind: 'buff', target: 'prod', mult: 2, sec: 60 },
+  flow: { kind: 'buff', target: 'prod', mult: 3, sec: 45 },
+  overtime: { kind: 'buff', target: 'click', mult: 7, sec: 30 },
+  fire: { kind: 'buff', target: 'prod', mult: 0.5, sec: 60 },
+  fireBig: { kind: 'buff', target: 'prod', mult: 0.25, sec: 90 },
+} as const satisfies Record<string, EventEffect>;
+
+export type EventEffectId = keyof typeof EVENT_EFFECTS;
+
 export const CONFIG = {
   /** Fester Logik-Takt */
   tickMs: 100,
@@ -109,6 +136,23 @@ export const CONFIG = {
   /** Klick-Logzeilen höchstens so oft */
   clickLogMinMs: 1_200,
   logMaxLines: 100,
+  // Zufallsevents (Zeiten in Spielzeit, laufen offline nicht weiter)
+  eventFirstMs: 3 * 60_000,
+  eventMinMs: 4 * 60_000,
+  eventMaxMs: 8 * 60_000,
+  /** so lange piept der Pager, bevor „keine Reaktion“ gilt */
+  eventExpireMs: 45_000,
+  /** „!! DRINGEND !!“-Tickets in der Queue */
+  urgentMinMs: 90_000,
+  urgentMaxMs: 240_000,
+  urgentVisibleMs: 9_000,
+  /** Belohnung beim Erwischen: Effekt und Gewicht */
+  urgentRewards: [
+    { effect: 'win', weight: 60 },
+    { effect: 'overtime', weight: 25 },
+    { effect: 'flow', weight: 15 },
+  ] as { effect: EventEffectId; weight: number }[],
+
   /** Erste Ticketnummer */
   ticketNumberOffset: 4_711,
 } as const;
