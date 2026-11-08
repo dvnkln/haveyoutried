@@ -9,13 +9,13 @@ export interface GeneratorDef {
 }
 
 export const GENERATORS = [
-  { id: 'intern', baseCost: 15, baseProd: 0.1 },
-  { id: 'bash', baseCost: 100, baseProd: 1 },
-  { id: 'cron', baseCost: 1_100, baseProd: 8 },
-  { id: 'ansible', baseCost: 12_000, baseProd: 47 },
-  { id: 'k8s', baseCost: 130_000, baseProd: 260 },
-  { id: 'agent', baseCost: 1_400_000, baseProd: 1_400 },
-  { id: 'undertable', baseCost: 20_000_000, baseProd: 7_800 },
+  { id: 'intern', baseCost: 15, baseProd: 0.025 },
+  { id: 'bash', baseCost: 100, baseProd: 0.25 },
+  { id: 'cron', baseCost: 1_100, baseProd: 2 },
+  { id: 'ansible', baseCost: 12_000, baseProd: 11.75 },
+  { id: 'k8s', baseCost: 130_000, baseProd: 65 },
+  { id: 'agent', baseCost: 1_400_000, baseProd: 350 },
+  { id: 'undertable', baseCost: 20_000_000, baseProd: 1_950 },
 ] as const satisfies readonly GeneratorDef[];
 
 export type GeneratorId = (typeof GENERATORS)[number]['id'];
@@ -23,9 +23,9 @@ export type GeneratorId = (typeof GENERATORS)[number]['id'];
 // --- Upgrades ---
 
 export type UpgradeEffect =
-  /** Klickwert × mult */
+  /** Tipptempo × mult (weniger Anschläge pro Ticket) */
   | { kind: 'click'; mult: number }
-  /** Jeder Klick bringt zusätzlich diesen Anteil der Produktion/s */
+  /** Jeder Anschlag bringt beim Lösen zusätzlich diesen Anteil der Produktion/s */
   | { kind: 'clickPps'; fraction: number }
   /** Produktion eines Generators × mult */
   | { kind: 'gen'; gen: GeneratorId; mult: number }
@@ -61,15 +61,15 @@ const generatorUpgrades: UpgradeDef[] = GENERATORS.flatMap((g) =>
 );
 
 export const UPGRADES: readonly UpgradeDef[] = [
-  { id: 'coffee', cost: 100, unlock: { kind: 'clicks', n: 25 }, effect: { kind: 'click', mult: 2 } },
-  { id: 'mousepad', cost: 400, unlock: { kind: 'clicks', n: 60 }, effect: { kind: 'click', mult: 1.5 } },
-  { id: 'mouse', cost: 25_000, unlock: { kind: 'clicks', n: 750 }, effect: { kind: 'click', mult: 2 } },
-  { id: 'keyboard', cost: 1_000, unlock: { kind: 'clicks', n: 200 }, effect: { kind: 'click', mult: 2 } },
-  { id: 'answering', cost: 5_000, unlock: { kind: 'clicks', n: 500 }, effect: { kind: 'click', mult: 2 } },
-  { id: 'headset', cost: 40_000, unlock: { kind: 'clicks', n: 600 }, effect: { kind: 'click', mult: 1.5 } },
+  { id: 'coffee', cost: 40, unlock: { kind: 'clicks', n: 25 }, effect: { kind: 'click', mult: 2 } },
+  { id: 'mousepad', cost: 150, unlock: { kind: 'clicks', n: 60 }, effect: { kind: 'click', mult: 1.5 } },
+  { id: 'mouse', cost: 10_000, unlock: { kind: 'clicks', n: 750 }, effect: { kind: 'click', mult: 2 } },
+  { id: 'keyboard', cost: 500, unlock: { kind: 'clicks', n: 200 }, effect: { kind: 'click', mult: 2 } },
+  { id: 'answering', cost: 2_500, unlock: { kind: 'clicks', n: 500 }, effect: { kind: 'click', mult: 2 } },
+  { id: 'headset', cost: 15_000, unlock: { kind: 'clicks', n: 600 }, effect: { kind: 'click', mult: 1.5 } },
   { id: 'basement', cost: 600_000, unlock: { kind: 'total', n: 200_000 }, effect: { kind: 'global', mult: 1.1 } },
   { id: 'monitor2', cost: 15_000, unlock: { kind: 'total', n: 5_000 }, effect: { kind: 'clickPps', fraction: 0.01 } },
-  { id: 'macro', cost: 100_000, unlock: { kind: 'clicks', n: 1_000 }, effect: { kind: 'click', mult: 3 } },
+  { id: 'macro', cost: 50_000, unlock: { kind: 'clicks', n: 1_000 }, effect: { kind: 'click', mult: 3 } },
   { id: 'duck', cost: 1_000_000, unlock: { kind: 'total', n: 500_000 }, effect: { kind: 'clickPps', fraction: 0.02 } },
   { id: 'rtfm', cost: 75_000, unlock: { kind: 'total', n: 25_000 }, effect: { kind: 'global', mult: 1.1 } },
   { id: 'kanban', cost: 6_000_000, unlock: { kind: 'total', n: 2_000_000 }, effect: { kind: 'global', mult: 1.1 } },
@@ -194,25 +194,33 @@ export const INCIDENTS = {
 
 export const PRESTIGE = {
   /** Berufserfahrung gesamt = floor((Tickets aller Jobs / ticketsPerPoint) ^ exponent) */
-  ticketsPerPoint: 1_000_000,
+  ticketsPerPoint: 250_000,
   exponent: 0.5,
-  /** Bonus je Punkt Berufserfahrung auf Produktion und Klicks */
-  bonusPerPoint: 0.02,
+  /** Bonus je Punkt Berufserfahrung auf Produktion und Tipptempo */
+  bonusPerPoint: 0.05,
 };
 
-/** Gelöste Tickets im Arbeitsfenster: Bonus, der mit der Serie wächst */
+/**
+ * Tickets von Hand: Tippen füllt das Ticket, erst „Gelöst!“ zahlt aus.
+ * Tempo (Klick-Upgrades, Berufserfahrung, Überstunden) senkt die nötigen Anschläge.
+ */
 export const SOLVE = {
-  /** Grundbonus: so viele Sekunden Produktion bzw. so viele Klicks, je nachdem, was mehr ist */
-  bonusSec: 1.5,
-  bonusClicks: 4,
-  /** je Ticket in Folge +10 % Bonus, höchstens ×3 */
-  perStreak: 0.1,
-  maxStreakMult: 3,
+  /** Arbeit pro Ticket in Anschlägen bei Tempo 1 */
+  work: 25,
+  /** ein Ticket braucht immer mindestens so viele Anschläge (sonst Stempel bei jeder Taste) */
+  minPresses: 3,
+  /** Tickets pro Lösung (vor Multiplikatoren); Tempo über die Mindest-Anschläge hinaus zählt als Wert */
+  reward: 1,
+  /** jede Lösung bringt außerdem so viele Sekunden Produktion: aktives Spielen bleibt wertvoll */
+  ppsSec: 0.25,
+  /** je Ticket in Folge +5 %, höchstens ×2 */
+  perStreak: 0.05,
+  maxStreakMult: 2,
   /** Serie reißt, wenn so lange keine Taste gedrückt wird */
   breakMs: 4_000,
-  /** Meilensteine der Serie: Extra-Bonus (Sekunden Produktion bzw. Klicks) */
+  /** Meilensteine der Serie: Extra (Sekunden Produktion bzw. Tickets-Lösungen), was mehr ist */
   milestoneSec: 15,
-  milestoneClicks: 40,
+  milestoneTickets: 5,
 };
 
 export const ACHIEVEMENTS_CFG = {
@@ -239,7 +247,6 @@ export const CONFIG = {
 
   /** Wachstumsfaktor der Generatorkosten pro gekauftem Exemplar */
   costGrowth: 1.15,
-  clickValue: 1,
   /** Generator wird sichtbar, sobald Lifetime-Tickets diesen Anteil seiner Basiskosten erreichen */
   unlockAtFraction: 0.5,
   /** Besitz-Schwellen, die einen Meilenstein-Logeintrag auslösen */

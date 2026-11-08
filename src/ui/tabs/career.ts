@@ -61,7 +61,7 @@ export function careerTab(): Tab {
         h('p', {}, [
           'Dafür bekommst du ',
           h('strong', { class: 'hl', text: `+${g} Berufserfahrung` }),
-          ` (dann ${pct(experienceBonus(s.prestige.experience + g))} Bonus auf alles).`,
+          ` (dann ${pct(experienceBonus(s.prestige.experience + g))} schneller tippen und mehr Produktion).`,
         ]),
         'Weg sind: Tickets, Infrastruktur, Upgrades, laufende Boosts.',
         'Bleiben: Berufserfahrung, Achievements, Statistik, Einstellungen.',

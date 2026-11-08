@@ -76,9 +76,9 @@ const pct = (mult: number) => `+${Math.round((mult - 1) * 100)} %`;
 export function effectLabel(effect: UpgradeEffect): string {
   switch (effect.kind) {
     case 'click':
-      return `Klicks ×${effect.mult}`;
+      return `Tippen ×${effect.mult} schneller`;
     case 'clickPps':
-      return `Klick +${Math.round(effect.fraction * 100)} % der Tickets/s`;
+      return `Anschlag +${Math.round(effect.fraction * 100)} % der Tickets/s`;
     case 'gen':
       return `${GENERATOR_TEXT[effect.gen].name} ×${effect.mult}`;
     case 'global':

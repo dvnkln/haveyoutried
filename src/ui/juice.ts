@@ -5,7 +5,6 @@ import { randInt } from '../util';
 const MAX_PARTICLES = 20;
 const CONFETTI_COLORS = ['#ffd166', '#ff9aa2', '#9be3c1', '#a0c4ff', '#fffaf0'];
 /** So lange bleibt ein Combo-Spruch stehen, auch wenn weitergetippt wird. */
-const COMBO_LINE_MS = 2_400;
 
 export interface Rect {
   x: number;
@@ -20,16 +19,11 @@ export interface Rect {
  */
 export class Fx {
   readonly el: HTMLElement;
-  private comboEl: HTMLElement;
-  private comboTimer = 0;
-  private comboLine = '';
-  private comboLineUntil = 0;
   /** Positionen ändern sich nur bei Größenänderung: zwischenspeichern statt pro Anschlag messen */
   private rects = new Map<Element, Rect>();
 
   constructor() {
-    this.comboEl = h('div', { class: 'combo', 'aria-hidden': 'true', hidden: '' });
-    this.el = h('div', { class: 'floaters fx', 'aria-hidden': 'true' }, [this.comboEl]);
+    this.el = h('div', { class: 'floaters fx', 'aria-hidden': 'true' });
     const clear = () => this.rects.clear();
     window.addEventListener('resize', clear);
     if (typeof ResizeObserver === 'function') new ResizeObserver(clear).observe(this.el);
@@ -102,26 +96,5 @@ export class Fx {
       c.style.animationDelay = `${randInt(0, 120)}ms`;
       this.add(c);
     }
-  }
-
-  /** Combo-Anzeige „×23“; ein Spruch bleibt eine Weile stehen, die Zahl zählt weiter. */
-  combo(n: number, line?: string): void {
-    const now = performance.now();
-    if (line) {
-      this.comboLine = line;
-      this.comboLineUntil = now + COMBO_LINE_MS;
-    }
-    const showLine = now < this.comboLineUntil;
-    this.comboEl.hidden = false;
-    this.comboEl.textContent = showLine ? `×${n} · ${this.comboLine}` : `×${n}`;
-    this.comboEl.style.setProperty('--size', String(Math.min(1.15, 1 + n / 800)));
-    if (line) {
-      // nur bei neuem Spruch hüpfen: kein Reflow pro Anschlag
-      this.comboEl.classList.remove('bump');
-      void this.comboEl.offsetWidth;
-      this.comboEl.classList.add('bump');
-    }
-    clearTimeout(this.comboTimer);
-    this.comboTimer = window.setTimeout(() => (this.comboEl.hidden = true), showLine ? this.comboLineUntil - now : 1_200);
   }
 }

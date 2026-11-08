@@ -38,7 +38,8 @@ export function systemTab(): Tab {
   };
   const stats = {
     total: stat('Tickets (dieser Job)'),
-    clicks: stat('Von Hand geschlossen'),
+    solved: stat('Von Hand gelöst'),
+    clicks: stat('Anschläge'),
     offline: stat('Nachts erledigt'),
     play: stat('Uptime'),
     since: stat('Im Dienst seit'),
@@ -232,6 +233,7 @@ export function systemTab(): Tab {
     render() {
       const s = ctx.state;
       setText(stats.total.value, formatNumber(s.ticketsTotal));
+      setText(stats.solved.value, formatNumber(s.flags.solved ?? 0));
       setText(stats.clicks.value, formatNumber(s.clicks));
       setText(stats.offline.value, formatNumber(s.stats.offlineTickets));
       setText(stats.play.value, formatDuration(s.stats.playTimeMs));

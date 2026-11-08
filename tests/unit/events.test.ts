@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { CONFIG, EVENT_EFFECTS } from '../../src/config';
 import { EVENTS } from '../../src/content/events';
-import { clickValue, productionPerSec, rates } from '../../src/core/economy';
+import { clickValue, productionPerSec, rates, tempo } from '../../src/core/economy';
+import { prod } from './helpers';
 import { applyEffect, claimUrgent, resolveEvent, updateEvents } from '../../src/core/events';
 import { applyOfflineProgress } from '../../src/core/offline';
 import { createInitialState, type GameState } from '../../src/core/state';
@@ -63,18 +64,18 @@ describe('Event-Planung', () => {
 });
 
 describe('Effekte', () => {
-  it('tickets: mindestens Klickwert × clicks', () => {
+  it('tickets: mindestens Anschlagwert × clicks', () => {
     const s = createInitialState(0);
     const r = applyEffect(s, 'win', rates(s));
-    expect(r.tickets).toBe(40);
-    expect(s.tickets).toBe(40);
+    expect(r.tickets).toBeCloseTo(40 * clickValue(s));
+    expect(s.tickets).toBeCloseTo(40 * clickValue(s));
   });
 
   it('tickets: sonst Produktion × sec', () => {
     const s = createInitialState(0);
-    s.generators.bash.owned = 10; // 10/s
+    s.generators.bash.owned = 10;
     applyEffect(s, 'tip', rates(s));
-    expect(s.tickets).toBeCloseTo(600);
+    expect(s.tickets).toBeCloseTo(600 * prod('bash'));
   });
 
   it('lose: Anteil vom Konto, gedeckelt, nie negativ', () => {
@@ -82,7 +83,7 @@ describe('Effekte', () => {
     s.tickets = 1e9;
     s.generators.bash.owned = 1;
     const r = applyEffect(s, 'loss', rates(s));
-    expect(r.tickets).toBeCloseTo(-300); // Deckel: 1/s × 300 s
+    expect(r.tickets).toBeCloseTo(-300 * prod('bash')); // Deckel: Produktion × 300 s
     const poor = createInitialState(0);
     poor.tickets = 5;
     applyEffect(poor, 'loss', rates(poor));
@@ -93,11 +94,11 @@ describe('Effekte', () => {
     const s = createInitialState(0);
     s.generators.bash.owned = 10;
     applyEffect(s, 'flow', rates(s));
-    expect(productionPerSec(s)).toBeCloseTo(30);
+    expect(productionPerSec(s)).toBeCloseTo(30 * prod('bash'));
     applyEffect(s, 'overtime', rates(s));
-    expect(clickValue(s)).toBeCloseTo(7);
+    expect(tempo(s)).toBeCloseTo(7);
     play(s, 46_000);
-    expect(productionPerSec(s)).toBeCloseTo(10);
+    expect(productionPerSec(s)).toBeCloseTo(10 * prod('bash'));
     expect(s.buffs).toEqual([]);
   });
 
@@ -113,7 +114,7 @@ describe('Effekte', () => {
     s.generators.bash.owned = 1;
     applyEffect(s, 'flow', rates(s));
     applyOfflineProgress(s, 3600_000);
-    expect(s.tickets).toBeCloseTo(3600); // ohne ×3
+    expect(s.tickets).toBeCloseTo(3600 * prod('bash')); // ohne ×3
     expect(s.buffs[0]!.remainingMs).toBe(45_000);
   });
 
@@ -130,7 +131,7 @@ describe('Effekte', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0.1); // < 0.4 → Jackpot
     const res = resolveEvent(s, 0, rates(s))!;
     expect(res.effect).toBe('jackpot');
-    expect(s.tickets).toBe(100);
+    expect(s.tickets).toBeCloseTo(100 * clickValue(s));
   });
 });
 

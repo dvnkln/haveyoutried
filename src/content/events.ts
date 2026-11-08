@@ -172,7 +172,7 @@ export const EVENTS: GameEventDef[] = [
     title: 'Wartungsfenster heute Nacht',
     text: 'Patchday. 47 Updates, drei davon „kritisch“, eines davon „nur ein kleiner Neustart“.',
     options: [
-      { label: 'Überstunden machen', outcomes: [o('overtime', 'Kaffee, Pizza, Patches. Du bist im Tunnel. Jeder Klick zählt siebenfach.')] },
+      { label: 'Überstunden machen', outcomes: [o('overtime', 'Kaffee, Pizza, Patches. Du bist im Tunnel und tippst siebenmal so schnell.')] },
       {
         label: 'Automatisch über Nacht',
         outcomes: [
@@ -390,7 +390,7 @@ export const EVENTS: GameEventDef[] = [
 /** „!! DRINGEND !!“-Ticket erwischt: Texte je Effekt */
 export const URGENT_TEXT: Record<string, string> = {
   win: 'VIP-Ticket vom Vorstand in 2 Sekunden gelöst. Beförderung: nein. Tickets: ja.',
-  overtime: 'Adrenalin! Die nächsten Klicks zählen siebenfach.',
+  overtime: 'Adrenalin! Du tippst eine Weile siebenmal so schnell.',
   flow: 'Du bist im Flow. Die ganze Abteilung läuft dreifach.',
 };
 

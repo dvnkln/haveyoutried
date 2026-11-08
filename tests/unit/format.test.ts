@@ -36,7 +36,8 @@ describe('formatNumber', () => {
 
 describe('formatRate / formatDuration', () => {
   it('Raten mit einer Nachkommastelle', () => {
-    expect(formatRate(0.1)).toBe('0.1');
+    expect(formatRate(0.1)).toBe('0.10');
+    expect(formatRate(0.025)).toBe('0.02');
     expect(formatRate(4.56)).toBe('4.5');
     expect(formatRate(150)).toBe('150');
     expect(formatRate(2500)).toBe('2.50 K');

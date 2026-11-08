@@ -50,14 +50,14 @@ const live = (def: AchievementDef): AchievementDef => ({ ...def, needsActivity: 
 
 export const ACHIEVEMENTS: AchievementDef[] = [
   // --- Tickets & Klicks ---
-  a('first', 'Hallo, IT?', 'Das erste Ticket geschlossen.', (s) => s.clicks >= 1),
-  a('clicks1k', 'Sehnenscheide, Stufe 1', '1.000 Tickets von Hand geschlossen.', (s) => s.clicks >= 1_000),
-  a('clicks10k', 'Sehnenscheide, Stufe 2', '10.000 Tickets von Hand geschlossen. Die Maus ist durch.', (s) => s.clicks >= 10_000),
+  a('first', 'Hallo, IT?', 'Das erste Ticket gelöst.', (s) => (s.flags.solved ?? 0) >= 1),
+  a('clicks1k', 'Sehnenscheide, Stufe 1', '1.000 Anschläge. Die Tastatur ist eingetippt.', (s) => s.clicks >= 1_000),
+  a('clicks10k', 'Sehnenscheide, Stufe 2', '10.000 Anschläge. Die Leertaste glänzt schon.', (s) => s.clicks >= 10_000),
   a('total1k', 'Queue leer? Nie.', '1 K Tickets in einem Job.', (s) => s.ticketsTotal >= 1e3),
   a('total1m', 'Mega-Ticket', '1 M Tickets in einem Job.', (s) => s.ticketsTotal >= 1e6),
   a('total1g', 'Giga-überlastet', '1 G Tickets in einem Job.', (s) => s.ticketsTotal >= 1e9),
   a('total1t', 'Data Lake', '1 T Tickets in einem Job. Niemand wird sie je lesen.', (s) => s.ticketsTotal >= 1e12),
-  a('clicks100k', 'Sehnenscheide, Stufe 3', '100.000 Tickets von Hand. Die Physiotherapeutin kennt dich beim Namen.', (s) => s.clicks >= 100_000),
+  a('clicks100k', 'Sehnenscheide, Stufe 3', '100.000 Anschläge. Die Physiotherapeutin kennt dich beim Namen.', (s) => s.clicks >= 100_000),
   a('callers100', 'Telefonseelsorge', '100 Anrufer angehört.', (s) => flag(s, 'callers') >= 100),
   a('callbacks10', 'Ich ruf jetzt zum dritten Mal an', '10 Rückrufe ertragen.', (s) => flag(s, 'callbacks') >= 10),
   a('streak10', 'Läuft bei dir', '10 Tickets in Folge gelöst, ohne abzusetzen.', (s) => flag(s, 'bestStreak') >= 10),

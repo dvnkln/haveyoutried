@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { CONFIG } from '../../src/config';
-import { buyGenerator, clickTicket } from '../../src/core/actions';
+import { CONFIG, SOLVE } from '../../src/config';
+import { buyGenerator, pressKey } from '../../src/core/actions';
+import { prod } from './helpers';
 import { bus } from '../../src/core/bus';
 import { bulkCost, isUnlocked, maxAffordable, priceFor, productionPerSec, unitCost } from '../../src/core/economy';
 import { createInitialState } from '../../src/core/state';
@@ -41,14 +42,14 @@ describe('Kosten', () => {
 });
 
 describe('Aktionen', () => {
-  it('Klick gibt Tickets und meldet Ticketnummer', () => {
+  it('Anschlag bringt Arbeit, aber noch keine Tickets, und meldet Ticketnummer', () => {
     const s = createInitialState(0);
     const seen: number[] = [];
     const off = bus.on('click', (e) => seen.push(e.ticketNo));
-    clickTicket(s);
-    clickTicket(s);
+    expect(pressKey(s)).toBe(1);
+    pressKey(s);
     off();
-    expect(s.tickets).toBe(2);
+    expect(s.tickets).toBe(0);
     expect(s.clicks).toBe(2);
     expect(seen).toEqual([CONFIG.ticketNumberOffset + 1, CONFIG.ticketNumberOffset + 2]);
   });
@@ -98,15 +99,15 @@ describe('Produktion & Tick', () => {
     s.generators.intern.owned = 10;
     s.generators.bash.owned = 2;
     s.generators.cron.owned = 1;
-    expect(productionPerSec(s)).toBeCloseTo(10 * 0.1 + 2 * 1 + 8);
+    expect(productionPerSec(s)).toBeCloseTo(10 * prod('intern') + 2 * prod('bash') + prod('cron'));
   });
 
   it('tick schreibt dt * Produktion gut', () => {
     const s = createInitialState(0);
     s.generators.bash.owned = 3;
     tick(s, 0.1, 100);
-    expect(s.tickets).toBeCloseTo(0.3);
-    expect(s.ticketsTotal).toBeCloseTo(0.3);
+    expect(s.tickets).toBeCloseTo(0.3 * prod('bash'));
+    expect(s.ticketsTotal).toBeCloseTo(0.3 * prod('bash'));
     expect(s.lastTick).toBe(100);
   });
 
@@ -115,5 +116,26 @@ describe('Produktion & Tick', () => {
     expect(isUnlocked(s, 'bash')).toBe(false);
     s.ticketsTotal = 50;
     expect(isUnlocked(s, 'bash')).toBe(true);
+  });
+});
+
+describe('Tickets von Hand', () => {
+  it('ein Ticket braucht SOLVE.work Anschläge, Tempo-Upgrades senken das, aber nie unter das Minimum', async () => {
+    const { pressesPerTicket, ticketReward } = await import('../../src/core/economy');
+    const s = createInitialState(0);
+    expect(pressesPerTicket(s)).toBe(SOLVE.work);
+    s.upgrades.coffee = true;
+    expect(pressesPerTicket(s)).toBe(Math.ceil(SOLVE.work / 2));
+    for (const id of ['mousepad', 'keyboard', 'answering', 'mouse', 'headset', 'macro']) s.upgrades[id] = true;
+    expect(pressesPerTicket(s)).toBe(SOLVE.minPresses);
+    // Tempo über das Minimum hinaus zählt als Wert
+    expect(ticketReward(s)).toBeGreaterThan(SOLVE.reward * 10);
+  });
+
+  it('Berufserfahrung macht schneller', async () => {
+    const { pressesPerTicket } = await import('../../src/core/economy');
+    const s = createInitialState(0);
+    s.prestige.experience = 20; // +100 % bei 5 % je Punkt
+    expect(pressesPerTicket(s)).toBeLessThan(SOLVE.work);
   });
 });

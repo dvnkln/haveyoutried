@@ -3,19 +3,21 @@ import { GENERATORS, UPGRADES } from '../../src/config';
 import { CALLERS, situationalCalls } from '../../src/content/callers';
 import { GENERATOR_TEXT } from '../../src/content/generators';
 import { UPGRADE_TEXT } from '../../src/content/upgrades';
-import { buyUpgrade, clickTicket } from '../../src/core/actions';
-import { availableUpgrades, clickValue, productionPerSec } from '../../src/core/economy';
+import { buyUpgrade, pressKey, solveTicket } from '../../src/core/actions';
+import { pressPpsFraction, tempo, ticketReward } from '../../src/core/economy';
+import { prod } from './helpers';
+import { availableUpgrades, productionPerSec } from '../../src/core/economy';
 import { createInitialState } from '../../src/core/state';
 
 describe('Upgrades', () => {
-  it('Kaffeemaschine: erst nach 25 Klicks, dann Klick ×2', () => {
+  it('Kaffeemaschine: erst nach 25 Anschlägen, dann doppeltes Tipptempo', () => {
     const s = createInitialState(0);
     s.tickets = 1000;
     expect(buyUpgrade(s, 'coffee')).toBe(false);
-    for (let i = 0; i < 25; i++) clickTicket(s);
+    for (let i = 0; i < 25; i++) pressKey(s);
     expect(availableUpgrades(s).map((u) => u.id)).toContain('coffee');
     expect(buyUpgrade(s, 'coffee')).toBe(true);
-    expect(clickValue(s)).toBe(2);
+    expect(tempo(s)).toBe(2);
     expect(buyUpgrade(s, 'coffee')).toBe(false); // nur einmal
   });
 
@@ -24,9 +26,9 @@ describe('Upgrades', () => {
     s.generators.intern.owned = 10;
     s.generators.bash.owned = 1;
     s.tickets = 1e6;
-    expect(productionPerSec(s)).toBeCloseTo(2);
+    expect(productionPerSec(s)).toBeCloseTo(10 * prod('intern') + prod('bash'));
     expect(buyUpgrade(s, 'intern-1')).toBe(true);
-    expect(productionPerSec(s)).toBeCloseTo(3);
+    expect(productionPerSec(s)).toBeCloseTo(20 * prod('intern') + prod('bash'));
   });
 
   it('Global-Upgrade wirkt auf Produktion und Klick', () => {
@@ -35,23 +37,27 @@ describe('Upgrades', () => {
     s.ticketsTotal = 25_000;
     s.tickets = 1e6;
     expect(buyUpgrade(s, 'rtfm')).toBe(true);
-    expect(productionPerSec(s)).toBeCloseTo(11);
-    expect(clickValue(s)).toBeCloseTo(1.1);
+    expect(productionPerSec(s)).toBeCloseTo(11 * prod('bash'));
+    expect(ticketReward(s)).toBeCloseTo(1.1);
   });
 
-  it('Zweiter Monitor: Klick bringt 1 % der Produktion', () => {
+  it('Zweiter Monitor: jeder Anschlag bringt beim Lösen 1 % der Produktion', () => {
     const s = createInitialState(0);
-    s.generators.cron.owned = 100; // 800/s
+    s.generators.cron.owned = 100;
     s.ticketsTotal = 5_000;
     s.tickets = 1e6;
     buyUpgrade(s, 'monitor2');
-    expect(clickValue(s)).toBeCloseTo(1 + 8);
+    expect(pressPpsFraction(s)).toBeCloseTo(0.01);
+    const before = s.tickets;
+    const pps = productionPerSec(s);
+    solveTicket(s, 1, 25);
+    expect(s.tickets - before).toBeGreaterThan(pps * 0.01 * 25);
   });
 
   it('kosten nur bei genug Tickets', () => {
     const s = createInitialState(0);
     s.clicks = 25;
-    s.tickets = 99;
+    s.tickets = UPGRADES.find((u) => u.id === 'coffee')!.cost - 1;
     expect(buyUpgrade(s, 'coffee')).toBe(false);
     expect(s.upgrades).toEqual({});
   });

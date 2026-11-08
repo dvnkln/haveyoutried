@@ -41,7 +41,7 @@ export const DUCK_LINES: string[] = [
   'duckd[42]: quack. Ticket an die Ente eskaliert. Ente: „Nicht mein Bereich.“',
 ];
 
-/** Combo-Sprüche bei schnellem Tippen (Serie → Text). */
+/** Sprechblase an der Tastatur nach so vielen Anschlägen am Stück (Anschläge → Text). */
 export const COMBO_LINES: Record<number, string> = {
   50: 'Sehnenscheide: warm',
   100: 'Tastatur-Garantie: erloschen',

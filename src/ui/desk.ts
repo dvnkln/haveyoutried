@@ -4,7 +4,7 @@ import { topicPool } from '../content/topics';
 import { URGENT_LABELS, URGENT_TEXT } from '../content/events';
 import { VIP_TICKETS } from '../content/work';
 import { ALTF4_LINES, COMBO_LINES, PANIC_LINES } from '../content/props';
-import { clickTicket, solveTicket } from '../core/actions';
+import { pressKey, solveTicket } from '../core/actions';
 import { rates } from '../core/economy';
 import { claimUrgent } from '../core/events';
 import { incidentRunning } from '../core/incidents';
@@ -52,10 +52,7 @@ const PHONE_SVG = `<svg viewBox="0 0 64 58">
   </g>
 </svg>`;
 
-
-/** Ab so vielen Anschlägen in Folge zeigt sich die Combo-Anzeige. */
-const COMBO_SHOW = 10;
-/** Pause, nach der eine Serie endet. */
+/** Pause, nach der das Tippen am Stück endet (für die Combo-Sprüche) */
 const COMBO_GAP_MS = 700;
 /** Abstand zwischen zwei Log-Sprüchen derselben Sondertaste */
 const GAG_COOLDOWN_MS = 20_000;
@@ -133,8 +130,8 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
   const work = createWork(
     ctx,
     () => call,
-    (streak, stamp) => {
-      const { bonus, milestone } = solveTicket(ctx.state, streak);
+    (streak, stamp, presses) => {
+      const { bonus, milestone } = solveTicket(ctx.state, streak, presses);
       const p = fx.rel(stamp);
       fx.floater(p.x + p.w / 2, p.y, `+${formatNumber(bonus)}`, true);
       if (milestone) {
@@ -180,7 +177,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
   keyboard.append(enter);
   const anyKey = keys.get('ANY');
   // Einstieg: Hinweis, dass hier getippt wird (verschwindet nach den ersten Anschlägen)
-  const hint = h('div', { class: 'tap-hint', hidden: '', text: 'Tipp drauf! Jede Taste schließt ein Ticket' });
+  const hint = h('div', { class: 'tap-hint', hidden: '', text: 'Tipp drauf! Jede Taste tippt am Ticket weiter' });
   let i = 0;
   for (const el of keyboard.querySelectorAll<HTMLElement>('.key')) el.style.setProperty('--i', String(i++ % 14));
   const keyboardWrap = h('div', { class: 'keyboard-wrap' }, [hint, keyboard]);
@@ -310,29 +307,28 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
   const hit = (keyEl: HTMLElement) => {
     const def = keyEl.dataset.key ?? '';
     ctx.sfx.unlock();
-    const value = clickTicket(ctx.state);
+    const progress = pressKey(ctx.state);
 
-    // Eingabezeile: Enter schickt ab, Alt+F4 verwirft, alles andere tippt weiter
+    // Eingabezeile: jede Taste (auch Enter) tippt weiter, Alt+F4 verwirft das Ticket
     const now = performance.now();
-    if (def === 'ENTER') work.send();
-    else if (def === 'F4') {
+    if (def === 'F4') {
       work.newTask(); // Fenster zu, nächste Aufgabe
       gag('F4', 'warn', ALTF4_LINES, now, keyEl);
     } else {
       if (def === 'CAPSLOCK') gag('CAPSLOCK', 'info', PANIC_LINES, now, keyEl);
-      work.typeMore();
+      work.typeMore(progress);
     }
     work.afterKey();
 
-    // Effekte: Zahl steigt von der Taste auf, ab und zu ein Schnipsel
+    // Effekte: Tickets gibt es erst beim Lösen; pro Taste nur ab und zu ein Schnipsel
     const k = fx.rel(keyEl, true);
-    const x = k.x + k.w / 2;
-    fx.floater(x, k.y, `+${formatNumber(value, value < 10 && value % 1 !== 0 ? 1 : 0)}`);
-    if (Math.random() < 0.18) fx.scrap(x, k.y + 6);
+    if (Math.random() < 0.25) fx.scrap(k.x + k.w / 2, k.y + 6);
 
     combo = now - lastHit < COMBO_GAP_MS ? combo + 1 : 1;
     lastHit = now;
-    if (combo >= COMBO_SHOW) fx.combo(combo, COMBO_LINES[combo]);
+    // langes Tippen am Stück: ab und zu ein Spruch an der Tastatur (gezählt wird nur die Serie gelöster Tickets)
+    const comboLine = COMBO_LINES[combo];
+    if (comboLine) quip(keyboard, comboLine);
 
     ctx.sfx.tap();
     ctx.haptic('tap');

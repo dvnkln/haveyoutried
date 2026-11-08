@@ -1,4 +1,5 @@
 import { SOLVE } from '../config';
+import { ticketWork } from '../core/economy';
 import { CALLERS, QUEUE_LINE, type Call, type Line } from '../content/callers';
 import { STREAK_LINES, CALL_LINES, CHAT_LINES, MEME_ACCOUNTS, MEMES, RDP_ERRORS, SEARCH_RESULTS, TICKET_PRIOS, WEB_GENERIC, DONE_LINES, TICKET_STATES } from '../content/work';
 import { DEVICE_SETTINGS, TALK_NOTES, TOPICS, topicPool, type Device, type Topic } from '../content/topics';
@@ -259,11 +260,14 @@ export function createWork(
   ctx: AppContext,
   currentCall: () => Call | null,
   /** gelöst: Serie und Stempel (für Bonus und Effekte am Schreibtisch) */
-  onSolved: (streak: number, stamp: HTMLElement) => void,
+  onSolved: (streak: number, stamp: HTMLElement, presses: number) => void,
 ) {
   let task: Task = { kind: 'ticket', who: '', subject: '', full: '', no: 0, line: QUEUE_LINE, call: null, device: null, target: '' };
   let reply = '';
   let typedLen = 0;
+  /** Arbeit am aktuellen Ticket und Anschläge dafür */
+  let progress = 0;
+  let presses = 0;
   let memes = false;
   /** Antwort fertig: Fenster bleibt kurz mit „Gelöst!“ stehen, dann kommt das nächste */
   let sentTimer = 0;
@@ -321,7 +325,8 @@ export function createWork(
   ]);
 
   const showTyped = () => {
-    last.style.setProperty('--p', reply ? (typedLen / reply.length).toFixed(3) : '0');
+    // Füllstand der Statuszeile = Arbeit am Ticket
+    last.style.setProperty('--p', Math.min(1, progress / ticketWork(ctx.state)).toFixed(3));
     const t = reply.slice(0, typedLen);
     setText(typedEl, t.length > TYPED_VISIBLE ? `…${t.slice(-TYPED_VISIBLE)}` : t);
   };
@@ -357,6 +362,8 @@ export function createWork(
     const prog = PROGRAMS[kind];
     reply = pick(prog.lines(task));
     typedLen = 0;
+    progress = 0;
+    presses = 0;
     if (!memes) el.dataset.kind = kind;
     setText(title, prog.title(task));
     head.replaceChildren(...prog.head(task));
@@ -385,14 +392,11 @@ export function createWork(
     if (line) stamp.classList.add('big');
     ctx.sfx.solved(streak);
     ctx.haptic('tap');
-    onSolved(streak, stamp);
+    onSolved(streak, stamp, presses);
   };
 
   /** Abschicken: Erfolgsstempel, Karte mit Abschluss-Spruch in den Ticketverlauf, kurz danach das nächste */
   const send = () => {
-    // Enter, während der Stempel noch steht: gleich weiter
-    if (sentTimer) return newTask();
-    if (typedLen === 0) return newTask();
     typedLen = reply.length;
     showTyped();
     if (task.call) answered = task.call;
@@ -455,14 +459,16 @@ export function createWork(
     last,
     promptSlot,
     newTask,
-    send,
     /** Ein Anschlag tippt ein paar Zeichen; mit Textbaustein ganze Wörter. Ende = abschicken. */
-    typeMore() {
+    /** Ein Anschlag bringt `work` Arbeit; der Text läuft im selben Verhältnis mit. Fertig = gelöst. */
+    typeMore(work: number) {
       // nicht auf den Stempel warten: nächster Anschlag beginnt gleich das nächste Ticket
       if (sentTimer) newTask();
-      const step = ctx.state.upgrades.macro ? randInt(6, 10) : randInt(2, 4);
-      typedLen = Math.min(reply.length, typedLen + step);
-      if (typedLen >= reply.length) send();
+      progress += work;
+      presses++;
+      const need = ticketWork(ctx.state);
+      typedLen = Math.min(reply.length, Math.round((reply.length * progress) / need));
+      if (progress >= need - 1e-9) send();
     },
     /** Nach jedem Anschlag: Memes zu, Anzeige auffrischen */
     afterKey() {

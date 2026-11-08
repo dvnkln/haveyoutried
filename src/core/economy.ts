@@ -1,4 +1,4 @@
-import { CONFIG, GENERATORS, UPGRADES, type GeneratorDef, type GeneratorId, type UpgradeDef } from '../config';
+import { CONFIG, GENERATORS, SOLVE, UPGRADES, type GeneratorDef, type GeneratorId, type UpgradeDef } from '../config';
 import { achievementMultiplier } from './achievements';
 import { buffMultiplier } from './events';
 import { prestigeMultiplier } from './prestige';
@@ -102,14 +102,43 @@ export function globalMultiplier(state: GameState): number {
   return m * prestigeMultiplier(state) * achievementMultiplier(state);
 }
 
-export function clickValue(state: GameState): number {
+// --- Tickets von Hand ---
+
+/** Tempo beim Tippen: Klick-Upgrades × Berufserfahrung (Routine) × Überstunden & Co. */
+export function tempo(state: GameState): number {
   let mult = 1;
-  let ppsFraction = 0;
-  for (const u of owns(state)) {
-    if (u.effect.kind === 'click') mult *= u.effect.mult;
-    else if (u.effect.kind === 'clickPps') ppsFraction += u.effect.fraction;
-  }
-  return (CONFIG.clickValue * mult * globalMultiplier(state) + productionPerSec(state) * ppsFraction) * buffMultiplier(state, 'click');
+  for (const u of owns(state)) if (u.effect.kind === 'click') mult *= u.effect.mult;
+  return mult * prestigeMultiplier(state) * buffMultiplier(state, 'click');
+}
+
+/** Arbeit für das nächste Ticket (in Anschlägen bei Tempo 1) */
+export function ticketWork(state: GameState): number {
+  void state;
+  return SOLVE.work;
+}
+
+/** So viele Anschläge braucht ein Ticket gerade (mindestens SOLVE.minPresses) */
+export function pressesPerTicket(state: GameState): number {
+  return Math.max(SOLVE.minPresses, Math.ceil(ticketWork(state) / tempo(state) - 1e-9));
+}
+
+/** Anteil der Produktion, den jeder Anschlag zusätzlich bringt (Zweitmonitor, Gummiente) */
+export function pressPpsFraction(state: GameState): number {
+  let f = 0;
+  for (const u of owns(state)) if (u.effect.kind === 'clickPps') f += u.effect.fraction;
+  return f;
+}
+
+/** Tickets für eine Lösung ohne Serie: Grundwert, Tempo-Überschuss zählt als Wert. Berufserfahrung steckt im Tempo. */
+export function ticketReward(state: GameState): number {
+  const surplus = Math.max(1, (tempo(state) * SOLVE.minPresses) / ticketWork(state));
+  return SOLVE.reward * surplus * (globalMultiplier(state) / prestigeMultiplier(state));
+}
+
+/** Wert eines Anschlags im Schnitt (für Ereignisse, die in „Klicks“ rechnen) */
+export function clickValue(state: GameState): number {
+  const pps = productionPerSec(state);
+  return ticketReward(state) / pressesPerTicket(state) + pps * (pressPpsFraction(state) + SOLVE.ppsSec / pressesPerTicket(state));
 }
 
 export function generatorProduction(state: GameState, id: GeneratorId): number {

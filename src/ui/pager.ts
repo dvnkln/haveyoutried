@@ -18,7 +18,7 @@ export function describeEffect(r: EffectResult): string {
     case 'lose':
       return `−${formatNumber(-r.tickets)} Tickets`;
     case 'buff':
-      return `${BUFF_LABELS[r.effect] ?? r.effect}: ${e.target === 'prod' ? 'Produktion' : 'Klicks'} ×${e.mult} für ${e.sec} s`;
+      return `${BUFF_LABELS[r.effect] ?? r.effect}: ${e.target === 'prod' ? 'Produktion' : 'Tipptempo'} ×${e.mult} für ${e.sec} s`;
   }
 }
 

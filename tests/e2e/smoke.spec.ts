@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { PATCH_DEPARTMENTS } from '../../src/content/incidents';
+import { SOLVE } from '../../src/config';
 
 const SHOTS = process.env.SHOTS_DIR;
 const shot = async (page: import('@playwright/test').Page, name: string) => {
@@ -8,9 +9,17 @@ const shot = async (page: import('@playwright/test').Page, name: string) => {
 const tickets = async (page: import('@playwright/test').Page) =>
   Number((await page.locator('.counter-value').textContent())?.replace(/[^\d.]/g, ''));
 
-test('Kern-Loop: tippen, kaufen, produzieren, speichern', async ({ page }) => {
+test('Kern-Loop: tippen, kaufen, produzieren, speichern', async ({ page, context }) => {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
+  // Startkapital für den ersten Praktikanten (15 Tickets), ein Ticket kommt gleich dazu
+  const save = { version: 1, tickets: 14, ticketsTotal: 14, clicks: 0, lastTick: Date.now() };
+  await context.addInitScript((json) => {
+    if (!sessionStorage.getItem('seeded')) {
+      localStorage.setItem('hyt.save', json);
+      sessionStorage.setItem('seeded', '1');
+    }
+  }, JSON.stringify(save));
 
   await page.goto('/');
   await expect(page.locator('.close-btn')).toBeVisible();
@@ -22,12 +31,13 @@ test('Kern-Loop: tippen, kaufen, produzieren, speichern', async ({ page }) => {
   const box = (await page.locator('.close-btn').boundingBox())!;
   expect(box.y + box.height / 2).toBeGreaterThan(740 / 2);
 
-  for (let i = 0; i < 20; i++) await page.locator('.close-btn').tap();
-  await expect(page.locator('.counter-value')).toHaveText('20');
-  // Statuszeile wechselt erst, wenn die Antwort abgeschickt ist (Enter)
-  await page.locator('.key[data-key="Q"]').tap();
+  // Tippen bringt noch keine Tickets, erst das gelöste Ticket (SOLVE.work Anschläge)
+  for (let i = 0; i < 24; i++) await page.locator('.key[data-key="Q"]').tap();
+  await expect(page.locator('.counter-value')).toHaveText('14');
+  await expect(page.locator('.history .hist')).toHaveCount(0);
   await page.locator('.close-btn').tap();
-  // abgeschickt: Erfolgsstempel (bleibt im DOM, also kein Wettlauf mit der kurzen Pause), Statuszeile zeigt weiter das Ticket
+  await expect(page.locator('.counter-value')).toHaveText('15');
+  // gelöst: Erfolgsstempel (bleibt im DOM, also kein Wettlauf mit der kurzen Pause), Statuszeile zeigt weiter das Ticket
   await expect(page.locator('.solved-stamp')).toHaveClass(/show/);
   await expect(page.locator('.solved-stamp')).toContainText('✓');
   await expect(page.locator('.last-closed')).toContainText('#INC-');
@@ -42,7 +52,7 @@ test('Kern-Loop: tippen, kaufen, produzieren, speichern', async ({ page }) => {
   await expect(buy).toBeEnabled();
   await buy.tap();
   await expect(page.locator('.gen[data-gen="intern"] .gen-owned')).toHaveText('×1');
-  await expect(page.locator('.rate')).toHaveText('+0.1/s');
+  await expect(page.locator('.rate')).toHaveText('+0.02/s');
   // Bash-Skript ist ab 50 Tickets sichtbar, vorher Teaser
   await expect(page.locator('.gen[data-gen="bash"]')).toBeHidden();
   await expect(page.locator('.gen-locked')).toBeVisible();
@@ -52,7 +62,7 @@ test('Kern-Loop: tippen, kaufen, produzieren, speichern', async ({ page }) => {
   await page.locator('.sheet-close').tap();
   await expect(page.locator('.sheet')).toBeHidden();
   await page.getByRole('button', { name: /System/ }).tap();
-  await expect(page.locator('#panel-system .stats')).toContainText('Von Hand geschlossen');
+  await expect(page.locator('#panel-system .stats')).toContainText('Von Hand gelöst');
   await shot(page, '3-system');
 
   // Reload: Stand bleibt (pagehide-Save)
@@ -64,7 +74,8 @@ test('Kern-Loop: tippen, kaufen, produzieren, speichern', async ({ page }) => {
 
 test('Offline-Progress wird auf 8 h gedeckelt', async ({ page, context }) => {
   const twoDaysAgo = Date.now() - 48 * 3600_000;
-  const save = { version: 1, tickets: 0, generators: { bash: { owned: 1 } }, lastTick: twoDaysAgo };
+  // 4 Bash-Skripte à 0.25/s = 1/s
+  const save = { version: 1, tickets: 0, generators: { bash: { owned: 4 } }, lastTick: twoDaysAgo };
   await context.addInitScript((json) => {
     if (!sessionStorage.getItem('seeded')) {
       localStorage.setItem('hyt.save', json);
@@ -107,9 +118,9 @@ test('Upgrades: Badge, Kauf, Wirkung; Sound-Schalter', async ({ page, context })
   // Fenster zu, zurück an die Tastatur
   await page.locator('.sheet-close').tap();
   await expect(page.locator('.mug')).toBeVisible();
-  await page.locator('.close-btn').tap();
-  // Kaffeemaschine: ein Klick = 2 Tickets
-  await expect(page.locator('.floater').last()).toHaveText('+2');
+  // Kaffeemaschine: doppeltes Tempo, ein Ticket braucht nur noch halb so viele Anschläge
+  for (let i = 0; i < 13; i++) await page.locator('.close-btn').tap();
+  await expect(page.locator('.solved-stamp')).toHaveClass(/show/);
 
   await page.getByRole('button', { name: /System/ }).tap();
   const sound = page.getByRole('switch', { name: 'Sound' });
@@ -316,9 +327,10 @@ test('Karriere: kündigen, neue Firma, Achievement-Toast', async ({ page, contex
   page.on('pageerror', (e) => errors.push(e.message));
   const save = {
     version: 1,
-    tickets: 2e7,
-    ticketsTotal: 1e8,
-    ticketsAllTime: 1e8,
+    // 100 Punkt-Schwellen à 250 K = 10 Punkte Berufserfahrung
+    tickets: 5e6,
+    ticketsTotal: 2.5e7,
+    ticketsAllTime: 2.5e7,
     clicks: 5,
     generators: { cron: { owned: 12 } },
     lastTick: Date.now(),
@@ -365,10 +377,17 @@ test('Tastatur: jede Taste zählt, auch Sondertasten, physische Tasten und die M
   }, JSON.stringify(save));
   await page.goto('/');
 
+  // Fortschritt am Ticket (Füllstand der Statuszeile) in Anschlägen; ohne Upgrades bringt jeder Anschlag 1 von SOLVE.work
+  const presses = async () =>
+    Math.round(Number(await page.locator('.last-closed').evaluate((e) => getComputedStyle(e).getPropertyValue('--p'))) * SOLVE.work);
   // verschiedene Tasten, auch Sondertasten und die Kaugummi-Taste
-  for (const k of ['Q', 'A', 'CAPSLOCK', 'B', ' ', 'F4', 'ENTER']) await page.locator(`.key[data-key="${k}"]`).tap();
-  await expect(page.locator('.counter-value')).toHaveText('7');
-  await expect(page.locator('.typed')).toHaveText(''); // Enter schickt ab
+  for (const k of ['Q', 'A', 'CAPSLOCK', 'B', ' ']) await page.locator(`.key[data-key="${k}"]`).tap();
+  await expect.poll(presses).toBe(5);
+  // Alt+F4 verwirft das Ticket, Enter tippt wie jede andere Taste weiter
+  await page.locator('.key[data-key="F4"]').tap();
+  await expect.poll(presses).toBe(0);
+  await page.locator('.key[data-key="ENTER"]').tap();
+  await expect.poll(presses).toBe(1);
 
   // Tippen schreibt eine echte Antwort ins Arbeitsfenster (Mail, Ticket oder Terminal)
   for (const k of ['W', 'E']) await page.locator(`.key[data-key="${k}"]`).tap();
@@ -378,22 +397,24 @@ test('Tastatur: jede Taste zählt, auch Sondertasten, physische Tasten und die M
   // physische Tastatur (Desktop): Buchstaben und unbekannte Zeichen zählen, Auto-Repeat nicht
   await page.locator('body').press('x');
   await page.locator('body').press('7');
-  await expect(page.locator('.counter-value')).toHaveText('11');
+  await expect.poll(presses).toBe(5);
   await page.dispatchEvent('body', 'keydown', { key: 'x', repeat: true });
-  await expect(page.locator('.counter-value')).toHaveText('11');
+  await expect.poll(presses).toBe(5);
 
   // Treffer zwischen die Tasten bzw. auf den Rahmen zählt auch (ganze Tastatur ist Tippfläche)
   const kb = (await page.locator('.keyboard').boundingBox())!;
   await page.touchscreen.tap(kb.x + 3, kb.y + 3);
-  await expect(page.locator('.counter-value')).toHaveText('12');
+  await expect.poll(presses).toBe(6);
 
   // Gummiente quietscht nur
   await page.locator('.duck').tap();
-  await expect(page.locator('.counter-value')).toHaveText('12');
+  await expect.poll(presses).toBe(6);
   await expect(page.locator('.quip').last()).toBeVisible();
 
   // Maus antippen zählt dagegen wie ein Tastendruck
   await page.locator('.mouse').tap();
-  await expect(page.locator('.counter-value')).toHaveText('13');
+  await expect.poll(presses).toBe(7);
+  // Tickets gibt es erst beim Lösen
+  await expect(page.locator('.counter-value')).toHaveText('0');
   expect(errors).toEqual([]);
 });

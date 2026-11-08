@@ -5,7 +5,8 @@ import { COMPANIES } from '../../src/content/companies';
 import { checkAchievements } from '../../src/core/achievements';
 import { bus } from '../../src/core/bus';
 import { applyOfflineProgress } from '../../src/core/offline';
-import { clickValue, productionPerSec, rates } from '../../src/core/economy';
+import { clickValue, productionPerSec, rates, tempo, ticketReward } from '../../src/core/economy';
+import { prod } from './helpers';
 import { resolveEvent } from '../../src/core/events';
 import { _resetIncidentRuntime, startIncident } from '../../src/core/incidents';
 import { canQuit, experienceFor, prestigeGain, quitJob, ticketsForNextPoint } from '../../src/core/prestige';
@@ -14,11 +15,12 @@ import { createInitialState } from '../../src/core/state';
 afterEach(() => _resetIncidentRuntime());
 
 describe('Berufserfahrung', () => {
-  it('Wurzelformel: 1 M → 1, 100 M → 10, 10 G → 100', () => {
-    expect(experienceFor(999_999)).toBe(0);
-    expect(experienceFor(1e6)).toBe(1);
-    expect(experienceFor(1e8)).toBe(10);
-    expect(experienceFor(1e10)).toBe(100);
+  it('Wurzelformel: 1 Punkt-Schwelle → 1, 100× → 10, 10.000× → 100', () => {
+    const P = PRESTIGE.ticketsPerPoint;
+    expect(experienceFor(P - 1)).toBe(0);
+    expect(experienceFor(P)).toBe(1);
+    expect(experienceFor(100 * P)).toBe(10);
+    expect(experienceFor(10_000 * P)).toBe(100);
   });
 
   it('nächster Punkt: genau dort springt die Erfahrung', () => {
@@ -31,9 +33,10 @@ describe('Berufserfahrung', () => {
 
   it('Kündigen: Erfahrung gutschreiben, Job zurücksetzen, Lebenslanges behalten', () => {
     const s = createInitialState(0);
-    s.tickets = 5e7;
-    s.ticketsTotal = 1e8;
-    s.ticketsAllTime = 1e8;
+    const P = PRESTIGE.ticketsPerPoint;
+    s.tickets = 50 * P;
+    s.ticketsTotal = 100 * P;
+    s.ticketsAllTime = 100 * P;
     s.clicks = 1234;
     s.generators.cron.owned = 40;
     s.upgrades = { coffee: true };
@@ -54,7 +57,7 @@ describe('Berufserfahrung', () => {
     expect(s.upgrades).toEqual({});
     expect(s.buffs).toEqual([]);
     // bleibt
-    expect(s.ticketsAllTime).toBe(1e8);
+    expect(s.ticketsAllTime).toBe(100 * P);
     expect(s.clicks).toBe(1234);
     expect(s.achievements).toEqual({ first: 1 });
     expect(s.settings.sound).toBe(false);
@@ -70,12 +73,12 @@ describe('Berufserfahrung', () => {
     expect(canQuit(s)).toBe(false);
   });
 
-  it('Bonus: +2 % je Punkt auf Produktion und Klicks', () => {
+  it('Bonus je Punkt auf Produktion und Tipptempo', () => {
     const s = createInitialState(0);
     s.generators.bash.owned = 10;
     s.prestige.experience = 10;
-    expect(productionPerSec(s)).toBeCloseTo(10 * (1 + 10 * PRESTIGE.bonusPerPoint));
-    expect(clickValue(s)).toBeCloseTo(1 + 10 * PRESTIGE.bonusPerPoint);
+    expect(productionPerSec(s)).toBeCloseTo(10 * prod('bash') * (1 + 10 * PRESTIGE.bonusPerPoint));
+    expect(tempo(s)).toBeCloseTo(1 + 10 * PRESTIGE.bonusPerPoint);
   });
 
   it('jede Firma hat Name, Host und Begrüßung; IDs eindeutig', () => {
@@ -99,7 +102,7 @@ describe('Achievements', () => {
 
   it('freischalten: gespeichert, gemeldet, nur einmal, mit Bonus', () => {
     const s = createInitialState(0);
-    s.clicks = 1;
+    s.flags.solved = 1;
     const seen: string[] = [];
     const off = bus.on('achievement', (e) => seen.push(e.id));
     const d = new Date(2026, 10, 10, 12, 0);
@@ -108,7 +111,7 @@ describe('Achievements', () => {
     off();
     expect(seen).toEqual(['first']);
     expect(s.achievements.first).toBe(d.getTime());
-    expect(clickValue(s)).toBeCloseTo(1 + ACHIEVEMENTS_CFG.bonusPerAchievement);
+    expect(ticketReward(s)).toBeCloseTo(1 + ACHIEVEMENTS_CFG.bonusPerAchievement);
   });
 
   it('Event-Ausgänge zählen: „Es war DNS.“ und „Nicht mein Problem“', () => {
@@ -194,7 +197,7 @@ describe('Review-Fixes Karriere', () => {
   it('Achievement-Bonus folgt neuen Freischaltungen trotz Zwischenspeicher', () => {
     const s = createInitialState(0);
     const before = clickValue(s);
-    s.clicks = 1;
+    s.flags.solved = 1;
     checkAchievements(s, new Date(2026, 10, 10, 12, 0), false);
     expect(s.achievements.first).toBeDefined();
     expect(clickValue(s)).toBeGreaterThan(before);

@@ -33,9 +33,9 @@ export function formatNumber(n: number, decimals = 0): string {
   return `${floorTo(scaled, digits).toFixed(digits)} ${PREFIXES[exp]}`;
 }
 
-/** Produktionsraten: unter 100 mit einer Nachkommastelle. */
+/** Produktionsraten: unter 1 mit zwei, unter 100 mit einer Nachkommastelle (ein Praktikant schafft 0.03/s). */
 export function formatRate(n: number): string {
-  return formatNumber(n, n < 100 ? 1 : 0);
+  return formatNumber(n, n > 0 && n < 1 ? 2 : n < 100 ? 1 : 0);
 }
 
 export function formatDuration(ms: number): string {
