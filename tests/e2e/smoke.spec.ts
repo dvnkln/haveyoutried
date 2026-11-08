@@ -91,9 +91,11 @@ test('Upgrades: Badge, Kauf, Wirkung; Sound-Schalter', async ({ page, context })
   // Kaffeemaschine: ein Klick = 2 Tickets
   await expect(page.locator('.floater').last()).toHaveText('+2');
 
-  await page.locator('.sound-btn').tap();
-  await expect(page.locator('.sound-btn')).toHaveAttribute('aria-pressed', 'false');
   await page.getByRole('tab', { name: /System/ }).tap();
+  const sound = page.getByRole('switch', { name: 'Sound' });
+  await sound.tap();
+  await expect(sound).toHaveAttribute('aria-checked', 'false');
+  await expect(sound).toHaveClass(/off/);
   await shot(page, '6-system');
   expect(errors).toEqual([]);
 });
@@ -110,12 +112,10 @@ test('Layout bleibt bildschirmbreit, auch bei langen Texten', async ({ page }) =
       vw: document.documentElement.clientWidth,
       sw: document.documentElement.scrollWidth,
       lastTabRight: navs[navs.length - 1]!.getBoundingClientRect().right,
-      soundRight: document.querySelector('.sound-btn')!.getBoundingClientRect().right,
     };
   });
   expect(r.sw).toBe(r.vw);
   expect(r.lastTabRight).toBeLessThanOrEqual(r.vw);
-  expect(r.soundRight).toBeLessThanOrEqual(r.vw);
 });
 
 test('Zufallsevent: Pager → Entscheidung → Ergebnis', async ({ page, context }) => {

@@ -621,19 +621,34 @@ button {
   flex: 1;
   min-width: 0;
 }
-.sound-btn {
+.icon-toggle {
+  position: relative;
   flex: 0 0 auto;
-  width: var(--touch);
+  width: 76px;
   height: var(--touch);
-  border: 1px solid var(--line);
+  padding: 0;
+  border: 1px solid var(--green);
   border-radius: var(--radius);
   background: var(--bg-3);
   color: var(--green);
-  font-size: 20px;
+  font-size: 18px;
   line-height: 1;
 }
-.sound-btn.off {
+.icon-toggle.off {
+  border-color: var(--line);
+  background: var(--bg-2);
   color: var(--fg-dim);
+}
+/* durchgestrichen – selbst gezeichnet, weil Kombinationszeichen nicht jeder Font kann */
+.icon-toggle.off::after {
+  content: '';
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  top: 50%;
+  height: 2px;
+  background: var(--red);
+  transform: rotate(-30deg);
 }
 
 .nav-btn {
@@ -727,11 +742,6 @@ button {
   font-size: 11px;
   color: var(--fg-dim);
 }
-.vib-result {
-  min-height: 0;
-  margin: 6px 0 0;
-  word-break: break-word;
-}
 .setting-col + .setting {
   margin-top: 16px;
 }
@@ -779,7 +789,21 @@ button {
   color: var(--amber);
   box-shadow: 0 0 12px rgba(255, 176, 0, 0.35);
   text-align: left;
+  overflow: hidden;
   animation: pager-blink 1.2s steps(2, jump-none) infinite;
+}
+.pager > :not(.pager-fill) {
+  position: relative;
+}
+.pager-fill {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 176, 0, 0.22);
+  transform-origin: left center;
+  transition: transform 0.1s linear;
+}
+.pager.urgent .pager-fill {
+  background: rgba(255, 77, 77, 0.25);
 }
 .pager.urgent {
   border-color: var(--red);

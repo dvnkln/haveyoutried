@@ -1,4 +1,4 @@
-import { EVENT_EFFECTS } from '../config';
+import { CONFIG, EVENT_EFFECTS } from '../config';
 import { BUFF_LABELS } from '../content/events';
 import { rates } from '../core/economy';
 import { eventDef, resolveEvent, type EffectResult } from '../core/events';
@@ -29,7 +29,10 @@ export function describeEffect(r: EffectResult): string {
 export function createPager(ctx: AppContext): { el: HTMLElement; render(): void } {
   const title = h('span', { class: 'pager-title' });
   const countdown = h('span', { class: 'pager-count' });
+  // Füllung läuft leer = verbleibende Zeit
+  const fill = h('span', { class: 'pager-fill', 'aria-hidden': 'true' });
   const el = h('button', { class: 'pager', type: 'button', hidden: '' }, [
+    fill,
     h('span', { class: 'pager-tag', text: 'PAGER' }),
     title,
     countdown,
@@ -83,8 +86,10 @@ export function createPager(ctx: AppContext): { el: HTMLElement; render(): void 
       if (el.hidden === show) el.hidden = !show;
       if (!a || !show) return;
       setText(title, eventDef(a.id)?.title ?? a.id);
-      const left = Math.max(0, Math.ceil((a.expiresAt - ctx.state.stats.playTimeMs) / 1_000));
+      const leftMs = Math.max(0, a.expiresAt - ctx.state.stats.playTimeMs);
+      const left = Math.ceil(leftMs / 1_000);
       setText(countdown, `${left}s`);
+      fill.style.transform = `scaleX(${Math.min(1, leftMs / CONFIG.eventExpireMs)})`;
       setFlag(el, 'urgent', left <= 10);
     },
   };

@@ -21,8 +21,9 @@ export function systemTab(): Tab {
     play: stat('Uptime'),
     since: stat('Im Dienst seit'),
   };
-  const hapticBtn = h('button', { class: 'btn toggle', type: 'button', role: 'switch' });
-  const soundBtn = h('button', { class: 'btn toggle', type: 'button', role: 'switch' });
+  // Symbol-Schalter: bei „aus“ rot durchgestrichen
+  const hapticBtn = h('button', { class: 'icon-toggle', type: 'button', role: 'switch', 'aria-label': 'Vibration', text: '((•))' });
+  const soundBtn = h('button', { class: 'icon-toggle', type: 'button', role: 'switch', 'aria-label': 'Sound', text: '♪' });
   const volume = h('input', { class: 'volume', type: 'range', min: '0', max: '1', step: '0.1', 'aria-label': 'Lautstärke' });
   const tapButtons = TAP_SOUND_IDS.map((id) => ({
     id,
@@ -31,10 +32,8 @@ export function systemTab(): Tab {
       h('span', { class: 'switch-hint', text: SWITCHES[id].hint }),
     ]),
   }));
-  const vibTest = h('button', { class: 'btn', type: 'button', text: 'Testen' });
-  const vibResult = h('p', { class: 'hint vib-result' });
   const HAPTIC_HINT = {
-    vibrate: 'Vibriert beim Tippen und Kaufen. Merkst du nichts? System-Vibration oder Energiesparmodus prüfen.',
+    vibrate: 'Vibriert beim Tippen und Kaufen. Spürst du nichts? In Android „Berührungs-Feedback“ einschalten.',
     ios: 'iPhone: Safari erlaubt nur ein leichtes Klicken (ab iOS 18). Mehr gibt Apple nicht her.',
     none: 'Dein Gerät kann nicht vibrieren. Bei mir geht’s.',
   } as const;
@@ -145,25 +144,6 @@ export function systemTab(): Tab {
           ctx.sfx.preview(b.id);
         });
       }
-      vibTest.addEventListener('click', () => {
-        let result: boolean | 'fehlt' = 'fehlt';
-        try {
-          if (typeof navigator.vibrate === 'function') result = navigator.vibrate(200);
-        } catch {
-          result = false;
-        }
-        const active = (navigator as Navigator & { userActivation?: { hasBeenActive: boolean } }).userActivation?.hasBeenActive;
-        const verdict =
-          result === true
-            ? 'Chrome hat den Befehl angenommen. Spürst du nichts, schaltet Android die Vibration ab: Einstellungen → Ton & Vibration → Vibration & Haptik (Berührungs-Feedback), Bitte-nicht-stören, Energiesparmodus.'
-            : result === false
-              ? 'Chrome hat die Vibration abgelehnt.'
-              : 'Dieser Browser hat keine Vibrations-Schnittstelle.';
-        setText(
-          vibResult,
-          `vibrate(200) → ${String(result)} · HTTPS: ${window.isSecureContext ? 'ja' : 'nein'} · Geste: ${String(active ?? '?')} · Audio: ${ctx.sfx.state()}. ${verdict}`,
-        );
-      });
       volume.value = String(ctx.state.settings.volume);
       volume.addEventListener('input', () => {
         ctx.state.settings.volume = Number(volume.value);
@@ -194,8 +174,6 @@ export function systemTab(): Tab {
           h('div', {}, [h('div', { text: 'Vibration' }), h('div', { class: 'hint', text: HAPTIC_HINT[hapticSupport()] })]),
           hapticBtn,
         ]),
-        h('div', { class: 'setting' }, [h('div', { text: 'Vibration testen (200 ms)' }), vibTest]),
-        vibResult,
 
         h('div', { class: 'section-title', text: '# Spielstand' }),
         h('div', { class: 'actions' }, [
@@ -224,9 +202,8 @@ export function systemTab(): Tab {
         [hapticBtn, s.settings.haptics],
         [soundBtn, s.settings.sound],
       ] as const) {
-        setText(btn, on ? 'an' : 'aus');
         btn.setAttribute('aria-checked', String(on));
-        btn.classList.toggle('active', on);
+        btn.classList.toggle('off', !on);
       }
       volume.disabled = !s.settings.sound;
       for (const b of tapButtons) {

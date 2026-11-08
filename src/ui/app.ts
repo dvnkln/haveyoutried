@@ -40,13 +40,6 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
   const buffsEl = h('span', { class: 'buffs', 'aria-live': 'polite' });
   let buffSig = '';
   let buffChips: HTMLElement[] = [];
-  const soundBtn = h('button', { class: 'sound-btn', type: 'button', 'aria-label': 'Sound an/aus' });
-  soundBtn.addEventListener('click', () => {
-    ctx.state.settings.sound = !ctx.state.settings.sound;
-    ctx.sfx.unlock();
-    ctx.sfx.tick();
-    ctx.haptic('tap');
-  });
 
   const header = h('header', { class: 'top' }, [
     h('div', { class: 'top-text' }, [
@@ -58,7 +51,6 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
       h('div', { class: 'counter' }, [tickets, h('span', { class: 'counter-unit', text: ' Tickets' })]),
       h('div', { class: 'rate-row' }, [rate, buffsEl]),
     ]),
-    soundBtn,
   ]);
 
   const main = h('main', { class: 'panels' });
@@ -108,10 +100,6 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
     render() {
       setText(tickets, formatNumber(ctx.state.tickets));
       setText(rate, `+${formatRate(productionPerSec(ctx.state))}/s`);
-      const soundOn = ctx.state.settings.sound;
-      setText(soundBtn, soundOn ? '♪' : '♪̸');
-      setFlag(soundBtn, 'off', !soundOn);
-      soundBtn.setAttribute('aria-pressed', String(soundOn));
       for (const m of mounted) setFlag(m.btn, 'has-badge', m.tab.badge?.() ?? false);
       pager.render();
 
