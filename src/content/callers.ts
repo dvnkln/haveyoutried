@@ -138,7 +138,7 @@ export const CALLERS: Caller[] = [
   },
   {
     face: '(-_-)',
-    who: 'Facility',
+    who: 'Immobilienmanagement',
     lines: [
       'Wir machen am Wochenende den Strom aus. Ist das schlimm für euch?',
       'Im Serverraum ist es so laut. Darf ich die Klimaanlage ausmachen?',
@@ -238,7 +238,7 @@ export const SITUATIONS: Situation[] = [
       ['agent', sit('(╯°□°)╯︵ ┻━┻', 'Geschäftsführung', 'Euer KI-Agent hat mir geantwortet: „Ich verstehe Ihre Frustration.“ Und dann aufgelegt.')],
       [
         'undertable',
-        sit('(-_-)', 'Facility', 'Unter einem Tisch im 2. OG brummt ein Kasten. Darf ich den ausstecken?', {
+        sit('(-_-)', 'Immobilienmanagement', 'Unter einem Tisch im 2. OG brummt ein Kasten. Darf ich den ausstecken?', {
           level: 'crit',
           text: 'admin[1]: NEIN.',
         }),

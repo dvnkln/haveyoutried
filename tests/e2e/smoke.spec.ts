@@ -160,3 +160,46 @@ test('Zufallsevent: Pager → Entscheidung → Ergebnis', async ({ page, context
   await expect(page.locator('.log')).toContainText('pager[911]: ALERT');
   expect(errors).toEqual([]);
 });
+
+for (const id of ['raid', 'spam', 'services']) {
+  test(`Incident ${id}: Alarm → Spiel → Ergebnis`, async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    await page.clock.install();
+    await page.goto(`/?incident=${id}`);
+    await page.clock.runFor(1_500);
+
+    const alert = page.locator('.nag-card.nag-problem');
+    await expect(alert).toBeVisible();
+    await expect(alert.locator('.nag-title')).toContainText('** PROBLEM Service Alert:');
+    await expect(alert).toContainText('Assigned to: you');
+    const take = page.locator('.nag-take');
+    await expect(take).toBeDisabled(); // Sperre gegen Fehlgriffe
+    await shot(page, `inc-${id}-1-alert`);
+    // ohne Übernehmen startet nichts
+    await page.clock.runFor(20_000);
+    await expect(page.locator('.inc-game')).toHaveCount(0);
+    await expect(take).toBeEnabled();
+    await expect(alert.locator('.nag-task')).not.toBeEmpty();
+    await take.click();
+    // Countdown: Spielfeld sichtbar, aber gesperrt
+    await expect(page.locator('.inc-ready')).toHaveText('3');
+    await expect(page.locator('.inc-game')).toBeVisible();
+    await page.clock.runFor(2_500);
+    await shot(page, `inc-${id}-2-game`);
+
+    await page.clock.runFor(30_000);
+    const ack = page.locator('.nag-close');
+    await expect(ack).toBeVisible();
+    await expect(page.locator('.incident .effect-line').first()).not.toBeEmpty();
+    await shot(page, `inc-${id}-3-result`);
+    await page.clock.runFor(1_000);
+    await ack.click();
+    await expect(page.locator('.incident')).toBeHidden();
+    await expect(page.locator('.log')).toContainText('icinga2[2342]: SERVICE ALERT');
+
+    const width = await page.evaluate(() => document.documentElement.scrollWidth);
+    expect(width).toBeLessThanOrEqual(360);
+    expect(errors).toEqual([]);
+  });
+}

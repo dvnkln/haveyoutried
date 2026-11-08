@@ -1,5 +1,5 @@
 import type { GeneratorId } from '../config';
-import type { Resolution } from './events';
+import type { EffectResult, Resolution } from './events';
 
 /** Alle Ereignisse, die die Logik nach außen meldet (UI, Log, später Achievements). */
 export interface GameEvents {
@@ -10,6 +10,8 @@ export interface GameEvents {
   eventIncoming: { id: string };
   eventResolved: Resolution;
   buffEnded: { id: string };
+  incidentStart: { id: string };
+  incidentResolved: { id: string; score: number; results: EffectResult[] };
 }
 
 type Handler<T> = (payload: T) => void;

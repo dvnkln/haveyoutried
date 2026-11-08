@@ -100,6 +100,58 @@ export const EVENT_EFFECTS = {
 
 export type EventEffectId = keyof typeof EVENT_EFFECTS;
 
+// --- Incidents (Minispiele nach Monitoring-Alarm) ---
+
+export const INCIDENT_IDS = ['raid', 'spam', 'services'] as const;
+export type IncidentId = (typeof INCIDENT_IDS)[number];
+
+export const INCIDENTS = {
+  /** Spielzeit bis zum ersten Incident, danach zufällig min..max */
+  firstMs: 5 * 60_000,
+  minMs: 6 * 60_000,
+  maxMs: 12 * 60_000,
+  /** „Übernehmen“-Button ist erst danach aktiv (gegen Fehlgriffe beim Dauertippen) */
+  ackArmMs: 1_200,
+  /** Countdown vor dem Spielstart (Spielfeld schon sichtbar, aber eingefroren) */
+  readyMs: 3_000,
+  /** Alarm wiederholt sich, bis übernommen wird */
+  alarmRepeatMs: 6_000,
+  /** nach Abwesenheit frühestens so viel Spielzeit bis zum nächsten Incident */
+  returnDelayMs: 20_000,
+  /** läuft gerade ein Pager-Event, wird so lange verschoben */
+  retryMs: 30_000,
+  /** Score → Effekte (aus EVENT_EFFECTS), erste passende Stufe gilt */
+  rewards: [
+    { min: 0.95, effects: ['win', 'flow'] },
+    { min: 0.8, effects: ['win'] },
+    { min: 0.4, effects: ['tip'] },
+    { min: 0, effects: ['fire'] },
+  ] as { min: number; effects: EventEffectId[] }[],
+  games: {
+    raid: {
+      durationMs: 20_000,
+      disks: 12,
+      /** RAID 6: zwei Ausfälle verkraftbar, beim dritten ist das Array tot */
+      maxFailed: 3,
+      /** Abstand zwischen Plattenausfällen, wird im Spielverlauf kürzer */
+      failEveryStartMs: 1_400,
+      failEveryEndMs: 550,
+      rebuildMs: 1_200,
+    },
+    spam: {
+      durationMs: 20_000,
+      /** so viele richtige Entscheidungen = volle Punktzahl */
+      target: 14,
+    },
+    services: {
+      durationMs: 25_000,
+      rounds: 4,
+      /** Zeitstrafe für Neustart des falschen Dienstes */
+      wrongPenaltyMs: 1_500,
+    },
+  },
+} as const;
+
 export const CONFIG = {
   /** Fester Logik-Takt */
   tickMs: 100,
@@ -142,6 +194,8 @@ export const CONFIG = {
   eventMaxMs: 8 * 60_000,
   /** so lange piept der Pager, bevor „keine Reaktion“ gilt */
   eventExpireMs: 45_000,
+  /** nach Abwesenheit frühestens so viel Spielzeit bis zum nächsten Pager-Event */
+  eventReturnDelayMs: 5_000,
   /** „!! DRINGEND !!“-Tickets in der Queue */
   urgentMinMs: 90_000,
   urgentMaxMs: 240_000,

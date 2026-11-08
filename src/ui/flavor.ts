@@ -11,6 +11,8 @@ import {
 import { UPGRADE_TEXT } from '../content/upgrades';
 import { BUFF_LABELS } from '../content/events';
 import { eventDef } from '../core/events';
+import { INCIDENT_TEXT } from '../content/incidents';
+import { isIncidentId } from '../core/incidents';
 import { bus } from '../core/bus';
 import { availableUpgrades, isUnlocked } from '../core/economy';
 import type { GameState } from '../core/state';
@@ -56,6 +58,19 @@ export function startFlavor(ctx: AppContext, app: App): void {
     if (res.outcome.log) log.template(res.outcome.log);
     if (res.mood === 'good') sfx.good();
     else if (res.mood === 'bad') sfx.error();
+  });
+
+  // Incidents: Log im Icinga-Format (host;service;state;type;attempt;output)
+  bus.on('incidentStart', ({ id }) => {
+    if (!isIncidentId(id)) return;
+    const t = INCIDENT_TEXT[id];
+    log.write('crit', `icinga2[2342]: SERVICE ALERT: ${t.host};${t.service};CRITICAL;HARD;3;${t.info}`);
+  });
+  bus.on('incidentResolved', ({ id, score }) => {
+    if (!isIncidentId(id)) return;
+    const t = INCIDENT_TEXT[id];
+    if (score >= 0.4) log.write('ok', `icinga2[2342]: SERVICE ALERT: ${t.host};${t.service};OK;HARD;1;${t.okInfo}`);
+    else log.write('warn', `icinga2[2342]: SERVICE NOTIFICATION: kollege;${t.host};${t.service};CRITICAL;escalated`);
   });
 
   bus.on('buffEnded', ({ id }) => {

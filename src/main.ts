@@ -9,6 +9,8 @@ import { registerServiceWorker } from './pwa/register';
 import { mountApp } from './ui/app';
 import { h } from './ui/dom';
 import { startFlavor } from './ui/flavor';
+import { mountIncidentOverlay } from './ui/incidents/overlay';
+import { isIncidentId, startIncident } from './core/incidents';
 import { formatDuration, formatNumber } from './ui/format';
 import { createHaptics } from './ui/haptics';
 import { Sfx } from './ui/audio';
@@ -42,6 +44,11 @@ if (!root) throw new Error('#app fehlt');
 const ctx = { state, log, saver, sfx, haptic };
 const app = mountApp(root, ctx, [queueTab(), infraTab(), upgradesTab(), systemTab()]);
 startFlavor(ctx, app);
+mountIncidentOverlay(ctx);
+
+// Testhilfe: ?incident=raid|spam|services startet das Minispiel direkt
+const forced = new URLSearchParams(location.search).get('incident');
+if (forced && isIncidentId(forced)) setTimeout(() => startIncident(forced), 1_200);
 
 for (const line of BOOT_LINES) log.template(line);
 if (loaded) log.write('info', 'helpdesk[1337]: savegame restored from /var/lib/helpdesk');

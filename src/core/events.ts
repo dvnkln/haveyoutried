@@ -98,6 +98,8 @@ export function updateEvents(
   dtMs: number,
   rates: () => { pps: number; click: number },
   now: Date = new Date(),
+  /** während eines Incidents: keine neuen Events, Pager-Countdown steht */
+  paused = false,
 ): void {
   // Boosts
   if (state.buffs.length > 0) {
@@ -114,7 +116,15 @@ export function updateEvents(
   if (!ev.nextAt) ev.nextAt = t + CONFIG.eventFirstMs;
 
   if (ev.active) {
+    if (paused) {
+      if (!ev.active.opened) ev.active.expiresAt += dtMs;
+      return;
+    }
     if (!ev.active.opened && t >= ev.active.expiresAt) resolveEvent(state, -1, rates());
+    return;
+  }
+  if (paused) {
+    if (t >= ev.nextAt) ev.nextAt = t + 1_000;
     return;
   }
   if (t >= ev.nextAt) {

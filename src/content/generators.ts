@@ -32,7 +32,7 @@ export const GENERATOR_TEXT: Record<GeneratorId, GeneratorText> = {
     ],
     milestones: {
       1: 'hr[201]: first intern. they still believe in documentation.',
-      10: 'facility[42]: coffee machine reports 300% load. interns detected.',
+      10: 'immobilien[42]: coffee machine reports 300% load. interns detected.',
       25: 'ldap[389]: 25 interns in group "Domain Admins". this is fine.',
       50: 'hr[201]: intern pool exceeds parking spots. new policy: bike.',
       100: 'kernel: intern overflow. spawning more desks.',
@@ -165,7 +165,7 @@ export const GENERATOR_TEXT: Record<GeneratorId, GeneratorText> = {
     buyLog: [
       'inventory[{pid}]: found server #{n} under a desk. label: "NICHT AUSSTECKEN!!"',
       'inventory[{pid}]: server #{n}: no asset tag, no docs, 100% business critical.',
-      'facility[{pid}]: cleaning staff instructed to vacuum AROUND server #{n}.',
+      'immobilien[{pid}]: cleaning staff instructed to vacuum AROUND server #{n}.',
     ],
     ambient: [
       'srv-tisch[{pid}]: uptime 4017 days, load 0.00, still closing tickets',

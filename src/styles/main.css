@@ -901,3 +901,389 @@ button {
     animation: none;
   }
 }
+
+/* ---------- Incidents (Minispiele) ---------- */
+.incident {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  background: rgba(0, 0, 0, 0.88);
+  padding: calc(12px + var(--safe-top)) 12px calc(12px + var(--safe-bottom));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.incident > * {
+  width: 100%;
+  max-width: 496px;
+}
+
+/* Nagios/Icinga-Mail */
+.nag-card {
+  align-self: center;
+  padding: 14px 16px;
+  border: 2px solid var(--red);
+  border-radius: 8px;
+  background: #140808;
+  font-size: 13px;
+  box-shadow: 0 0 24px rgba(255, 77, 77, 0.35);
+  animation: nag-in 0.2s ease-out;
+}
+.nag-recovery {
+  border-color: var(--green);
+  background: #08140a;
+  box-shadow: 0 0 24px rgba(51, 255, 102, 0.3);
+}
+.nag-title {
+  margin-bottom: 10px;
+  font-weight: 700;
+  color: var(--red);
+  word-break: break-word;
+}
+.nag-recovery .nag-title {
+  color: var(--green);
+}
+.nag-line {
+  word-break: break-word;
+}
+.nag-key {
+  color: var(--fg-dim);
+}
+.nag-crit {
+  color: var(--red);
+  font-weight: 700;
+}
+.nag-ok {
+  color: var(--green);
+  font-weight: 700;
+}
+.nag-assign {
+  margin-top: 14px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--amber);
+}
+.nag-count {
+  display: inline-block;
+  min-width: 2ch;
+  animation: nag-pulse 1s ease-in-out infinite;
+}
+.nag-comment {
+  margin: 12px 0 8px;
+}
+.nag-ack {
+  width: 100%;
+  margin-top: 14px;
+}
+@keyframes nag-in {
+  from {
+    transform: scale(0.94);
+    opacity: 0;
+  }
+}
+@keyframes nag-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* Spielrahmen */
+.inc-game {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 100%;
+}
+.inc-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+}
+.inc-tag {
+  padding: 0 6px;
+  border-radius: 3px;
+  background: var(--red);
+  color: #140808;
+  font-size: 12px;
+}
+.inc-name {
+  color: var(--red);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.inc-bar {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--bg-3);
+  overflow: hidden;
+}
+.inc-bar-fill {
+  height: 100%;
+  background: var(--amber);
+  transform-origin: left center;
+}
+.inc-status {
+  min-height: 1.4em;
+  font-size: var(--fs-small);
+  color: var(--fg-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.inc-goal {
+  font-size: var(--fs-small);
+  color: var(--fg);
+}
+.inc-stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* RAID */
+.rack {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 10px;
+  border: 2px solid #333;
+  border-radius: 6px;
+  background: repeating-linear-gradient(180deg, #161616 0 6px, #111 6px 8px);
+}
+.disk {
+  min-height: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 8px;
+  border: 1px solid #3a3a3a;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #2a2a2a, #1d1d1d);
+  color: #bbb;
+  touch-action: none;
+}
+.disk-led {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green);
+}
+.disk-name {
+  font-size: 12px;
+}
+.disk-slot {
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: #0d0d0d;
+}
+.disk[data-state='failed'] {
+  border-color: var(--red);
+  background: linear-gradient(180deg, #3a1414, #241010);
+  animation: disk-alarm 0.4s steps(2, jump-none) infinite;
+}
+.disk[data-state='failed'] .disk-led {
+  background: var(--red);
+  box-shadow: 0 0 10px var(--red);
+}
+.disk[data-state='rebuild'] .disk-led {
+  background: var(--amber);
+  box-shadow: 0 0 8px var(--amber);
+  animation: nag-pulse 0.3s linear infinite;
+}
+@keyframes disk-alarm {
+  50% {
+    border-color: #551c1c;
+  }
+}
+
+/* Spamfilter */
+.spam {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.mail-stage {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  min-height: 180px;
+  overflow: hidden;
+}
+.mail-card {
+  width: 100%;
+  padding: 14px;
+  border: 1px solid var(--fg-dim);
+  border-radius: 10px;
+  background: #e9e9e2;
+  color: #1a1a1a;
+  font-family: system-ui, sans-serif;
+  touch-action: none;
+  transition: transform 0.15s ease-out, opacity 0.15s;
+}
+.mail-card[data-lean='spam'] {
+  box-shadow: -6px 0 0 var(--red);
+}
+.mail-card[data-lean='ham'] {
+  box-shadow: 6px 0 0 var(--green);
+}
+.mail-card.fly-left {
+  transform: translateX(-130%) rotate(-12deg) !important;
+  opacity: 0;
+}
+.mail-card.fly-right {
+  transform: translateX(130%) rotate(12deg) !important;
+  opacity: 0;
+}
+.mail-from {
+  font-size: 12px;
+  color: #555;
+  word-break: break-all;
+}
+.mail-subject {
+  margin: 6px 0;
+  font-weight: 700;
+  font-size: 16px;
+}
+.mail-preview {
+  font-size: 14px;
+  color: #333;
+}
+.mail-feedback {
+  min-height: 1.4em;
+  text-align: center;
+  color: var(--red);
+  font-weight: 700;
+}
+.mail-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.mail-btn {
+  min-height: 64px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+/* Dienste-Dashboard */
+.services {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.svc-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+.svc {
+  min-height: 88px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 6px;
+  border: 1px solid var(--green);
+  border-radius: 4px;
+  background: #0c1a0e;
+  text-align: left;
+  font-size: 11px;
+  overflow: hidden;
+}
+.svc-name {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--fg);
+}
+.svc-state {
+  font-weight: 700;
+  color: var(--green);
+}
+.svc-msg {
+  color: var(--fg);
+  overflow-wrap: anywhere;
+}
+.svc-deps {
+  margin-top: auto;
+  color: var(--fg-dim);
+  overflow-wrap: anywhere;
+}
+.svc[data-state='crit'] {
+  border-color: var(--red);
+  background: #200c0c;
+}
+.svc[data-state='crit'] .svc-state {
+  color: var(--red);
+}
+.svc[data-state='warn'] {
+  border-color: var(--amber);
+  background: #1e1806;
+}
+.svc[data-state='warn'] .svc-state {
+  color: var(--amber);
+}
+.svc-info {
+  min-height: 2.8em;
+  font-size: var(--fs-small);
+  color: var(--fg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .disk[data-state='failed'],
+  .nag-count {
+    animation: none;
+  }
+}
+
+.incident.playing {
+  background: var(--bg);
+}
+.effect-line.mood-good {
+  color: var(--green);
+}
+.effect-line.mood-bad {
+  color: var(--red);
+}
+
+.nag-task {
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-left: 3px solid var(--amber);
+  background: rgba(255, 176, 0, 0.08);
+  color: var(--fg);
+}
+.inc-stage {
+  position: relative;
+}
+/* Countdown über dem eingefrorenen Spielfeld; fängt alle Taps ab */
+.inc-ready {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: min(22vh, 170px);
+  background: rgba(11, 15, 11, 0.55);
+  color: var(--amber);
+  font-size: 72px;
+  font-weight: 700;
+  text-shadow: 0 0 18px rgba(255, 176, 0, 0.6);
+  transition: opacity 0.3s;
+}
+.inc-ready.go {
+  opacity: 0;
+  pointer-events: none;
+}

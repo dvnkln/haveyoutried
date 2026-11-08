@@ -212,7 +212,7 @@ export const EVENTS: GameEventDef[] = [
       {
         label: '„Nicht unser Bereich“',
         outcomes: [
-          o('none', 'Facility kümmert sich. Lieferzeit: sechs Wochen.', 0.5),
+          o('none', 'Das Immobilienmanagement kümmert sich. Lieferzeit: sechs Wochen.', 0.5),
           o('fire', 'Ohne Kaffee schließt niemand Tickets. Du auch nicht.', 0.5),
         ],
       },

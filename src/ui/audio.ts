@@ -331,6 +331,17 @@ export class Sfx {
     for (const dt of [0, 0.13, 0.26]) this.tone('square', 2900, 2900, r.t + dt, 0.07, 0.07, lp, 0.004);
   }
 
+  /** Monitoring-Alarm: zweitönige Sirene */
+  alarm(): void {
+    const r = this.ready();
+    const lp = this.lowpass(3200);
+    if (!r || !lp) return;
+    for (let i = 0; i < 6; i++) {
+      const f = i % 2 === 0 ? 880 : 660;
+      this.tone('square', f, f, r.t + i * 0.14, 0.09, 0.12, lp, 0.005);
+    }
+  }
+
   /** Gutes Event-Ergebnis */
   good(): void {
     this.upgrade();

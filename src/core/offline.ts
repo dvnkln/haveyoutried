@@ -1,4 +1,4 @@
-import { CONFIG } from '../config';
+import { CONFIG, INCIDENTS } from '../config';
 import type { GameState } from './state';
 import { tick } from './tick';
 
@@ -28,7 +28,20 @@ export function applyOfflineProgress(state: GameState, now: number): OfflineRepo
   const gained = tick(state, creditedMs / 1_000, now, false);
   state.buffs = buffs;
   state.stats.offlineTickets += gained;
+  advanceTimers(state, creditedMs);
 
   if (elapsedMs < CONFIG.offlineReportMinMs) return null;
   return { elapsedMs, creditedMs, gained, capped: elapsedMs > CONFIG.offlineCapMs };
+}
+
+/**
+ * Abwesenheit zählt für die Event- und Incident-Uhren mit: Wer zurückkommt,
+ * findet bald etwas vor. Es stapelt sich aber nichts, höchstens je eins wartet.
+ */
+function advanceTimers(state: GameState, ms: number): void {
+  const t = state.stats.playTimeMs;
+  const ev = state.events;
+  if (ev.nextAt && !ev.active) ev.nextAt = Math.min(ev.nextAt, Math.max(t + CONFIG.eventReturnDelayMs, ev.nextAt - ms));
+  const inc = state.incidents;
+  if (inc.nextAt) inc.nextAt = Math.min(inc.nextAt, Math.max(t + INCIDENTS.returnDelayMs, inc.nextAt - ms));
 }
