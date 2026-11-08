@@ -62,6 +62,8 @@ const generatorUpgrades: UpgradeDef[] = GENERATORS.flatMap((g) =>
 
 export const UPGRADES: readonly UpgradeDef[] = [
   { id: 'coffee', cost: 100, unlock: { kind: 'clicks', n: 25 }, effect: { kind: 'click', mult: 2 } },
+  { id: 'mousepad', cost: 400, unlock: { kind: 'clicks', n: 60 }, effect: { kind: 'click', mult: 1.5 } },
+  { id: 'mouse', cost: 25_000, unlock: { kind: 'clicks', n: 750 }, effect: { kind: 'click', mult: 2 } },
   { id: 'keyboard', cost: 1_000, unlock: { kind: 'clicks', n: 200 }, effect: { kind: 'click', mult: 2 } },
   { id: 'answering', cost: 5_000, unlock: { kind: 'clicks', n: 500 }, effect: { kind: 'click', mult: 2 } },
   { id: 'basement', cost: 600_000, unlock: { kind: 'total', n: 200_000 }, effect: { kind: 'global', mult: 1.1 } },

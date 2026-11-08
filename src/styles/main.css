@@ -3510,3 +3510,17 @@ button {
   border: 0;
   background: none;
 }
+/* ohne Upgrade: alte graue Kugelmaus direkt auf dem Tisch */
+.mouse .pad {
+  display: none;
+}
+.mouse.has-pad .pad {
+  display: inline;
+}
+.mouse .mouse-body {
+  fill: #ddd6ca;
+  transition: fill 0.3s;
+}
+.mouse.ergo .mouse-body {
+  fill: var(--mint);
+}

@@ -105,8 +105,11 @@ const CABLES = `<svg viewBox="0 0 300 60" preserveAspectRatio="none">
 /** Maus auf Mauspad, Kabel läuft nach oben zum Monitor */
 const MOUSE = `<svg viewBox="0 0 40 46">
   <path d="M20 14 c0 -6 -2 -9 4 -12" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linecap="round"/>
-  <rect x="2" y="16" width="36" height="28" rx="6" fill="#a0c4ff" stroke="var(--ink)" stroke-width="2"/>
-  <path d="M12 26 a8 8 0 0 1 16 0 v8 a8 8 0 0 1 -16 0Z" fill="#fffaf0" stroke="var(--ink)" stroke-width="2.2"/>
+  <g class="pad">
+    <rect x="2" y="16" width="36" height="28" rx="6" fill="#a0c4ff" stroke="var(--ink)" stroke-width="2"/>
+    <path d="M6 40 h10" stroke="#fffaf0" stroke-width="2" stroke-linecap="round" opacity=".7"/>
+  </g>
+  <path class="mouse-body" d="M12 26 a8 8 0 0 1 16 0 v8 a8 8 0 0 1 -16 0Z" stroke="var(--ink)" stroke-width="2.2"/>
   <path d="M20 18 v8 M12 27 h16" stroke="var(--ink)" stroke-width="1.6"/>
   <rect class="wheel" x="18.6" y="20" width="2.8" height="4.5" rx="1.4" fill="var(--ink)"/>
 </svg>`;
@@ -178,6 +181,10 @@ export function createProps(ctx: AppContext) {
     juice(mouse, [{ transform: 'translateY(0)' }, { transform: 'translateY(2px) scale(.96)' }, { transform: 'translateY(0)' }], 160, true);
     ctx.log.write('info', pick(MOUSE_LINES));
   });
+  // Mauspad und ergonomische Maus: Upgrades, die man am Tisch sieht
+  bus.on('upgrade', ({ id }) => {
+    if (id === 'mouse' || id === 'mousepad') requestAnimationFrame(() => juice(mouse, POP, 420, true));
+  });
   const monitor2 = svg(MONITOR2, 'prop monitor2');
   const book = svg(BOOK, 'prop book');
   const kanban = svg(KANBAN, 'prop kanban');
@@ -220,6 +227,8 @@ export function createProps(ctx: AppContext) {
     } else setText(signValue, String(Math.floor((now - lastIncident) / 60_000)));
 
     for (const p of owned) setFlag(p.el, 'owned', !!s.upgrades[p.upgrade]);
+    setFlag(mouse, 'has-pad', !!s.upgrades.mousepad);
+    setFlag(mouse, 'ergo', !!s.upgrades.mouse);
 
     // Pflanze wächst mit dem Fortschritt in diesem Job (1–5 Blätter)
     const stage = Math.max(1, Math.min(5, Math.floor(Math.log10(Math.max(1, s.ticketsTotal)) / 2) + 1));

@@ -9,6 +9,14 @@ export interface UpgradeText {
 export const UPGRADE_TEXT: Record<string, UpgradeText> = {
   // Klick
   coffee: { name: 'Kaffeemaschine', desc: 'Läuft durch wie der Admin. Entkalkt wurde sie 2017.' },
+  mousepad: {
+    name: 'Mauspad mit Werbung',
+    desc: 'Vom Hardware-Lieferanten, Messe 2011. Das Logo ist abgerieben, die Maus läuft wieder geradeaus.',
+  },
+  mouse: {
+    name: 'Ergonomische Maus',
+    desc: 'Vertikal, gummiert, 89 €. Das Handgelenk dankt. Die Kollegen fragen, ob das ein Joystick ist.',
+  },
   keyboard: { name: 'Mechanische Tastatur', desc: 'Cherry MX Blue. Das Großraumbüro hasst dich. Du tippst doppelt so schnell.' },
   answering: {
     name: 'Anrufbeantworter mit Ansage',
