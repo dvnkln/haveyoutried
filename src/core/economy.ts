@@ -1,4 +1,4 @@
-import { CONFIG, GENERATORS, UPGRADES, type GeneratorDef, type GeneratorId, type UpgradeDef } from '../config';
+import { ACHIEVEMENTS_CFG, CONFIG, GENERATORS, PRESTIGE, UPGRADES, type GeneratorDef, type GeneratorId, type UpgradeDef } from '../config';
 import { buffMultiplier } from './events';
 import type { BuyAmount, GameState } from './state';
 
@@ -85,7 +85,7 @@ export function availableUpgrades(state: GameState): UpgradeDef[] {
   );
 }
 
-// --- Modifier-Pipeline. Phase 2: Berufserfahrung (Prestige) hängt sich hier ein. ---
+// --- Modifier-Pipeline ---
 
 export function generatorMultiplier(state: GameState, id: GeneratorId): number {
   let m = 1;
@@ -96,6 +96,9 @@ export function generatorMultiplier(state: GameState, id: GeneratorId): number {
 export function globalMultiplier(state: GameState): number {
   let m = 1;
   for (const u of owns(state)) if (u.effect.kind === 'global') m *= u.effect.mult;
+  // Berufserfahrung (Prestige) und Achievements
+  m *= 1 + state.prestige.experience * PRESTIGE.bonusPerPoint;
+  m *= 1 + Object.keys(state.achievements).length * ACHIEVEMENTS_CFG.bonusPerAchievement;
   return m;
 }
 

@@ -43,6 +43,16 @@ export const CLOSE_REASONS = [
   'Haben Sie es mal mit einem anderen Browser versucht?',
   'Bekanntes Problem, Fix kommt im nächsten Release (2031)',
   'Workaround: nicht mehr machen',
+  'Mail an die Feuerwehr geschickt',
+  'Lösung im Forum: „nvm, fixed it“',
+  'Polarität umgekehrt',
+  'Eingaben bereinigt (Hallo, Bobby)',
+  'Schwarzen Kasten mit Lämpchen neu gestartet',
+  'War ein Brief an den Weihnachtsmann',
+  'Doppelt gemeldet (dreimal)',
+  'Lag am Wetter',
+  'User hat aufgegeben',
+  'Zum Feature erklärt, Release Notes ergänzt',
 ];
 
 /** Klassische BOFH-Ausreden für bofh[666]. */
@@ -72,6 +82,9 @@ export const BOFH_EXCUSES = [
   'moon phase unfavourable for layer 2',
   'DNS. obviously.',
   'it worked in the change request',
+  'internet box too far from Big Ben',
+  'the dependency maintained by one person in Nebraska took a day off',
+  'polarity needs reversing (worked on TV)',
 ];
 
 /** Hintergrundrauschen im Syslog. {pid} wird zufällig ersetzt. */
@@ -143,6 +156,44 @@ export const AMBIENT: LogTemplate[] = [
   t('info', 'bofh[666]: user asked for "the password". gave them one. not theirs.'),
   t('info', 'bofh[666]: user\'s mailbox quota set to 1 mail. they will learn.'),
   t('info', 'pfy[{pid}]: carpet static charge test on manager\'s desk: successful'),
+  // IT Crowd, xkcd, Dilbert & Co.
+  t('warn', 'smoke-detector[{pid}]: server room. response: email sent to feuerwehr@stadt.de'),
+  t('info', 'pbx[{pid}]: new emergency number configured: 0118 999 881 999 119 725 … 3'),
+  t('info', 'facility-map[{pid}]: IT department located in the basement. again. sunlight: n/a'),
+  t('crit', "mysql[3306]: INSERT INTO schueler VALUES ('Robert'); DROP TABLE schueler;--') … oops"),
+  t('info', 'forum[{pid}]: thread "same problem here" (2009). last post: "nvm, fixed it". no details.'),
+  t('warn', 'npm[{pid}]: 1412 dependencies installed. 1 maintained by one person in Nebraska since 2003.'),
+  t('info', 'make[{pid}]: compiling… (sword fight in the hallway is approved)'),
+  t('info', 'sudo[{pid}]: make me a sandwich → okay.'),
+  t('info', 'standards[{pid}]: 14 competing standards. proposal: one universal standard. result: 15 competing standards.'),
+  t('warn', 'passwd[{pid}]: "correct horse battery staple" rejected: needs 1 uppercase, 1 digit, 1 hieroglyph'),
+  t('info', 'automation[{pid}]: script saves 5 min/week. took 3 weeks to write. worth it.'),
+  t('warn', 'security[{pid}]: USB request denied. reason: information wants to be prevented.'),
+  t('info', 'coffee[{pid}]: colleague walks slowly with full mug. looks busy. is not.'),
+  t('info', 'deep-thought[42]: answer computed: 42. question: unknown.'),
+  t('warn', 'meme[{pid}]: server room at 41 °C. dog with coffee reports: this is fine.'),
+  t('info', 'anton[{pid}]: do not restart me.'),
+  // Büro-Alltag
+  t('warn', 'login[{pid}]: user "admin" logged in from 3 countries at once. impressive.'),
+  t('info', 'cupsd[631]: job "Internet.pdf" received (4312 pages, color)'),
+  t('info', 'wifi[{pid}]: SSID "Polizei Überwachungswagen 3" detected next door'),
+  t('info', 'calendar[{pid}]: meeting "Wie machen wir weniger Meetings?" scheduled (2 h)'),
+  t('info', 'git[{pid}]: commit "final final v2 (jetzt aber wirklich)"'),
+  t('info', 'CRON[{pid}]: job "reboot_if_monday" executed. it is monday.'),
+  t('info', 'teams[{pid}]: status "Bin gleich da" for 3 days'),
+  t('warn', 'ldap[389]: account "praktikant2019" still active. praktikant left in 2019.'),
+  t('warn', 'excel[{pid}]: "Budget_final.xlsx" links to 412 files that no longer exist'),
+  t('warn', 'ups[{pid}]: battery self-test passed. battery age: 11 years. trust: low.'),
+  t('info', 'kernel: usb 2-1: new device "Tassenwärmer (USB)" wants 2 A. denied.'),
+  t('info', 'helpdesk[1337]: ticket "Maus geht nicht" – the mouse is a TV remote.'),
+  t('warn', 'named[53]: TTL set to 86400. by someone. on friday.'),
+  t('info', 'sshd[{pid}]: key "id_rsa_final_FINAL" accepted from praktikant-laptop'),
+  t('info', 'backup[{pid}]: tape rotation: tape 3 is a cassette labelled "Mix 1994"'),
+  t('warn', 'monitoring[{pid}]: everything green. this has never happened. investigating.'),
+  t('info', 'jira[{pid}]: new ticket: "Bitte Ticket für das Ticketsystem anlegen"'),
+  t('info', 'outlook[{pid}]: out-of-office: "Bis auf Weiteres im Urlaub. Bei Fragen: siehe oben."'),
+  t('info', 'dishwasher[{pid}]: firmware 2.1 installed. now requires login.'),
+  t('info', 'cupsd[631]: printer "Dieter" renamed by works council vote'),
 ];
 
 export const BOOT_LINES: LogTemplate[] = [
@@ -156,6 +207,7 @@ export const RETURN_LINES: LogTemplate[] = [
   t('info', 'helpdesk[1337]: admin is back. pretending it was busy the whole time.'),
   t('info', 'login[{pid}]: session resumed. 47 unread "Dringend!!" mails.'),
   t('info', 'helpdesk[1337]: welcome back. nobody noticed you were gone. nobody ever does.'),
+  t('info', 'pbx[{pid}]: 47 voicemails. 46 of them: "Hallo? Ist da die IT?"'),
 ];
 
 /** Wenn ein Upgrade gekauft wird; {name} = Upgrade-Name */

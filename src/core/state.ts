@@ -45,8 +45,10 @@ export interface GameState {
   upgrades: Record<string, true>;
   /** Achievement-ID → Freischalt-Timestamp */
   achievements: Record<string, number>;
-  /** „Kündigen und neuen Job anfangen“ */
-  prestige: { experience: number; jobs: number };
+  /** „Kündigen und neuen Job anfangen“: experience = insgesamt verdiente Berufserfahrung */
+  prestige: { experience: number; jobs: number; company: string };
+  /** Zähler für Achievements (z. B. Event-Ausgänge, erwischte Dringend-Tickets) */
+  flags: Record<string, number>;
   /** Zufallsevents; Zeiten in Spielzeit (stats.playTimeMs) */
   events: { nextAt: number; active: ActiveEvent | null; lastId: string; seen: Record<string, number> };
   /** laufende Boosts/Bremsen aus Events */
@@ -74,7 +76,8 @@ export function createInitialState(now: number): GameState {
     generators,
     upgrades: {},
     achievements: {},
-    prestige: { experience: 0, jobs: 0 },
+    prestige: { experience: 0, jobs: 0, company: 'mueller' },
+    flags: {},
     events: { nextAt: 0, active: null, lastId: '', seen: {} },
     buffs: [],
     incidents: { nextAt: 0, lastId: '', active: '', seen: {}, best: {} },
@@ -88,4 +91,8 @@ export function addTickets(state: GameState, amount: number): void {
   state.tickets += amount;
   state.ticketsTotal += amount;
   state.ticketsAllTime += amount;
+}
+
+export function bumpFlag(state: GameState, key: string, by = 1): void {
+  state.flags[key] = (state.flags[key] ?? 0) + by;
 }

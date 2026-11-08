@@ -1,0 +1,120 @@
+import { GENERATORS, INCIDENT_IDS, INCIDENTS, UPGRADES, type EventEffectId } from '../config';
+import type { GameState } from '../core/state';
+import { EVENTS } from './events';
+
+export interface AchievementDef {
+  id: string;
+  name: string;
+  desc: string;
+  /** geheim: Name und Beschreibung erst nach dem Freischalten sichtbar */
+  hidden?: boolean;
+  check: (s: GameState, now: Date) => boolean;
+}
+
+const flag = (s: GameState, key: string) => s.flags[key] ?? 0;
+
+/** Zählerschlüssel für einen Event-Ausgang; Option per Beschriftung, damit Umsortieren nichts kaputt macht. */
+function ev(eventId: string, optionLabel: string, effect: EventEffectId): string {
+  const def = EVENTS.find((e) => e.id === eventId);
+  const idx = def?.options.findIndex((o) => o.label === optionLabel) ?? -1;
+  if (!def || idx < 0) throw new Error(`Achievement verweist auf unbekannte Event-Option: ${eventId}/${optionLabel}`);
+  return `ev:${eventId}:${idx}:${effect}`;
+}
+
+/** Prüf-Funktion „dieser Event-Ausgang kam mindestens einmal vor“ – Schlüssel wird sofort berechnet. */
+function evHappened(eventId: string, optionLabel: string, effect: EventEffectId): AchievementDef['check'] {
+  const key = ev(eventId, optionLabel, effect);
+  return (s) => flag(s, key) > 0;
+}
+
+const companiesSeen = (s: GameState) => Object.keys(s.flags).filter((k) => k.startsWith('company:')).length;
+const at = (d: Date, h: number, m: number) => d.getHours() === h && d.getMinutes() === m;
+
+const owned = (s: GameState, id: (typeof GENERATORS)[number]['id']) => s.generators[id].owned;
+const upgradeCount = (s: GameState) => Object.keys(s.upgrades).length;
+const best = (s: GameState, id: string) => s.incidents.best[id] ?? 0;
+const PERFECT = 0.95;
+
+const a = (
+  id: string,
+  name: string,
+  desc: string,
+  check: AchievementDef['check'],
+  hidden = false,
+): AchievementDef => ({ id, name, desc, check, hidden });
+
+export const ACHIEVEMENTS: AchievementDef[] = [
+  // --- Tickets & Klicks ---
+  a('first', 'Hallo, IT?', 'Das erste Ticket geschlossen.', (s) => s.clicks >= 1),
+  a('clicks1k', 'Sehnenscheide, Stufe 1', '1.000 Tickets von Hand geschlossen.', (s) => s.clicks >= 1_000),
+  a('clicks10k', 'Sehnenscheide, Stufe 2', '10.000 Tickets von Hand geschlossen. Die Maus ist durch.', (s) => s.clicks >= 10_000),
+  a('total1k', 'Queue leer? Nie.', '1 K Tickets in einem Job.', (s) => s.ticketsTotal >= 1e3),
+  a('total1m', 'Mega-Ticket', '1 M Tickets in einem Job.', (s) => s.ticketsTotal >= 1e6),
+  a('total1g', 'Giga-überlastet', '1 G Tickets in einem Job.', (s) => s.ticketsTotal >= 1e9),
+  a('total1t', 'Data Lake', '1 T Tickets in einem Job. Niemand wird sie je lesen.', (s) => s.ticketsTotal >= 1e12),
+  a('clicks100k', 'Sehnenscheide, Stufe 3', '100.000 Tickets von Hand. Die Physiotherapeutin kennt dich beim Namen.', (s) => s.clicks >= 100_000),
+  a('callers100', 'Telefonseelsorge', '100 Anrufer angehört.', (s) => flag(s, 'callers') >= 100),
+  a('callbacks10', 'Ich ruf jetzt zum dritten Mal an', '10 Rückrufe ertragen.', (s) => flag(s, 'callbacks') >= 10),
+  a('uptime', 'Uptime: 365 Tage', '365 Minuten gespielt. In Helpdesk-Zeit ist das ein Jahr.', (s) => s.stats.playTimeMs >= 365 * 60_000),
+
+  // --- Infrastruktur & Upgrades ---
+  a('interns25', 'Praktikanten-Rudel', '25 Praktikanten. Die Kaffeemaschine kapituliert.', (s) => owned(s, 'intern') >= 25),
+  a('interns100', 'Praktikanten-Armee', '100 Praktikanten. Der Parkplatz ist voll.', (s) => owned(s, 'intern') >= 100),
+  a('scripts50', 'Funktioniert, keiner weiß warum', '50 Bash-Skripte.', (s) => owned(s, 'bash') >= 50),
+  a('cron100', '03:00 Uhr ist Rushhour', '100 Cronjobs. Nachts ist im Serverraum mehr los als tagsüber.', (s) => owned(s, 'cron') >= 100),
+  a('k8s25', 'Hochverfügbares Wiki', '25 Kubernetes-Cluster für drei Besucher im Monat.', (s) => owned(s, 'k8s') >= 25),
+  a('agents100', 'Skynet (Beta)', '100 AI-Agents. Sie haben einen Betriebsrat gegründet.', (s) => owned(s, 'agent') >= 100),
+  a('undertable', 'Nicht anfassen.', 'Den ersten Server unterm Tisch gefunden.', (s) => owned(s, 'undertable') >= 1),
+  a('fullstack', 'Full Stack (Chaos)', 'Von jeder Infrastruktur mindestens eins.', (s) => GENERATORS.every((g) => owned(s, g.id) >= 1)),
+  a('upgrades10', 'Budget ausgeschöpft', '10 Upgrades gekauft.', (s) => upgradeCount(s) >= 10),
+  a('upgradesAll', 'Change Advisory Board persönlich', 'Alle Upgrades gekauft.', (s) => upgradeCount(s) >= UPGRADES.length),
+
+  // --- Pager-Events ---
+  a('dns', 'Es war DNS.', 'Beim DNS-Ausfall die Logs gelesen. Es war DNS.', evHappened('dns', 'Logs lesen', 'win')),
+  a('rmrf', 'rm -rf überlebt', 'Nach „rm -rf /*“ das Backup erfolgreich eingespielt.', evHappened('rmrf', 'Backup einspielen', 'win')),
+  a('password', 'Passwort war Passwort123', 'Nach der Phishing-Welle alle Passwörter zurückgesetzt.', evHappened('phishing', 'Alle Passwörter zurücksetzen', 'win')),
+  a('friday', 'Freitags-Deploy überlebt', 'Freitag 16:55 durchgewunken – und es lief.', evHappened('friday', 'Durchwinken', 'jackpot')),
+  a('fridayFail', 'Welches Wochenende?', 'Freitag 16:55 durchgewunken. Es lief nicht.', evHappened('friday', 'Durchwinken', 'fireBig'), true),
+  a('replyall', 'Reply-All-Sturm', 'Eine Warnung an alle geschickt. Alle haben geantwortet.', evHappened('phishing', 'Rundmail: „Nicht klicken!“', 'fire'), true),
+  a('unplug', 'Du hast ihn ausgesteckt.', 'Den Server unterm Tisch ausgesteckt. Die Lohnabrechnung erinnert sich.', evHappened('beep', 'Ausstecken', 'fireBig'), true),
+  a('bobby', 'Little Bobby Tables', 'Die Schuldatenbank gerettet und Eingaben bereinigt.', evHappened('bobby', 'Backup einspielen und Eingaben bereinigen', 'win')),
+  a('internetbox', 'Das ist das Internet.', 'Dem Chef einen schwarzen Kasten mit Lämpchen geliehen. Der Vorstand war begeistert.', evHappened('internet', 'Schwarzen Kasten mit Lämpchen geben', 'jackpot')),
+  a('nebraska', 'Die Person in Nebraska', 'Die Bibliothek geforkt, auf der alles steht. Jetzt bist du es.', evHappened('nebraska', 'Forken und selbst pflegen', 'overtime')),
+  a('firemail', 'Ich schick dazu eine Mail', 'Bei Rauch im Serverraum der Feuerwehr gemailt.', evHappened('fire', 'Mail an die Feuerwehr schreiben', 'fire'), true),
+  a('thisisfine', 'This is fine.', 'Bei Rauch im Serverraum erst mal Kaffee getrunken. Es war nicht fine.', evHappened('fire', 'Kaffee trinken. „This is fine.“', 'fireBig'), true),
+  a('denvercoder', 'Antwort aus 2009', 'Der Fragesteller aus dem Forum hat nach 17 Jahren geantwortet.', evHappened('forum', 'Den Fragesteller anschreiben', 'jackpot'), true),
+  a('ignore5', 'Nicht mein Problem', '5 Pager-Alarme einfach ignoriert.', (s) => flag(s, 'ev:ignored') >= 5),
+  a('urgent10', 'VIP-Dompteur', '10 „!! DRINGEND !!“-Tickets erwischt.', (s) => flag(s, 'urgent') >= 10),
+
+  // --- Incidents ---
+  a('raid', 'RAID ist kein Backup', 'RAID-Rettung mit Bestwertung.', (s) => best(s, 'raid') >= PERFECT),
+  a('spam', 'Spamfilter mit Herz', 'Mail-Queue fehlerfrei sortiert.', (s) => best(s, 'spam') >= PERFECT),
+  a('services', 'Root Cause Analyst', 'Dienste-Dashboard ohne Fehlgriff gelöst.', (s) => best(s, 'services') >= PERFECT),
+  a('loggrep', 'grep-Meister', 'Jeden echten Fehler im Log erwischt.', (s) => best(s, 'loggrep') >= PERFECT),
+  a('network', 'OSI-Schichtarbeiter', 'Netzwerkausfall ohne Fehlgriff behoben.', (s) => best(s, 'network') >= PERFECT),
+  a('patch', 'Kabelmanagement', 'Patchfeld fehlerfrei verkabelt.', (s) => best(s, 'patch') >= PERFECT),
+  a('oncall', 'On-Call-Held', 'Jeden Incident-Typ mindestens einmal gelöst.', (s) => INCIDENT_IDS.every((id) => best(s, id) >= INCIDENTS.goodMin)),
+
+  // --- Karriere ---
+  a('quit1', 'Neuer Job, alte Probleme', 'Zum ersten Mal gekündigt.', (s) => s.prestige.jobs >= 1),
+  a('quit5', 'Jobhopper', '5 Mal gekündigt. Der Lebenslauf wird lang.', (s) => s.prestige.jobs >= 5),
+  a('exp25', 'Senior (laut Signatur)', '25 Punkte Berufserfahrung.', (s) => s.prestige.experience >= 25),
+  a('exp100', 'Principal Staff Lead Architect', '100 Punkte Berufserfahrung. Dein Titel passt nicht mehr auf die Visitenkarte.', (s) => s.prestige.experience >= 100),
+  a('quit10', 'Lebenslauf länger als die Doku', '10 Mal gekündigt.', (s) => s.prestige.jobs >= 10),
+  a('companies5', 'Branchenkenner', 'Bei 5 verschiedenen Firmen gearbeitet. Überall dasselbe.', (s) => companiesSeen(s) >= 5),
+
+  // --- Geheim ---
+  a('weekend', 'Wochenende', '8 Stunden am Stück weg gewesen. Es lief auch ohne dich. Leider.', (s) => flag(s, 'offline:capped') > 0, true),
+  a('night', 'Nachtschicht', 'Zwischen 0 und 5 Uhr gespielt.', (_s, d) => d.getHours() < 5, true),
+  a('fridayLate', 'Freitag, 16:55', 'Freitag kurz vor Feierabend noch Tickets geschlossen.', (_s, d) => d.getDay() === 5 && d.getHours() === 16 && d.getMinutes() >= 55, true),
+  a('silent', 'Großraumbüro-tauglich', 'Den Sound ausgeschaltet. Die Kollegen danken.', (s) => !s.settings.sound, true),
+  a('loud', 'Großraumbüro-Terror', 'MX Blue auf voller Lautstärke. Die Kollegen planen etwas.', (s) => s.settings.sound && s.settings.volume >= 1 && s.settings.tapSound === 'blue', true),
+  a('silentRed', 'Leisetreter', 'Auf MX Silent Red gewechselt. Feigling.', (s) => s.settings.tapSound === 'silent', true),
+  a('leet', '1337 h4x0r', 'Um 13:37 Uhr gespielt.', (_s, d) => at(d, 13, 37), true),
+  a('pi', 'π-hole', 'Um 3:14 Uhr gespielt. Nachts. Warum?', (_s, d) => at(d, 3, 14), true),
+  a('monday', 'Montagmorgen, 7:59', 'Montag vor 8 Uhr schon Tickets geschlossen.', (_s, d) => d.getDay() === 1 && d.getHours() < 8, true),
+  a('sunday', 'Sonntagsdienst', 'Am Sonntag gespielt. Rufbereitschaft wird nicht vergütet.', (_s, d) => d.getDay() === 0, true),
+  a('xmas', 'Weihnachtsbereitschaft', 'An Heiligabend Tickets geschlossen. Der Drucker hat dir ein Lied gedruckt.', (_s, d) => d.getMonth() === 11 && d.getDate() === 24, true),
+  a('nye', 'Jahreswechsel im Serverraum', 'Silvester nach 23 Uhr gespielt. Das Feuerwerk ist der Brandmelder.', (_s, d) => d.getMonth() === 11 && d.getDate() === 31 && d.getHours() >= 23, true),
+  a('chaos', 'Ausnahmezustand', 'Drei Boosts oder Bremsen gleichzeitig aktiv.', (s) => s.buffs.length >= 3, true),
+];

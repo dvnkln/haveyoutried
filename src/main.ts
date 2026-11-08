@@ -21,6 +21,7 @@ import { infraTab } from './ui/tabs/infra';
 import { queueTab } from './ui/tabs/queue';
 import { upgradesTab } from './ui/tabs/upgrades';
 import { systemTab } from './ui/tabs/system';
+import { careerTab } from './ui/tabs/career';
 import { pick } from './util';
 
 const now = Date.now();
@@ -43,7 +44,7 @@ const saver = new Saver(
 const root = document.getElementById('app');
 if (!root) throw new Error('#app fehlt');
 const ctx = { state, log, saver, sfx, haptic };
-const app = mountApp(root, ctx, [queueTab(), infraTab(), upgradesTab(), systemTab()]);
+const app = mountApp(root, ctx, [queueTab(), infraTab(), upgradesTab(), careerTab(), systemTab()]);
 startFlavor(ctx, app);
 mountIncidentOverlay(ctx);
 

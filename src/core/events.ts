@@ -2,7 +2,7 @@ import { CONFIG, EVENT_EFFECTS, type EventEffectId } from '../config';
 import { EVENTS, type GameEventDef, type Outcome } from '../content/events';
 import { weightedPick } from '../util';
 import { bus } from './bus';
-import { addTickets, type Buff, type GameState } from './state';
+import { addTickets, bumpFlag, type Buff, type GameState } from './state';
 
 /** Ergebnis eines angewendeten Effekts, für Anzeige und Log. */
 export interface EffectResult {
@@ -142,6 +142,9 @@ export function resolveEvent(
 
   state.events.active = null;
   state.events.lastId = def.id;
+  // für Achievements: welche Option mit welchem Ausgang
+  bumpFlag(state, `ev:${def.id}:${option}:${outcome.effect}`);
+  if (option < 0) bumpFlag(state, 'ev:ignored');
   state.events.seen[def.id] = (state.events.seen[def.id] ?? 0) + 1;
   scheduleNext(state);
 
@@ -153,5 +156,6 @@ export function resolveEvent(
 /** „!! DRINGEND !!“-Ticket erwischt. */
 export function claimUrgent(state: GameState, rates: { pps: number; click: number }): EffectResult {
   const pick = weightedPick(CONFIG.urgentRewards, (r) => r.weight, random);
+  bumpFlag(state, 'urgent');
   return applyEffect(state, pick.effect, rates);
 }

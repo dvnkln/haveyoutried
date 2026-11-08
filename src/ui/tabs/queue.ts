@@ -2,6 +2,7 @@ import { CONFIG } from '../../config';
 import { CALLBACK_LINES, CALLERS, situationalCalls, type Call } from '../../content/callers';
 import { CLOSE_REASONS } from '../../content/syslog';
 import { clickTicket } from '../../core/actions';
+import { bumpFlag } from '../../core/state';
 import { URGENT_LABELS, URGENT_TEXT } from '../../content/events';
 import { rates } from '../../core/economy';
 import { claimUrgent } from '../../core/events';
@@ -61,6 +62,8 @@ export function queueTab(): Tab {
 
   const showCall = (c: Call, sound = true) => {
     call = c;
+    bumpFlag(ctx.state, 'callers');
+    if (c.who.endsWith('(Rückruf)')) bumpFlag(ctx.state, 'callbacks');
     recent.push(c.line);
     if (recent.length > 30) recent.shift();
     setText(face, c.face);

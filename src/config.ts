@@ -63,6 +63,8 @@ const generatorUpgrades: UpgradeDef[] = GENERATORS.flatMap((g) =>
 export const UPGRADES: readonly UpgradeDef[] = [
   { id: 'coffee', cost: 100, unlock: { kind: 'clicks', n: 25 }, effect: { kind: 'click', mult: 2 } },
   { id: 'keyboard', cost: 1_000, unlock: { kind: 'clicks', n: 200 }, effect: { kind: 'click', mult: 2 } },
+  { id: 'answering', cost: 5_000, unlock: { kind: 'clicks', n: 500 }, effect: { kind: 'click', mult: 2 } },
+  { id: 'basement', cost: 600_000, unlock: { kind: 'total', n: 200_000 }, effect: { kind: 'global', mult: 1.1 } },
   { id: 'monitor2', cost: 15_000, unlock: { kind: 'total', n: 5_000 }, effect: { kind: 'clickPps', fraction: 0.01 } },
   { id: 'macro', cost: 100_000, unlock: { kind: 'clicks', n: 1_000 }, effect: { kind: 'click', mult: 3 } },
   { id: 'duck', cost: 1_000_000, unlock: { kind: 'total', n: 500_000 }, effect: { kind: 'clickPps', fraction: 0.02 } },
@@ -184,6 +186,23 @@ export const INCIDENTS = {
     },
   },
 } as const;
+
+// --- Prestige („Kündigen“) und Achievements ---
+
+export const PRESTIGE = {
+  /** Berufserfahrung gesamt = floor((Tickets aller Jobs / ticketsPerPoint) ^ exponent) */
+  ticketsPerPoint: 1_000_000,
+  exponent: 0.5,
+  /** Bonus je Punkt Berufserfahrung auf Produktion und Klicks */
+  bonusPerPoint: 0.02,
+};
+
+export const ACHIEVEMENTS_CFG = {
+  /** Bonus je freigeschaltetem Achievement auf Produktion und Klicks */
+  bonusPerAchievement: 0.01,
+  /** Prüfintervall in ms */
+  checkMs: 1_000,
+};
 
 export const CONFIG = {
   /** Fester Logik-Takt */

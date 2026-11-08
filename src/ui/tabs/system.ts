@@ -185,7 +185,7 @@ export function systemTab(): Tab {
         ]),
         h('p', {
           class: 'hint',
-          text: `Autosave alle ${CONFIG.autosaveMs / 1_000} s. „Kündigen und neu anfangen“ folgt nach dem Change-Freeze.`,
+          text: `Autosave alle ${CONFIG.autosaveMs / 1_000} s. Kündigen geht im Karriere-Tab.`,
         }),
       ]);
     },

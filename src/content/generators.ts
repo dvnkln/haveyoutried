@@ -149,6 +149,7 @@ export const GENERATOR_TEXT: Record<GeneratorId, GeneratorText> = {
       'agent[{pid}]: apologized 3 times, resolved 0 issues. CSAT: 5/5.',
       'agent[{pid}]: escalated to another agent. loop detected. productivity +400%.',
       'agent[{pid}]: "Great question!" (it was not)',
+      'agent[{pid}]: "I\'m sorry, Dave. I\'m afraid I can\'t close that ticket."',
     ],
     milestones: {
       1: 'agent[1]: first AI agent. it is "excited to help".',
@@ -161,7 +162,7 @@ export const GENERATOR_TEXT: Record<GeneratorId, GeneratorText> = {
   undertable: {
     name: 'Der Server unterm Tisch',
     icon: '[▓▓]',
-    desc: 'Uptime: 4.017 Tage. Niemand weiß, was er tut. Niemand fasst ihn an.',
+    desc: 'Uptime: 4.017 Tage. Die ganze Firma steht darauf. Gepflegt seit 2003 von einer Person in Nebraska.',
     buyLog: [
       'inventory[{pid}]: found server #{n} under a desk. label: "NICHT AUSSTECKEN!!"',
       'inventory[{pid}]: server #{n}: no asset tag, no docs, 100% business critical.',

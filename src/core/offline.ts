@@ -1,5 +1,5 @@
 import { CONFIG, INCIDENTS } from '../config';
-import type { GameState } from './state';
+import { bumpFlag, type GameState } from './state';
 import { tick } from './tick';
 
 export interface OfflineReport {
@@ -30,6 +30,7 @@ export function applyOfflineProgress(state: GameState, now: number): OfflineRepo
   state.stats.offlineTickets += gained;
   advanceTimers(state, creditedMs);
 
+  if (elapsedMs > CONFIG.offlineCapMs) bumpFlag(state, 'offline:capped');
   if (elapsedMs < CONFIG.offlineReportMinMs) return null;
   return { elapsedMs, creditedMs, gained, capped: elapsedMs > CONFIG.offlineCapMs };
 }

@@ -37,7 +37,7 @@ test('Kern-Loop: tippen, kaufen, produzieren, speichern', async ({ page }) => {
   await shot(page, '2-infra');
 
   await page.getByRole('tab', { name: /System/ }).tap();
-  await expect(page.locator('.stats')).toContainText('Von Hand geschlossen');
+  await expect(page.locator('#panel-system .stats')).toContainText('Von Hand geschlossen');
   await shot(page, '3-system');
 
   // Reload: Stand bleibt (pagehide-Save)
@@ -251,10 +251,13 @@ test('Patchkabel: Antippen-Antippen und Ziehen verbinden, Uplink straft', async 
       await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2, { steps: 5 });
       await page.mouse.up();
     }
-    await expect(lefts.nth(i)).toHaveClass(/done/);
+    // nach dem letzten Kabel ist das Spiel vorbei und das Feld weg – vorher zählen
+    if (i < n - 1) {
+      await expect(lefts.nth(i)).toHaveClass(/done/);
+      await expect(page.locator('.patch-cable')).toHaveCount(i + 1);
+      if (i === n - 2) await shot(page, 'inc-patch-played');
+    }
   }
-  await expect(page.locator('.patch-cable')).toHaveCount(n);
-  await shot(page, 'inc-patch-played');
   await page.clock.runFor(500);
   await expect(page.locator('.nag-recovery')).toBeVisible();
   expect(errors).toEqual([]);
@@ -283,4 +286,45 @@ test('Patchkabel: Ziehen und außerhalb loslassen hängt nicht, Fehlklick zählt
   await wrong.click();
   await page.clock.runFor(200);
   await expect(page.locator('.inc-status')).toContainText('Fehlgriffe: 1');
+});
+
+test('Karriere: kündigen, neue Firma, Achievement-Toast', async ({ page, context }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  const save = {
+    version: 1,
+    tickets: 2e7,
+    ticketsTotal: 1e8,
+    ticketsAllTime: 1e8,
+    clicks: 5,
+    generators: { cron: { owned: 12 } },
+    lastTick: Date.now(),
+  };
+  await context.addInitScript((json) => {
+    if (!sessionStorage.getItem('seeded')) {
+      localStorage.setItem('hyt.save', json);
+      sessionStorage.setItem('seeded', '1');
+    }
+  }, JSON.stringify(save));
+
+  await page.goto('/');
+  await expect(page.locator('.prompt-user')).toHaveText('root@mueller-spedition');
+  await page.getByRole('tab', { name: /Karriere/ }).tap();
+  await expect(page.locator('.career')).toContainText('+10');
+  await shot(page, 'career-1');
+  await page.getByRole('button', { name: 'Kündigen', exact: true }).tap();
+  const confirm = page.getByRole('button', { name: 'Kündigen. Ernsthaft.' });
+  await expect(confirm).toBeEnabled();
+  await confirm.tap();
+  await expect(page.locator('dialog.modal')).toContainText('Erster Arbeitstag');
+  await page.getByRole('button', { name: 'Na dann.' }).tap();
+
+  await expect(page.locator('.prompt-user')).not.toHaveText('root@mueller-spedition');
+  await expect(page.locator('.counter-value')).toHaveText('0');
+  await expect(page.locator('.toasts')).toContainText('Neuer Job, alte Probleme', { timeout: 5_000 });
+  await shot(page, 'career-2');
+  expect(await page.locator('.ach.done').count()).toBeGreaterThanOrEqual(2);
+  const width = await page.evaluate(() => document.documentElement.scrollWidth);
+  expect(width).toBeLessThanOrEqual(360);
+  expect(errors).toEqual([]);
 });

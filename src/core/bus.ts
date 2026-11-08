@@ -11,6 +11,8 @@ export interface GameEvents {
   eventResolved: Resolution;
   buffEnded: { id: string };
   incidentStart: { id: IncidentId };
+  achievement: { id: string };
+  jobQuit: { gained: number; company: string };
   /** abandoned = beim Laden gefunden (Seite während des Incidents geschlossen) */
   incidentResolved: { id: IncidentId; score: number; results: EffectResult[]; abandoned: boolean };
 }

@@ -7,7 +7,9 @@ import { formatNumber, formatRate } from './format';
 import type { HapticKind } from './haptics';
 import type { SysLog } from './log';
 import { createPager } from './pager';
+import { createToaster } from './toast';
 import { BUFF_LABELS } from '../content/events';
+import { companyOf } from '../content/companies';
 
 export interface AppContext {
   state: GameState;
@@ -32,19 +34,22 @@ export interface Tab {
 export interface App {
   render(): void;
   popCounter(): void;
+  toast(title: string, text: string): void;
 }
 
 export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
   const tickets = h('span', { class: 'counter-value', text: '0' });
   const rate = h('span', { class: 'rate', text: '+0.0/s' });
   const buffsEl = h('span', { class: 'buffs', 'aria-live': 'polite' });
+  // Hostname der aktuellen Firma (wechselt beim Kündigen)
+  const promptUser = h('span', { class: 'prompt-user' });
   let buffSig = '';
   let buffChips: HTMLElement[] = [];
 
   const header = h('header', { class: 'top' }, [
     h('div', { class: 'top-text' }, [
       h('div', { class: 'prompt' }, [
-        h('span', { class: 'prompt-user', text: 'root@helpdesk' }),
+        promptUser,
         h('span', { text: ':~# ' }),
         h('span', { class: 'prompt-title', text: 'Have You Tried…' }),
       ]),
@@ -55,7 +60,8 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
 
   const main = h('main', { class: 'panels' });
   const pager = createPager(ctx);
-  main.append(pager.el);
+  const toaster = createToaster();
+  main.append(pager.el, toaster.el);
   const nav = h('nav', { class: 'bottom-nav', 'aria-label': 'Navigation' });
 
   const mounted = tabs.map((tab) => {
@@ -99,6 +105,7 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
   return {
     render() {
       setText(tickets, formatNumber(ctx.state.tickets));
+      setText(promptUser, `root@${companyOf(ctx.state.prestige.company).host}`);
       setText(rate, `+${formatRate(productionPerSec(ctx.state))}/s`);
       for (const m of mounted) setFlag(m.btn, 'has-badge', m.tab.badge?.() ?? false);
       pager.render();
@@ -120,5 +127,6 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
     popCounter() {
       juice(tickets, POP, 320);
     },
+    toast: toaster.show,
   };
 }

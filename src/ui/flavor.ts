@@ -13,6 +13,10 @@ import { BUFF_LABELS } from '../content/events';
 import { eventDef } from '../core/events';
 import { INCIDENT_TEXT } from '../content/incidents';
 import { isSolved } from '../core/incidents';
+import { ACHIEVEMENTS } from '../content/achievements';
+import { checkAchievements } from '../core/achievements';
+import { companyOf } from '../content/companies';
+import { ACHIEVEMENTS_CFG } from '../config';
 import { bus } from '../core/bus';
 import { availableUpgrades, isUnlocked } from '../core/economy';
 import type { GameState } from '../core/state';
@@ -76,6 +80,21 @@ export function startFlavor(ctx: AppContext, app: App): void {
       log.write('warn', `icinga2[2342]: SERVICE NOTIFICATION: kollege;${t.host};${t.service};CRITICAL;escalated`);
     }
   });
+
+  bus.on('achievement', ({ id }) => {
+    const def = ACHIEVEMENTS.find((a) => a.id === id);
+    if (!def) return;
+    log.write('ok', `achievementd[777]: unlocked "${def.name}"`);
+    app.toast(`Achievement: ${def.name}`, def.desc);
+    sfx.milestone();
+    haptic('milestone');
+  });
+  bus.on('jobQuit', ({ gained, company }) => {
+    const c = companyOf(company);
+    log.write('warn', `hr[201]: Kündigung eingegangen. Resturlaub: 0 Tage. Berufserfahrung +${gained}.`);
+    log.write('info', `login[1]: welcome to ${c.host}. ${c.welcome}`);
+  });
+  setInterval(() => checkAchievements(state), ACHIEVEMENTS_CFG.checkMs);
 
   bus.on('buffEnded', ({ id }) => {
     log.write('info', `helpdesk[1337]: ${BUFF_LABELS[id] ?? id} vorbei. Zurück zum Normalbetrieb.`);

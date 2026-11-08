@@ -19,7 +19,8 @@ describe('Spielstand', () => {
     expect(s.generators.intern.owned).toBe(4);
     expect(s.generators.cron.owned).toBe(0);
     expect(s.settings.haptics).toBe(true);
-    expect(s.prestige).toEqual({ experience: 0, jobs: 0 });
+    expect(s.prestige).toEqual({ experience: 0, jobs: 0, company: 'mueller' });
+    expect(s.flags).toEqual({});
   });
 
   it('verwirft kaputte Werte', () => {

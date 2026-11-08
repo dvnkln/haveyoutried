@@ -10,6 +10,11 @@ export const UPGRADE_TEXT: Record<string, UpgradeText> = {
   // Klick
   coffee: { name: 'Kaffeemaschine', desc: 'Läuft durch wie der Admin. Entkalkt wurde sie 2017.' },
   keyboard: { name: 'Mechanische Tastatur', desc: 'Cherry MX Blue. Das Großraumbüro hasst dich. Du tippst doppelt so schnell.' },
+  answering: {
+    name: 'Anrufbeantworter mit Ansage',
+    desc: '„Hallo, IT. Haben Sie es schon aus- und wieder eingeschaltet?“ Löst 40 % aller Anrufe, ohne dass jemand abhebt.',
+  },
+  basement: { name: 'Büro im Keller', desc: 'Kein Fenster, kein Handyempfang, keine Besucher. Die Produktivität ist beängstigend.' },
   monitor2: { name: 'Zweiter Monitor', desc: 'Links das Ticket, rechts Stack Overflow. Endlich Multitasking.' },
   macro: { name: 'Textbaustein', desc: 'Strg+Alt+R: „Haben Sie es schon aus- und wieder eingeschaltet?“' },
   duck: { name: 'Rubber Duck', desc: 'Hört zu. Urteilt nicht. Löst die Hälfte aller Probleme durch Schweigen.' },
@@ -43,7 +48,7 @@ export const UPGRADE_TEXT: Record<string, UpgradeText> = {
   // AI-Agent
   'agent-1': { name: 'Prompt: „Sei hilfreich“', desc: 'Hilft. Sehr. Hat drei Tickets direkt an den Vorstand eskaliert.' },
   'agent-2': { name: 'Human in the Loop', desc: 'Der Praktikant klickt auf „Genehmigen“. Gelesen wird nichts.' },
-  'agent-3': { name: 'Halluzinationsfilter', desc: 'Erfundene RFCs nur noch freitags.' },
+  'agent-3': { name: 'Halluzinationsfilter', desc: 'Erfundene RFCs nur noch freitags. „Tut mir leid, Dave“ sagt er auch nicht mehr.' },
   // Server unterm Tisch
   'undertable-1': { name: 'Schild „NICHT AUSSTECKEN“', desc: 'Handgeschrieben, Edding, laminiert. Wirkt seit 2009.' },
   'undertable-2': { name: 'Staubsauger', desc: 'Erstmals seit Inbetriebnahme abgesaugt. Die Uptime hat überlebt. Knapp.' },

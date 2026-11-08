@@ -278,6 +278,113 @@ export const EVENTS: GameEventDef[] = [
     ],
     ignore: o('fireBig', 'Niemand hat geantwortet. Er hat es einfach ausprobiert.'),
   },
+  {
+    id: 'fire',
+    title: 'Rauch im Serverraum',
+    text: 'Aus dem Serverraum quillt Rauch. Der Praktikant filmt es für Instagram.',
+    options: [
+      {
+        label: 'Mail an die Feuerwehr schreiben',
+        outcomes: [
+          o('fire', 'Betreff: Feuer. Inhalt: siehe Betreff. Die Feuerwehr antwortet nach drei Werktagen.', 1, {
+            level: 'warn',
+            text: 'postfix/smtp[25]: to=<feuerwehr@stadt.de> status=sent (Betreff: FEUER!!! – bitte zeitnah)',
+          }),
+        ],
+      },
+      { label: 'Feuerlöscher holen', outcomes: [o('win', 'Es war der Toaster in der Teeküche. Du bekommst den Brandschutz-Award. Er ist aus Plexiglas.')] },
+      {
+        label: 'Kaffee trinken. „This is fine.“',
+        outcomes: [
+          o('none', 'Alles gut. Es war nur die Kaffeemaschine. Diesmal.', 0.5),
+          o('fireBig', 'Es war nicht fine.', 0.5),
+        ],
+      },
+    ],
+    ignore: o('fire', 'Niemand hat reagiert. Die Sprinkleranlage schon. Über dem Serverraum.'),
+  },
+  {
+    id: 'internet',
+    title: 'Der Chef will das Internet',
+    text: 'Für die Präsentation vor dem Vorstand möchte der Chef „das Internet“ ausleihen. Physisch. Bis 14 Uhr.',
+    options: [
+      {
+        label: 'Schwarzen Kasten mit Lämpchen geben',
+        outcomes: [
+          o('jackpot', 'Der Vorstand ist begeistert. Das Internet ist erstaunlich leicht. Bitte nicht fallen lassen.', 0.6),
+          o('loss', 'Er hat es fallen lassen. Der Vorstand glaubt jetzt, das Internet sei kaputt. Kurz glaubst du es auch.', 0.4),
+        ],
+      },
+      { label: 'Erklären, was das Internet ist', outcomes: [o('tip', '40 Minuten Erklärung. Er nickt. Dann fragt er, ob man das ausdrucken kann.')] },
+      { label: 'WLAN-Router mitgeben', outcomes: [o('rush', 'Die Präsentation lief. Das halbe Büro ist offline und ruft nicht mehr an. Herrlich.')] },
+    ],
+    ignore: o('tip', 'Er hat stattdessen ein Foto von Wolken gezeigt. Cloud. Alle waren zufrieden.'),
+  },
+  {
+    id: 'bobby',
+    title: 'Anruf von der Schule',
+    text: 'Die Schulsoftware hat alle Schüler gelöscht. Der neue Schüler heißt laut Anmeldung Robert\'); DROP TABLE Schueler;--',
+    options: [
+      {
+        label: 'Backup einspielen und Eingaben bereinigen',
+        outcomes: [o('win', 'Backup zurück, Eingaben werden jetzt escaped. Hoffentlich lernt die Schule daraus.')],
+      },
+      { label: 'Den Namen verbieten', outcomes: [o('tip', 'Klammern und Semikolons sind in Namen jetzt verboten. Familie O\'Brien ist empört.')] },
+      { label: 'Den kleinen Bobby zum Admin machen', outcomes: [o('flow', 'Der Junge hat Talent. Er findet in einer Stunde 14 weitere Lücken.')] },
+    ],
+    ignore: o('loss', 'Am nächsten Tag heißt eine neue Schülerin \' OR 1=1;--. Alle Zeugnisse: 1,0.'),
+  },
+  {
+    id: 'nebraska',
+    title: 'Die Abhängigkeit aus Nebraska',
+    text: 'Eine winzige Bibliothek, auf der eure gesamte Infrastruktur steht, wird seit 2003 von einer einzigen Person gepflegt. Sie hat gerade aufgehört.',
+    options: [
+      { label: 'Forken und selbst pflegen', outcomes: [o('overtime', 'Glückwunsch. Du bist jetzt die Person in Nebraska.')] },
+      {
+        label: 'Dem Maintainer Geld spenden',
+        outcomes: [
+          o('win', 'Er macht weiter. Für 50 € im Jahr. Du hast das Internet gerettet. Niemand wird es je erfahren.', 0.7),
+          o('tip', 'Er bedankt sich und hört trotzdem auf. Mit 50 € mehr.', 0.3),
+        ],
+      },
+      {
+        label: 'Hoffen, dass nichts passiert',
+        outcomes: [
+          o('none', 'Nichts passiert. Noch.', 0.5),
+          o('fireBig', 'left-pad-Moment: elf Zeilen Code weg, die halbe Welt baut nicht mehr. Deine Firma auch nicht.', 0.5),
+        ],
+      },
+    ],
+    ignore: o('none', 'Niemand hat es gemerkt. Die Bibliothek läuft. Irgendwo in Nebraska seufzt jemand.'),
+  },
+  {
+    id: 'forum',
+    title: 'Gleiches Problem, Forum 2009',
+    text: 'Du findest genau deinen Fehler in einem Forenbeitrag von 2009. Einzige Antwort, vom Fragesteller selbst: „nvm, fixed it“.',
+    options: [
+      {
+        label: 'Den Fragesteller anschreiben',
+        outcomes: [
+          o('jackpot', 'Er antwortet! Nach 17 Jahren. Die Lösung funktioniert. Du musst kurz weinen.', 0.2),
+          o('none', 'Account seit 2011 inaktiv. Du schaust auf die Nachricht wie auf einen alten Brief.', 0.8),
+        ],
+      },
+      { label: 'Selbst lösen und Lösung posten', outcomes: [o('flow', 'Gelöst und gepostet. Irgendwann in der Zukunft dankt dir jemand. Ganz bestimmt.')] },
+      { label: '„Same problem here“ posten', outcomes: [o('tip', 'Du hast „+1“ geschrieben. Hilft niemandem, fühlt sich aber gemeinschaftlich an.')] },
+    ],
+    ignore: o('lossSmall', 'Zwei Stunden selbst gesucht. Es war ein Leerzeichen.'),
+  },
+  {
+    id: 'security',
+    title: 'IT-Sicherheit hat Ideen',
+    text: 'Die IT-Sicherheit will alle USB-Ports mit Heißkleber verschließen. Und die Tastaturen, sicherheitshalber.',
+    options: [
+      { label: 'Zustimmen', outcomes: [o('loss', 'Alle Ports dicht. Auch der für deine Maus. Die Produktivität ist jetzt sehr, sehr sicher.')] },
+      { label: 'Ein Meeting dazu ansetzen', outcomes: [o('tip', 'Das Meeting hat ein Folgemeeting. Die Ports bleiben offen. Sieg durch Bürokratie.')] },
+      { label: 'Risikoanalyse schreiben', outcomes: [o('rush', '40 Seiten Risikoanalyse. Niemand liest sie, alle stimmen dir zu.')] },
+    ],
+    ignore: o('lossSmall', 'Keiner hat widersprochen. Der Heißkleber trocknet gerade.'),
+  },
 ];
 
 /** „!! DRINGEND !!“-Ticket erwischt: Texte je Effekt */
