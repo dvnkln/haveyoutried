@@ -18,7 +18,7 @@ import { Sfx } from './ui/audio';
 import { SysLog } from './ui/log';
 import { showModal } from './ui/modal';
 import { infraTab } from './ui/tabs/infra';
-import { queueTab } from './ui/tabs/queue';
+import { logTab } from './ui/tabs/log';
 import { upgradesTab } from './ui/tabs/upgrades';
 import { systemTab } from './ui/tabs/system';
 import { careerTab } from './ui/tabs/career';
@@ -44,7 +44,7 @@ const saver = new Saver(
 const root = document.getElementById('app');
 if (!root) throw new Error('#app fehlt');
 const ctx = { state, log, saver, sfx, haptic };
-const app = mountApp(root, ctx, [queueTab(), infraTab(), upgradesTab(), careerTab(), systemTab()]);
+const app = mountApp(root, ctx, [logTab(), infraTab(), upgradesTab(), careerTab(), systemTab()]);
 startFlavor(ctx, app);
 mountIncidentOverlay(ctx);
 

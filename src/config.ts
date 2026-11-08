@@ -207,6 +207,8 @@ export const ACHIEVEMENTS_CFG = {
 };
 
 export const CONFIG = {
+  /** Ruhiger Start: so viele Anschläge, bevor der erste Anrufer klingelt und Timer laufen */
+  onboardingClicks: 8,
   /** Fester Logik-Takt */
   tickMs: 100,
   /** Max. Frame-Delta, das der Loop nachholt (Rest regelt Offline-Progress) */

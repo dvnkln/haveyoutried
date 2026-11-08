@@ -1,7 +1,7 @@
 import { CONFIG, GENERATORS, type GeneratorId } from '../../config';
 import { GENERATOR_TEXT, LOCKED_TEXT } from '../../content/generators';
 import { buyGenerator } from '../../core/actions';
-import { generatorDef, generatorProduction, isUnlocked, priceFor } from '../../core/economy';
+import { generatorDef, generatorProduction, isUnlocked, priceFor, unitCost } from '../../core/economy';
 import { BUY_AMOUNTS, type BuyAmount } from '../../core/state';
 import type { AppContext, Tab } from '../app';
 import { h, juice, setDisabled, setFlag, setText, SHAKE } from '../dom';
@@ -133,6 +133,11 @@ export function infraTab(): Tab {
       const showTeaser = firstLocked !== null;
       if (teaser.hidden === showTeaser) teaser.hidden = !showTeaser;
       if (firstLocked) setText(teaserCost, formatNumber(generatorDef(firstLocked).baseCost * CONFIG.unlockAtFraction));
+    },
+    /** Punkt am Icon: mindestens ein freigeschalteter Generator ist bezahlbar */
+    badge() {
+      const s = ctx.state;
+      return GENERATORS.some((g) => isUnlocked(s, g.id) && unitCost(g.baseCost, s.generators[g.id].owned) <= s.tickets);
     },
   };
 }

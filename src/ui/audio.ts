@@ -360,6 +360,16 @@ export class Sfx {
     this.tone('square', 150, 95, r.t, 0.14, 0.16, lp);
   }
 
+  /** Gummiente: Quietschen, hoch und wieder runter. */
+  squeak(): void {
+    const r = this.ready();
+    const lp = this.lowpass(2600);
+    if (!r || !lp) return;
+    const p = this.rnd(0.9, 1.15);
+    this.tone('triangle', 900 * p, 1500 * p, r.t, 0.12, 0.09, lp, 0.01);
+    this.tone('triangle', 1500 * p, 800 * p, r.t + 0.09, 0.1, 0.14, lp, 0.005);
+  }
+
   /** Umschalten (Tabs, Einstellungen): leises Tick. */
   tick(): void {
     const r = this.ready();

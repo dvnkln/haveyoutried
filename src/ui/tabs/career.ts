@@ -12,10 +12,17 @@ import { showModal } from '../modal';
 
 const pct = (x: number) => `${Math.round(x * 100)} %`;
 
+type AchFilter = 'new' | 'done' | 'open';
+const FILTER_LABEL: Record<AchFilter, string> = { new: 'Neu', done: 'Geschafft', open: 'Offen' };
+/** Zeitpunkt, bis zu dem Achievements angeschaut wurden (im Spielstand, damit „neu“ ein Neuladen übersteht) */
+const SEEN_FLAG = 'ach:seen';
+
 /** Prestige („Kündigen“) und Achievements. */
 export function careerTab(): Tab {
   let ctx: AppContext;
-  let seenAchievements = 0;
+  /** Achievements, die seit diesem Zeitpunkt dazukamen, gelten in dieser Ansicht als „neu“ */
+  let viewSince = 0;
+  let filter: AchFilter = 'open';
 
   const company = h('dd');
   const jobs = h('dd');
@@ -25,7 +32,22 @@ export function careerTab(): Tab {
   const quitBtn = h('button', { class: 'btn btn-danger quit-btn', type: 'button', text: 'Kündigen' });
   const quitHint = h('p', { class: 'hint' });
 
-  const achTitle = h('div', { class: 'section-title' });
+  const achTitle = h('div', { class: 'section-title', text: '# Achievements' });
+  const achSummary = h('div', { class: 'ach-summary' });
+  const achFill = h('span', { class: 'ach-progress-fill' });
+  const achProgress = h('div', { class: 'ach-progress', 'aria-hidden': 'true' }, [achFill]);
+  const chips = (['new', 'done', 'open'] as const).map((f) => {
+    const count = h('span', { class: 'chip-count' });
+    const el = h('button', { class: `ach-chip chip-${f}`, type: 'button', 'aria-pressed': 'false' }, [FILTER_LABEL[f], count]);
+    el.addEventListener('click', () => {
+      filter = f;
+      ctx.sfx.tick();
+      rebuildAchievements();
+    });
+    return { f, el, count };
+  });
+  const achFilter = h('div', { class: 'ach-filter', role: 'group', 'aria-label': 'Achievements filtern' }, chips.map((c) => c.el));
+  const achEmpty = h('p', { class: 'hint ach-empty', hidden: '' });
   const achList = h('ul', { class: 'achievements' });
   let achShown = -1;
 
@@ -70,17 +92,39 @@ export function careerTab(): Tab {
   const rebuildAchievements = () => {
     const s = ctx.state;
     const n = achievementCount(s);
-    setText(achTitle, `# Achievements (${n}/${ACHIEVEMENTS.length}) · +${pct(achievementMultiplier(s) - 1)} auf alles`);
+    const isNew = (id: string) => (s.achievements[id] ?? 0) > viewSince;
+    const counts = { new: 0, done: n, open: ACHIEVEMENTS.length - n };
+    for (const a of ACHIEVEMENTS) if (isNew(a.id)) counts.new++;
+    if (filter === 'new' && counts.new === 0) filter = 'open';
+
+    setText(achSummary, `${n} von ${ACHIEVEMENTS.length} geschafft · +${pct(achievementMultiplier(s) - 1)} auf alles`);
+    achFill.style.width = `${(n / ACHIEVEMENTS.length) * 100}%`;
+    for (const c of chips) {
+      setText(c.count, String(counts[c.f]));
+      c.el.hidden = c.f === 'new' && counts.new === 0;
+      c.el.classList.toggle('active', c.f === filter);
+      c.el.setAttribute('aria-pressed', String(c.f === filter));
+    }
+    achEmpty.hidden = counts[filter] > 0;
+    setText(achEmpty, filter === 'open' ? 'Alles geschafft. Zeit für Urlaub. (Abgelehnt.)' : 'Noch nichts. Weiter tippen.');
+
     achList.replaceChildren(
       ...ACHIEVEMENTS.map((a) => {
-        const done = !!s.achievements[a.id];
+        const at = s.achievements[a.id];
+        const done = !!at;
+        const fresh = isNew(a.id);
         const secret = a.hidden && !done;
-        return h('li', { class: `ach${done ? ' done' : ''}${secret ? ' secret' : ''}` }, [
-          h('span', { class: 'ach-mark', text: done ? '[x]' : '[ ]' }),
+        const show = filter === 'new' ? fresh : filter === 'done' ? done : !done;
+        return h('li', { class: `ach${done ? ' done' : ''}${secret ? ' secret' : ''}${fresh ? ' new' : ''}`, hidden: show ? undefined : '' }, [
+          h('span', { class: 'ach-mark', 'aria-hidden': 'true', text: done ? '★' : secret ? '?' : '○' }),
+          // Status für Screenreader (das Symbol ist nur Deko)
+          h('span', { class: 'sr-only', text: done ? (fresh ? 'Neu geschafft:' : 'Geschafft:') : secret ? 'Geheim, offen:' : 'Offen:' }),
           h('span', { class: 'ach-body' }, [
             h('span', { class: 'ach-name', text: secret ? '??? (geheim)' : a.name }),
             h('span', { class: 'ach-desc', text: secret ? 'Wird verraten, wenn es passiert.' : a.desc }),
+            done ? h('span', { class: 'ach-date', text: `am ${new Date(at).toLocaleDateString('de-DE')}` }) : '',
           ]),
+          fresh ? h('span', { class: 'ach-new', text: 'NEU' }) : '',
         ]);
       }),
     );
@@ -92,7 +136,9 @@ export function careerTab(): Tab {
     icon: '[★]',
     mount(c) {
       ctx = c;
-      seenAchievements = achievementCount(c.state); // Badge nur für wirklich Neues
+      // Ältere Spielstände: alles bisher Freigeschaltete gilt als gesehen
+      c.state.flags[SEEN_FLAG] ??= Date.now();
+      viewSince = c.state.flags[SEEN_FLAG];
       quitBtn.addEventListener('click', confirmQuit);
       return h('div', { class: 'system career' }, [
         h('div', { class: 'section-title', text: '# Lebenslauf' }),
@@ -111,6 +157,10 @@ export function careerTab(): Tab {
         quitBtn,
         quitHint,
         achTitle,
+        achSummary,
+        achProgress,
+        achFilter,
+        achEmpty,
         achList,
       ]);
     },
@@ -140,10 +190,16 @@ export function careerTab(): Tab {
       }
     },
     onShow() {
-      seenAchievements = achievementCount(ctx.state);
+      // „Neu“ = seit dem letzten Besuch; ab jetzt gilt alles als gesehen
+      const s = ctx.state;
+      viewSince = s.flags[SEEN_FLAG] ?? 0;
+      s.flags[SEEN_FLAG] = Date.now();
+      filter = Object.values(s.achievements).some((t) => t > viewSince) ? 'new' : 'open';
+      achShown = -1;
     },
     badge() {
-      return achievementCount(ctx.state) > seenAchievements;
+      const seen = ctx.state.flags[SEEN_FLAG] ?? 0;
+      return Object.values(ctx.state.achievements).some((t) => t > seen);
     },
   };
 }

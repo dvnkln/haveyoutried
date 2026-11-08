@@ -40,16 +40,12 @@ const reduceMotionQuery =
 export const reducedMotion = () => reduceMotionQuery?.matches ?? false;
 
 /** Kurze Effekt-Animation, entfällt bei reduced motion. */
-export function juice(el: Element, keyframes: Keyframe[], ms = 220): void {
+export function juice(el: Element, keyframes: Keyframe[], ms = 220, additive = false): void {
   if (reducedMotion() || typeof el.animate !== 'function') return;
-  el.animate(keyframes, { duration: ms, easing: 'cubic-bezier(.2,.8,.3,1.4)' });
+  // additive: auf das bestehende CSS-transform aufsetzen (z. B. gedrehte Post-its) statt es zu ersetzen
+  el.animate(keyframes, { duration: ms, easing: 'cubic-bezier(.2,.8,.3,1.4)', composite: additive ? 'add' : 'replace' });
 }
 
-export const SQUASH: Keyframe[] = [
-  { transform: 'scale(1)' },
-  { transform: 'scale(.94, .9)' },
-  { transform: 'scale(1)' },
-];
 export const POP: Keyframe[] = [
   { transform: 'scale(1)' },
   { transform: 'scale(1.18)' },

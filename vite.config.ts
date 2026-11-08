@@ -1,4 +1,5 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { sep } from 'node:path';
 import { createHash } from 'node:crypto';
 import type { Plugin } from 'vite';
 import { defineConfig } from 'vitest/config';
@@ -16,9 +17,11 @@ function serviceWorker(): Plugin {
         hash.update(name).update(out.type === 'chunk' ? out.code : out.source);
         if (name !== 'index.html') files.add(`./${name}`);
       }
-      for (const name of readdirSync('public')) {
-        hash.update(name).update(readFileSync(`public/${name}`));
-        files.add(`./${name}`);
+      for (const name of readdirSync('public', { recursive: true, encoding: 'utf8' }).sort()) {
+        const path = `public/${name}`;
+        if (statSync(path).isDirectory() || name.endsWith('.txt')) continue;
+        hash.update(name).update(readFileSync(path));
+        files.add(`./${name.split(sep).join('/')}`);
       }
       const list = [...files].sort();
       const version = hash.digest('hex').slice(0, 12);

@@ -14,7 +14,9 @@ test('Kern-Loop: tippen, kaufen, produzieren, speichern', async ({ page }) => {
 
   await page.goto('/');
   await expect(page.locator('.close-btn')).toBeVisible();
-  await expect(page.locator('.log .line').first()).toBeVisible();
+  // Log läuft im Hintergrund mit (App „Log“), auf dem Desktop steht das Arbeitsfenster
+  await expect(page.locator('.log .line').first()).toBeAttached();
+  await expect(page.locator('.work')).toBeVisible();
 
   // Button liegt in der unteren Bildschirmhälfte (Daumenzone)
   const box = (await page.locator('.close-btn').boundingBox())!;
@@ -25,7 +27,7 @@ test('Kern-Loop: tippen, kaufen, produzieren, speichern', async ({ page }) => {
   await expect(page.locator('.last-closed')).toContainText('#INC-004731');
   await shot(page, '1-queue');
 
-  await page.getByRole('tab', { name: /Infra/ }).tap();
+  await page.getByRole('button', { name: /Infra/ }).tap();
   const buy = page.locator('button.buy[data-gen="intern"]');
   await expect(buy).toBeEnabled();
   await buy.tap();
@@ -36,13 +38,16 @@ test('Kern-Loop: tippen, kaufen, produzieren, speichern', async ({ page }) => {
   await expect(page.locator('.gen-locked')).toBeVisible();
   await shot(page, '2-infra');
 
-  await page.getByRole('tab', { name: /System/ }).tap();
+  // App-Fenster schließen, dann die nächste App vom Desktop öffnen
+  await page.locator('.sheet-close').tap();
+  await expect(page.locator('.sheet')).toBeHidden();
+  await page.getByRole('button', { name: /System/ }).tap();
   await expect(page.locator('#panel-system .stats')).toContainText('Von Hand geschlossen');
   await shot(page, '3-system');
 
   // Reload: Stand bleibt (pagehide-Save)
   await page.reload();
-  await page.getByRole('tab', { name: /Infra/ }).tap();
+  await page.getByRole('button', { name: /Infra/ }).tap();
   await expect(page.locator('.gen[data-gen="intern"] .gen-owned')).toHaveText('×1');
   expect(errors).toEqual([]);
 });
@@ -80,19 +85,23 @@ test('Upgrades: Badge, Kauf, Wirkung; Sound-Schalter', async ({ page, context })
   }, JSON.stringify(save));
 
   await page.goto('/');
-  const tab = page.getByRole('tab', { name: /Upgrades/ });
+  const tab = page.getByRole('button', { name: /Upgrades/ });
   await expect(tab).toHaveClass(/has-badge/);
+  // Upgrades stehen sichtbar auf dem Schreibtisch: vor dem Kauf kein Kaffeebecher
+  await expect(page.locator('.mug')).toBeHidden();
   await tab.tap();
   await page.locator('button[data-upgrade="coffee"]').tap();
   await expect(page.locator('.upgrades-done')).toContainText('Kaffeemaschine');
   await shot(page, '5-upgrades');
 
-  await page.getByRole('tab', { name: /Queue/ }).tap();
+  // Fenster zu, zurück an die Tastatur
+  await page.locator('.sheet-close').tap();
+  await expect(page.locator('.mug')).toBeVisible();
   await page.locator('.close-btn').tap();
   // Kaffeemaschine: ein Klick = 2 Tickets
   await expect(page.locator('.floater').last()).toHaveText('+2');
 
-  await page.getByRole('tab', { name: /System/ }).tap();
+  await page.getByRole('button', { name: /System/ }).tap();
   const sound = page.getByRole('switch', { name: 'Sound' });
   await sound.tap();
   await expect(sound).toHaveAttribute('aria-checked', 'false');
@@ -108,7 +117,7 @@ test('Layout bleibt bildschirmbreit, auch bei langen Texten', async ({ page }) =
     document.querySelector('.last-closed')!.textContent = '#INC-004769 → ' + 'Bekanntes Problem, Fix kommt im nächsten Release '.repeat(3);
     document.querySelector('.counter-value')!.textContent = '999.99e123';
     document.querySelector('.caller-who')!.textContent = 'X'.repeat(80);
-    const navs = [...document.querySelectorAll('.nav-btn')];
+    const navs = [...document.querySelectorAll('.app-icon')];
     return {
       vw: document.documentElement.clientWidth,
       sw: document.documentElement.scrollWidth,
@@ -309,7 +318,7 @@ test('Karriere: kündigen, neue Firma, Achievement-Toast', async ({ page, contex
 
   await page.goto('/');
   await expect(page.locator('.prompt-user')).toHaveText('root@mueller-spedition');
-  await page.getByRole('tab', { name: /Karriere/ }).tap();
+  await page.getByRole('button', { name: /Karriere/ }).tap();
   await expect(page.locator('.career')).toContainText('+10');
   await shot(page, 'career-1');
   await page.getByRole('button', { name: 'Kündigen', exact: true }).tap();
@@ -326,5 +335,47 @@ test('Karriere: kündigen, neue Firma, Achievement-Toast', async ({ page, contex
   expect(await page.locator('.ach.done').count()).toBeGreaterThanOrEqual(2);
   const width = await page.evaluate(() => document.documentElement.scrollWidth);
   expect(width).toBeLessThanOrEqual(360);
+  expect(errors).toEqual([]);
+});
+
+test('Tastatur: jede Taste zählt, auch Sondertasten und physische Tasten; Ente zählt nicht', async ({ page, context }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  // Rubber Duck gekauft: steht dann auf dem Tisch
+  const save = { version: 1, tickets: 0, ticketsTotal: 0, clicks: 0, upgrades: { duck: true }, lastTick: Date.now() };
+  await context.addInitScript((json) => {
+    if (!sessionStorage.getItem('seeded')) {
+      localStorage.setItem('hyt.save', json);
+      sessionStorage.setItem('seeded', '1');
+    }
+  }, JSON.stringify(save));
+  await page.goto('/');
+
+  // verschiedene Tasten, auch Sondertasten und die Kaugummi-Taste
+  for (const k of ['Q', 'A', 'CAPSLOCK', 'B', ' ', 'F4', 'ENTER']) await page.locator(`.key[data-key="${k}"]`).tap();
+  await expect(page.locator('.counter-value')).toHaveText('7');
+  await expect(page.locator('.typed')).toHaveText(''); // Enter schickt ab
+
+  // Tippen schreibt eine echte Antwort ins Arbeitsfenster (Mail, Ticket oder Terminal)
+  for (const k of ['W', 'E']) await page.locator(`.key[data-key="${k}"]`).tap();
+  await expect(page.locator('.typed')).toHaveText(/^.{4,}$/);
+  await expect(page.locator('.work')).toHaveAttribute('data-kind', /mail|ticket|term/);
+
+  // physische Tastatur (Desktop): Buchstaben und unbekannte Zeichen zählen, Auto-Repeat nicht
+  await page.locator('body').press('x');
+  await page.locator('body').press('7');
+  await expect(page.locator('.counter-value')).toHaveText('11');
+  await page.dispatchEvent('body', 'keydown', { key: 'x', repeat: true });
+  await expect(page.locator('.counter-value')).toHaveText('11');
+
+  // Treffer zwischen die Tasten bzw. auf den Rahmen zählt auch (ganze Tastatur ist Tippfläche)
+  const kb = (await page.locator('.keyboard').boundingBox())!;
+  await page.touchscreen.tap(kb.x + 3, kb.y + 3);
+  await expect(page.locator('.counter-value')).toHaveText('12');
+
+  // Gummiente quietscht nur
+  await page.locator('.duck').tap();
+  await expect(page.locator('.counter-value')).toHaveText('12');
+  await expect(page.locator('.log .line').last()).toContainText('duckd');
   expect(errors).toEqual([]);
 });
