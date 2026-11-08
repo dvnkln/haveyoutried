@@ -1,4 +1,5 @@
 import { INCIDENTS } from '../../config';
+import { progressScore } from '../../core/incidents';
 import { PATCH_DEPARTMENTS } from '../../content/incidents';
 import { shuffle } from '../../util';
 import { h, juice, SHAKE, setText } from '../dom';
@@ -33,8 +34,9 @@ export class PatchSim {
     return this.connected.size >= this.cables;
   }
 
+  /** Es werden nur passende Paare gespeichert (links === rechts) */
   isRightTaken(right: string): boolean {
-    return [...this.connected.values()].includes(right);
+    return this.connected.has(right);
   }
 
   connect(left: string, right: string): PatchResult {
@@ -53,7 +55,7 @@ export class PatchSim {
   }
 
   score(): number {
-    return (this.connected.size / this.cables) * Math.max(0.4, 1 - this.wrong * 0.1);
+    return progressScore(this.connected.size, this.cables, this.wrong);
   }
 }
 
@@ -126,6 +128,10 @@ export function patchGame(): Minigame {
       api.penalize(CFG.uplinkPenaltyMs);
       juice(rightEl, SHAKE, 300);
       setText(info, 'Spanning Tree sagt nein. Broadcast-Sturm im ganzen Haus. Kabel schnell wieder raus.');
+    } else if (res === 'taken') {
+      api.sfx.tick();
+      juice(rightEl, SHAKE, 200);
+      setText(info, `Gi-Port VLAN ${vlanOf(right)} ist schon belegt. Ein Kabel pro Port, auch hier.`);
     } else if (res === 'wrong') {
       api.sfx.error();
       api.haptic('error');
@@ -151,6 +157,8 @@ export function patchGame(): Minigame {
           e.preventDefault();
           select(dept);
           dragging = true;
+          // pointerup kommt so immer hier an (bubbelt zum Board), auch außerhalb
+          el.setPointerCapture(e.pointerId);
         });
         // Tastatur (Enter/Space): auswählen, dann Switch-Port wählen
         el.addEventListener('click', (e) => {
@@ -162,13 +170,13 @@ export function patchGame(): Minigame {
 
       sim.right.forEach((dept, i) => {
         const uplink = dept === UPLINK;
-        const el = h('button', { class: `port port-right${uplink ? ' uplink' : ''}`, type: 'button' }, [
+        const el = h('button', { class: `port port-right${uplink ? ' uplink' : ''}`, type: 'button', 'data-dept': dept }, [
           h('span', { class: 'port-id', text: uplink ? 'Te1/1/1' : `Gi1/0/${3 + i * 2}` }),
           h('span', { class: 'port-label', text: uplink ? 'UPLINK – NICHT ANFASSEN' : `VLAN ${vlanOf(dept)}` }),
         ]);
         // Antippen nach Auswahl links (Tap-Tap)
         el.addEventListener('click', () => {
-          if (selected) tryConnect(dept);
+          if (selected && !dragging) tryConnect(dept);
         });
         rightEls.set(dept, el);
         rightCol.append(el);
@@ -186,8 +194,8 @@ export function patchGame(): Minigame {
         if (!dragging) return;
         dragging = false;
         temp.setAttribute('d', '');
-        const target = document.elementFromPoint(e.clientX, e.clientY)?.closest('.port-right');
-        const dept = [...rightEls].find(([, el]) => el === target)?.[0];
+        const target = document.elementFromPoint(e.clientX, e.clientY)?.closest<HTMLElement>('.port-right');
+        const dept = target?.dataset.dept;
         if (dept) tryConnect(dept);
       };
       board.addEventListener('pointermove', move);
@@ -199,6 +207,7 @@ export function patchGame(): Minigame {
 
       svg.append(temp);
       board.append(leftCol, rightCol, svg);
+      if (typeof ResizeObserver !== 'undefined') new ResizeObserver(() => drawCables()).observe(board);
       root.append(h('div', { class: 'patch' }, [board, info]));
     },
     update() {

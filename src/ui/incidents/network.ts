@@ -1,4 +1,5 @@
 import { INCIDENTS } from '../../config';
+import { progressScore } from '../../core/incidents';
 import { NET_DISTRACTORS, NET_SCENARIOS, type NetScenario } from '../../content/incidents';
 import { pick, shuffle } from '../../util';
 import { h, juice, SHAKE, setText } from '../dom';
@@ -15,7 +16,7 @@ export class NetworkSim {
   wrong = 0;
 
   constructor(rnd: () => number = Math.random) {
-    this.scenario = NET_SCENARIOS[Math.floor(rnd() * NET_SCENARIOS.length)]!;
+    this.scenario = pick(NET_SCENARIOS, rnd);
   }
 
   get total(): number {
@@ -40,7 +41,7 @@ export class NetworkSim {
   }
 
   score(): number {
-    return (this.progress / this.total) * Math.max(0.4, 1 - this.wrong * 0.1);
+    return progressScore(this.progress, this.total, this.wrong);
   }
 }
 
@@ -65,8 +66,9 @@ export function networkGame(): Minigame {
   return {
     mount(root, gameApi) {
       api = gameApi;
-      say('err', 'admin-pc:~$ ping 10.0.0.1');
-      say('err', 'connect: Network is unreachable');
+      const [cmd, out] = sim.scenario.intro;
+      say('cmd', cmd);
+      say('err', out);
 
       const buttons = shuffle([
         ...sim.scenario.steps.map((s) => ({ id: s.id, label: s.label })),
@@ -86,12 +88,12 @@ export function networkGame(): Minigame {
             el.classList.add('done');
             el.disabled = true;
             say('cmd', `$ ${step.label}`);
-            say('ok', step.output);
+            say(step.finding ? 'err' : 'ok', step.output);
             setText(reply, '');
             api.sfx.tap();
             api.haptic('tap');
             if (sim.done) {
-              say('ok', '64 bytes from 10.0.0.1: icmp_seq=1 ttl=64 time=0.4 ms');
+              say('ok', `${sim.scenario.intro[0]} → läuft wieder.`);
               api.sfx.good();
               api.finish();
             }

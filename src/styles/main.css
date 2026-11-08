@@ -1305,6 +1305,8 @@ button {
   color: var(--green);
 }
 .grep-log {
+  /* Wischen auf dem Log scrollt nicht (sonst zählt das Ansetzen als Fehlgriff) */
+  touch-action: none;
   display: flex;
   flex-direction: column;
   gap: 3px;
@@ -1493,4 +1495,15 @@ button {
   min-height: 2.8em;
   font-size: var(--fs-small);
   color: var(--amber);
+}
+
+@media (max-height: 700px) {
+  .grep-line {
+    min-height: 32px;
+    padding: 2px 6px;
+    font-size: 11px;
+  }
+  .inc-goal {
+    font-size: 11px;
+  }
 }

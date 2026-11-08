@@ -124,6 +124,8 @@ export const INCIDENTS = {
   returnDelayMs: 20_000,
   /** läuft gerade ein Pager-Event, wird so lange verschoben */
   retryMs: 30_000,
+  /** Wertung der Spiele: Fortschritt × max(floor, 1 − Fehlgriffe × mistakePenalty) */
+  scoring: { mistakePenalty: 0.1, floor: 0.4 },
   /** Score → Effekte (aus EVENT_EFFECTS), erste passende Stufe gilt */
   rewards: [
     { min: 0.95, effects: ['win', 'flow'] },
@@ -161,7 +163,7 @@ export const INCIDENTS = {
       intervalStartMs: 800,
       intervalEndMs: 450,
       /** Nachsicht: kurz nach dem Nachrücken zählt die Zeile unter dem Fehler auch als Treffer */
-      shiftGraceMs: 350,
+      shiftGraceMs: 200,
       /** sichtbare Zeilen; fällt der Fehler oben raus, ist er verpasst */
       window: 9,
       /** Störzeilen vor dem echten Fehler (min..max) */

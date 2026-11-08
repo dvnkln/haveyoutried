@@ -238,21 +238,26 @@ export interface NetStep {
   label: string;
   /** Terminal-Ausgabe, wenn der Schritt dran war */
   output: string;
+  /** Ausgabe zeigt einen Befund (Fehler gefunden), kein Erfolg */
+  finding?: boolean;
 }
 
 export interface NetScenario {
   id: string;
+  /** Terminal-Ausgabe zu Beginn, passend zur Ursache */
+  intro: [string, string];
   steps: NetStep[];
 }
 
-const step = (id: string, label: string, output: string): NetStep => ({ id, label, output });
+const step = (id: string, label: string, output: string, finding = false): NetStep => ({ id, label, output, finding });
 
 /** Mögliche Ursachen, jeweils die richtige Reihenfolge von unten nach oben */
 export const NET_SCENARIOS: NetScenario[] = [
   {
     id: 'cable',
+    intro: ['admin-pc:~$ ping 10.0.0.1', 'connect: Network is unreachable'],
     steps: [
-      step('cable', 'Kabel prüfen', 'Kabel hängt lose raus. Spuren vom Staubsauger.'),
+      step('cable', 'Kabel prüfen', 'Kabel hängt lose raus. Spuren vom Staubsauger.', true),
       step('plug', 'Kabel einstecken', '*klick*'),
       step('led', 'Link-LED prüfen', 'Link up, 1000 Mbit/s full duplex'),
       step('gw', 'Gateway anpingen', '64 bytes from 10.0.0.1: time=0.4 ms'),
@@ -260,22 +265,24 @@ export const NET_SCENARIOS: NetScenario[] = [
   },
   {
     id: 'dhcp',
+    intro: ['admin-pc:~$ ping 10.0.0.1', 'connect: Network is unreachable'],
     steps: [
       step('cable', 'Kabel prüfen', 'Kabel steckt.'),
       step('led', 'Link-LED prüfen', 'Link up.'),
-      step('ip', 'IP-Adresse prüfen', 'inet 169.254.13.37 – das ist APIPA. Kein DHCP.'),
+      step('ip', 'IP-Adresse prüfen', 'inet 169.254.13.37 – das ist APIPA. Kein DHCP.', true),
       step('dhcp', 'DHCP erneuern', 'DHCPACK: 10.0.0.42/24, gw 10.0.0.1'),
       step('gw', 'Gateway anpingen', '64 bytes from 10.0.0.1: time=0.5 ms'),
     ],
   },
   {
     id: 'dns',
+    intro: ['admin-pc:~$ ping intranet.firma.de', 'ping: intranet.firma.de: Temporary failure in name resolution'],
     steps: [
       step('cable', 'Kabel prüfen', 'Kabel steckt.'),
       step('led', 'Link-LED prüfen', 'Link up.'),
       step('ip', 'IP-Adresse prüfen', 'inet 10.0.0.42/24 – passt.'),
       step('gw', 'Gateway anpingen', '64 bytes from 10.0.0.1: time=0.4 ms'),
-      step('dns', 'DNS testen (nslookup)', ';; connection timed out; no servers could be reached'),
+      step('dns', 'DNS testen (nslookup)', ';; connection timed out; no servers could be reached', true),
       step('dnsfix', 'DNS-Server eintragen', 'nameserver 10.0.0.53 – Auflösung klappt. Es war DNS.'),
     ],
   },

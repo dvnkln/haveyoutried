@@ -1,4 +1,6 @@
 import { INCIDENTS } from '../../config';
+import { progressScore } from '../../core/incidents';
+import { pick, randInt } from '../../util';
 import { LOG_DECOYS, LOG_TARGETS } from '../../content/incidents';
 import { h, juice, SHAKE } from '../dom';
 import type { GameApi, Minigame } from './types';
@@ -46,7 +48,7 @@ export class LogGrepSim {
   }
 
   private decoyCount(): number {
-    return this.cfg.decoysMin + Math.floor(this.rnd() * (this.cfg.decoysMax - this.cfg.decoysMin + 1));
+    return randInt(this.cfg.decoysMin, this.cfg.decoysMax, this.rnd);
   }
 
   private interval(): number {
@@ -55,7 +57,7 @@ export class LogGrepSim {
   }
 
   private pickText(pool: readonly string[]): string {
-    return pool[Math.floor(this.rnd() * pool.length)]!;
+    return pick(pool, this.rnd);
   }
 
   private push(): void {
@@ -109,14 +111,14 @@ export class LogGrepSim {
   }
 
   score(): number {
-    return (this.found / this.cfg.rounds) * Math.max(0.4, 1 - this.wrong * 0.1);
+    return progressScore(this.found, this.cfg.rounds, this.wrong);
   }
 }
 
 export function logGrepGame(): Minigame {
   const sim = new LogGrepSim();
   let api: GameApi | null = null;
-  const list = h('div', { class: 'grep-log', role: 'list' });
+  const list = h('div', { class: 'grep-log', role: 'region', 'aria-label': 'app.log' });
   const rendered = new Map<number, HTMLButtonElement>();
   const fixed = new Set<number>();
 
@@ -130,7 +132,7 @@ export function logGrepGame(): Minigame {
     }
     for (const line of sim.lines) {
       if (rendered.has(line.id)) continue;
-      const el = h('button', { class: 'grep-line', type: 'button', role: 'listitem', text: line.text });
+      const el = h('button', { class: 'grep-line', type: 'button', text: line.text });
       const level = line.text.slice(0, 5).trim();
       el.dataset.level = level.toLowerCase();
       const hit = () => {

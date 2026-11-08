@@ -259,3 +259,28 @@ test('Patchkabel: Antippen-Antippen und Ziehen verbinden, Uplink straft', async 
   await expect(page.locator('.nag-recovery')).toBeVisible();
   expect(errors).toEqual([]);
 });
+
+test('Patchkabel: Ziehen und außerhalb loslassen hängt nicht, Fehlklick zählt einfach', async ({ page }) => {
+  await page.clock.install();
+  await page.goto('/?incident=patch');
+  await page.clock.runFor(4_000);
+  await page.locator('.nag-take').click();
+  await page.clock.runFor(3_200);
+
+  const left = page.locator('.port-left').first();
+  const a = (await left.boundingBox())!;
+  await page.mouse.move(a.x + a.width / 2, a.y + a.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(a.x + a.width / 2, 5, { steps: 4 }); // nach oben aus dem Board raus
+  await page.mouse.up();
+  await expect(page.locator('.patch-temp')).toHaveAttribute('d', '');
+
+  // falscher Port: genau ein Fehlgriff
+  const dept = (await left.locator('.port-label').textContent())!;
+  const vlan = PATCH_DEPARTMENTS.find((d) => d.name === dept)!.vlan;
+  const wrong = page.locator('.port-right:not(.uplink)').filter({ hasNotText: `VLAN ${vlan}` }).first();
+  await left.click();
+  await wrong.click();
+  await page.clock.runFor(200);
+  await expect(page.locator('.inc-status')).toContainText('Fehlgriffe: 1');
+});

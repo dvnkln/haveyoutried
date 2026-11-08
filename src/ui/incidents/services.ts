@@ -1,4 +1,5 @@
 import { INCIDENTS } from '../../config';
+import { progressScore } from '../../core/incidents';
 import { NOISE_WARNINGS, ROOT_CAUSES, SERVICES, type ServiceDef } from '../../content/incidents';
 import { weightedPick } from '../../util';
 import { h, juice, SHAKE, setText } from '../dom';
@@ -95,7 +96,7 @@ export class ServicesSim {
   }
 
   score(): number {
-    return (this.solved / this.rounds) * Math.max(0.4, 1 - this.wrong * 0.1);
+    return progressScore(this.solved, this.rounds, this.wrong);
   }
 }
 

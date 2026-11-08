@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { INCIDENTS } from '../../src/config';
 import { LOG_DECOYS, LOG_TARGETS, NET_DISTRACTORS, NET_SCENARIOS, PATCH_DEPARTMENTS } from '../../src/content/incidents';
-import { isSolved } from '../../src/core/incidents';
+import { isSolved, progressScore } from '../../src/core/incidents';
 import { LogGrepSim } from '../../src/ui/incidents/loggrep';
 import { NetworkSim } from '../../src/ui/incidents/network';
 import { PatchSim, UPLINK } from '../../src/ui/incidents/patch';
@@ -92,6 +92,18 @@ describe('Netzwerkausfall', () => {
     expect(sim.wrong).toBe(2);
   });
 
+  it('Einstieg passt zur Ursache, jedes Szenario hat einen Befund', () => {
+    for (const sc of NET_SCENARIOS) {
+      expect(sc.steps.some((st) => st.finding)).toBe(true);
+      if (sc.id === 'dns') {
+        expect(sc.intro[1]).toMatch(/name resolution/);
+        expect(sc.steps.find((st) => st.id === 'gw')!.finding).toBeFalsy();
+      } else {
+        expect(sc.intro[1]).toMatch(/unreachable/);
+      }
+    }
+  });
+
   it('Szenarien beginnen bei Layer 1, IDs eindeutig, keine Überschneidung mit Ablenkungen', () => {
     const distractors = new Set(NET_DISTRACTORS.map((d) => d.id));
     for (const sc of NET_SCENARIOS) {
@@ -124,8 +136,25 @@ describe('Patchkabel', () => {
     expect(sim.uplinkHits).toBe(1);
   });
 
+  it('belegter Port meldet „taken“ und zählt nicht als Fehlgriff', () => {
+    const sim = new PatchSim();
+    const [a, b] = sim.left as [string, string];
+    sim.connect(a, a);
+    expect(sim.connect(b, a)).toBe('taken');
+    expect(sim.wrong).toBe(0);
+  });
+
   it('genug Abteilungen mit eindeutigen VLANs', () => {
     expect(PATCH_DEPARTMENTS.length).toBeGreaterThanOrEqual(INCIDENTS.games.patch.cables);
     expect(new Set(PATCH_DEPARTMENTS.map((d) => d.vlan)).size).toBe(PATCH_DEPARTMENTS.length);
+  });
+});
+
+describe('Gemeinsame Wertung', () => {
+  it('Fortschritt mal Fehlerabzug mit Untergrenze', () => {
+    expect(progressScore(5, 5, 0)).toBe(1);
+    expect(progressScore(5, 5, 2)).toBeCloseTo(0.8);
+    expect(progressScore(5, 5, 50)).toBeCloseTo(INCIDENTS.scoring.floor);
+    expect(progressScore(0, 0, 0)).toBe(0);
   });
 });

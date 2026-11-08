@@ -1,12 +1,12 @@
-export function pick<T>(items: readonly T[]): T {
-  const item = items[Math.floor(Math.random() * items.length)];
+export function pick<T>(items: readonly T[], rnd: () => number = Math.random): T {
+  const item = items[Math.floor(rnd() * items.length)];
   if (item === undefined) throw new Error('pick() on empty list');
   return item;
 }
 
 /** Ganzzahl in [min, max] */
-export function randInt(min: number, max: number): number {
-  return min + Math.floor(Math.random() * (max - min + 1));
+export function randInt(min: number, max: number, rnd: () => number = Math.random): number {
+  return min + Math.floor(rnd() * (max - min + 1));
 }
 
 export function fill(template: string, vars: Record<string, string | number>): string {

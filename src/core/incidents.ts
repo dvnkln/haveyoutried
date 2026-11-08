@@ -15,6 +15,12 @@ export const incidentRunning = (): IncidentId | null => running;
 
 export const isIncidentId = (id: string): id is IncidentId => (INCIDENT_IDS as readonly string[]).includes(id);
 
+/** Gemeinsame Wertung der Minispiele: Fortschritt, abgezogen für Fehlgriffe (mit Untergrenze). */
+export function progressScore(done: number, total: number, wrong: number): number {
+  const { mistakePenalty, floor } = INCIDENTS.scoring;
+  return total > 0 ? (done / total) * Math.max(floor, 1 - wrong * mistakePenalty) : 0;
+}
+
 /** Gilt dieser Score als gelöst? (eine Quelle für Karte, Log und Belohnung) */
 export const isSolved = (score: number): boolean => score >= INCIDENTS.goodMin;
 
