@@ -1,7 +1,8 @@
 import { CONFIG, SOLVE, type GeneratorId } from '../config';
 import { bus } from './bus';
 import { isUpgradeUnlocked, pressPpsFraction, priceFor, productionPerSec, tempo, ticketReward, upgradeDef } from './economy';
-import type { BuyAmount, GameState } from './state';
+import { STREAK_LINES } from '../content/work';
+import { bumpFlag, type BuyAmount, type GameState } from './state';
 import { addTickets } from './tick';
 
 /** Ein Anschlag: bringt Arbeit am aktuellen Ticket, Tickets gibt es erst beim Lösen. */
@@ -38,8 +39,8 @@ export function buyUpgrade(state: GameState, id: string): boolean {
   return true;
 }
 
-/** Meilensteine einer Serie gelöster Tickets */
-export const STREAK_MILESTONES = [5, 10, 20, 42, 100] as const;
+/** Meilensteine einer Serie gelöster Tickets: jede Serie, für die der Stempel einen Spruch hat */
+export const STREAK_MILESTONES: readonly number[] = Object.keys(STREAK_LINES).map(Number);
 
 /**
  * Ticket im Arbeitsfenster gelöst: Grundwert plus etwas Produktion, wächst mit der Serie;
@@ -50,11 +51,11 @@ export function solveTicket(state: GameState, streak: number, presses = 0): { bo
   const pps = productionPerSec(state);
   const reward = ticketReward(state) + pps * (SOLVE.ppsSec + pressPpsFraction(state) * presses);
   const mult = Math.min(SOLVE.maxStreakMult, 1 + SOLVE.perStreak * Math.max(0, streak - 1));
-  const milestone = (STREAK_MILESTONES as readonly number[]).includes(streak);
+  const milestone = STREAK_MILESTONES.includes(streak);
   let bonus = reward * mult;
   if (milestone) bonus += Math.max(pps * SOLVE.milestoneSec, reward * SOLVE.milestoneTickets);
   addTickets(state, bonus);
-  state.flags.solved = (state.flags.solved ?? 0) + 1;
+  bumpFlag(state, 'solved');
   state.flags.bestStreak = Math.max(state.flags.bestStreak ?? 0, streak);
   return { bonus, milestone };
 }

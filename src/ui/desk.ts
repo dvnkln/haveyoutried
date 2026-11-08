@@ -18,38 +18,13 @@ import { describeEffect } from './pager';
 import { nextTicketNo, ticketId } from './history';
 import { createWork } from './work';
 
+/** Bürotelefon in drei Modellen: Grundmodell, mit AB (has-am), VoIP mit Headset (has-headset) */
 const PHONE_SVG = `<svg viewBox="0 0 64 58">
-  <g class="ring" fill="none" stroke="var(--ink)" stroke-width="2.2" stroke-linecap="round">
-    <path d="M5 9 q-3 5 0 10"/><path d="M1 6 q-4 8 0 16"/><path d="M59 9 q3 5 0 10"/><path d="M63 6 q4 8 0 16"/>
-  </g>
-  <path class="cord" d="M12 22 c-6 2 -2 6 -6 8 c-4 2 0 6 -4 8 c-3 2 1 6 2 8 c1 2 4 3 8 2" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linecap="round"/>
-  <path d="M12 26 h40 l6 24 a4 4 0 0 1 -4 5 h-44 a4 4 0 0 1 -4 -5Z" fill="#ff9aa2" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round"/>
-  <path d="M15 30 h34" stroke="#ffc2c8" stroke-width="3" stroke-linecap="round"/>
-  <circle cx="32" cy="41" r="10" fill="#fffaf0" stroke="var(--ink)" stroke-width="2.2"/>
-  <g fill="var(--ink)" opacity=".75">
-    <circle cx="32" cy="34.5" r="1.6"/><circle cx="37.6" cy="37.7" r="1.6"/><circle cx="37.6" cy="44.3" r="1.6"/>
-    <circle cx="32" cy="47.5" r="1.6"/><circle cx="26.4" cy="44.3" r="1.6"/><circle cx="26.4" cy="37.7" r="1.6"/>
-  </g>
-  <circle cx="32" cy="41" r="3" fill="#ff9aa2" stroke="var(--ink)" stroke-width="1.6"/>
-  <g class="am">
-    <rect x="44" y="34" width="10" height="7" rx="1.5" fill="#4b4453" stroke="var(--ink)" stroke-width="1.4"/>
-    <circle cx="47" cy="37.5" r="1.3" fill="#d9d0e8"/><circle cx="51" cy="37.5" r="1.3" fill="#d9d0e8"/>
-    <circle class="am-led" cx="49" cy="47" r="2.4" fill="#ff5b5b" stroke="var(--ink)" stroke-width="1.3"/>
-    <text x="15.5" y="45" text-anchor="middle" font-family="Fredoka, sans-serif" font-size="6" font-weight="700" fill="var(--ink)">AB</text>
-  </g>
-  <path d="M19 26 v-4 h6 v4 M39 26 v-4 h6 v4" fill="#ff8a94" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round"/>
-  <g class="handset">
-    <path d="M9 18 c0 -9 6 -13 12 -13 h22 c6 0 12 4 12 13 c0 3 -2 5 -5 5 h-5 c-3 0 -4 -2 -4 -4 v-3 h-16 v3 c0 2 -1 4 -4 4 h-5 c-3 0 -5 -2 -5 -5Z" fill="#ff8a94" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round"/>
-    <path d="M22 9 h20" stroke="#ffc2c8" stroke-width="2.5" stroke-linecap="round"/>
-  </g>
-  <g class="headset">
-    <path d="M13 22 c0 -22 38 -22 38 0" fill="none" stroke="var(--ink)" stroke-width="5" stroke-linecap="round"/>
-    <path d="M13 22 c0 -22 38 -22 38 0" fill="none" stroke="#7fa6e6" stroke-width="2.4" stroke-linecap="round"/>
-    <rect x="7" y="15" width="10" height="13" rx="4" fill="#a0c4ff" stroke="var(--ink)" stroke-width="2.2"/>
-    <rect x="47" y="15" width="10" height="13" rx="4" fill="#a0c4ff" stroke="var(--ink)" stroke-width="2.2"/>
-    <path d="M12 27 c2 6 8 7 14 6" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linecap="round"/>
-    <circle cx="27" cy="33" r="2.6" fill="var(--mint)" stroke="var(--ink)" stroke-width="1.6"/>
-  </g>
+  <g class="ring" fill="none" stroke="var(--ink)" stroke-width="2.2" stroke-linecap="round"><path d="M3 4 q-3 5 0 10"/><path d="M-1 1 q-4 8 0 16"/><path d="M61 9 q3 5 0 10"/><path d="M65 6 q4 8 0 16"/></g>
+  <g class="model m1"><path class="cord" d="M8 50 c-5 0 -2 4 -5 5 c-3 1 -1 4 -3 5" fill="none" stroke="var(--ink)" stroke-width="1.8" stroke-linecap="round"/><path d="M11 20 h42 a4 4 0 0 1 4 3.4 l4.2 26.6 a4 4 0 0 1 -4 4.6 h-50.4 a4 4 0 0 1 -4 -4.6 l4.2 -26.6 a4 4 0 0 1 4 -3.4Z" fill="#eadfc8" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round"/><path d="M24 23.5 h28" stroke="#f7efdf" stroke-width="2.4" stroke-linecap="round"/><rect x="27" y="26" width="22" height="7" rx="1.5" fill="#bccaa2" stroke="var(--ink)" stroke-width="1.6"/><path d="M30 29.5 h7 M40 29.5 h4" stroke="#55604a" stroke-width="1.6" stroke-linecap="round"/><g fill="#fffaf0" stroke="var(--ink)" stroke-width="1"><rect x="28.5" y="36" width="5.4" height="3.4" rx="1.2"/><rect x="35.5" y="36" width="5.4" height="3.4" rx="1.2"/><rect x="42.5" y="36" width="5.4" height="3.4" rx="1.2"/><rect x="28.5" y="40.4" width="5.4" height="3.4" rx="1.2"/><rect x="35.5" y="40.4" width="5.4" height="3.4" rx="1.2"/><rect x="42.5" y="40.4" width="5.4" height="3.4" rx="1.2"/><rect x="28.5" y="44.8" width="5.4" height="3.4" rx="1.2"/><rect x="35.5" y="44.8" width="5.4" height="3.4" rx="1.2"/><rect x="42.5" y="44.8" width="5.4" height="3.4" rx="1.2"/><rect x="28.5" y="49.2" width="5.4" height="3.4" rx="1.2"/><rect x="35.5" y="49.2" width="5.4" height="3.4" rx="1.2"/><rect x="42.5" y="49.2" width="5.4" height="3.4" rx="1.2"/></g><g class="handset"><rect x="6" y="13" width="14" height="40" rx="6.5" fill="#ddd0b3" stroke="var(--ink)" stroke-width="2.3"/><path d="M10 19 v10" stroke="#f7efdf" stroke-width="2.2" stroke-linecap="round"/><g fill="var(--ink)" opacity=".55"><circle cx="13" cy="17.5" r="1"/><circle cx="13" cy="48.5" r="1"/></g></g></g>
+  <g class="model m2"><path class="cord" d="M8 50 c-5 0 -2 4 -5 5 c-3 1 -1 4 -3 5" fill="none" stroke="var(--ink)" stroke-width="1.8" stroke-linecap="round"/><path d="M11 20 h42 a4 4 0 0 1 4 3.4 l4.2 26.6 a4 4 0 0 1 -4 4.6 h-50.4 a4 4 0 0 1 -4 -4.6 l4.2 -26.6 a4 4 0 0 1 4 -3.4Z" fill="#d9dce6" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round"/><path d="M24 23.5 h28" stroke="#f1f2f7" stroke-width="2.4" stroke-linecap="round"/><rect x="24.5" y="25.5" width="25" height="9" rx="1.5" fill="#bfe0c9" stroke="var(--ink)" stroke-width="1.6"/><path d="M27.5 28.5 h9 M27.5 31.5 h14" stroke="#4d6a57" stroke-width="1.4" stroke-linecap="round"/><circle class="am-led" cx="54" cy="28" r="2.3" fill="#ff5b5b" stroke="var(--ink)" stroke-width="1.2"/><g fill="#fffaf0" stroke="var(--ink)" stroke-width="1"><rect x="26" y="37.5" width="5" height="3.2" rx="1.2"/><rect x="32.5" y="37.5" width="5" height="3.2" rx="1.2"/><rect x="39" y="37.5" width="5" height="3.2" rx="1.2"/><rect x="26" y="41.6" width="5" height="3.2" rx="1.2"/><rect x="32.5" y="41.6" width="5" height="3.2" rx="1.2"/><rect x="39" y="41.6" width="5" height="3.2" rx="1.2"/><rect x="26" y="45.7" width="5" height="3.2" rx="1.2"/><rect x="32.5" y="45.7" width="5" height="3.2" rx="1.2"/><rect x="39" y="45.7" width="5" height="3.2" rx="1.2"/><rect x="26" y="49.8" width="5" height="3.2" rx="1.2"/><rect x="32.5" y="49.8" width="5" height="3.2" rx="1.2"/><rect x="39" y="49.8" width="5" height="3.2" rx="1.2"/></g><g fill="#b9bdcb" stroke="var(--ink)" stroke-width="1"><rect x="47" y="37.5" width="7.5" height="3.2" rx="1.2"/><rect x="47" y="41.6" width="7.5" height="3.2" rx="1.2"/></g><g class="handset"><rect x="6" y="13" width="14" height="40" rx="6.5" fill="#c5c9d6" stroke="var(--ink)" stroke-width="2.3"/><path d="M10 19 v10" stroke="#eceef4" stroke-width="2.2" stroke-linecap="round"/><g fill="var(--ink)" opacity=".55"><circle cx="13" cy="17.5" r="1"/><circle cx="13" cy="48.5" r="1"/></g></g></g>
+  <g class="model m3"><path class="cord" d="M8 50 c-5 0 -2 4 -5 5 c-3 1 -1 4 -3 5" fill="none" stroke="var(--ink)" stroke-width="1.8" stroke-linecap="round"/><path d="M11 20 h42 a4 4 0 0 1 4 3.4 l4.2 26.6 a4 4 0 0 1 -4 4.6 h-50.4 a4 4 0 0 1 -4 -4.6 l4.2 -26.6 a4 4 0 0 1 4 -3.4Z" fill="#565063" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round"/><path d="M24 23.5 h28" stroke="#6f6880" stroke-width="2.4" stroke-linecap="round"/><rect x="23.5" y="25" width="27" height="11" rx="1.8" fill="#a0c4ff" stroke="var(--ink)" stroke-width="1.6"/><path d="M25 27.6 h24" stroke="#fffaf0" stroke-width="2.2"/><g fill="#fffaf0"><rect x="26" y="30.5" width="6" height="3.6" rx="1"/><rect x="34" y="30.5" width="6" height="3.6" rx="1"/><rect x="42" y="30.5" width="6" height="3.6" rx="1"/></g><g fill="var(--mint)" stroke="var(--ink)" stroke-width=".9"><circle cx="54.3" cy="27" r="1.4"/><circle cx="54.6" cy="31" r="1.4"/><circle cx="55" cy="35" r="1.4"/></g><g fill="#ece8f2" stroke="var(--ink)" stroke-width="1"><rect x="26" y="38.5" width="5" height="3" rx="1.2"/><rect x="32.5" y="38.5" width="5" height="3" rx="1.2"/><rect x="39" y="38.5" width="5" height="3" rx="1.2"/><rect x="26" y="42.4" width="5" height="3" rx="1.2"/><rect x="32.5" y="42.4" width="5" height="3" rx="1.2"/><rect x="39" y="42.4" width="5" height="3" rx="1.2"/><rect x="26" y="46.3" width="5" height="3" rx="1.2"/><rect x="32.5" y="46.3" width="5" height="3" rx="1.2"/><rect x="39" y="46.3" width="5" height="3" rx="1.2"/><rect x="26" y="50.2" width="5" height="3" rx="1.2"/><rect x="32.5" y="50.2" width="5" height="3" rx="1.2"/><rect x="39" y="50.2" width="5" height="3" rx="1.2"/></g><g fill="#7a7390" stroke="var(--ink)" stroke-width="1"><rect x="47" y="38.5" width="7.5" height="3" rx="1.2"/><rect x="47" y="42.4" width="7.5" height="3" rx="1.2"/><rect x="47" y="46.3" width="7.5" height="3" rx="1.2"/></g><g class="handset"><rect x="6" y="13" width="14" height="40" rx="6.5" fill="#423c4d" stroke="var(--ink)" stroke-width="2.3"/><path d="M10 19 v10" stroke="#6f6880" stroke-width="2.2" stroke-linecap="round"/><g fill="var(--ink)" opacity=".55"><circle cx="13" cy="17.5" r="1"/><circle cx="13" cy="48.5" r="1"/></g></g></g>
+  <g class="headset"><path d="M27 20 c0 -19 30 -19 30 0" fill="none" stroke="var(--ink)" stroke-width="5" stroke-linecap="round"/><path d="M27 20 c0 -19 30 -19 30 0" fill="none" stroke="#7fa6e6" stroke-width="2.4" stroke-linecap="round"/><rect x="22" y="13" width="9" height="11" rx="3.5" fill="#a0c4ff" stroke="var(--ink)" stroke-width="2"/><rect x="53" y="13" width="9" height="11" rx="3.5" fill="#a0c4ff" stroke="var(--ink)" stroke-width="2"/><path d="M24 22 c-2 3 -2 6 -1 8" fill="none" stroke="var(--ink)" stroke-width="1.8" stroke-linecap="round"/><circle cx="23.2" cy="30.5" r="2" fill="var(--mint)" stroke="var(--ink)" stroke-width="1.4"/></g>
 </svg>`;
 
 /** Pause, nach der das Tippen am Stück endet (für die Combo-Sprüche) */
@@ -101,8 +76,8 @@ const ROWS: KeyDef[][] = [
 ];
 
 /**
- * Der Schreibtisch unter dem Monitor: Anrufer, Tastatur (jede Taste schließt ein Ticket
- * und tippt eine Support-Antwort weiter), Dringend-Tickets als Post-its und die Eingabezeile.
+ * Der Schreibtisch unter dem Monitor: Anrufer, Tastatur (jede Taste tippt die Support-Antwort weiter,
+ * fertig = gelöst), Dringend-Tickets als Post-its und die Eingabezeile.
  */
 export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, screen: () => HTMLElement) {
   let call: Call | null = null;
@@ -111,6 +86,8 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
   const recent: string[] = [];
   let combo = 0;
   let lastHit = 0;
+  /** dieser Anschlag hat ein Ticket gelöst (dann kein Tipp-Vibrieren, das die Meilenstein-Vibration abschneiden würde) */
+  let solvedNow = false;
 
   // --- Anrufer (Sprechblase über dem Schreibtisch) ---
   const face = h('span', { class: 'caller-face', 'aria-hidden': 'true' });
@@ -132,6 +109,8 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
     () => call,
     (streak, stamp, presses) => {
       const { bonus, milestone } = solveTicket(ctx.state, streak, presses);
+      callerLeft--;
+      solvedNow = true;
       const p = fx.rel(stamp);
       fx.floater(p.x + p.w / 2, p.y, `+${formatNumber(bonus)}`, true);
       if (milestone) {
@@ -144,7 +123,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
 
   // --- Tastatur ---
   const keys = new Map<string, HTMLButtonElement>();
-  const keyboard = h('div', { class: 'keyboard', role: 'group', 'aria-label': 'Tastatur: jede Taste schließt ein Ticket' });
+  const keyboard = h('div', { class: 'keyboard', role: 'group', 'aria-label': 'Tastatur: jede Taste tippt am Ticket weiter' });
   ROWS.forEach((row, r) => {
     for (const def of row) {
       const el = h('button', {
@@ -167,7 +146,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
     {
       class: 'key key-enter close-btn',
       type: 'button',
-      'aria-label': 'Ticket schließen',
+      'aria-label': 'Am Ticket weitertippen',
       style: 'grid-row:2 / span 2;grid-column:56 / span 5',
     },
     [h('span', { class: 'enter-arrow', text: '⏎' }), h('span', { class: 'key-small', text: 'Fix' })],
@@ -307,6 +286,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
   const hit = (keyEl: HTMLElement) => {
     const def = keyEl.dataset.key ?? '';
     ctx.sfx.unlock();
+    solvedNow = false;
     const progress = pressKey(ctx.state);
 
     // Eingabezeile: jede Taste (auch Enter) tippt weiter, Alt+F4 verwirft das Ticket
@@ -331,15 +311,15 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
     if (comboLine) quip(keyboard, comboLine);
 
     ctx.sfx.tap();
-    ctx.haptic('tap');
+    if (!solvedNow) ctx.haptic('tap');
     // Ruhiger Start: erst ein bisschen tippen, dann klingelt zum ersten Mal das Telefon
     if (!started) {
       if (ctx.state.clicks >= CONFIG.onboardingClicks) begin();
       return;
     }
-    // Wechsel erst nach genug Tickets UND genug Lesezeit
+    // Wechsel erst nach genug gelösten Tickets UND genug Lesezeit;
     // nächster Anruf erst, wenn der aktuelle seine Antwort hat (sonst geht er verloren)
-    if (--callerLeft <= 0 && now >= callerUntil && work.isAnswered(call)) showCall(chooseCall());
+    if (callerLeft <= 0 && now >= callerUntil && work.isAnswered(call)) showCall(chooseCall());
   };
 
   /** Nach dem ruhigen Start: erster Anruf (klingelt), Dringend-Tickets ab jetzt */

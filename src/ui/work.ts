@@ -3,7 +3,7 @@ import { ticketWork } from '../core/economy';
 import { CALLERS, QUEUE_LINE, type Call, type Line } from '../content/callers';
 import { STREAK_LINES, CALL_LINES, CHAT_LINES, MEME_ACCOUNTS, MEMES, RDP_ERRORS, SEARCH_RESULTS, TICKET_PRIOS, WEB_GENERIC, DONE_LINES, TICKET_STATES } from '../content/work';
 import { DEVICE_SETTINGS, TALK_NOTES, TOPICS, topicPool, type Device, type Topic } from '../content/topics';
-import { pick, randInt, weightedPick } from '../util';
+import { fill, pick, randInt, weightedPick } from '../util';
 import type { AppContext } from './app';
 import { h, setText } from './dom';
 import { nextTicketNo, ticketId } from './history';
@@ -253,7 +253,7 @@ const PROGRAMS: Record<Kind, Program> = {
 
 /**
  * Arbeitsfenster auf dem Desktop: wechselt zwischen Mail, Ticketsystem, Shell, Chat, Videocall,
- * Fernwartung, Webinterface und Websuche. Jeder Anschlag tippt die Antwort weiter, Enter schickt ab.
+ * Fernwartung, Webinterface und Websuche. Jeder Anschlag tippt die Antwort weiter, fertig = gelöst.
  * Wer eine Weile nichts tippt, scrollt heimlich durch Memes.
  */
 export function createWork(
@@ -279,7 +279,7 @@ export function createWork(
     last.style.fontSize = '';
     for (let size = 11; size > 8 && last.scrollWidth > last.clientWidth + 1; size -= 0.5) last.style.fontSize = `${size - 0.5}px`;
   };
-  const fill = (t: string) => t.replaceAll('{who}', task.who).replaceAll('{target}', task.target);
+  const vars = () => ({ who: task.who, target: task.target });
   /** Anruf, dessen Antwort abgeschickt ist */
   let answered: Call | null = null;
   /** zuletzt bearbeitete Anliegen (Anrufe und Warteschlange), damit sich Betreffe nicht gleich wiederholen */
@@ -406,15 +406,15 @@ export function createWork(
       id: ticketId(task.no),
       subject: task.full,
       who: task.who,
-      channel: fill(CHANNELS[task.kind]),
+      channel: fill(CHANNELS[task.kind], vars()),
       prio: pick(TICKET_PRIOS),
       status: pick(TICKET_STATES),
       reply,
       replyLabel: REPLY_LABELS[task.kind],
       cause: task.line.cause,
       // Fragen: Notiz zum Gespräch; Probleme: Notiz zur Reparatur
-      note: fill(pick(task.line.fix ? topicPool(task.line.topic, 'notes') : TALK_NOTES)),
-      solution: fill(pick(DONE_LINES[task.kind])),
+      note: fill(pick(task.line.fix ? topicPool(task.line.topic, 'notes') : TALK_NOTES), vars()),
+      solution: fill(pick(DONE_LINES[task.kind]), vars()),
     });
     el.classList.add('sent');
     celebrate();
@@ -459,7 +459,6 @@ export function createWork(
     last,
     promptSlot,
     newTask,
-    /** Ein Anschlag tippt ein paar Zeichen; mit Textbaustein ganze Wörter. Ende = abschicken. */
     /** Ein Anschlag bringt `work` Arbeit; der Text läuft im selben Verhältnis mit. Fertig = gelöst. */
     typeMore(work: number) {
       // nicht auf den Stempel warten: nächster Anschlag beginnt gleich das nächste Ticket

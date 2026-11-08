@@ -1292,7 +1292,6 @@ button {
   .monitor-area {
     padding-top: 10px;
   }
-  .plant,
   .beacon {
     display: none;
   }
@@ -3377,7 +3376,6 @@ button {
 
 /* Niedrige Displays: Requisiten auf dem Gehäuse auch nach dem Kauf weglassen (sonst überlappen sie) */
 @media (max-height: 680px) {
-  .plant.owned,
   .beacon.owned {
     display: none;
   }
@@ -4912,8 +4910,9 @@ button {
 
 /* ---------- Pager: Restzeit-Balken und Eskalation ---------- */
 .pager-device {
-  width: 76px;
-  height: 50px;
+  /* echter Pager ist klein: etwa so groß wie eine Streichholzschachtel neben der Tasse */
+  width: 64px;
+  height: 42px;
   transition: scale 0.25s cubic-bezier(0.2, 0.8, 0.3, 1.4);
 }
 .pd-lcd {
@@ -5029,23 +5028,19 @@ button {
 }
 
 /* ---------- Telefon-Upgrades ---------- */
-.phone .am,
+/* Jedes Upgrade ersetzt das Telefon durch ein neueres Modell; das Headset liegt hinten drüber */
+.phone .model,
 .phone .headset {
   display: none;
 }
-.phone.has-am .am,
+.phone:not(.has-am):not(.has-headset) .m1,
+.phone.has-am:not(.has-headset) .m2,
+.phone.has-headset .m3,
 .phone.has-headset .headset {
   display: inline;
 }
 .phone .am-led {
   animation: am-blink 1.4s steps(2, jump-none) infinite;
-}
-/* mit Headset liegt der Hörer nicht mehr auf: der Bügel hängt über der Gabel */
-.phone.has-headset .handset {
-  display: none;
-}
-.phone.ringing .headset {
-  animation: handset-hop 0.14s ease-in-out 6 alternate;
 }
 @media (prefers-reduced-motion: reduce) {
   .phone .am-led {
@@ -5058,8 +5053,9 @@ button {
   position: relative;
   flex: 0 0 auto;
   align-self: flex-end;
-  width: 14px;
-  height: 40px;
+  /* 0,5-l-Flasche: sichtbar höher als die Tasse */
+  width: 18px;
+  height: 50px;
   margin: 0 2px 4px -6px;
   rotate: 4deg;
 }
@@ -5255,6 +5251,8 @@ button {
   top: 50%;
   z-index: 4;
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   align-items: center;
   gap: 6px;
   padding: 4px 12px;
@@ -5267,10 +5265,6 @@ button {
   pointer-events: none;
   opacity: 0;
   transform: translate(-50%, -50%) rotate(-8deg);
-}
-.solved-stamp {
-  flex-wrap: wrap;
-  justify-content: center;
 }
 .solved-stamp .ss-streak:empty,
 .solved-stamp .ss-line:empty {
@@ -5679,7 +5673,8 @@ body > .incident.playing {
   display: none;
   z-index: 0;
   left: 12%;
-  top: 4px;
+  /* hängt knapp unter den Schildern, damit der Monitor es nicht verdeckt */
+  top: -5px;
   width: 46px;
   height: 33px;
   opacity: 0.55;
@@ -5852,4 +5847,20 @@ body > .incident.playing {
 }
 .hist-vip {
   border-color: #d64545 !important;
+}
+
+@media (max-width: 359px) {
+  /* Pflanze steht hinten auf dem Tisch hinter dem Pager, damit die Sprechblase Platz behält */
+  .deskbar .plant {
+    position: absolute;
+    z-index: 0;
+    right: 26px;
+    /* Topf steckt halb hinter dem Pager */
+    bottom: 42px;
+    margin: 0;
+  }
+  /* Zähler, Kanban und Whiteboard teilen sich die Wand: etwas enger hängen */
+  .wall {
+    gap: 6px;
+  }
 }

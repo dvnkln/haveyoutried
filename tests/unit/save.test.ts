@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { deserialize, exportSave, importSave, serialize } from '../../src/core/save';
 import { createInitialState } from '../../src/core/state';
+import { prestigeGain } from '../../src/core/prestige';
 
 describe('Spielstand', () => {
   it('Roundtrip', () => {
@@ -38,6 +39,15 @@ describe('Spielstand', () => {
     expect(load('mx')).toBe('blue');
     expect(load('pop')).toBe('blue');
     expect(load('brown')).toBe('brown');
+  });
+
+  it('Spielstand v1: Berufserfahrung wird auf die neue Formel umgerechnet (keine Gratis-Punkte)', () => {
+    // v1: 1 Punkt je 1 M Tickets (Wurzel) → 4 M Tickets = 2 Punkte; v2 (250 K) ergibt dafür 4
+    const old = { version: 1, ticketsAllTime: 4_000_000, prestige: { experience: 2, jobs: 1, company: 'x' } };
+    const s = deserialize(JSON.stringify(old), 0)!;
+    expect(s.version).toBe(2);
+    expect(s.prestige.experience).toBe(4);
+    expect(prestigeGain(s)).toBe(0);
   });
 
   it('ungültiges JSON → null', () => {

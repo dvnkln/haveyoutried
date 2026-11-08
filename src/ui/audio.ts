@@ -234,7 +234,7 @@ export class Sfx {
     this.hiss(t, x.gain * level, this.rnd(...x.dur), x.type ?? 'bandpass', this.rnd(...x.freq) * freqScale, x.q);
   }
 
-  /** Taste drücken („Ticket schließen“). */
+  /** Taste drücken (ein Anschlag am Ticket). */
   tap(id = this.settings().tapSound): void {
     const r = this.ready();
     if (!r) return;

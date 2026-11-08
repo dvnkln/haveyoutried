@@ -8,7 +8,13 @@ const EVENT_GRACE_MS = 15_000;
 
 /** Migrationen: Index = Version, von der aus migriert wird. */
 const migrations: Record<number, (raw: Record<string, unknown>) => Record<string, unknown>> = {
-  // 1: (raw) => ({ ...raw, version: 2, ... }),
+  // v2: Punkt kostet 250 K statt 1 M Tickets → gleiche Tickets = doppelte Erfahrung (Wurzel aus 4).
+  // Ohne Umrechnung gäbe es beim nächsten Kündigen die Hälfte der Punkte geschenkt.
+  1: (raw) => {
+    const p = raw.prestige;
+    if (!isPlain(p) || typeof p.experience !== 'number') return { ...raw, version: 2 };
+    return { ...raw, version: 2, prestige: { ...p, experience: p.experience * 2 } };
+  },
 };
 
 type Plain = Record<string, unknown>;

@@ -4,7 +4,6 @@ import { randInt } from '../util';
 /** Obergrenze für gleichzeitig sichtbare Effekt-Elemente (Leistung auf dem Handy). */
 const MAX_PARTICLES = 20;
 const CONFETTI_COLORS = ['#ffd166', '#ff9aa2', '#9be3c1', '#a0c4ff', '#fffaf0'];
-/** So lange bleibt ein Combo-Spruch stehen, auch wenn weitergetippt wird. */
 
 export interface Rect {
   x: number;
