@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Vollflächig, Motiv auf 85 % verkleinert: bleibt in der sicheren Zone runder/eckiger Android-Masken -->
+  <rect width="64" height="64" fill="#0b0f0b"/>
+  <g transform="translate(32 33) scale(0.85) translate(-32 -33)">
+    <circle cx="32" cy="34" r="16" fill="none" stroke="#33ff66" stroke-width="5" stroke-linecap="round" stroke-dasharray="80 21" transform="rotate(-62 32 34)"/>
+    <path d="M32 12v20" stroke="#33ff66" stroke-width="5" stroke-linecap="round"/>
+    <rect x="40" y="46" width="12" height="4" fill="#ffb000"/>
+  </g>
+</svg>

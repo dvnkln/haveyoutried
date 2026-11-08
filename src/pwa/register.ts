@@ -1,12 +1,11 @@
 /**
- * PWA-Vorbereitung. Phase 1: bewusst ohne Service Worker, damit Entwicklung
- * und Vorschau nie alte Builds aus dem Cache liefern.
- *
- * Später: public/sw.js anlegen (Cache-first für Assets) und hier aktivieren:
- *   if ('serviceWorker' in navigator && import.meta.env.PROD) {
- *     navigator.serviceWorker.register('./sw.js');
- *   }
+ * Service Worker nur im Produktions-Build: Entwicklung (vite dev) soll nie aus dem Cache kommen.
+ * sw.js entsteht beim Build (vite.config.ts) aus src/pwa/sw.template.js.
  */
 export function registerServiceWorker(): void {
-  /* noch nicht aktiv */
+  if (!import.meta.env.PROD || !('serviceWorker' in navigator)) return;
+  // Kein HTTPS (z. B. Vorschau per IP): Browser lehnt ab, Spiel läuft trotzdem.
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
 }
