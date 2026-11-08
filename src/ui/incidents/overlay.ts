@@ -139,7 +139,7 @@ export function mountIncidentOverlay(ctx: AppContext): void {
 
     // --- Phase 1: Monitoring-Alarm, wartet auf manuelles Übernehmen ---
     const take = h('button', { class: 'btn btn-danger nag-ack nag-take', type: 'button', text: pick(TAKE_LABELS), disabled: '' });
-    const alert = h('div', { class: 'mon-page' }, [
+    const alert = h('div', { class: 'mon-page mon-compact' }, [
       summary(1, 2),
       h('div', { class: 'mon-table' }, [monRow('crit', text.host, text.service, text.info, '0m 03s', true)]),
       h('div', { class: 'mon-detail' }, [
@@ -247,7 +247,7 @@ export function mountIncidentOverlay(ctx: AppContext): void {
       const pct = Math.round(score * 100);
       screen(
         good ? 'ok' : 'esc',
-        h('div', { class: 'mon-page' }, [
+        h('div', { class: 'mon-page mon-compact' }, [
           summary(good ? 0 : 1, 2),
           h('div', { class: 'mon-table' }, [
             monRow(good ? 'ok' : 'esc', text.host, text.service, good ? text.okInfo : 'eskaliert an: Kollege', good ? '0m 01s' : '0m 00s', true),

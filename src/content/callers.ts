@@ -1,7 +1,7 @@
 import type { GeneratorId } from '../config';
 import type { GameState } from '../core/state';
 import type { LogTemplate } from './syslog';
-import type { Topic } from './topics';
+import type { Device, Topic } from './topics';
 
 /** Ein Anliegen und was im Ticket dazu passt. */
 export interface Line {
@@ -14,12 +14,21 @@ export interface Line {
   answer: string;
   /** true = man muss technisch ran: Shell, Fernwartung, Webinterface und Websuche passen dann auch */
   fix: boolean;
+  /** Webinterfaces, die zu genau diesem Anliegen passen (statt der Geräte des Themas); leer = keins */
+  devices?: Device[];
 }
 
 /** Nur reden hilft (Frage, Wunsch, Unsinn) */
 const q = (topic: Topic, text: string, cause: string, answer: string): Line => ({ topic, text, cause, answer, fix: false });
 /** Hier muss man ran */
-const f = (topic: Topic, text: string, cause: string, answer: string): Line => ({ topic, text, cause, answer, fix: true });
+const f = (topic: Topic, text: string, cause: string, answer: string, devices?: Device[]): Line => ({
+  topic,
+  text,
+  cause,
+  answer,
+  fix: true,
+  ...(devices && { devices }),
+});
 
 export interface Caller {
   face: string;
@@ -51,17 +60,17 @@ export const CALLERS: Caller[] = [
     who: 'Buchhaltung',
     lines: [
       q('allgemein', 'Ich hab NICHTS geändert!!1', 'User hat nichts geändert (hat er doch)', 'Laut Verlauf haben Sie gestern 14 Einstellungen geändert. Aber gut, dann war es der PC selbst.'),
-      f('office', 'Seit dem Update geht nix mehr. Welches Update? Na, DAS Update!', 'Update über Nacht', 'Das Update habe ich zurückgerollt. Bitte das nächste Mal das Fenster nicht mit „Später“ wegklicken. 41-mal.'),
-      f('office', 'Excel sagt #NAME?. Ich heiße aber Petra.', 'Zelle als Text formatiert', 'Die Zelle war als Text formatiert. Excel meinte nicht Sie, Petra. Diesmal.'),
+      f('office', 'Seit dem Update geht nix mehr. Welches Update? Na, DAS Update!', 'Update über Nacht', 'Das Update habe ich zurückgerollt. Bitte das nächste Mal das Fenster nicht mit „Später“ wegklicken. 41-mal.', []),
+      f('office', 'Excel sagt #NAME?. Ich heiße aber Petra.', 'Tippfehler in der Formel (=SUMMME)', 'In der Formel stand =SUMMME, mit drei M. Excel meinte die Formel, nicht Sie, Petra. Diesmal.', []),
       q('wunsch', 'Ich brauch Adminrechte. Nur für den Bildschirmschoner.', 'War kein Problem, war ein Wunsch', 'Adminrechte gibt es nicht für Bildschirmschoner. Ich stelle Ihnen die Aquarium-Fische ein. Mehr geht nicht.'),
-      f('hardware', 'Mein Bildschirm ist zu klein. Kann man den zoomen? Also den ganzen Bildschirm?', 'Auflösung auf 800×600', 'Die Auflösung stand auf 800×600. Jetzt passt mehr drauf. Wenn es zu klein ist: Strg und Mausrad.'),
+      f('hardware', 'Mein Bildschirm ist zu klein. Kann man den zoomen? Also den ganzen Bildschirm?', 'Auflösung auf 800×600', 'Die Auflösung stand auf 800×600. Jetzt passt mehr drauf. Wenn es zu klein ist: Strg und Mausrad.', []),
     ],
   },
   {
     face: '(°ロ°)',
     who: 'Vertrieb',
     lines: [
-      f('netz', 'Das Internet ist weg!', 'WLAN-Schalter am Laptop aus', 'Das Internet ist noch da. Ihr WLAN-Schalter war aus. Kleiner Schieber, linke Seite.'),
+      f('netz', 'Das Internet ist weg!', 'WLAN-Schalter am Laptop aus', 'Das Internet ist noch da. Ihr WLAN-Schalter war aus. Kleiner Schieber, linke Seite.', []),
       q('mail', 'Kann man eine Mail zurückholen? Die an „Alle“?', '„Allen antworten“', 'Zurückholen geht nicht. 340 Leute haben sie schon gelesen. Ich würde jetzt einfach selbstbewusst gucken.'),
       q('allgemein', 'Ich brauch das sofort, der Kunde sitzt neben mir.', 'Kunde saß daneben, Problem auch', 'Bin dran. Sagen Sie dem Kunden, das ist unser Sicherheitscheck. Klingt besser.'),
       q('wunsch', 'Ich hab dem Kunden schon zugesagt, dass das geht. Geht das?', 'Zusage vor Machbarkeitsprüfung', 'Nein. Aber ich hab eine Folie gebaut, auf der es so aussieht. Für das Meeting reicht das.'),
@@ -72,7 +81,7 @@ export const CALLERS: Caller[] = [
     face: '¯\\_(ツ)_/¯',
     who: 'Marketing',
     lines: [
-      f('server', 'Ist der Server down? Ich seh nur eine weiße Seite.', 'Webserver-Prozess hing', 'Der Webserver hing. Läuft wieder. Die weiße Seite war kein neues Minimal-Design.'),
+      f('server', 'Ist der Server down? Ich seh nur eine weiße Seite.', 'Webserver-Prozess hing', 'Der Webserver hing. Läuft wieder. Die weiße Seite war kein neues Minimal-Design.', []),
       q('wunsch', 'Wir haben ein neues Tool gekauft. Geht Montag live. Ihr wisst Bescheid, oder?', 'Einkauf ohne IT', 'Jetzt wissen wir Bescheid. Montag wird ambitioniert. Wer hat denn die Zugangsdaten? … Niemand? Super.'),
       f('passwort', 'Mein Passwort ist abgelaufen. Ich hab einfach eine 2 drangehängt.', 'Altes Passwort mit einer 2 dran', 'Das System kennt den Trick. Neues Passwort ist gesetzt. Eine 3 dranhängen gilt übrigens auch nicht.'),
       q('wunsch', 'Könnt ihr mal schnell die Website responsive machen? Bis zur Messe. Die ist morgen.', 'Messe morgen, Anfrage heute', 'Bis morgen nicht. Ich kann die Website aber so einstellen, dass sie auf dem Handy wenigstens nicht abstürzt.'),
@@ -84,11 +93,11 @@ export const CALLERS: Caller[] = [
     who: 'Geschäftsführung',
     lines: [
       f('netz', 'Warum ist das so langsam? Bei meinem Neffen geht das schneller.', 'Laptop im Gast-WLAN', 'Ihr Laptop war im Gast-WLAN der Kantine. Jetzt im richtigen. Grüße an den Neffen.'),
-      f('sicherheit', 'Ich hab auf den Link geklickt. Den mit dem Gewinn.', 'Link mit dem Gewinn geklickt', 'Sie haben nichts gewonnen. Laptop ist geprüft, Passwort ist neu. Bitte nie wieder klicken. Auch nicht bei Kreuzfahrten.'),
-      f('netz', 'Machen Sie mal schnell das WLAN schneller.', 'Router hinter dem Aktenschrank', 'Der Router stand hinter dem Aktenschrank. Jetzt steht er davor. Schneller ist es auch.'),
+      f('sicherheit', 'Ich hab auf den Link geklickt. Den mit dem Gewinn.', 'Link mit dem Gewinn geklickt', 'Sie haben nichts gewonnen. Laptop ist geprüft, Passwort ist neu. Bitte nie wieder klicken. Auch nicht bei Kreuzfahrten.', ['Firewall', 'Benutzerverwaltung']),
+      f('netz', 'Machen Sie mal schnell das WLAN schneller.', 'Router hinter dem Aktenschrank', 'Der Router stand hinter dem Aktenschrank. Jetzt steht er davor. Schneller ist es auch.', ['Router Filiale']),
       q('allgemein', 'Wofür bezahlen wir die IT eigentlich? Es läuft doch alles.', 'Gute Arbeit (unsichtbar)', 'Genau dafür. Es läuft, weil wir da sind. Ein Paradox, ich weiß.'),
-      f('netz', 'Ich brauche das Internet. Also den Kasten mit dem Lämpchen. Für den Vorstand.', 'Router ausgesteckt (für den Wasserkocher)', 'Der Kasten war ausgesteckt. Für den Wasserkocher. Steckt wieder. Bitte den Wasserkocher woanders.'),
-      f('allgemein', 'Es geht NICHTS! Wofür bezahlen wir die IT eigentlich?', 'Bildschirm war aus', 'Es ging alles. Nur der Bildschirm war aus. Knopf unten rechts. Und: dafür.'),
+      f('netz', 'Ich brauche das Internet. Also den Kasten mit dem Lämpchen. Für den Vorstand.', 'Router ausgesteckt (für den Wasserkocher)', 'Der Kasten war ausgesteckt. Für den Wasserkocher. Steckt wieder. Bitte den Wasserkocher woanders.', ['Router Filiale']),
+      q('hardware', 'Es geht NICHTS! Wofür bezahlen wir die IT eigentlich?', 'Bildschirm war aus', 'Es ging alles. Nur der Bildschirm war aus. Knopf unten rechts. Und: dafür.'),
     ],
   },
   {
@@ -106,11 +115,11 @@ export const CALLERS: Caller[] = [
     face: '(¬‿¬)',
     who: 'Entwicklung',
     lines: [
-      q('allgemein', 'Bei mir geht’s.', 'Works on my machine', 'Schön. Dann liefern wir eben Ihren Rechner aus.'),
+      q('allgemein', 'Bei mir geht’s.', 'Works on my machine', 'Schön. Dann liefern wir eben deinen Rechner aus.'),
       q('wunsch', 'Gib mir mal kurz root. Nur ganz kurz.', 'Root „nur ganz kurz“', 'Nein. Auch nicht ganz kurz. Sag mir, was du brauchst, ich mach’s.'),
-      f('netz', 'Das ist kein Bug im Code, das ist ein Netzwerkproblem.', 'Doch ein Bug im Code (Timeout 0 ms)', 'Netz ist sauber, Ping 0,4 ms. Dein Timeout steht auf 0 ms. Das ist dann eher sportlich.'),
+      f('netz', 'Das ist kein Bug im Code, das ist ein Netzwerkproblem.', 'Doch ein Bug im Code (Timeout 0 ms)', 'Netz ist sauber, Ping 0,4 ms. Dein Timeout steht auf 0 ms. Das ist dann eher sportlich.', []),
       q('sicherheit', 'Kannst du Port 22 nach außen aufmachen? Nur bis Montag.', '„Nur bis Montag“ (= für immer)', 'Port 22 bleibt zu. Du kriegst VPN. Das bleibt dann auch nach Montag.'),
-      f('server', 'Ich hab die Produktivdatenbank als Testumgebung benutzt. Fällt das auf?', 'Test auf Produktion', 'Ja. Allen Kunden heißen jetzt „Test Test“. Restore läuft. Wir reden danach.'),
+      f('server', 'Ich hab die Produktivdatenbank als Testumgebung benutzt. Fällt das auf?', 'Test auf Produktion', 'Ja. Alle Kunden heißen jetzt „Test Test“. Restore läuft. Wir reden danach.', ['NAS Buchhaltung']),
       q('server', 'Mein Build läuft. Ich mach so lange Schwertkampf im Flur.', 'Build dauert 40 Minuten', 'Viel Spaß. Wenn er fertig ist, schau bitte auch mal, warum er 40 Minuten dauert.'),
       q('allgemein', 'Ich hab mein Problem im Forum gefunden. Einzige Antwort von 2009: „nvm, fixed it“.', 'Lösung im Forum: „nvm, fixed it“', 'Kenne ich. Schick mir die Fehlermeldung, dann sind wir zu zweit ratlos. Das hilft oft.'),
     ],
@@ -130,7 +139,7 @@ export const CALLERS: Caller[] = [
     face: '(⊙_☉)',
     who: 'Empfang',
     lines: [
-      f('netz', 'Das Telefon zeigt „DNS-Fehler“. Was hat das Telefon mit DNS zu tun?', 'Es war DNS', 'Alles hat mit DNS zu tun. Immer. Ist behoben.'),
+      f('netz', 'Das Telefon zeigt „DNS-Fehler“. Was hat das Telefon mit DNS zu tun?', 'Es war DNS', 'Alles hat mit DNS zu tun. Immer. Ist behoben.', ['Router Filiale']),
       q('allgemein', 'Ich hab die Fehlermeldung weggeklickt. Was stand da? Keine Ahnung.', 'Fehlermeldung ungelesen weggeklickt', 'Wenn sie wiederkommt: bitte NICHT wegklicken, sondern fotografieren. Ohne Blitz.'),
       q('sicherheit', 'Hier steht ein Herr vom „Microsoft-Support“. Soll ich ihn in den Serverraum lassen?', 'Betrüger am Empfang', 'NEIN! Microsoft kommt nie vorbei. Bitte nicht reinlassen. Ich rufe den Sicherheitsdienst.'),
       q('allgemein', 'Es geht wieder! … Nein, doch nicht.', 'Wackelkontakt', 'Bleiben Sie dran. Nicht bewegen. Ich komme vorbei, bevor es sich anders überlegt.'),
@@ -161,17 +170,17 @@ export const CALLERS: Caller[] = [
     face: '(o_O)',
     who: 'Azubi',
     lines: [
-      f('server', 'Ich hab „sudo“ davorgeschrieben, wie im Tutorial. Jetzt ist /etc weg. War das wichtig?', 'Tutorial blind abgetippt', 'Sehr wichtig. Ist aus dem Backup zurück. Ab heute erklärst du mir vorher jeden Befehl.'),
+      f('server', 'Ich hab „sudo“ davorgeschrieben, wie im Tutorial. Jetzt ist /etc weg. War das wichtig?', 'Tutorial blind abgetippt', 'Sehr wichtig. Ist aus dem Backup zurück. Ab heute erklärst du mir vorher jeden Befehl.', []),
       q('netz', 'Ist Chrome das Internet oder Google?', 'Grundlagen fehlen', 'Weder noch. Chrome ist der Browser, Google die Suche, das Internet ist alles dazwischen. Kaffee?'),
-      f('server', 'Ich hab den Server neu gestartet, damit mein Update durchläuft. Welcher Server? Na, der.', 'Falscher Server neu gestartet', 'Das war der Mailserver. Läuft wieder. Ab sofort frag bitte, bevor du irgendwas „mal kurz“ neu startest.'),
-      f('server', 'Ich hab ChatGPT gefragt, wie man den Server neu startet. Jetzt ist der Server weg.', 'Halluzinierte Anleitung', 'Der Server ist wieder da. ChatGPT hat dir eine Anleitung für einen anderen Server gegeben. Selbstbewusst.'),
+      f('server', 'Ich hab den Server neu gestartet, damit mein Update durchläuft. Welcher Server? Na, der.', 'Falscher Server neu gestartet', 'Das war der Mailserver. Läuft wieder. Ab sofort frag bitte, bevor du irgendwas „mal kurz“ neu startest.', ['Mailserver']),
+      f('server', 'Ich hab ChatGPT gefragt, wie man den Server neu startet. Jetzt ist der Server weg.', 'Halluzinierte Anleitung', 'Der Server ist wieder da. ChatGPT hat dir eine Anleitung für einen anderen Server gegeben. Selbstbewusst.', []),
     ],
   },
   {
     face: '(ʘ‿ʘ)',
     who: 'Datenschutz',
     lines: [
-      f('server', 'Haben wir Logfiles? Löschen. Alle. Sofort. Nein, warte: Aufbewahrungspflicht!', 'Datenschutz trifft Aufbewahrungspflicht', 'Logs bleiben 90 Tage, dann automatisch weg. Beide Gesetze zufrieden. Ich auch.'),
+      f('server', 'Haben wir Logfiles? Löschen. Alle. Sofort. Nein, warte: Aufbewahrungspflicht!', 'Datenschutz trifft Aufbewahrungspflicht', 'Logs bleiben 90 Tage, dann automatisch weg. Beide Gesetze zufrieden. Ich auch.', ['NAS Buchhaltung']),
       f('drucker', 'Wer hat den Drucker im Flur ins Internet gehängt? Der hat jetzt Instagram.', 'Drucker mit öffentlicher IP', 'Drucker ist wieder nur im Firmennetz. Sein Instagram-Account hatte übrigens mehr Follower als unserer.'),
       q('passwort', 'Ist „Passwort123“ DSGVO-konform?', 'Passwort123', 'Konform vielleicht. Sicher nicht. Bitte ändern. Heute noch.'),
       f('sicherheit', 'Die Kaffeemaschine sammelt Daten. Wer hat dem zugestimmt?', 'Smarte Kaffeemaschine', 'Niemand. Die Telemetrie ist aus. Die Maschine weiß jetzt nicht mehr, wie viel Sie trinken. Ich schon.'),
@@ -181,7 +190,7 @@ export const CALLERS: Caller[] = [
     face: '(-_-)',
     who: 'Immobilienmanagement',
     lines: [
-      q('server', 'Wir machen am Wochenende den Strom aus. Ist das schlimm für euch?', 'Stromabschaltung ohne Vorwarnung', 'Ja. Sehr. Bitte sagen Sie mir wann, dann fahre ich vorher alles sauber runter.'),
+      q('server', 'Wir machen am Wochenende den Strom aus. Ist das schlimm für euch?', 'Stromabschaltung, Uhrzeit: „irgendwann“', 'Ja. Sehr. Sagen Sie mir die Uhrzeit, dann fahre ich vorher alles sauber runter.'),
       q('server', 'Im Serverraum ist es so laut. Darf ich die Klimaanlage ausmachen?', 'Klimaanlage aus („zu laut“)', 'Bitte NICHT. Ohne Klimaanlage wird es da drin in einer Stunde 50 Grad. Dann ist es auch leise.'),
       q('server', 'Im Keller steht Wasser. Ist das euer Raum?', 'Serverraum im Keller (Planung von 1998)', 'Ja! Bitte Hauptsicherung NICHT anfassen und nicht reingehen. Ich bin sofort da.'),
       q('server', 'Wir streichen den Serverraum. Könnt ihr kurz alles rausstellen?', 'Renovierung ohne Absprache', 'Rausstellen geht nicht. Abdecken schon. Ich bringe Folie. Und bleibe daneben stehen.'),
@@ -201,10 +210,10 @@ export const CALLERS: Caller[] = [
     face: '(⌐■_■)',
     who: 'Externer Berater',
     lines: [
-      q('server', 'Wir empfehlen Kubernetes. Wofür? Für alles.', 'Lösung sucht Problem', 'Wir haben drei Server und eine Kaffeemaschine. Danke, wir verzichten.'),
-      q('wunsch', 'Habt ihr mal über Blockchain nachgedacht? Für die Ticketvergabe.', 'Lösung sucht Problem', 'Haben wir. Kurz. Die Tickets bleiben in der Datenbank.'),
-      q('allgemein', 'Meine Rechnung ist raus. Was macht ihr hier eigentlich so?', 'Berater', 'Wir machen die Arbeit aus Ihrer Präsentation. Die Rechnung geht an den Einkauf.'),
-      q('wunsch', 'Mein Vorschlag: Alles neu machen. Mein Honorar: auch neu.', 'Berater', 'Danke. Wir reparieren erst mal, was da ist. Das ist günstiger.'),
+      q('server', 'Wir empfehlen Kubernetes. Wofür? Für alles.', 'Kubernetes für drei Server', 'Wir haben drei Server und eine Kaffeemaschine. Danke, wir verzichten.'),
+      q('wunsch', 'Habt ihr mal über Blockchain nachgedacht? Für die Ticketvergabe.', 'Lösung sucht Problem (Blockchain)', 'Haben wir. Kurz. Die Tickets bleiben in der Datenbank.'),
+      q('allgemein', 'Meine Rechnung ist raus. Was macht ihr hier eigentlich so?', 'Rechnung vor Ergebnis', 'Wir machen die Arbeit aus Ihrer Präsentation. Die Rechnung geht an den Einkauf.'),
+      q('wunsch', 'Mein Vorschlag: Alles neu machen. Mein Honorar: auch neu.', 'Greenfield-Fantasie', 'Danke. Wir reparieren erst mal, was da ist. Das ist günstiger.'),
     ],
   },
   {
@@ -213,7 +222,7 @@ export const CALLERS: Caller[] = [
     lines: [
       q('netz', 'Der Chef braucht WLAN im Aufzug. Bis morgen.', 'Physik (Aufzug = Faradayscher Käfig)', 'Der Aufzug ist ein Metallkasten. Da geht kein WLAN durch. Bis morgen auch nicht.'),
       f('passwort', 'Der Chef hat sein Passwort vergessen. Er sagt, Sie kennen es doch bestimmt.', 'Passwort vergessen (Chef)', 'Ich kenne es nicht, das ist der Sinn von Passwörtern. Er hat ein neues. Bitte persönlich abholen.'),
-      f('hardware', 'Können Sie den Beamer im Vorstandszimmer anmachen? Er sagt „No Signal“. Das Signal ist doch da!', 'Falscher HDMI-Eingang', 'Eingang stand auf HDMI 1, das Kabel steckt in HDMI 2. Jetzt geht’s. Signal war tatsächlich da. Nur woanders.'),
+      f('hardware', 'Können Sie den Beamer im Vorstandszimmer anmachen? Er sagt „No Signal“. Das Signal ist doch da!', 'Falscher HDMI-Eingang', 'Eingang stand auf HDMI 1, das Kabel steckt in HDMI 2. Jetzt geht’s. Signal war tatsächlich da. Nur woanders.', ['Beamer Vorstandsraum']),
       q('mail', 'Der Chef will, dass seine Mails „lauter“ sind. Geht das?', 'Wunsch nach lauten Mails', 'Mails haben keine Lautstärke. Ich kann sie als „Wichtig“ markieren. Das ignorieren dann alle in Rot.'),
     ],
   },
@@ -223,7 +232,7 @@ export const CALLERS: Caller[] = [
     lines: [
       q('sicherheit', 'Ab Montag verbieten wir USB. Und Bluetooth. Und Tastaturen.', 'Sicherheit über alles', 'Gerne. Ohne Tastaturen bitte auch keine Tickets mehr. Win-win.'),
       q('passwort', 'Ihr Passwort „correct horse battery staple“ steht in vier Wörterbüchern. Abgelehnt.', 'xkcd 936', 'Okay. Dann „correct horse battery staple 2“. Spaß. Ich nehme ein neues.'),
-      f('sicherheit', 'Ich habe den Server vom Netz genommen. Jetzt ist er sicher.', 'Sicherheit durch Nichterreichbarkeit', 'Sicher ist er. Nur nutzen kann ihn auch keiner. Ich steck ihn wieder ein, wir patchen ihn zusammen.'),
+      f('sicherheit', 'Ich habe den Server vom Netz genommen. Jetzt ist er sicher.', 'Sicherheit durch Nichterreichbarkeit', 'Sicher ist er. Nur nutzen kann ihn auch keiner. Ich steck ihn wieder ein, wir patchen ihn zusammen.', ['Firewall', 'Switch Keller']),
       q('sicherheit', 'Ich hab einen Phishing-Test gemacht. Ich bin selbst drauf reingefallen.', 'Eigener Phishing-Test', 'Sehr glaubwürdiger Test also. Passwort neu, und ich sag es niemandem. Vielleicht.'),
     ],
   },
@@ -231,15 +240,15 @@ export const CALLERS: Caller[] = [
     face: '(°ー°〃)',
     who: 'Schulsekretariat',
     lines: [
-      f('server', 'Unsere Software hat alle Schüler gelöscht. Der Neue hat Klammern im Namen.', 'Eingaben bereinigt (Hallo, Bobby)', 'Schüler sind aus dem Backup zurück. Die Software prüft jetzt Eingaben. Grüße an den kleinen Bobby.'),
-      q('server', 'Heißt Ihr Sohn wirklich Robert, Klammer zu, Semikolon, DROP TABLE?', 'Eingaben bereinigt (Hallo, Bobby)', 'Ja. Wir nennen ihn Little Bobby Tables. Und Sie bereinigen hoffentlich Ihre Eingaben.'),
+      f('server', 'Unsere Software hat alle Schüler gelöscht. Der Neue hat Klammern im Namen.', 'Eingaben nicht bereinigt (Hallo, Bobby)', 'Schüler sind aus dem Backup zurück. Die Software prüft jetzt Eingaben. Grüße an den kleinen Bobby.', ['NAS Buchhaltung']),
+      f('server', 'Ein Vater sagt, sein Sohn heißt „Robert\'); DROP TABLE Schueler;--“. Sollen wir den so eintragen?', 'Eingaben nicht bereinigt (Hallo, Bobby)', 'Eintragen ja, aber erst, wenn die Software Eingaben prüft. Hab ich gerade eingebaut. Sonst sind morgen wieder alle Schüler weg.', []),
     ],
   },
   {
     face: '(ーー;)',
     who: 'Betriebsrat',
     lines: [
-      f('office', 'Die neue Software zählt, wie oft ich klicke? Das ist mitbestimmungspflichtig.', 'Telemetrie ab Werk', 'Stimmt. Die Klickzählung ist aus. Die Software war nur neugierig.'),
+      f('office', 'Die neue Software zählt, wie oft ich klicke? Das ist mitbestimmungspflichtig.', 'Telemetrie ab Werk', 'Stimmt. Die Klickzählung ist aus. Die Software war nur neugierig.', []),
       q('office', 'Der Bildschirmschoner geht nach 5 Minuten an. Das ist Leistungskontrolle.', 'Sicherheitsrichtlinie', 'Der Bildschirmschoner schützt nur vor neugierigen Blicken. Er zählt nichts. Ehrenwort.'),
       q('drucker', 'Wer hat entschieden, dass der Drucker „Dieter“ heißt? Wurde das abgestimmt?', 'Drucker eigenmächtig benannt', 'Das war ich. Ich beantrage hiermit eine Abstimmung. Mein Vorschlag bleibt Dieter.'),
     ],
@@ -248,9 +257,9 @@ export const CALLERS: Caller[] = [
     face: '(ˆڡˆ)',
     who: 'Kantine',
     lines: [
-      f('hardware', 'Die Kasse zeigt nur noch Hieroglyphen. Die Leute zahlen jetzt nach Ehrlichkeit.', 'Zeichensatz: Windows-1252 trifft UTF-8', 'Kasse spricht wieder Deutsch. Die Einnahmen der letzten Stunde waren übrigens höher als sonst.'),
+      f('hardware', 'Die Kasse zeigt nur noch Hieroglyphen. Die Leute zahlen jetzt nach Ehrlichkeit.', 'Zeichensatz: Windows-1252 trifft UTF-8', 'Kasse spricht wieder Deutsch. Die Einnahmen der letzten Stunde waren übrigens höher als sonst.', []),
       q('wunsch', 'Können Sie die Speisekarte ins Intranet stellen? Und die von 2019 endlich raus?', 'Intranet seit 2019 nicht gepflegt', 'Erledigt. Die Karte von 2019 hatte mehr Aufrufe als alles andere im Intranet.'),
-      f('passwort', 'Die Spülmaschine hat ein Update gemacht. Jetzt will sie ein Passwort.', 'Smarte Spülmaschine', 'Das Standardpasswort stand im Handbuch. Jetzt spült sie wieder. Und hat ein besseres Passwort als der Chef.'),
+      f('passwort', 'Die Spülmaschine hat ein Update gemacht. Jetzt will sie ein Passwort.', 'Smarte Spülmaschine', 'Das Standardpasswort stand im Handbuch. Jetzt spült sie wieder. Und hat ein besseres Passwort als der Chef.', []),
     ],
   },
   {
@@ -259,7 +268,7 @@ export const CALLERS: Caller[] = [
     lines: [
       q('netz', 'Wir brauchen 5G im Keller. Für Content.', 'Physik (Keller)', 'Im Keller gibt es WLAN. 5G kann ich leider nicht herzaubern. Content geht auch im Erdgeschoss.'),
       q('passwort', 'Kann man das WLAN-Passwort hashtaggen?', 'Passwort als Hashtag', 'Nein. Bitte das WLAN-Passwort generell nicht posten. Weder mit noch ohne Hashtag.'),
-      f('sicherheit', 'Unser Post ist viral gegangen. Mit dem Screenshot vom Admin-Passwort drauf.', 'Screenshot mit Passwort gepostet', 'Passwort ist geändert, Post ist gelöscht. 40.000 Leute haben es gesehen. Glückwunsch zur Reichweite.'),
+      f('sicherheit', 'Unser Post ist viral gegangen. Mit dem Screenshot vom Admin-Passwort drauf.', 'Screenshot mit Passwort gepostet', 'Passwort ist geändert, Post ist gelöscht. 40.000 Leute haben es gesehen. Glückwunsch zur Reichweite.', ['Benutzerverwaltung']),
     ],
   },
   {
@@ -307,7 +316,7 @@ export const SITUATIONS: Situation[] = [
     // Montagmorgen
     when: (_s, d) => d.getDay() === 1 && d.getHours() < 11,
     calls: [
-      sit('(ಠ_ಠ)', 'Buchhaltung', f('allgemein', 'Seit Freitag geht nichts. Ist mir aber erst jetzt aufgefallen.', 'Update am Freitagabend', 'Das Update vom Freitagabend war es. Ist behoben. Danke, dass Sie es Montag um 8:01 melden.')),
+      sit('(ಠ_ಠ)', 'Buchhaltung', f('allgemein', 'Seit Freitag geht nichts. Ist mir aber erst jetzt aufgefallen.', 'Update am Freitagabend', 'Das Update vom Freitagabend war es. Ist behoben. Danke, dass Sie es Montag um 8:01 melden.', [])),
       sit('( ˘︹˘ )', 'Personal', f('passwort', 'Mein Passwort ist weg. Übers Wochenende. Einfach weg.', 'Passwort übers Wochenende vergessen', 'Das Passwort ist nicht weg, nur vergessen. Passiert jeden Montag. Neues ist gesetzt.')),
     ],
   },
@@ -315,7 +324,7 @@ export const SITUATIONS: Situation[] = [
     // Nachts
     when: (_s, d) => d.getHours() >= 22 || d.getHours() < 6,
     calls: [
-      sit('(・_・;)', 'Nachtschicht', f('drucker', 'Oh, Sie gehen ran? Um diese Uhrzeit? … Egal. Mein Drucker.', 'Drucker im Energiesparmodus', 'Der Drucker schlief. Wie alle um diese Uhrzeit. Außer uns beiden.')),
+      sit('(・_・;)', 'Nachtschicht', f('drucker', 'Oh, Sie gehen ran? Um diese Uhrzeit? … Egal. Mein Drucker.', 'Drucker im Energiesparmodus', 'Der Drucker schlief. Wie alle um diese Uhrzeit. Außer uns beiden.', ['Drucker 3. OG'])),
       sit('(ಠ_ಠ)', 'Buchhaltung', q('mail', 'Ich weiß, es ist mitten in der Nacht. Aber root schickt mir Mails.', 'Cronjob mit falscher Empfängeradresse', 'root ist ein Cronjob, der Sie aus Versehen informiert. Ich hab ihn umgestellt. Schlafen Sie gut.')),
       sit('(╯°□°)╯︵ ┻━┻', 'Geschäftsführung', q('server', 'Ich kann nicht schlafen. Ist der Server noch an?', 'Sorgen um 3 Uhr nachts', 'Ja. Er läuft seit 1.284 Tagen. Er schläft nie. Sie sollten es aber versuchen.')),
     ],
@@ -329,14 +338,14 @@ export const SITUATIONS: Situation[] = [
     [
       ['intern', sit('(°ロ°)', 'Vertrieb', q('hardware', 'Ihr Praktikant hat meinen Rechner neu gestartet. Mitten in der Präsentation.', 'Praktikant mit Tatendrang', 'Tut mir leid. Er bekommt eine Schulung zum Thema „Vorher fragen“. Die Präsentation ist zum Glück gespeichert.'))],
       ['intern', sit('(ಠ_ಠ)', 'Buchhaltung', q('hardware', 'Ihr Praktikant hat gefragt, ob ich es aus- und wieder eingeschaltet hab. Frechheit. Hat geholfen.', 'Aus- und wieder eingeschaltet', 'Das ist der Standardweg. Ich sag ihm, er soll es freundlicher fragen. Helfen wird es trotzdem.'))],
-      ['bash', sit('¯\\_(ツ)_/¯', 'Marketing', f('office', 'Seit heute Nacht heißen alle meine Dateien „final_v2_FINAL“. Also noch mehr als vorher.', 'Skript mit zu viel Ehrgeiz', 'Mein Aufräum-Skript war zu ehrgeizig. Die alten Namen sind zurück. Leider auch die alten Namen.'))],
+      ['bash', sit('¯\\_(ツ)_/¯', 'Marketing', f('office', 'Seit heute Nacht heißen alle meine Dateien „final_v2_FINAL“. Also noch mehr als vorher.', 'Skript mit zu viel Ehrgeiz', 'Mein Aufräum-Skript war zu ehrgeizig. Die alten Namen sind zurück. Leider auch die alten Namen.', ['NAS Buchhaltung']))],
       ['cron', sit('(ಠ_ಠ)', 'Buchhaltung', q('mail', 'Ich krieg jeden Morgen um 3:00 eine Mail von „root“. Wer ist root und was will er von mir?', 'Cronjob mit falscher Empfängeradresse', 'root ist ein Cronjob von mir. Er wollte nur Bescheid sagen. Ab sofort sagt er es nur noch mir.'))],
-      ['ansible', sit('(ಠ_ಠ)', 'Buchhaltung', f('server', 'Mein Laptop heißt jetzt „webserver-prod-07“ und hat nginx. Ich bin in der Buchhaltung.', 'Ansible-Inventar verrutscht', 'Das Inventar war verrutscht. Ihr Laptop ist wieder ein Laptop. Die echte Website war kurz bei Ihnen gehostet.'))],
+      ['ansible', sit('(ಠ_ಠ)', 'Buchhaltung', f('server', 'Mein Laptop heißt jetzt „webserver-prod-07“ und hat nginx. Ich bin in der Buchhaltung.', 'Ansible-Inventar verrutscht', 'Das Inventar war verrutscht. Ihr Laptop ist wieder ein Laptop. Die echte Website war kurz bei Ihnen gehostet.', []))],
       ['k8s', sit('( ˘︹˘ )', 'Personal', q('server', 'Mein Excel läuft jetzt in einem Pod? Wo ist der Pod? Wo ist mein Excel?', 'Kubernetes', 'Ihr Excel läuft auf Ihrem Rechner. Wie immer. Der Pod war ein Missverständnis meinerseits.'))],
       ['agent', sit('(°ロ°)', 'Vertrieb', q('allgemein', 'Euer Chatbot hat mir gekündigt. Gilt das?', 'KI-Agent mit zu vielen Rechten', 'Nein, das gilt nicht. Der Chatbot hat keine Personalbefugnis mehr. Hatte er nie haben sollen.'))],
       ['agent', sit('(╯°□°)╯︵ ┻━┻', 'Geschäftsführung', q('allgemein', 'Euer KI-Agent hat mir geantwortet: „Ich verstehe Ihre Frustration.“ Und dann aufgelegt.', 'KI-Agent im Kundenservice-Modus', 'Der Agent ist für Chefs jetzt abgeschaltet. Sie bekommen wieder mich. Ich lege nie auf. Leider.'))],
-      ['cron', sit('( ˘︹˘ )', 'Personal', f('server', 'Bei mir geht jede Nacht um 3 Uhr das Licht an. Hat das was mit euch zu tun?', 'Cronjob steuert die Haustechnik', 'Ja. Ein Cronjob von mir hat statt Backups das Licht geschaltet. Ist korrigiert. Die Backups laufen jetzt auch.'))],
-      ['ansible', sit('¯\\_(ツ)_/¯', 'Marketing', f('office', 'Mein Bildschirmhintergrund wird jeden Morgen zurückgesetzt. Auf ein Logo mit „YAML“.', 'Ansible-Playbook für alle Rechner', 'Das Playbook galt für alle Rechner statt nur für Server. Ihr Hintergrund bleibt jetzt, wie er ist.'))],
+      ['cron', sit('( ˘︹˘ )', 'Personal', f('server', 'Bei mir geht jede Nacht um 3 Uhr das Licht an. Hat das was mit euch zu tun?', 'Cronjob steuert die Haustechnik', 'Ja. Ein Cronjob von mir hat statt Backups das Licht geschaltet. Ist korrigiert. Die Backups laufen jetzt auch.', ['NAS Buchhaltung']))],
+      ['ansible', sit('¯\\_(ツ)_/¯', 'Marketing', f('office', 'Mein Bildschirmhintergrund wird jeden Morgen zurückgesetzt. Auf ein Logo mit „YAML“.', 'Ansible-Playbook für alle Rechner', 'Das Playbook galt für alle Rechner statt nur für Server. Ihr Hintergrund bleibt jetzt, wie er ist.', []))],
       ['k8s', sit('(•̀ᴗ•́)و', 'Projektleitung', q('server', 'Unser Wiki ist jetzt hochverfügbar, sagt ihr. Lesen tut es trotzdem keiner.', 'Wiki hochverfügbar, ungelesen', 'Hochverfügbar heißt, es ist immer da, wenn es keiner liest. Ich verlinke es in jeder Antwort. Hilft auch nicht.'))],
       ['bash', sit('(ಠ_ಠ)', 'Buchhaltung', q('sicherheit', 'In meinem Ordner liegt eine Datei namens „fix_all.sh“. Darf ich die mal doppelklicken?', 'Unbekanntes Skript im Ordner', 'Bitte NICHT doppelklicken. Die ist von mir, aus Versehen bei Ihnen gelandet. Ich hol sie ab.'))],
       [

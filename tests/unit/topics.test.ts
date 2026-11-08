@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CALLERS, situationalCalls } from '../../src/content/callers';
+import { CALLERS, SITUATIONS, situationalCalls } from '../../src/content/callers';
 import { DEVICE_SETTINGS, GENERIC, TOPICS, topicPool, type Topic } from '../../src/content/topics';
 import { VIP_TICKETS } from '../../src/content/work';
 import { createInitialState } from '../../src/core/state';
@@ -39,6 +39,19 @@ describe('Themen der Tickets', () => {
     expect(topicPool('drucker', 'cmds', () => 0)).toBe(TOPICS.drucker.cmds);
     expect(topicPool('drucker', 'cmds', () => 0.99)).toBe(GENERIC.cmds);
     expect(topicPool('allgemein', 'cmds', () => 0)).toBe(GENERIC.cmds);
+  });
+
+  it('jedes Gerät hat ein passendes Anliegen; eigene Geräte nur bei technischen Anliegen', () => {
+    const s = createInitialState(0);
+    for (const g of Object.keys(s.generators) as (keyof typeof s.generators)[]) s.generators[g].owned = 1;
+    s.prestige.jobs = 1;
+    const lines = [...CALLERS.flatMap((c) => c.lines), ...SITUATIONS.flatMap((x) => x.calls)];
+    const used = new Set<string>(Object.values(TOPICS).flatMap((t) => t.devices));
+    for (const l of lines) {
+      if (l.devices) expect(l.fix, l.text).toBe(true);
+      for (const d of l.devices ?? []) used.add(d);
+    }
+    expect([...used].sort()).toEqual(Object.keys(DEVICE_SETTINGS).sort());
   });
 
   it('jedes Anliegen hat eigene Antwort und Ursache', () => {

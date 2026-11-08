@@ -154,11 +154,20 @@ button {
 }
 .wall .buff-good {
   color: #1f7a50;
-  background: #d9f5e6;
+  background: linear-gradient(90deg, #b3ebcd calc(var(--left, 1) * 100%), #e9f9f0 0);
+}
+.wall .buff:not(:last-child) {
+  display: none;
+}
+.wall .buffs[data-more]:not([data-more=''])::after {
+  content: attr(data-more);
+  align-self: center;
+  font-weight: 700;
+  color: var(--ink-soft);
 }
 .wall .buff-bad {
   color: #a33a3a;
-  background: #ffe0e0;
+  background: linear-gradient(90deg, #ffc9c9 calc(var(--left, 1) * 100%), #fff0f0 0);
 }
 .rate {
   color: #2f9e6a;
@@ -5489,6 +5498,14 @@ button {
   min-height: 42px;
   margin: 7px 0 5px;
 }
+/* Knopf klebt unten im Monitor: auf kleinen Displays scrollt nur der Text, der Knopf bleibt sichtbar */
+.screen > .incident .mon-detail .nag-take,
+.screen > .incident .mon-detail .nag-close {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  box-shadow: 0 -8px 10px 2px #fff;
+}
 .screen > .incident .mon-detail .nag-comment {
   margin: 5px 0 3px;
   font-size: 12.5px;
@@ -5598,8 +5615,9 @@ button {
 /* Post-it: feste Größe, ragt nur über die Monitor-Unterkante, nicht in den Bildschirm */
 .postit-1 {
   bottom: 5px;
-  height: 34px;
-  min-height: 0;
+  /* wächst nach oben bis drei Zeilen, längere Sprüche enden mit … */
+  height: auto;
+  min-height: 34px;
   overflow: hidden;
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -5768,9 +5786,14 @@ body > .incident.playing {
   font-size: 12px;
 }
 .hist-id {
+  flex: 0 0 auto;
   font: 700 12px / 1.2 var(--font);
+  white-space: nowrap;
 }
 .hist-badge {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   padding: 1px 7px;
   border-radius: 8px;
   background: #d9f5e6;
@@ -5862,5 +5885,65 @@ body > .incident.playing {
   /* Zähler, Kanban und Whiteboard teilen sich die Wand: etwas enger hängen */
   .wall {
     gap: 6px;
+  }
+  .counter-sign {
+    padding-inline: 9px;
+  }
+
+}
+@media (max-width: 399px) {
+  /* Boost-Chip: Farbe sagt gut/schlecht, der Faktor hat hier keinen Platz */
+  .wall .buff-mult {
+    display: none;
+  }
+  .wall .rate-row {
+    gap: 5px;
+  }
+  .wall .buffs {
+    gap: 3px;
+  }
+  .wall .buff {
+    padding: 0 4px;
+    font-size: 10.5px;
+  }
+}
+@media (max-width: 339px) {
+  .wall .buffs::after {
+    display: none;
+  }
+}
+/* Incident-Alarm und -Auswertung auf kleinen Displays: Doppeltes weglassen, damit Text und Knopf zusammen passen */
+@media (max-width: 399px), (max-height: 700px) {
+  .screen > .incident .mon-compact .mon-summary,
+  .screen > .incident .mon-compact .nag-title {
+    display: none;
+  }
+  .screen > .incident .mon-compact .nag-assign {
+    margin-top: 0;
+  }
+}
+@media (max-height: 680px) {
+  .screen > .incident .mon-compact .mon-table {
+    display: none;
+  }
+}
+
+/* Handy quer: zu niedrig für Monitor und Tastatur – freundlich ums Drehen bitten (Desktop ist höher, greift dort nicht) */
+@media (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
+  #app {
+    visibility: hidden;
+  }
+  body::after {
+    content: '⟳\A Bitte Handy hochkant drehen.\A Der Helpdesk arbeitet nur im Hochformat. Wie der Drucker.';
+    white-space: pre-line;
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    padding: 24px;
+    background: var(--wall);
+    color: var(--ink);
+    font: 600 18px / 1.5 var(--font-ui);
+    text-align: center;
   }
 }

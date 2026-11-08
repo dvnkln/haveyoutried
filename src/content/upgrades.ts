@@ -15,7 +15,7 @@ export const UPGRADE_TEXT: Record<string, UpgradeText> = {
   },
   mouse: {
     name: 'Ergonomische Maus',
-    desc: 'Vertikal, gummiert, 89 €. Das Handgelenk dankt. Die Kollegen fragen, ob das ein Joystick ist.',
+    desc: 'Rund, gummiert, mit grünem Mausrad, 89 €. Das Handgelenk dankt. Die Kollegen fragen, ob das ein Ufo ist.',
   },
   keyboard: { name: 'Mechanische Tastatur', desc: 'Cherry MX Blue. Das Großraumbüro hasst dich. Du tippst doppelt so schnell.' },
   answering: {
@@ -41,8 +41,8 @@ export const UPGRADE_TEXT: Record<string, UpgradeText> = {
   freeze: { name: 'Change Freeze', desc: 'Niemand darf irgendwas ändern. Endlich Ruhe. Die Tickets schließen sich fast von selbst.' },
 
   // Praktikant
-  'intern-1': { name: 'Eigener Schreibtisch', desc: 'Statt Klappstuhl neben dem Drucker. Produktivität verdoppelt, Rückenschmerzen halbiert.' },
-  'intern-2': { name: 'Admin-Rechte (temporär)', desc: 'Seit 2019 temporär.' },
+  'intern-1': { name: 'Eigener Schreibtisch', desc: 'Statt Klappstuhl neben dem Drucker. Mit Pflanze. Produktivität verdoppelt, Rückenschmerzen halbiert.' },
+  'intern-2': { name: 'Admin-Rechte (temporär)', desc: 'Seit 2019 temporär. Die Zugangsdaten kleben jetzt als Post-it am Monitor.' },
   'intern-3': { name: 'Übernahmeangebot', desc: 'Sie bleiben. Für Mindestlohn, Club-Mate und das Versprechen „nächstes Jahr mehr“.' },
   // Bash
   'bash-1': { name: 'set -euo pipefail', desc: 'Scheitert jetzt laut statt leise. Das nennt man Fortschritt.' },

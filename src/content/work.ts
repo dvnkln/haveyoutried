@@ -1,7 +1,7 @@
 import type { Topic } from './topics';
 
 // Inhalte für das Arbeitsfenster auf dem Desktop: was getippt wird und was drumherum steht.
-export { TICKET_PRIOS } from './props';
+export { BOSSES, TICKET_PRIOS } from './props';
 
 /** Chat im Firmen-Messenger: Einstieg vor der eigentlichen Antwort */
 export const CHAT_LINES: string[] = [

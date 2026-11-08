@@ -78,6 +78,8 @@ export function createPager(ctx: AppContext): { el: HTMLElement; device: HTMLEle
   };
   el.addEventListener('click', open);
 
+  /** LCD im Alarm je Eskalationsstufe: piept, nervt, brennt */
+  const PAGER_CODES = ['1 NEUE', 'RUF AN!', '911 911'];
   // Der Pager als Gerät auf dem Schreibtisch: Ruhe = Uhrzeit, Alarm = Titel + Countdown, Antippen öffnet
   const lcdTitle = h('span', { class: 'pd-title' });
   const lcdCount = h('span', { class: 'pd-count' });
@@ -124,7 +126,6 @@ export function createPager(ctx: AppContext): { el: HTMLElement; device: HTMLEle
         setText(lcdCount, '');
         return;
       }
-      setText(lcdTitle, eventDef(a.id)?.title ?? a.id);
       setText(title, eventDef(a.id)?.title ?? a.id);
       const leftMs = Math.max(0, a.expiresAt - ctx.state.stats.playTimeMs);
       const left = Math.ceil(leftMs / 1_000);
@@ -136,6 +137,8 @@ export function createPager(ctx: AppContext): { el: HTMLElement; device: HTMLEle
       setFlag(el, 'urgent', left <= 10);
       setFlag(device, 'urgent', left <= 10);
       setLevel(frac > 0.6 ? 1 : frac > 0.3 ? 2 : 3);
+      // wie ein echter Pager: nur ein kurzer Code, der Text steht im Dialog
+      setText(lcdTitle, PAGER_CODES[level - 1] ?? '');
       // in der letzten Phase alle paar Sekunden nachpiepen
       const now = performance.now();
       if (level >= 3 && now - lastBeep > 3_500 && !document.hidden) {

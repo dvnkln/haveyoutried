@@ -60,7 +60,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   a('clicks100k', 'Sehnenscheide, Stufe 3', '100.000 Anschläge. Die Physiotherapeutin kennt dich beim Namen.', (s) => s.clicks >= 100_000),
   a('callers100', 'Telefonseelsorge', '100 Anrufer angehört.', (s) => flag(s, 'callers') >= 100),
   a('callbacks10', 'Ich ruf jetzt zum dritten Mal an', '10 Rückrufe ertragen.', (s) => flag(s, 'callbacks') >= 10),
-  a('streak10', 'Läuft bei dir', '10 Tickets in Folge gelöst, ohne abzusetzen.', (s) => flag(s, 'bestStreak') >= 10),
+  a('streak10', 'Die Warteschlange hat Angst', '10 Tickets in Folge gelöst, ohne abzusetzen.', (s) => flag(s, 'bestStreak') >= 10),
   a('streak42', 'Die Antwort auf alles', '42 Tickets in Folge gelöst. Handtuch nicht vergessen.', (s) => flag(s, 'bestStreak') >= 42),
   a('streak100', 'Ludicrous Speed', '100 Tickets in Folge. Die Tastatur hat Plaid erreicht.', (s) => flag(s, 'bestStreak') >= 100),
   a('solved500', 'Inbox Zero ist ein Mythos', '500 Tickets komplett beantwortet. Die Warteschlange: unbeeindruckt.', (s) => flag(s, 'solved') >= 500),

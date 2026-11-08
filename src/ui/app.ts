@@ -84,6 +84,8 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
   const buffsEl = h('span', { class: 'buffs', 'aria-live': 'polite' });
   let buffSig = '';
   let buffChips: HTMLElement[] = [];
+  /** Startdauer je Chip (für den Füllstand) */
+  let buffTotal: number[] = [];
   const header = h('header', { class: 'wall' }, [
     h('div', { class: 'sign counter-sign' }, [
       h('div', { class: 'counter' }, [tickets, h('span', { class: 'counter-unit', text: ' Tickets' })]),
@@ -316,13 +318,25 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
       const sig = buffs.map((b) => b.id).join();
       if (sig !== buffSig) {
         buffSig = sig;
-        buffChips = buffs.map((b) => h('span', { class: `buff ${b.mult >= 1 ? 'buff-good' : 'buff-bad'}` }));
+        // Name + Faktor; die Restzeit läuft als Füllstand leer (kürzer als Sekunden, passt auch auf schmale Handys)
+        buffChips = buffs.map((b) =>
+          h('span', { class: `buff ${b.mult >= 1 ? 'buff-good' : 'buff-bad'}`, title: `${Math.ceil(b.remainingMs / 1_000)} s` }, [
+            h('span', { class: 'buff-name', text: BUFF_LABELS[b.id] ?? b.id }),
+            h('span', { class: 'buff-mult', text: ` ×${b.mult}` }),
+          ]),
+        );
+        buffTotal = buffs.map((b) => b.remainingMs);
         buffsEl.replaceChildren(...buffChips);
+        // nur der neueste Chip passt an die Wand, die übrigen als „+n“
+        buffsEl.dataset.more = buffs.length > 1 ? `+${buffs.length - 1}` : '';
         setFlag(screen, 'brake', buffs.some((b) => b.mult < 1));
       }
       buffs.forEach((b, i) => {
         const chip = buffChips[i];
-        if (chip) setText(chip, `${BUFF_LABELS[b.id] ?? b.id} ×${b.mult} ${Math.ceil(b.remainingMs / 1_000)}s`);
+        if (!chip) return;
+        buffTotal[i] = Math.max(buffTotal[i] ?? 0, b.remainingMs);
+        chip.style.setProperty('--left', (b.remainingMs / (buffTotal[i] || 1)).toFixed(3));
+        chip.title = `noch ${Math.ceil(b.remainingMs / 1_000)} s`;
       });
       active?.tab.render();
     },

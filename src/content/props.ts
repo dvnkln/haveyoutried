@@ -21,7 +21,7 @@ export const POSTITS: string[] = [
   'Is it plugged in?',
   'Montag. Wieder.',
   'Doku? Später.',
-  'There is no cloud. Just someone else’s computer.',
+  'Cloud = PC von wem anders',
   'Mittagspause 12:00–12:05',
   'PEBKAC',
   'RTFM (freundlich)',
@@ -68,7 +68,9 @@ export const PANIC_LINES: string[] = [
 export const INCIDENT_SIGN = 'Minuten ohne Incident';
 
 /** Prioritäten im Ticketsystem */
-export const TICKET_PRIOS: string[] = ['niedrig', 'mittel', 'hoch', 'sehr hoch', 'CHEF', 'gestern'];
+export const TICKET_PRIOS: string[] = ['niedrig', 'mittel', 'hoch', 'sehr hoch', 'gestern'];
+/** Wer die Priorität „CHEF“ bekommt (sonst nie) */
+export const BOSSES = ['Chef', 'Geschäftsführung', 'Vorstand', 'Vorstandsassistenz'];
 
 /** Maus auf dem Mauspad: Antippen gibt einen Spruch im Log. */
 export const MOUSE_LINES: string[] = [
@@ -98,9 +100,9 @@ export const POSTERS: Record<'bash' | 'cron' | 'ansible' | 'k8s' | 'agent', { ti
     glyph: '#!',
     color: '#a0c4ff',
     lines: [
-      'Warum 5 Minuten klicken, wenn man 5 Stunden skripten kann?',
-      'Jedes Skript beginnt mit „nur ganz kurz“. Und endet mit 400 Zeilen.',
-      'Wer Fehler ignoriert, hat keine. (set -e hat das jetzt beendet.)',
+      'Wer Fehler ignoriert, hat keine. Seit set -e leider doch.',
+      'Jedes Skript beginnt mit „nur ganz kurz“. Jetzt steht es wenigstens im Kommentar.',
+      'Warum 5 Minuten klicken, wenn man 5 Stunden skripten kann? Jetzt ohne Warnungen.',
     ],
   },
   cron: {
@@ -108,9 +110,9 @@ export const POSTERS: Record<'bash' | 'cron' | 'ansible' | 'k8s' | 'agent', { ti
     glyph: '*/5',
     color: '#ffd166',
     lines: [
-      'Läuft jede Nacht um 3. Seit 2011. Niemand weiß, was.',
-      'Erfolg ist, wenn keiner merkt, dass es läuft. Oder ob.',
-      'Manche Jobs laufen fünfmal gleichzeitig. Das nennt man Teamgeist.',
+      'Erfolg ist, wenn keiner merkt, ob es läuft. Ohne Cron-Mails merkt es wirklich keiner.',
+      'Jeder Job läuft nur noch einmal gleichzeitig. Teamgeist war gestern.',
+      'Läuft jede Nacht um 3. Seit 2011. Jetzt mit Unit-File.',
     ],
   },
   ansible: {
@@ -118,8 +120,8 @@ export const POSTERS: Record<'bash' | 'cron' | 'ansible' | 'k8s' | 'agent', { ti
     glyph: 'YAML',
     color: '#9be3c1',
     lines: [
-      'Jetzt ist es überall gleich kaputt.',
-      'Ein Leerzeichen zu viel trennt Genie von Wahnsinn.',
+      'Dry Run sagt „changed: 0“. Jetzt ist es überall gleich kaputt.',
+      'Alle Geheimnisse verschlüsselt. Das Passwort steht im README.',
       'Zweimal ausgeführt, gleiches Ergebnis. Erzähl es deinen Enkeln.',
     ],
   },

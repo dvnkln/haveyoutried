@@ -52,7 +52,7 @@ export const INCIDENT_TEXT: Record<IncidentId, IncidentText> = {
     okInfo: 'all services OK',
     goal: 'Finde die Ursache und starte nur diesen Dienst neu. Achte darauf, wovon ein Dienst abhängt.',
     good: [
-      'Ursache gefunden, alles grün. Es war DNS. Natürlich war es DNS.',
+      'Ursache gefunden, nur den einen Dienst neu gestartet, alles grün. Wie im Lehrbuch.',
       'Root Cause sauber behoben. Du schreibst sogar ein Postmortem. Vielleicht.',
     ],
     bad: [
@@ -86,8 +86,8 @@ export const INCIDENT_TEXT: Record<IncidentId, IncidentText> = {
       'Online. Die Queue ist in der Zwischenzeit nicht kürzer geworden. Komisch.',
     ],
     bad: [
-      'Ein Kollege hat dein Kabel wieder eingesteckt. Er erzählt es gerade in der Teeküche.',
-      'Nach 20 Minuten Wireshark: Das Kabel war ab. Du nimmst ein Ticket für dich selbst auf.',
+      'Ein Kollege kam vorbei und hat es in 30 Sekunden gefunden. Er erzählt es gerade in der Teeküche.',
+      'Nach 20 Minuten Wireshark gefunden. Von unten nach oben wäre schneller gewesen. Du nimmst ein Ticket für dich selbst auf.',
     ],
   },
   patch: {

@@ -47,7 +47,7 @@ export const EVENTS: GameEventDef[] = [
         outcomes: [
           o('win', 'Es war DNS. Natürlich war es DNS. Zone repariert, Serial hochgezählt, Held des Tages.', 1, {
             level: 'ok',
-            text: 'named[53]: zone hd-local.de/IN: loaded serial 2026110801. it was DNS.',
+            text: 'named[53]: zone firma.de/IN: loaded serial 2026110801. it was DNS.',
           }),
         ],
       },

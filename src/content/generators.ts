@@ -162,7 +162,7 @@ export const GENERATOR_TEXT: Record<GeneratorId, GeneratorText> = {
   undertable: {
     name: 'Der Server unterm Tisch',
     icon: '[▓▓]',
-    desc: 'Uptime: 4.017 Tage. Die ganze Firma steht darauf. Gepflegt seit 2003 von einer Person in Nebraska.',
+    desc: 'Uptime: 4.017 Tage. Die ganze Firma steht darauf. Wer ihn aufgestellt hat, weiß niemand.',
     buyLog: [
       'inventory[{pid}]: found server #{n} under a desk. label: "NICHT AUSSTECKEN!!"',
       'inventory[{pid}]: server #{n}: no asset tag, no docs, 100% business critical.',

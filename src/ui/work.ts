@@ -1,8 +1,8 @@
 import { SOLVE } from '../config';
 import { ticketWork } from '../core/economy';
 import { CALLERS, QUEUE_LINE, type Call, type Line } from '../content/callers';
-import { STREAK_LINES, CALL_LINES, CHAT_LINES, MEME_ACCOUNTS, MEMES, RDP_ERRORS, SEARCH_RESULTS, TICKET_PRIOS, WEB_GENERIC, DONE_LINES, TICKET_STATES } from '../content/work';
-import { DEVICE_SETTINGS, TALK_NOTES, TOPICS, topicPool, type Device, type Topic } from '../content/topics';
+import { BOSSES, STREAK_LINES, CALL_LINES, CHAT_LINES, MEME_ACCOUNTS, MEMES, RDP_ERRORS, SEARCH_RESULTS, TICKET_PRIOS, WEB_GENERIC, DONE_LINES, TICKET_STATES } from '../content/work';
+import { DEVICE_SETTINGS, TALK_NOTES, TOPICS, topicPool, type Device } from '../content/topics';
 import { fill, pick, randInt, weightedPick } from '../util';
 import type { AppContext } from './app';
 import { h, setText } from './dom';
@@ -45,19 +45,23 @@ const withPrefix = (prefixes: readonly string[], answer: string, share: number) 
 /** Antworten geht immer */
 const TALK: Kind[] = ['mail', 'ticket', 'chat', 'call'];
 /** Werkzeuge, die zum Thema passen: genau die, für die das Thema Texte hat */
-const techFor = (topic: Topic): Kind[] => {
-  const t = TOPICS[topic];
+/** Webinterfaces für ein Anliegen: eigene Liste, sonst die des Themas */
+const devicesFor = (line: Line): readonly Device[] => line.devices ?? TOPICS[line.topic].devices;
+const techFor = (line: Line): Kind[] => {
+  const t = TOPICS[line.topic];
   return [
     ...(t.cmds.length ? (['term'] as const) : []),
     ...(t.rdp.length ? (['rdp'] as const) : []),
-    ...(t.devices.length ? (['web'] as const) : []),
+    ...(devicesFor(line).length ? (['web'] as const) : []),
     ...(t.searches.length ? (['search'] as const) : []),
   ];
 };
 /** so lange bleibt ein gelöstes Ticket stehen; der nächste Anschlag wartet nicht darauf */
 const SENT_HOLD_MS = 450;
 /** Erfolgsstempel: meistens „Gelöst!“, ab und zu Abwechslung */
-const STAMPS = ['Gelöst!', 'Gelöst!', 'Gelöst!', 'Ticket gelöst!', 'Erledigt!', 'Gefixt!', 'Läuft wieder!'];
+const STAMPS = ['Gelöst!', 'Gelöst!', 'Gelöst!', 'Ticket gelöst!', 'Erledigt!'];
+/** nur nach einer Reparatur: bei reinen Antworten läuft nichts „wieder“ */
+const FIX_STAMPS = [...STAMPS, 'Gefixt!', 'Läuft wieder!'];
 const initials = (who: string) =>
   who
     .split(/[\s-]+/)
@@ -83,6 +87,8 @@ interface Task {
   device: Device | null;
   /** Gerät, PC oder Ähnliches, je nach Programm */
   target: string;
+  /** Priorität: im Ticketsystem und im Verlauf dieselbe */
+  prio: string;
 }
 
 /** Programm für eine Aufgabe: Titel, Kopf, was getippt wird und wie es im Log landet */
@@ -146,7 +152,7 @@ const PROGRAMS: Record<Kind, Program> = {
         h('div', { class: 'tk-chips' }, [
           h('span', { class: 'tk-id', text: ticketId(t.no) }),
           h('span', { class: 'tk-status', text: pick(['Neu', 'In Bearbeitung', 'Wieder geöffnet (3×)']) }),
-          h('span', { class: 'tk-prio', text: pick(TICKET_PRIOS) }),
+          h('span', { class: 'tk-prio', text: t.prio }),
         ]),
         h('div', { class: 'tk-who' }, [avatar(t.who, 'small'), h('span', { text: `${t.who} · vor ${randInt(2, 59)} Min.` })]),
         h('div', { class: 'tk-problem', text: t.subject }),
@@ -262,7 +268,7 @@ export function createWork(
   /** gelöst: Serie und Stempel (für Bonus und Effekte am Schreibtisch) */
   onSolved: (streak: number, stamp: HTMLElement, presses: number) => void,
 ) {
-  let task: Task = { kind: 'ticket', who: '', subject: '', full: '', no: 0, line: QUEUE_LINE, call: null, device: null, target: '' };
+  let task: Task = { kind: 'ticket', who: '', subject: '', full: '', no: 0, line: QUEUE_LINE, call: null, device: null, target: '', prio: 'mittel' };
   let reply = '';
   let typedLen = 0;
   /** Arbeit am aktuellen Ticket und Anschläge dafür */
@@ -344,10 +350,10 @@ export function createWork(
     // Rückruf: Betreff bleibt das ursprüngliche Anliegen
     const text = q ? line.text : (call?.about ?? line.text);
     // Fragen werden beantwortet, Probleme auch mit passendem Werkzeug gelöst
-    const kinds = line.fix ? [...TALK, ...techFor(line.topic)] : TALK;
+    const kinds = line.fix ? [...TALK, ...techFor(line)] : TALK;
     const choices = kinds.length > 1 ? kinds.filter((k) => k !== task.kind) : kinds;
     const kind = weightedPick(choices, (k) => PROGRAMS[k].weight);
-    const device = kind === 'web' ? pick(TOPICS[line.topic].devices) : null;
+    const device = kind === 'web' ? pick(devicesFor(line)) : null;
     task = {
       kind,
       who,
@@ -358,6 +364,7 @@ export function createWork(
       call: q ? null : call,
       device,
       target: device ?? pcOf(who),
+      prio: BOSSES.includes(who) && Math.random() < 0.7 ? 'CHEF' : pick(TICKET_PRIOS),
     };
     const prog = PROGRAMS[kind];
     reply = pick(prog.lines(task));
@@ -383,7 +390,7 @@ export function createWork(
   const celebrate = () => {
     setStreak(streak + 1);
     const line = STREAK_LINES[streak] ?? '';
-    setText(stampText, `✓ ${pick(STAMPS)}`);
+    setText(stampText, `✓ ${pick(task.line.fix ? FIX_STAMPS : STAMPS)}`);
     setText(stampStreak, streak >= 2 ? `×${streak}` : '');
     setText(stampLine, line);
     stamp.classList.remove('show', 'big');
@@ -407,7 +414,7 @@ export function createWork(
       subject: task.full,
       who: task.who,
       channel: fill(CHANNELS[task.kind], vars()),
-      prio: pick(TICKET_PRIOS),
+      prio: task.prio,
       status: pick(TICKET_STATES),
       reply,
       replyLabel: REPLY_LABELS[task.kind],
