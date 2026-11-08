@@ -40,6 +40,9 @@ export const CONFIG = {
   /** Anrufer wechselt nach zufällig min..max geschlossenen Tickets */
   callerTicketsMin: 4,
   callerTicketsMax: 10,
+  /** …aber erst, wenn die Sprechblase lange genug stand: Basis + pro Zeichen */
+  callerMinShowMs: 2_500,
+  callerShowMsPerChar: 50,
   /** Abstand zwischen Ambient-Syslog-Zeilen in ms */
   ambientLogMinMs: 2_500,
   ambientLogMaxMs: 7_000,

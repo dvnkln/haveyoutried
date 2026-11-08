@@ -17,6 +17,8 @@ export function queueTab(): Tab {
   let caller: Caller = pick(CALLERS);
   let callerLeft = randInt(CONFIG.callerTicketsMin, CONFIG.callerTicketsMax);
   let lastClickLog = 0;
+  /** Frühester Zeitpunkt für den nächsten Anrufer (Lesezeit) */
+  let callerUntil = 0;
 
   const face = h('div', { class: 'caller-face', 'aria-hidden': 'true' });
   const who = h('div', { class: 'caller-who' });
@@ -37,7 +39,9 @@ export function queueTab(): Tab {
     caller = c;
     setText(face, c.face);
     setText(who, c.who);
-    setText(says, pick(c.lines));
+    const line = pick(c.lines);
+    setText(says, line);
+    callerUntil = performance.now() + CONFIG.callerMinShowMs + line.length * CONFIG.callerShowMsPerChar;
     juice(callerEl, POP, 260);
   };
 
@@ -73,7 +77,8 @@ export function queueTab(): Tab {
       lastClickLog = now;
       ctx.log.write('info', `helpdesk[1337]: ${ticketId(no)} closed (${reason})`);
     }
-    if (--callerLeft <= 0) nextCaller();
+    // Wechsel erst nach genug Tickets UND genug Lesezeit
+    if (--callerLeft <= 0 && now >= callerUntil) nextCaller();
   };
 
   return {
