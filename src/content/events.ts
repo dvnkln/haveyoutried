@@ -787,5 +787,5 @@ export const BUFF_HELP: Record<string, string> = {
   overtime: 'Überstunden: Du tippst siebenmal so schnell.',
   fire: 'Es brennt: Infrastruktur nur halb so schnell, bis gelöscht ist.',
   fireBig: 'Alles brennt: Infrastruktur auf ein Viertel. Einfach weitertippen.',
-  espresso: `Doppelter Espresso: Taste gedrückt halten, dann tippt es von selbst. ${CONFIG.espresso.rate}-mal pro Sekunde. Das schafft keine Hand.`,
+  espresso: `Doppelter Espresso: Taste gedrückt halten, dann tippt es von selbst. ${CONFIG.espresso.rate}-mal pro Sekunde, mit zwei Daumen ${2 * CONFIG.espresso.rate}-mal. Das schafft keine Hand.`,
 };

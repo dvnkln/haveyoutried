@@ -7161,6 +7161,11 @@ body:has(.tut-note) .tap-hint {
   background-color: #ffc285;
   box-shadow: inset 0 -1px 0 var(--key-edge), 0 0 10px 3px rgba(255, 150, 60, 0.85);
 }
+/* Espresso: Tastatur rattert. Nur Verschieben und Farbe, kein Padding (sonst wird die Tastatur neu vermessen) */
+#app.boost-click .key.ghost {
+  transform: translateY(1.5px);
+  background-color: #ffc285;
+}
 
 /* ---------- Power-up eingesammelt: kurzer Einblender in der Monitormitte ---------- */
 .powerup-banner {

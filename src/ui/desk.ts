@@ -206,7 +206,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
   const hint = h('div', { class: 'tap-hint', hidden: '', text: 'Tipp drauf! Jede Taste tippt am Ticket weiter' });
   let i = 0;
   for (const el of keyboard.querySelectorAll<HTMLElement>('.key')) el.style.setProperty('--i', String(i++ % 14));
-  const espressoHint = h('div', { class: 'tap-hint espresso-hint', hidden: '', text: '☕︎ Taste gedrückt halten, der Espresso tippt' });
+  const espressoHint = h('div', { class: 'tap-hint espresso-hint', hidden: '', text: '☕︎ Taste halten, der Espresso tippt. Zwei Daumen: doppelt.' });
   const keyboardWrap = h('div', { class: 'keyboard-wrap' }, [hint, espressoHint, keyboard]);
 
   const fresh = (lines: Line[]) => {
@@ -398,7 +398,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
       startEspresso(ctx.state);
       const p = fx.rel(cup);
       fx.floater(p.x + p.w / 2, p.y, 'Espresso!', true);
-      powerupBanner('☕︎ Doppelter Espresso', '2 Minuten: Taste gedrückt halten, es tippt von selbst.');
+      powerupBanner('☕︎ Doppelter Espresso', `${Math.round(CONFIG.espresso.durationMs / 1_000)} Sekunden: Taste halten, es tippt von selbst. Zwei Daumen: doppelt.`);
       ctx.log.write('ok', pick(ESPRESSO_LINES));
       ctx.sfx.unlock();
       ctx.sfx.milestone();
@@ -436,32 +436,43 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
 
   /** auto = Dauerfeuer beim Espresso (gehaltene Taste): ohne Vibration, seltener Schnipsel */
   let lastAutoSound = 0;
+  let lastAutoScrap = 0;
+  /** Espresso: Tasten, die nur zum Schein kurz runtergehen (.ghost), und wann sie wieder hochkommen */
+  const ghosts: [HTMLButtonElement, number][] = [];
+  let lastGhost = 0;
+  const clearGhosts = (until = Infinity) => {
+    while (ghosts.length && ghosts[0]![1] <= until) ghosts.shift()![0].classList.remove('ghost');
+  };
   const hit = (keyEl: HTMLElement, auto = false) => {
     const def = keyEl.dataset.key ?? '';
     ctx.sfx.unlock();
     solvedNow = false;
     const progress = pressKey(ctx.state);
 
-    // Eingabezeile: jede Taste (auch Enter) tippt weiter, Alt+F4 verwirft das Ticket
+    // Eingabezeile: jede Taste (auch Enter) tippt weiter, Alt+F4 verwirft das Ticket; gezeichnet wird einmal am Ende
     const now = performance.now();
-    if (def === 'F4') {
-      work.newTask(); // Fenster zu, nächste Aufgabe
-      gag('F4', 'warn', ALTF4_LINES, now, keyEl);
-    } else {
-      if (def === 'CAPSLOCK') gag('CAPSLOCK', 'info', PANIC_LINES, now, keyEl);
-      work.typeMore(progress);
-    }
-    work.afterKey();
+    work.batch(() => {
+      if (def === 'F4') {
+        work.newTask(); // Fenster zu, nächste Aufgabe
+        gag('F4', 'warn', ALTF4_LINES, now, keyEl);
+      } else {
+        if (def === 'CAPSLOCK') gag('CAPSLOCK', 'info', PANIC_LINES, now, keyEl);
+        work.typeMore(progress);
+      }
+      work.afterKey();
+    });
 
     // Effekte: Tickets gibt es erst beim Lösen; pro Taste nur ab und zu ein Schnipsel
-    if (Math.random() < (auto ? 0.08 : 0.25)) {
+    // Espresso: höchstens alle CONFIG.espresso.scrapGapMs einer, egal wie schnell er tippt
+    if (auto ? now - lastAutoScrap >= CONFIG.espresso.scrapGapMs && Math.random() < 0.5 : Math.random() < 0.25) {
+      if (auto) lastAutoScrap = now;
       const k = fx.rel(keyEl, true);
       fx.scrap(k.x + k.w / 2, k.y + 6);
     }
     lastHit = now;
 
-    // Espresso tippt schneller, als man Tastenklicks einzeln hört: Ton höchstens alle 40 ms
-    if (!auto || now - lastAutoSound >= 40) {
+    // Espresso tippt schneller, als man Tastenklicks einzeln hört: Ton höchstens alle CONFIG.espresso.soundGapMs
+    if (!auto || now - lastAutoSound >= CONFIG.espresso.soundGapMs) {
       ctx.sfx.tap();
       if (auto) lastAutoSound = now;
     }
@@ -506,6 +517,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
   const releaseAll = () => {
     for (const el of held.keys()) el.classList.remove('down');
     held.clear();
+    clearGhosts();
     pointerKeys.clear();
     physical.clear();
   };
@@ -636,18 +648,34 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
       // Espresso: solange eine Taste gehalten wird, tippt es von selbst (Takt aus CONFIG.espresso.rate)
       const espresso = espressoActive(s);
       const now = performance.now();
-      const holding = [...held.keys()].pop();
-      // gleiche Sperren wie beim Tippen mit der echten Tastatur; Alt+F4 verwirft Tickets, das tippt nicht von selbst
-      const blocked = gameBlocked();
-      if (espresso && holding && !blocked && holding.dataset.key !== 'F4') {
-        autoAcc += Math.min(0.25, (now - autoLast) / 1_000) * CONFIG.espresso.rate;
-        for (; autoAcc >= 1; autoAcc--) hit(holding, true);
+      // Alt+F4 verwirft Tickets, das tippt nicht von selbst; zwei Daumen (auch auf einer Taste) tippen doppelt so schnell
+      const holding = espresso && held.size ? [...held.keys()].filter((k) => k.dataset.key !== 'F4').slice(-2) : [];
+      // gleiche Sperren wie beim Tippen mit der echten Tastatur
+      if (holding.length && !gameBlocked()) {
+        const thumbs = Math.min(2, holding.reduce((n, k) => n + (held.get(k) ?? 1), 0));
+        autoAcc += Math.min(0.25, (now - autoLast) / 1_000) * CONFIG.espresso.rate * thumbs;
+        // alle Anschläge dieses Bilds zählen, gezeichnet wird einmal
+        if (autoAcc >= 1)
+          work.batch(() => {
+            for (; autoAcc >= 1; autoAcc--) hit(holding[Math.floor(autoAcc) % holding.length]!, true);
+          });
+        // man sieht, wie schnell er tippt: laufend geht eine andere Taste kurz runter
+        // (eigene Klasse nur mit transform/Farbe: .down ändert das Padding und würde die Tastatur neu vermessen)
+        if (now - lastGhost >= CONFIG.espresso.ghostEveryMs) {
+          lastGhost = now;
+          const k = allKeys[Math.floor(Math.random() * allKeys.length)]!;
+          if (!held.has(k) && !k.classList.contains('ghost')) {
+            k.classList.add('ghost');
+            ghosts.push([k, now + CONFIG.espresso.ghostDownMs]);
+          }
+        }
         espressoHint.hidden = true;
       } else {
         autoAcc = 0;
         if (!espresso) espressoHint.hidden = true;
       }
       autoLast = now;
+      clearGhosts(now);
       if (anyKey) {
         setText(anyKey, s.upgrades.macro ? 'Makro' : 'Any');
         setFlag(anyKey, 'key-macro', !!s.upgrades.macro);

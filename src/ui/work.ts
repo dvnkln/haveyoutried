@@ -462,6 +462,23 @@ export function createWork(
   let ready = false;
   /** abgeschickt mit Verlauf: wie er sich zurücknehmen lässt, falls das Fenster später kleiner wird */
   let readyFallback: (() => void) | undefined;
+  /** „Abgeschickt“-Ansicht fürs aktuelle Ticket schon gezeichnet */
+  let readyDrawn = false;
+  /**
+   * Zeichnen: die Spiellogik ändert nur Zustand und ruft invalidate(), draw() bringt das Fenster auf Stand.
+   * Innerhalb von batch() (jeder Anschlag, Espresso: alle Anschläge eines Bilds) einmal am Ende,
+   * sonst baut das Handy unter Espresso bis zu 40 Ticketfenster pro Sekunde, von denen man keins sieht.
+   */
+  let batchDepth = 0;
+  let dirty = false;
+  /** Ticket, das gerade im Fenster steht; ein anderes wird neu aufgebaut */
+  let drawnTask: Task | null = null;
+  /** Fenster neu ausmessen (nach den Memes) */
+  let fitPending = false;
+  /** Stempel soll neu aufspringen: 'big' mit Serien-Spruch */
+  let stampPending: '' | 'show' | 'big' = '';
+  /** Nachmessen im nächsten Bild: höchstens eins vormerken */
+  let settleFrame = 0;
   /** gelöste Tickets in Folge; reißt nach SOLVE.breakMs ohne Anschlag */
   let streak = 0;
   /** eine Zeile: passt der Text nicht, wird die Schrift kleiner statt abgeschnitten */
@@ -552,8 +569,9 @@ export function createWork(
     // während der Memes ist das Fenster versteckt: messen erst beim Zurückkommen
     if (memes) return showTyped();
     // abgeschickt (Größe ändert sich, z. B. Handy gedreht): Ergebnis bleibt stehen, nur enger machen;
-    // reicht „eng“ nicht, zuerst den Verlauf zurücknehmen (sonst blendet „enger“ die Nachricht davor aus)
-    if (ready) {
+    // reicht „eng“ nicht, zuerst den Verlauf zurücknehmen (sonst blendet „enger“ die Nachricht davor aus).
+    // Zählt, was im Fenster steht: abgeschickt, aber noch nicht gezeichnet, wird wie ein frisches Ticket gemessen.
+    if (readyDrawn) {
       const over = () => overflows(true);
       el.classList.remove('tight', 'tighter');
       body.style.fontSize = '';
@@ -629,27 +647,58 @@ export function createWork(
     };
     const prog = PROGRAMS[kind];
     reply = pick(prog.lines(task));
-    body.scrollTop = 0;
-    body.scrollLeft = 0;
     typedLen = 0;
     progress = 0;
     presses = 0;
-    if (!memes) el.dataset.kind = kind;
+    ready = false;
     taskTitle = prog.title(task);
+    invalidate();
+  };
+  /** Aktuelles Ticket ins Fenster: Programm, Kopf, Statuszeile, Platz ausmessen */
+  const renderTask = () => {
+    drawnTask = task;
+    readyFallback = undefined;
+    const prog = PROGRAMS[task.kind];
+    body.scrollTop = 0;
+    body.scrollLeft = 0;
+    if (!memes) el.dataset.kind = task.kind;
     setText(title, taskTitle);
     head.replaceChildren(...prog.head(task));
     extra.replaceChildren(...(prog.extra?.(task) ?? []));
     setText(label, prog.label ?? '');
     el.classList.remove('sent', 'ready', 'moved');
-    ready = false;
+    readyDrawn = false;
     // Statuszeile: Ticketnummer und Betreff, Füllstand zeigt den Fortschritt der Antwort
     setStatus(`${ticketId(task.no)} · ${task.full}`);
     fitBody();
     // Layout setzt sich manchmal erst im nächsten Frame (Sprechblase, Statuszeile): dann nochmal messen
     const no = task.no;
-    requestAnimationFrame(() => {
+    cancelAnimationFrame(settleFrame);
+    settleFrame = requestAnimationFrame(() => {
       if (task.no === no && !memes && !scrolls && overflows()) fitBody();
     });
+  };
+  /** Fenster auf den Stand der Spiellogik bringen: Ticket, Text, „Abgeschickt“, Stempel */
+  const draw = () => {
+    dirty = false;
+    // neues Ticket: aufbauen und ausmessen (zeigt dabei auch den Text)
+    if (drawnTask !== task) renderTask();
+    else if (fitPending) fitBody();
+    else showTyped();
+    fitPending = false;
+    if (ready && !readyDrawn) drawReady();
+    if (sentTimer) el.classList.add('sent');
+    if (stampPending) {
+      stamp.classList.remove('show', 'big');
+      void stamp.offsetWidth; // Animation neu starten
+      stamp.classList.add('show');
+      if (stampPending === 'big') stamp.classList.add('big');
+      stampPending = '';
+    }
+  };
+  const invalidate = () => {
+    if (batchDepth) dirty = true;
+    else draw();
   };
 
   /** Erfolg! Stempel springt auf, ab dem zweiten Ticket in Folge mit Zähler und höherem Ton */
@@ -673,10 +722,8 @@ export function createWork(
       nextCelebrate = now + (line ? STAMP_BIG_MS : CONFIG.espresso.celebrateGapMs);
       setText(stampText, `✓ ${pick(task.line.fix ? FIX_STAMPS : STAMPS)}`);
       setText(stampLine, line);
-      stamp.classList.remove('show', 'big');
-      void stamp.offsetWidth; // Animation neu starten
-      stamp.classList.add('show');
-      if (line) stamp.classList.add('big');
+      stampPending = line ? 'big' : 'show';
+      invalidate();
       ctx.sfx.solved(streak);
       ctx.haptic('tap');
     }
@@ -687,6 +734,10 @@ export function createWork(
   const showReady = () => {
     if (ready) return;
     ready = true;
+    invalidate();
+  };
+  const drawReady = () => {
+    readyDrawn = true;
     el.classList.add('ready');
     const fallback = PROGRAMS[task.kind].ready?.(task, head, extra, reply);
     readyFallback = fallback || undefined;
@@ -714,7 +765,6 @@ export function createWork(
   const send = () => {
     typedLen = reply.length;
     const wasReady = ready;
-    showTyped();
     if (task.call) answered = task.call;
     remember(task.full);
     ctx.log.write('ok', PROGRAMS[task.kind].log(task, reply));
@@ -738,12 +788,11 @@ export function createWork(
       return;
     }
     // mit einem Anschlag gelöst: das Abgeschickte kurz zeigen, der nächste Anschlag wartet nicht darauf
-    showReady();
-    el.classList.add('sent');
     sentTimer = window.setTimeout(() => {
       sentTimer = 0;
       newTask();
     }, SENT_HOLD_MS);
+    showReady();
   };
 
   // --- Memes beim Nichtstun ---
@@ -857,7 +906,8 @@ export function createWork(
     stopScrolling();
     el.dataset.kind = task.kind;
     setText(title, taskTitle);
-    fitBody();
+    fitPending = true;
+    invalidate();
     ctx.log.write('info', pick(MEME_LEAVE_LINES));
   };
 
@@ -887,6 +937,15 @@ export function createWork(
     last,
     promptSlot,
     newTask,
+    /** Anschläge (auch verschachtelt, Espresso: alle eines Bilds): danach einmal zeichnen, was am Ende zu sehen ist */
+    batch(fn: () => void) {
+      batchDepth++;
+      try {
+        fn();
+      } finally {
+        if (--batchDepth === 0 && dirty) draw();
+      }
+    },
     /** Ein Anschlag bringt `work` Arbeit; der Text läuft im selben Verhältnis mit. Fertig = gelöst. */
     typeMore(work: number) {
       // nicht auf den Stempel warten: nächster Anschlag beginnt gleich das nächste Ticket
@@ -905,7 +964,7 @@ export function createWork(
     /** Nach jedem Anschlag: Memes zu, Anzeige auffrischen */
     afterKey() {
       if (memes) leaveMemes();
-      showTyped();
+      invalidate();
     },
     /** Pro Frame: lange nichts getippt → Memes */
     idle(sinceLastKeyMs: number) {

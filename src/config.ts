@@ -291,14 +291,20 @@ export const CONFIG = {
     maxMs: 8 * 60_000,
     /** so lange fliegt sie durchs Bild */
     flightMs: 5_500,
-    durationMs: 2 * 60_000,
-    /** Anschläge pro Sekunde, solange eine Taste gehalten wird: deutlich schneller als jede Hand */
-    rate: 50,
+    durationMs: 30_000,
+    /** Anschläge pro Sekunde je gehaltener Taste (höchstens zwei Daumen): deutlich schneller als jede Hand */
+    rate: 40,
     /**
-     * Bei der Rate löst man 16–25 Tickets pro Sekunde. Stempel, Erfolgston und „+Tickets“
+     * Bei der Rate löst man 13–40 Tickets pro Sekunde. Stempel, Erfolgston und „+Tickets“
      * kommen dann höchstens in diesem Abstand; dazwischen zählt nur die Serie bzw. die Summe.
      */
-    celebrateGapMs: 250,
+    celebrateGapMs: 120,
+    /** Tastatur rattert: so oft geht unter Espresso eine andere Taste kurz runter (nur Optik) */
+    ghostEveryMs: 60,
+    ghostDownMs: 90,
+    /** schneller als man sie einzeln wahrnimmt: Tastenton und Papierschnipsel höchstens in diesem Abstand */
+    soundGapMs: 40,
+    scrapGapMs: 150,
   },
   /** „!! DRINGEND !!“-Tickets in der Queue */
   urgentMinMs: 90_000,
