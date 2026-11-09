@@ -135,6 +135,8 @@ button {
   flex: 1;
   min-width: 0;
   padding: 4px 12px 5px;
+  /* zweite Zeile mit Boosts ragt in den Luftraum unter der Wand, statt die Wand (und damit den Monitor) zu verschieben */
+  margin-bottom: -24px;
 }
 .counter {
   font-size: 28px;
@@ -541,9 +543,10 @@ button {
   color: var(--t-dim);
 }
 .work-comment {
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 .work:not([data-kind='term']) .typed-prompt {
   display: none;
@@ -1497,14 +1500,17 @@ button {
 /* ---------- Events: Pager, Boosts, Dringend-Tickets ---------- */
 .rate-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
-  gap: 8px;
+  gap: 2px 8px;
   white-space: nowrap;
   overflow: hidden;
 }
 .buffs {
   display: flex;
   gap: 6px;
+  max-width: 100%;
+  min-width: 0;
   overflow: hidden;
   font-size: 11px;
 }
@@ -4075,7 +4081,7 @@ button {
   line-height: 1.3;
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   overflow: hidden;
 }
 .chat-time {
@@ -4429,9 +4435,10 @@ button {
   border-left: 3px solid #3f8f86;
   background: #f4efe6;
   font-size: 11px;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 .work[data-kind='ticket'] .work-body {
   flex: 1 1 auto;
@@ -6135,7 +6142,7 @@ body > .incident.playing {
     display: none;
   }
   .wall .rate-row {
-    gap: 5px;
+    gap: 2px 5px;
   }
   .wall .buffs {
     gap: 3px;
@@ -6205,6 +6212,10 @@ body > .incident.playing {
 .work.tighter .chat-msg,
 .work.tighter .work-label {
   display: none;
+}
+/* ganz eng: Anliegen im Terminal nur einzeilig, die Antwort braucht den Platz */
+.work.tighter .work-comment {
+  -webkit-line-clamp: 1;
 }
 
 /* ---------- Niemand da: Bildschirm aus, Bürolicht aus ---------- */
@@ -6481,10 +6492,6 @@ body > .incident.playing {
 .espresso-hint {
   background: #f4a261;
 }
-/* Espresso aktiv: Tastatur glüht warm */
-.keyboard-wrap.espresso .keyboard {
-  box-shadow: 0 0 0 3px #f4a261, 0 0 16px 2px rgba(244, 162, 97, 0.55);
-}
 @media (prefers-reduced-motion: reduce) {
   .espresso-cup svg,
   .espresso-cup .cup-wing {
@@ -6745,10 +6752,8 @@ button.mug {
   font: 700 8px var(--font);
 }
 .ai-bubble {
-  flex: 1;
+  flex: 0 1 auto;
   min-width: 0;
-  /* immer drei Zeilen hoch: die Antwort braucht nicht mehr Platz als die Begrüßung, nichts springt */
-  height: calc(3 * 1.3em + 8px);
   padding: 3px 9px;
   border: 1.5px solid var(--ink);
   border-radius: 10px 10px 10px 2px;
@@ -6795,6 +6800,47 @@ button.mug {
   display: none;
 }
 
+/* Verlauf wie im Messenger (Chat, KI): abgeschickte Nachricht rechts, Antwort links darunter, unten wieder ein leeres Feld */
+.work.moved .work-body {
+  display: none;
+}
+.work.moved .work-extra {
+  margin-top: auto;
+}
+.msg-me {
+  display: flex;
+  justify-content: flex-end;
+  padding: 5px 9px 0 44px;
+}
+.me-bubble {
+  max-width: 100%;
+  padding: 4px 9px 3px;
+  border: 1.5px solid var(--ink);
+  border-radius: 10px 10px 2px 10px;
+  background: #d8f3e4;
+  font-size: 11.5px;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+  animation: sent-pop 0.18s ease-out;
+}
+.work[data-kind='ai'] .me-bubble {
+  background: #ece4ff;
+}
+.me-ticks {
+  margin-left: 6px;
+  font-size: 9px;
+  font-weight: 700;
+  color: #3a8dd8;
+}
+.ai-input {
+  margin: 0 8px 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .me-bubble {
+    animation: none;
+  }
+}
+
 /* ---------- Übergabe vom Vorgänger: Hervorhebung und Post-it ---------- */
 .tut-spot[hidden],
 .tut-note[hidden] {
@@ -6807,7 +6853,6 @@ button.mug {
   border-radius: 14px;
   /* sanft abdunkeln, die Stelle bleibt hell, gelber Rand wie ein Textmarker */
   box-shadow: 0 0 0 3px #ffd166, 0 0 0 200vmax rgba(24, 18, 26, 0.45);
-  transition: left 0.2s, top 0.2s, width 0.2s, height 0.2s;
   animation: tut-in 0.25s ease-out;
 }
 .tut-note {
@@ -6921,8 +6966,27 @@ body:has(.tut-note) .tap-hint {
   color: #1f8a55;
   text-shadow: 0 0 8px rgba(47, 158, 106, 0.55);
 }
-#app.boost-click .keyboard {
-  box-shadow: 0 0 0 3px #f4a261, 0 0 16px 2px rgba(244, 162, 97, 0.55);
+/* schneller Tippen (Espresso, Überstunden …): Tastatur glüht wie frisch aus dem Ofen, gedrückte Tasten leuchten auf */
+#app.boost-click .keyboard,
+.keyboard-wrap.espresso .keyboard {
+  --key-edge: #f0a868;
+  background: linear-gradient(to bottom, #ffdcb0, #f6ad72);
+  box-shadow: inset 0 -5px 0 #e0894c, 0 4px 0 rgba(61, 44, 46, 0.35), 0 0 0 2px #ffb070, 0 0 26px 8px rgba(255, 138, 61, 0.5);
+}
+/* Schein soll nicht unter der Schreibtischleiste verschwinden */
+#app.boost-click .keyboard-wrap,
+.keyboard-wrap.espresso {
+  z-index: 2;
+}
+/* Glut von unten auf jeder Taste; Grundfarbe bleibt (PANIK, Fix) */
+#app.boost-click .key,
+.keyboard-wrap.espresso .key {
+  background-image: radial-gradient(ellipse 90% 70% at 50% 115%, rgba(255, 140, 50, 0.55), transparent 75%);
+}
+#app.boost-click .key.down,
+.keyboard-wrap.espresso .key.down {
+  background-color: #ffc285;
+  box-shadow: inset 0 -1px 0 var(--key-edge), 0 0 10px 3px rgba(255, 150, 60, 0.85);
 }
 
 /* ---------- Power-up eingesammelt: kurzer Einblender in der Monitormitte ---------- */

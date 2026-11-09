@@ -131,12 +131,34 @@ interface Program {
   /** was getippt werden kann, passend zum Thema der Aufgabe */
   lines: (t: Task) => readonly string[];
   log: (t: Task, text: string) => string;
-  /** Abgeschickt (letzter Zustand vor „Gelöst“): Fenster zeigt das Ergebnis wie im echten Programm */
-  ready?: (t: Task, head: HTMLElement, extra: HTMLElement) => void;
+  /**
+   * Abgeschickt (letzter Zustand vor „Gelöst“): Fenster zeigt das Ergebnis wie im echten Programm.
+   * Kann eine Rückfallebene liefern, falls das Ergebnis nicht ins Fenster passt.
+   */
+  ready?: (t: Task, head: HTMLElement, extra: HTMLElement, reply: string) => (() => void) | void;
 }
 
 /** kleine grüne Bestätigung unter dem Eingabefeld */
 const note = (text: string) => h('div', { class: 'sent-note', text });
+const aiRow = (text: string, answered = false) =>
+  h('div', { class: 'ai-row' }, [h('span', { class: 'ai-bot', 'aria-hidden': 'true', text: '{•_•}' }), h('span', { class: `ai-bubble${answered ? ' answered' : ''}`, text })]);
+/**
+ * Messenger-Verlauf: die abgeschickte Nachricht wandert als Blase rechts unter die letzte Nachricht,
+ * danach ggf. die Antwort; das Eingabefeld unten ist wieder leer. Geht nicht, wenn der Verlauf im engen Fenster ausgeblendet ist.
+ * Liefert, wie es rückgängig geht (dann steht die Nachricht wie früher im Eingabefeld).
+ */
+const toHistory = (head: HTMLElement, mine: HTMLElement, after: HTMLElement[] = []) => {
+  const lastMsg = head.lastElementChild as HTMLElement | null;
+  const work = head.closest('.work');
+  if (!lastMsg || lastMsg.offsetParent === null || !work) return null;
+  const added = [h('div', { class: 'msg-me' }, [mine]), ...after];
+  head.append(...added);
+  work.classList.add('moved');
+  return () => {
+    for (const n of added) n.remove();
+    work.classList.remove('moved');
+  };
+};
 /**
  * Bestätigung an die Stelle von etwas Sichtbarem setzen (gleicher Platz, nichts springt).
  * Ist das Ziel im engen Fenster ausgeblendet, kommt sie als „optional“ dazu und fällt weg, wenn kein Platz ist.
@@ -210,7 +232,7 @@ const PROGRAMS: Record<Kind, Program> = {
     title: () => pick(MAIL_TITLES),
     head: (t) => [
       h('div', { class: 'mail-tools' }, ['↩ Antworten', '↪ Weiterleiten', '🗑︎ Löschen'].map((x) => h('span', { class: 'mail-tool', text: x }))),
-      h('div', { class: 'mail-fields' }, [row('An:', t.who), row('Betreff:', `Re: ${t.subject}`)]),
+      h('div', { class: 'mail-fields' }, [row('An:', t.who), row('Betreff:', `Re: ${t.full}`)]),
     ],
     lines: (t) => [t.line.answer],
     extra: () => [h('div', { class: 'mail-sig', text: pick(MAIL_SIGS) })],
@@ -230,7 +252,7 @@ const PROGRAMS: Record<Kind, Program> = {
           h('span', { class: 'tk-prio', text: t.prio }),
         ]),
         h('div', { class: 'tk-who' }, [avatar(t.who, 'small'), h('span', { text: `${t.who} · vor ${randInt(2, 59)} Min.` })]),
-        h('div', { class: 'tk-problem', text: t.subject }),
+        h('div', { class: 'tk-problem', text: t.full }),
       ]),
     ],
     label: 'Kommentar:',
@@ -249,7 +271,7 @@ const PROGRAMS: Record<Kind, Program> = {
   term: {
     weight: 2,
     title: () => 'Terminal — bash',
-    head: (t) => [h('div', { class: 'work-comment', text: `# ${t.who}: ${t.subject}` })],
+    head: (t) => [h('div', { class: 'work-comment', text: `# ${t.who}: ${t.full}` })],
     lines: (t) => topicPool(t.line.topic, 'cmds'),
     log: (_t, x) => `you@helpdesk:~$ ${x}`,
     ready: (_t, _head, extra) => extra.append(h('div', { class: 'term-out opt', text: pick(TERM_OUT) }), h('div', { class: 'term-out term-next opt', text: (document.querySelector('.typed-prompt')?.textContent ?? '$ ').trimEnd() })),
@@ -264,13 +286,16 @@ const PROGRAMS: Record<Kind, Program> = {
       ]),
       h('div', { class: 'chat-msg' }, [
         avatar(t.who, 'small'),
-        h('span', { class: 'chat-bubble' }, [t.subject, h('span', { class: 'chat-time', text: clock() })]),
+        h('span', { class: 'chat-bubble' }, [t.full, h('span', { class: 'chat-time', text: clock() })]),
       ]),
     ],
     lines: (t) => withPrefix(CHAT_LINES, t.line.answer, 0.2),
     log: (t, x) => `chat[443]: an ${t.who}: „${x}“`,
     // Nachricht steht als eigene Blase im Verlauf, das Eingabefeld darunter ist wieder leer
-    ready: (_t, _head, extra) => extra.append(h('div', { class: 'chat-input-empty opt', text: 'Nachricht schreiben …' })),
+    ready: (_t, head, extra, reply) => {
+      extra.append(h('div', { class: 'chat-input-empty opt', text: 'Nachricht schreiben …' }));
+      return toHistory(head, h('span', { class: 'me-bubble' }, [reply, h('span', { class: 'me-ticks', text: '✓✓' })])) ?? undefined;
+    },
   },
   call: {
     weight: 1,
@@ -345,23 +370,26 @@ const PROGRAMS: Record<Kind, Program> = {
   ai: {
     weight: 1,
     title: () => pick(AI_TITLES),
-    head: () => [
-      h('div', { class: 'ai-row' }, [
-        h('span', { class: 'ai-bot', 'aria-hidden': 'true', text: '{•_•}' }),
-        h('span', { class: 'ai-bubble', text: pick(AI_GREETINGS) }),
-      ]),
-    ],
+    head: () => [aiRow(pick(AI_GREETINGS))],
     // ganzer Betreff, wenn er nicht zu lang ist; nach „…?“ kein zusätzlicher Punkt
     lines: (t) =>
       AI_PROMPTS.map((p) => fill(p, { subject: t.full.length <= 80 ? t.full : t.subject, who: t.who }).replace(/([.!?…])“\./g, '$1“')),
     extra: () => [h('div', { class: 'ai-foot', text: pick(AI_FOOTERS) })],
     log: (t, x) => `ai[{pid}]: Prompt zu ${ticketId(t.no)}: „${x}“`,
-    // Antwort kommt: selbstbewusst, mit der echten Ursache des Tickets
-    ready: (t, head) => {
-      const bubble = head.querySelector('.ai-bubble');
-      if (!bubble) return;
-      bubble.textContent = fill(pick(AI_REPLIES), { cause: t.line.cause });
-      bubble.classList.add('answered');
+    // Antwort kommt als neue Blase unter dem Prompt: selbstbewusst, mit der echten Ursache des Tickets
+    ready: (t, head, extra, reply) => {
+      const answer = fill(pick(AI_REPLIES), { cause: t.line.cause });
+      const undo = toHistory(head, h('span', { class: 'me-bubble', text: reply }), [aiRow(answer, true)]);
+      // eng: wie früher, die Antwort steht an Stelle der Begrüßung
+      const inPlace = () => head.replaceChildren(aiRow(answer, true));
+      if (!undo) return inPlace();
+      // ist es zu eng, weicht erst das leere Eingabefeld, dann die Begrüßung
+      head.firstElementChild?.classList.add('opt');
+      extra.prepend(h('div', { class: 'chat-input-empty ai-input opt', text: 'Noch eine Frage? Ich hab Zeit. Und Strom.' }));
+      return () => {
+        undo();
+        inPlace();
+      };
     },
   },
   search: {
@@ -418,7 +446,8 @@ export function createWork(
   const setStatus = (text: string) => {
     setText(last, text);
     last.style.fontSize = '';
-    for (let size = 11; size > 8 && last.scrollWidth > last.clientWidth + 1; size -= 0.5) last.style.fontSize = `${size - 0.5}px`;
+    // nur etwas kleiner, dann lieber „…“ am Ende als Ameisenschrift
+    for (let size = 11; size > 10 && last.scrollWidth > last.clientWidth + 1; size -= 0.5) last.style.fontSize = `${size - 0.5}px`;
   };
   const vars = () => ({ who: task.who, target: task.target });
   /** Anruf, dessen Antwort abgeschickt ist */
@@ -571,10 +600,10 @@ export function createWork(
     head.replaceChildren(...prog.head(task));
     extra.replaceChildren(...(prog.extra?.(task) ?? []));
     setText(label, prog.label ?? '');
-    el.classList.remove('sent', 'ready');
+    el.classList.remove('sent', 'ready', 'moved');
     ready = false;
     // Statuszeile: Ticketnummer und Betreff, Füllstand zeigt den Fortschritt der Antwort
-    setStatus(`${ticketId(task.no)} · ${task.subject}`);
+    setStatus(`${ticketId(task.no)} · ${task.full}`);
     fitBody();
     // Layout setzt sich manchmal erst im nächsten Frame (Sprechblase, Statuszeile): dann nochmal messen
     const no = task.no;
@@ -609,10 +638,12 @@ export function createWork(
     if (ready) return;
     ready = true;
     el.classList.add('ready');
-    PROGRAMS[task.kind].ready?.(task, head, extra);
+    const fallback = PROGRAMS[task.kind].ready?.(task, head, extra, reply);
     // kein neues Ausmessen (sonst springt das Fenster): was nicht mehr passt, fällt weg
     const optional = [...el.querySelectorAll('.opt')].reverse();
     for (const o of optional) if (overflows(true)) o.remove();
+    // passt der Verlauf trotzdem nicht: Nachricht bleibt wie früher im Eingabefeld stehen
+    if (fallback && overflows(true)) fallback();
   };
 
   /** Gelöst: Stempel, Karte in den Ticketverlauf. Stand die Antwort schon abgeschickt da, kommt sofort das nächste. */

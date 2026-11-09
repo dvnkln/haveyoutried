@@ -90,7 +90,19 @@ export function startTutorial(state: GameState): void {
     spot.hidden = false;
     card.hidden = false;
     text.textContent = hint.text;
-    place();
+    follow();
+  };
+
+  // jeden Frame nachführen, solange ein Hinweis steht: die Kaffeetasse fliegt ja davon
+  let raf = 0;
+  const follow = () => {
+    cancelAnimationFrame(raf);
+    const step = () => {
+      if (!active) return;
+      place();
+      raf = requestAnimationFrame(step);
+    };
+    step();
   };
 
   ok.addEventListener('click', () => hide(true));
@@ -115,7 +127,7 @@ export function startTutorial(state: GameState): void {
     if (active) {
       // Stelle weg (Zettel abgefallen, Pager erledigt) oder Spiel blockiert: nur ausblenden, kommt wieder
       if (!active.el.isConnected || !visible(active.el) || gameBlocked({ hidden: true })) return hide(false);
-      return place();
+      return;
     }
     if (gameBlocked({ hidden: true })) return;
     const replay = !!state.flags[REPLAY];
