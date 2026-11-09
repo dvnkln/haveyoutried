@@ -3040,7 +3040,7 @@ button {
   text-align: left;
   box-shadow: inset 0 -4px 0 #e8c46a;
   /* gleiche Höhe für alle Switches: Pfeile springen beim Durchblättern nicht */
-  min-height: 140px;
+  min-height: 142px;
   touch-action: pan-y;
   user-select: none;
   -webkit-user-select: none;
@@ -3152,7 +3152,7 @@ button {
   .switch-card {
     gap: 9px;
     padding: 9px 10px;
-    min-height: 150px;
+    min-height: 154px;
   }
   .switch-pic {
     width: 46px;
@@ -3161,6 +3161,11 @@ button {
 }
 .switch-name {
   white-space: nowrap;
+}
+/* Text oben ausrichten: Name und Daten stehen bei jedem Switch auf derselben Höhe, egal wie lang der Spruch ist */
+.switch-card .switch-info {
+  align-self: flex-start;
+  padding-top: 4px;
 }
 .switch-dots {
   display: flex;
@@ -4099,6 +4104,7 @@ button {
   background: #7a8bd6;
 }
 .meme-page {
+  position: relative;
   flex: 1;
   min-height: 0;
   overflow: hidden;
@@ -4110,14 +4116,6 @@ button {
 .meme-window[data-site='forum'] .meme-feed-gag,
 .meme-window[data-site='gag'] .meme-feed-forum {
   display: none;
-}
-.meme-feed {
-  animation: meme-scroll 47s linear infinite;
-}
-@keyframes meme-scroll {
-  to {
-    transform: translateY(-50%);
-  }
 }
 .meme {
   margin: 8px 7px;
@@ -4229,11 +4227,6 @@ button {
   line-height: 1;
   white-space: nowrap;
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
-}
-@media (prefers-reduced-motion: reduce) {
-  .meme-feed {
-    animation-duration: 200s;
-  }
 }
 
 /* Tastatur und Maus nebeneinander */
@@ -5823,14 +5816,25 @@ button {
   font-size: 8.5px;
   line-height: 1.1;
 }
-/* Incident: alles außer dem Bildschirm wird dunkel (Wand, Tisch, Monitorgehäuse) */
+/* Incident: alles außer Monitor und Fuß wird dunkel, auch Telefon und Post-its davor (Maske aus overlay.ts) */
+.inc-dim {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  background: rgba(24, 18, 26, 0.74);
+  mask-size: 100% 100%;
+  -webkit-mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+}
+/* der Monitor wirft rotes Licht an die Wand */
 .inc-spot {
   position: fixed;
   z-index: 50;
   pointer-events: none;
   border-radius: 12px 12px 8px 8px;
-  /* kein Rahmen um das Glas: nur der Raum wird dunkel, der Monitor wirft rotes Licht an die Wand */
-  box-shadow: 0 0 34px 6px rgba(255, 91, 91, 0.28), 0 0 0 200vmax rgba(24, 18, 26, 0.74);
+  box-shadow: 0 0 34px 6px rgba(255, 91, 91, 0.28);
   transition: opacity 0.3s;
 }
 /* Minispiel: bildschirmfüllend, gleiche Monitoring-Oberfläche */

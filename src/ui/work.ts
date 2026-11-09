@@ -346,6 +346,7 @@ export function createWork(
     h('span', { class: 'br-tab', 'data-site': site }, [h('span', { class: 'br-fav' }), h('span', { class: 'br-tab-title', text }), h('span', { class: 'br-x', text: '×' })]);
   const memeTabs = [memeTab('forum', 'r/all – readit'), memeTab('gag', '404GAG – Hot'), memeTab('alibi', 'Ticketsystem 3.1 (Legacy)')];
   const memeAddr = h('span', { class: 'br-addr' });
+  const memePage = h('div', { class: 'meme-page' }, [forumFeed, gagFeed]);
   const memeWindow = h('div', { class: 'meme-window', 'aria-hidden': 'true' }, [
     h('div', { class: 'browser meme-browser' }, [
       h('div', { class: 'br-tabs' }, [...memeTabs, h('span', { class: 'br-new', text: '+' })]),
@@ -354,9 +355,12 @@ export function createWork(
         h('span', { class: 'br-url' }, [h('span', { class: 'br-lock', text: '🔒︎' }), memeAddr]),
       ]),
     ]),
-    h('div', { class: 'meme-page' }, [forumFeed, gagFeed]),
+    memePage,
   ]);
   let siteTimer = 0;
+  let scrollRaf = 0;
+  /** Tab gewechselt: Scrollen beginnt oben neu */
+  let siteChanged = false;
   /** Fenstertitel der aktuellen Aufgabe: einmal gewürfelt, bleibt auch nach der Meme-Pause */
   let taskTitle = '';
   // eigenes Element statt ::after: blendet über dem nächsten Ticket weiter aus
@@ -541,6 +545,9 @@ export function createWork(
   /** Aktiver Tab: Forum oder Bilderseite; ab und zu wird umgeschaltet (Seite lädt dann von oben) */
   const showSite = (site: 'forum' | 'gag') => {
     memeWindow.dataset.site = site;
+    // neue Seite lädt von oben
+    memePage.scrollTop = 0;
+    siteChanged = true;
     for (const t of memeTabs) t.classList.toggle('on', t.dataset.site === site);
     setText(memeAddr, site === 'forum' ? 'readit.example/r/all/hot' : '404gag.example/hot');
   };
@@ -550,20 +557,72 @@ export function createWork(
     siteTimer = window.setTimeout(() => {
       showSite(memeWindow.dataset.site === 'forum' ? 'gag' : 'forum');
       nextSite();
-    }, randInt(7_000, 11_000));
+    }, randInt(20_000, 35_000));
+  };
+  const reducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+  /**
+   * Scrollen wie mit dem Daumen: kurz lesen, zum nächsten Meme wischen (bremst ab),
+   * nicht immer genau auf Kante, ab und zu ein Stück zurück. Endlos dank doppelter Kartenliste.
+   */
+  const startScrolling = () => {
+    cancelAnimationFrame(scrollRaf);
+    let flicking = false;
+    let until = performance.now() + randInt(1_500, 3_000);
+    let from = 0;
+    let to = 0;
+    let start = 0;
+    let dur = 0;
+    const frame = (now: number) => {
+      if (!memes) return;
+      if (siteChanged) {
+        siteChanged = false;
+        flicking = false;
+        until = now + randInt(1_500, 3_000);
+      }
+      if (!flicking && now >= until) {
+        const cards = [...(memeWindow.dataset.site === 'gag' ? gagFeed : forumFeed).children] as HTMLElement[];
+        const half = cards.length / 2;
+        const loop = half >= 1 ? cards[half]!.offsetTop - cards[0]!.offsetTop : 0;
+        // zweite Hälfte = Kopie der ersten: unbemerkt zurückspringen
+        if (loop > 0 && memePage.scrollTop >= loop) memePage.scrollTop -= loop;
+        const cur = memePage.scrollTop;
+        const next = cards.find((c) => c.offsetTop > cur + 12);
+        let target = next ? next.offsetTop - 8 : cur + 200;
+        if (cur > 80 && Math.random() < 0.12) target = cur - randInt(40, 90); // nochmal gucken
+        else if (Math.random() < 0.3) target += randInt(-30, 40); // Daumen ist nicht pixelgenau
+        from = cur;
+        to = Math.max(0, target);
+        start = now;
+        dur = reducedMotion() ? 0 : Math.min(1_100, 380 + Math.abs(to - from) * 1.6);
+        flicking = true;
+      }
+      if (flicking) {
+        const t = dur > 0 ? Math.min(1, (now - start) / dur) : 1;
+        memePage.scrollTop = from + (to - from) * (1 - (1 - t) ** 3);
+        if (t >= 1) {
+          flicking = false;
+          // Lesezeit: mal schnell weiter, mal länger hängen bleiben
+          until = now + (reducedMotion() ? 8_000 : Math.random() < 0.2 ? randInt(7_000, 11_000) : randInt(3_000, 6_000));
+        }
+      }
+      scrollRaf = requestAnimationFrame(frame);
+    };
+    scrollRaf = requestAnimationFrame(frame);
   };
   const enterMemes = () => {
     memes = true;
     fillFeed();
+    el.dataset.kind = 'memes';
     showSite(Math.random() < 0.5 ? 'forum' : 'gag');
     nextSite();
-    el.dataset.kind = 'memes';
-    setText(title, 'Memes (nur ganz kurz)');
+    startScrolling();
+    setText(title, 'Browser');
     ctx.log.write('info', pick(MEME_ENTER_LINES));
   };
   const leaveMemes = () => {
     memes = false;
     clearTimeout(siteTimer);
+    cancelAnimationFrame(scrollRaf);
     el.dataset.kind = task.kind;
     setText(title, taskTitle);
     fitBody();

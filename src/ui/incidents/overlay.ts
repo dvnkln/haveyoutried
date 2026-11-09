@@ -77,7 +77,9 @@ export function mountIncidentOverlay(ctx: AppContext): void {
     body.scrollTop = 0;
   };
   const app = document.getElementById('app');
+  // Licht des Monitors an der Wand; die Abdunklung selbst ist eine Maske mit Loch in Monitorform
   const spot = h('div', { class: 'inc-spot', 'aria-hidden': 'true' });
+  const dim = h('div', { class: 'inc-dim', 'aria-hidden': 'true' });
   /** Alarm und Ergebnis im Monitor (Rest abgedunkelt), das Spiel selbst bildschirmfüllend */
   const inMonitor = (on: boolean) => {
     const screenEl = document.querySelector<HTMLElement>('#app .screen');
@@ -92,18 +94,72 @@ export function mountIncidentOverlay(ctx: AppContext): void {
         root.style.setProperty('--max-sy', (from.height / to.height).toFixed(3));
       }
       if (root.parentElement !== screenEl) screenEl.append(root);
-      document.body.append(spot);
+      document.body.append(dim, spot);
       placeSpot();
     } else {
       if (root.parentElement !== document.body) document.body.append(root);
       spot.remove();
+      dim.remove();
     }
   };
-  /** ausgespart wird der ganze Monitor samt Gehäuse: der Bildschirm bleibt Teil des Geräts */
+  /**
+   * Ausgespart werden Monitor und Fuß. Was davor steht (Telefon, Post-its), bleibt dunkel:
+   * es wird in der Maske wieder aufgemalt, in seiner echten Form.
+   */
   const placeSpot = () => {
-    const r = root.parentElement?.closest('.monitor')?.getBoundingClientRect();
-    if (!r || root.hidden) return;
+    const monitor = root.parentElement?.closest<HTMLElement>('.monitor');
+    if (!monitor || root.hidden) return;
+    const r = monitor.getBoundingClientRect();
     Object.assign(spot.style, { left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px` });
+    const w = window.innerWidth;
+    const hgt = window.innerHeight;
+    const n = (v: number) => v.toFixed(1);
+    // abgerundetes Rechteck als Pfad (oben/unten eigene Radien)
+    const rounded = (x: number, y: number, rw: number, rh: number, top: number, bottom: number) =>
+      `M${n(x + top)} ${n(y)}H${n(x + rw - top)}A${top} ${top} 0 0 1 ${n(x + rw)} ${n(y + top)}V${n(y + rh - bottom)}A${bottom} ${bottom} 0 0 1 ${n(x + rw - bottom)} ${n(y + rh)}H${n(x + bottom)}A${bottom} ${bottom} 0 0 1 ${n(x)} ${n(y + rh - bottom)}V${n(y + top)}A${top} ${top} 0 0 1 ${n(x + top)} ${n(y)}Z`;
+    let hole = rounded(r.left, r.top, r.width, r.height, 12, 8);
+    // Fuß (::after unter dem Gehäuse): nur der Teil unterhalb, damit sich die Löcher nicht überlappen
+    const foot = getComputedStyle(monitor, '::after');
+    const cs = getComputedStyle(monitor);
+    const bl = parseFloat(cs.borderLeftWidth) || 0;
+    const bb = parseFloat(cs.borderBottomWidth) || 0;
+    const fx = r.left + bl + (parseFloat(foot.left) || 0);
+    const fw =
+      parseFloat(foot.width) +
+      (foot.boxSizing === 'border-box' ? 0 : (parseFloat(foot.borderLeftWidth) || 0) + (parseFloat(foot.borderRightWidth) || 0));
+    const fBottom = r.bottom - bb - (parseFloat(foot.bottom) || 0);
+    if (fw > 0 && fBottom > r.bottom + 1) hole += rounded(fx, r.bottom, fw, fBottom - r.bottom, 0, Math.min(6, fBottom - r.bottom));
+    // Gegenstände vor dem Monitor (höherer z-index), die ins Loch ragen
+    const mz = parseInt(cs.zIndex, 10) || 0;
+    const covers: string[] = [];
+    for (const el of monitor.parentElement?.children ?? []) {
+      if (el === monitor || !(el instanceof HTMLElement)) continue;
+      const ecs = getComputedStyle(el);
+      if (ecs.display === 'none' || ecs.visibility === 'hidden' || (parseInt(ecs.zIndex, 10) || 0) <= mz) continue;
+      const b = el.getBoundingClientRect();
+      if (b.right < r.left || b.left > r.right || b.bottom < r.top || b.top > fBottom) continue;
+      const svg = el.querySelector(':scope > svg');
+      if (svg) {
+        // SVG-Gegenstand (Telefon): Form 1:1 übernehmen, ohne das unsichtbare Klingeln
+        const copy = svg.cloneNode(true) as SVGElement;
+        copy.querySelectorAll('.ring').forEach((x) => x.remove());
+        const sb = svg.getBoundingClientRect();
+        covers.push(`<svg x="${n(sb.left)}" y="${n(sb.top)}" width="${n(sb.width)}" height="${n(sb.height)}" viewBox="${svg.getAttribute('viewBox') ?? ''}" overflow="visible">${copy.innerHTML}</svg>`);
+      } else {
+        // gedrehtes Rechteck (Post-it): echte Größe, Drehung aus der Transform-Matrix
+        const m = new DOMMatrix(ecs.transform === 'none' ? undefined : ecs.transform);
+        const deg = (Math.atan2(m.b, m.a) * 180) / Math.PI;
+        const cx = b.left + b.width / 2;
+        const cy = b.top + b.height / 2;
+        const ew = el.offsetWidth;
+        const eh = el.offsetHeight;
+        covers.push(`<rect x="${n(cx - ew / 2)}" y="${n(cy - eh / 2)}" width="${ew}" height="${eh}" rx="2" transform="rotate(${n(deg)} ${n(cx)} ${n(cy)})"/>`);
+      }
+    }
+    const mask = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${hgt}" viewBox="0 0 ${w} ${hgt}"><path fill-rule="evenodd" d="M0 0H${w}V${hgt}H0Z${hole}"/>${covers.join('')}</svg>`;
+    const url = `url("data:image/svg+xml,${encodeURIComponent(mask)}")`;
+    dim.style.maskImage = url;
+    dim.style.setProperty('-webkit-mask-image', url);
   };
   window.addEventListener('resize', placeSpot);
   /** alles außer dem Monitor-Bildschirm stilllegen */
@@ -140,6 +196,7 @@ export function mountIncidentOverlay(ctx: AppContext): void {
     frozen = [];
     app?.classList.remove('incident-on');
     spot.remove();
+    dim.remove();
   };
 
   const run = (id: IncidentId) => {
