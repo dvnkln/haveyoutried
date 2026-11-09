@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { deserialize, EXP_REVALUED_FLAG, exportSave, importSave, serialize } from '../../src/core/save';
+import { deserialize, EXP_REVALUED_FLAG, serialize } from '../../src/core/save';
 import { createInitialState } from '../../src/core/state';
 import { prestigeGain } from '../../src/core/prestige';
 
@@ -76,13 +76,6 @@ describe('Spielstand', () => {
   it('ungültiges JSON → null', () => {
     expect(deserialize('{nope', 0)).toBeNull();
     expect(deserialize('[]', 0)).toBeNull();
-    expect(importSave('!!!kein base64', 0)).toBeNull();
-  });
-
-  it('Export/Import inkl. Umlaute', () => {
-    const s = createInitialState(1);
-    s.upgrades = { 'kaffeemaschine-ü': true };
-    expect(importSave(exportSave(s), 2)).toEqual(s);
   });
 });
 
@@ -121,17 +114,6 @@ describe('Saver', () => {
     removeItem: (k: string) => void store.delete(k),
   };
 
-  it('fehlgeschlagener Import lässt das Autosave weiterlaufen', async () => {
-    const { Saver } = await import('../../src/core/save');
-    vi.stubGlobal('localStorage', mockStorage);
-    const s = createInitialState(0);
-    const saver = new Saver(() => s);
-    full = true;
-    expect(saver.replaceWith(createInitialState(1))).toBe(false);
-    full = false;
-    expect(saver.saveNow()).toBe(true);
-    vi.unstubAllGlobals();
-  });
 
   it('dauerhafter Speicherfehler wird nur einmal gemeldet', async () => {
     const { Saver } = await import('../../src/core/save');

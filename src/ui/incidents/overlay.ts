@@ -291,7 +291,8 @@ export function mountIncidentOverlay(ctx: AppContext): void {
     setTimeout(() => (take.disabled = false), INCIDENTS.ackArmMs);
     // Alarm wiederholen, bis jemand übernimmt
     const nag = setInterval(() => {
-      if (!document.hidden) ctx.sfx.alarm();
+      // im Dunkeln (niemand da) piept es nicht die ganze Nacht
+      if (!document.hidden && !app?.classList.contains('afk')) ctx.sfx.alarm();
     }, INCIDENTS.alarmRepeatMs);
 
     let phase: 'warn' | 'ready' | 'play' | 'done' = 'warn';

@@ -19,9 +19,9 @@ export interface Line {
 }
 
 /** Nur reden hilft (Frage, Wunsch, Unsinn) */
-const q = (topic: Topic, text: string, cause: string, answer: string): Line => ({ topic, text, cause, answer, fix: false });
+export const q = (topic: Topic, text: string, cause: string, answer: string): Line => ({ topic, text, cause, answer, fix: false });
 /** Hier muss man ran */
-const f = (topic: Topic, text: string, cause: string, answer: string, devices?: Device[]): Line => ({
+export const f = (topic: Topic, text: string, cause: string, answer: string, devices?: Device[]): Line => ({
   topic,
   text,
   cause,

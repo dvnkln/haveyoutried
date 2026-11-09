@@ -1,10 +1,11 @@
 import './styles/main.css';
 import { BOOT_LINES, RETURN_LINES } from './content/syslog';
+import { awayRule, BOSS_REPORT_MIN_MS, bossReport } from './content/report';
+import { createAfk } from './ui/afk';
 import { startLoop } from './core/loop';
 import { applyOfflineProgress, type OfflineReport } from './core/offline';
 import { EXP_REVALUED_FLAG, loadGame, Saver } from './core/save';
 import { createInitialState } from './core/state';
-import { tick } from './core/tick';
 import { registerServiceWorker } from './pwa/register';
 import { mountApp } from './ui/app';
 import { h } from './ui/dom';
@@ -80,24 +81,48 @@ if (revaluedFrom !== undefined) {
 const showOfflineReport = (r: OfflineReport) => {
   if (r.gained <= 0) return;
   log.template(pick(RETURN_LINES));
+  // kurz weg: knappe Meldung; länger weg: der Chef schreibt eine Mail mit „ein paar Fragen“
+  if (r.elapsedMs < BOSS_REPORT_MIN_MS) {
+    showModal({
+      title: 'Während du weg warst …',
+      body: [
+        h('p', {}, ['Deine Infrastruktur hat ', h('strong', { class: 'hl', text: formatNumber(r.gained) }), ' Tickets geschlossen. Niemand hat’s gemerkt.']),
+        `Abwesend: ${formatDuration(r.elapsedMs)}`,
+      ],
+      actions: [{ label: 'Zur Kenntnis genommen', primary: true }],
+    });
+    return;
+  }
+  const mail = bossReport(state, r.elapsedMs, r.capped, Math.random, r.gained);
   showModal({
-    title: 'Während du weg warst …',
+    title: 'Neue Mail vom Chef',
+    className: 'boss-mail',
     body: [
-      h('p', {}, [
-        'Deine Infrastruktur hat ',
-        h('strong', { class: 'hl', text: formatNumber(r.gained) }),
-        ' Tickets geschlossen. Niemand hat’s gemerkt.',
+      h('div', { class: 'bm-head' }, [
+        h('div', {}, [h('span', { class: 'bm-key', text: 'Von:' }), ' Chef']),
+        h('div', {}, [h('span', { class: 'bm-key', text: 'Betreff:' }), ` ${mail.subject}`]),
       ]),
-      `Abwesend: ${formatDuration(r.elapsedMs)}` +
-        (r.capped ? ` (angerechnet: ${formatDuration(r.creditedMs)}. Der Rest war Wochenende.)` : ''),
+      h('p', {}, [
+        `Sie waren ${formatDuration(r.elapsedMs)} weg. Ihre Infrastruktur hat in der Zeit `,
+        h('strong', { class: 'hl', text: formatNumber(r.gained) }),
+        ' Tickets geschlossen. Ein paar Fragen:',
+      ]),
+      h('ul', { class: 'bm-list' }, mail.items.map((t) => h('li', { text: t }))),
+      mail.closer,
+      ...(r.reduced
+        ? [h('p', { class: 'hint', text: `Angerechnet: ${formatDuration(r.creditedMs)}. ${awayRule()} Der Rest war laut Personalabteilung Schlaf.` })]
+        : []),
+      h('p', { class: 'bm-sig', text: mail.signature }),
     ],
-    actions: [{ label: 'Zur Kenntnis genommen', primary: true }],
+    actions: [{ label: mail.button, primary: true }],
   });
 };
 if (startReport) showOfflineReport(startReport);
 
+// Seite offen, aber niemand da: Licht aus, Produktion wie bei Abwesenheit
+const afk = createAfk(state, log, showOfflineReport);
 const loop = startLoop(
-  (dt) => tick(state, dt, Date.now()),
+  (dt) => afk.update(dt),
   () => app.render(),
 );
 saver.start();
@@ -105,8 +130,10 @@ saver.start();
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
     saver.saveNow();
+    afk.hide();
   } else {
-    const report = applyOfflineProgress(state, Date.now());
+    // war vorher schon das Licht aus, läuft die Abwesenheit nahtlos weiter (ein Bericht für alles)
+    const report = afk.resume();
     loop.resetClock();
     if (report) showOfflineReport(report);
   }

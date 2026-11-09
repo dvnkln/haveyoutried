@@ -72,7 +72,7 @@ test('Kern-Loop: tippen, kaufen, produzieren, speichern', async ({ page, context
   expect(errors).toEqual([]);
 });
 
-test('Offline-Progress wird auf 8 h gedeckelt', async ({ page, context }) => {
+test('Abwesenheit: erste Stunde voll, dann ein Fünftel, höchstens 8 h; der Chef schreibt', async ({ page, context }) => {
   const twoDaysAgo = Date.now() - 48 * 3600_000;
   // 4 Bash-Skripte à 0.25/s = 1/s
   const save = { version: 1, tickets: 0, generators: { bash: { owned: 4 } }, lastTick: twoDaysAgo };
@@ -86,12 +86,13 @@ test('Offline-Progress wird auf 8 h gedeckelt', async ({ page, context }) => {
   await page.goto('/');
   const modal = page.locator('dialog.modal');
   await expect(modal).toBeVisible();
-  await expect(modal).toContainText('28.8 K'); // 8 h * 1/s
+  await expect(modal).toContainText('8.64 K'); // (1 h + 7 h × 0,2) × 1/s
+  await expect(modal).toContainText('Neue Mail vom Chef');
   await expect(modal).toContainText('Wochenende');
   await shot(page, '4-offline');
-  await modal.getByRole('button', { name: 'Zur Kenntnis genommen' }).tap();
+  await modal.locator('.modal-actions .btn').tap();
   await expect(modal).toBeHidden();
-  expect(await tickets(page)).toBeGreaterThanOrEqual(28.8);
+  expect(await tickets(page)).toBeGreaterThanOrEqual(8.6);
 });
 
 test('Upgrades: Badge, Kauf, Wirkung; Sound-Schalter', async ({ page, context }) => {

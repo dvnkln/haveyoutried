@@ -242,8 +242,14 @@ export const CONFIG = {
   /** Max. Frame-Delta, das der Loop nachholt (Rest regelt Offline-Progress) */
   maxFrameDeltaMs: 1_000,
   autosaveMs: 10_000,
-  /** Offline-Fortschritt wird höchstens für diese Dauer gutgeschrieben */
+  /** Abwesenheit zählt höchstens so lange (danach produziert nichts mehr) */
   offlineCapMs: 8 * 60 * 60 * 1_000,
+  /** so lange zählt Abwesenheit voll … */
+  offlineFullMs: 60 * 60 * 1_000,
+  /** … danach nur noch dieser Anteil (eine Nacht lohnt sich, ersetzt aber kein Spielen) */
+  offlineRestShare: 0.2,
+  /** Seite offen, aber keine Eingabe: ab dann Licht und Bildschirm aus, Rechnung wie bei Abwesenheit */
+  afkMs: 10 * 60 * 1_000,
   /** Ab dieser Abwesenheit gibt es einen Bericht */
   offlineReportMinMs: 30_000,
 
@@ -263,6 +269,8 @@ export const CONFIG = {
   callerShowMsPerChar: 50,
   /** Anteil Anrufe, die von Uhrzeit/Infrastruktur abhängen (wenn passende da sind) */
   callerSituationalChance: 0.3,
+  /** Chance, dass bei einem neuen Anruf eine fällige Folge einer Telefon-Geschichte drankommt */
+  callerStoryChance: 0.12,
   /** Chance, dass der letzte Anrufer nochmal anruft */
   callerCallbackChance: 0.1,
   /** Abstand zwischen Ambient-Syslog-Zeilen in ms */

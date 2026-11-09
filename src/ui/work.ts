@@ -124,7 +124,26 @@ interface Program {
   /** was getippt werden kann, passend zum Thema der Aufgabe */
   lines: (t: Task) => readonly string[];
   log: (t: Task, text: string) => string;
+  /** Abgeschickt (letzter Zustand vor „Gelöst“): Fenster zeigt das Ergebnis wie im echten Programm */
+  ready?: (t: Task, head: HTMLElement, extra: HTMLElement) => void;
 }
+
+/** kleine grüne Bestätigung unter dem Eingabefeld */
+const note = (text: string) => h('div', { class: 'sent-note', text });
+/**
+ * Bestätigung an die Stelle von etwas Sichtbarem setzen (gleicher Platz, nichts springt).
+ * Ist das Ziel im engen Fenster ausgeblendet, kommt sie als „optional“ dazu und fällt weg, wenn kein Platz ist.
+ */
+const swap = (target: Element | null | undefined, node: HTMLElement) => {
+  if (!target) return;
+  if (target instanceof HTMLElement && target.offsetParent !== null) target.replaceWith(node);
+  else {
+    node.classList.add('opt');
+    target.after(node);
+  }
+};
+/** typische Ausgabe nach einem Befehl im Terminal */
+const TERM_OUT = ['OK', '[  OK  ]', 'done.', 'exit 0', '3 warnings (ignoriert)', '1 Datei geändert.', 'Job erledigt.'];
 
 const clock = () => {
   const d = new Date();
@@ -163,6 +182,8 @@ const PROGRAMS: Record<Kind, Program> = {
     lines: (t) => [t.line.answer],
     extra: () => [h('div', { class: 'mail-sig', text: pick(MAIL_SIGS) })],
     log: (t, x) => `mail[25]: Re: ${t.subject} → ${t.who}: „${x}“`,
+    // Gesendet-Leiste statt Werkzeugleiste (gleicher Platz, nichts springt)
+    ready: (t, head) => swap(head.querySelector('.mail-tools'), note(`✓ Gesendet an ${t.who}`)),
   },
   ticket: {
     weight: 3,
@@ -183,6 +204,14 @@ const PROGRAMS: Record<Kind, Program> = {
     lines: (t) => [t.line.answer],
     extra: () => [h('div', { class: 'tk-actions' }, ['Antworten', 'Schließen', 'Eskalieren'].map((x, i) => h('span', { class: `tk-btn tk-btn-${i}`, text: x })))],
     log: (t, x) => `ticket[8080]: ${ticketId(t.no)} kommentiert: „${x}“`,
+    ready: (_t, head, extra) => {
+      const status = head.querySelector('.tk-status');
+      if (status) {
+        status.textContent = 'Gelöst';
+        status.classList.add('done');
+      }
+      swap(extra.querySelector('.tk-actions'), note('✓ Kommentar gespeichert · Du · gerade eben'));
+    },
   },
   term: {
     weight: 2,
@@ -190,6 +219,7 @@ const PROGRAMS: Record<Kind, Program> = {
     head: (t) => [h('div', { class: 'work-comment', text: `# ${t.who}: ${t.subject}` })],
     lines: (t) => topicPool(t.line.topic, 'cmds'),
     log: (_t, x) => `you@helpdesk:~$ ${x}`,
+    ready: (_t, _head, extra) => extra.append(h('div', { class: 'term-out opt', text: pick(TERM_OUT) }), h('div', { class: 'term-out term-next opt', text: (document.querySelector('.typed-prompt')?.textContent ?? '$ ').trimEnd() })),
   },
   chat: {
     weight: 2,
@@ -206,6 +236,8 @@ const PROGRAMS: Record<Kind, Program> = {
     ],
     lines: (t) => withPrefix(CHAT_LINES, t.line.answer, 0.2),
     log: (t, x) => `chat[443]: an ${t.who}: „${x}“`,
+    // Nachricht steht als eigene Blase im Verlauf, das Eingabefeld darunter ist wieder leer
+    ready: (_t, _head, extra) => extra.append(h('div', { class: 'chat-input-empty opt', text: 'Nachricht schreiben …' })),
   },
   call: {
     weight: 1,
@@ -220,6 +252,7 @@ const PROGRAMS: Record<Kind, Program> = {
     label: 'Du sagst:',
     lines: (t) => withPrefix(CALL_LINES, t.line.answer, 0.3),
     log: (t, x) => `call[3478]: zu ${t.who}: „${x}“${Math.random() < 0.3 ? ' (Mikro war aus)' : ''}`,
+    ready: (_t, head) => head.querySelector('.call-me .call-name')?.replaceChildren('🎙︎ spricht'),
   },
   rdp: {
     weight: 1,
@@ -238,6 +271,8 @@ const PROGRAMS: Record<Kind, Program> = {
     extra: () => [h('div', { class: 'rdp-taskbar' }, [h('span', { class: 'rdp-start', text: 'Start' }), h('span', { class: 'rdp-task', text: 'Ausführen' }), h('span', { class: 'rdp-clock', text: clock() })])],
     lines: (t) => topicPool(t.line.topic, 'rdp'),
     log: (t, x) => `rdp[3389]: ${t.target}> ${x}`,
+    // „Ausführen“ schließt sich, die Fehlermeldung ist weg
+    ready: (_t, head) => swap(head.querySelector('.rdp-dialog'), note('✓ Ausgeführt. Kein Fehler. Diesmal.')),
   },
   web: {
     weight: 1,
@@ -256,6 +291,10 @@ const PROGRAMS: Record<Kind, Program> = {
     ],
     lines: (t) => (Math.random() < 0.25 || !t.device ? WEB_GENERIC : DEVICE_SETTINGS[t.device]),
     log: (t, x) => `web[80]: ${t.target}: ${x} – gespeichert`,
+    ready: (_t, _head, extra) => {
+      extra.querySelector('.web-btn.save')?.classList.add('pressed');
+      swap(extra.querySelector('.web-foot'), note('✓ Einstellungen gespeichert'));
+    },
   },
   search: {
     weight: 2,
@@ -275,6 +314,11 @@ const PROGRAMS: Record<Kind, Program> = {
     ],
     lines: (t) => topicPool(t.line.topic, 'searches'),
     log: (_t, x) => `browser[42]: gesucht: „${x}“ – ${pick(SEARCH_RESULTS)}`,
+    ready: (_t, _head, extra) => {
+      extra.querySelector('.search-hits')?.prepend(h('div', { class: 'search-count', text: `Ungefähr ${randInt(2, 900).toLocaleString('de-DE')}.000 Ergebnisse (0,${randInt(10, 99)} Sekunden)` }));
+      // angeklickter Treffer (keine Anzeige): wird lila wie besucht
+      [...extra.querySelectorAll('.search-hit')].find((x) => !x.textContent?.includes('Anzeige'))?.classList.add('picked');
+    },
   },
 };
 
@@ -298,6 +342,8 @@ export function createWork(
   let memes = false;
   /** Antwort fertig: Fenster bleibt kurz mit „Gelöst!“ stehen, dann kommt das nächste */
   let sentTimer = 0;
+  /** Antwort ist abgeschickt und steht da; der nächste Anschlag löst und holt das nächste Ticket */
+  let ready = false;
   /** gelöste Tickets in Folge; reißt nach SOLVE.breakMs ohne Anschlag */
   let streak = 0;
   /** eine Zeile: passt der Text nicht, wird die Schrift kleiner statt abgeschnitten */
@@ -379,11 +425,14 @@ export function createWork(
 
   /** Antwort passt trotz Anpassung nicht ganz: beim Tippen zum Cursor scrollen */
   let scrolls = false;
+  /** Passt nicht: Fenster läuft über oder die Antwort im Feld (außer sie wird ohnehin mitgescrollt) */
+  const overflows = (ignoreBodyWhenScrolling = false) =>
+    el.scrollHeight > el.clientHeight + 1 || (!(ignoreBodyWhenScrolling && scrolls) && body.scrollHeight > body.clientHeight + 1);
   /** Ganze Antwort muss ins Feld passen (lesen vor dem letzten Anschlag): sonst Schrift etwas kleiner */
   const fitBody = () => {
     // während der Memes ist das Fenster versteckt: messen erst beim Zurückkommen
     if (memes) return showTyped();
-    const over = () => body.scrollHeight > body.clientHeight + 1 || el.scrollHeight > el.clientHeight + 1;
+    const over = () => overflows();
     el.classList.remove('tight', 'tighter');
     body.style.fontSize = '';
     // eng (niedrige Displays): erst Deko im Fenster weglassen, dann Kopfzeilen, zuletzt kleinere Schrift
@@ -454,10 +503,16 @@ export function createWork(
     head.replaceChildren(...prog.head(task));
     extra.replaceChildren(...(prog.extra?.(task) ?? []));
     setText(label, prog.label ?? '');
-    el.classList.remove('sent');
+    el.classList.remove('sent', 'ready');
+    ready = false;
     // Statuszeile: Ticketnummer und Betreff, Füllstand zeigt den Fortschritt der Antwort
     setStatus(`${ticketId(task.no)} · ${task.subject}`);
     fitBody();
+    // Layout setzt sich manchmal erst im nächsten Frame (Sprechblase, Statuszeile): dann nochmal messen
+    const no = task.no;
+    requestAnimationFrame(() => {
+      if (task.no === no && !memes && !scrolls && overflows()) fitBody();
+    });
   };
 
   /** Erfolg! Stempel springt auf, ab dem zweiten Ticket in Folge mit Zähler und höherem Ton */
@@ -481,9 +536,21 @@ export function createWork(
     onSolved(streak, stamp, presses);
   };
 
-  /** Abschicken: Erfolgsstempel, Karte mit Abschluss-Spruch in den Ticketverlauf, kurz danach das nächste */
+  /** Abgeschickt: wie im echten Programm, Cursor weg; gelöst wird erst beim nächsten Anschlag */
+  const showReady = () => {
+    if (ready) return;
+    ready = true;
+    el.classList.add('ready');
+    PROGRAMS[task.kind].ready?.(task, head, extra);
+    // kein neues Ausmessen (sonst springt das Fenster): was nicht mehr passt, fällt weg
+    const optional = [...el.querySelectorAll('.opt')].reverse();
+    for (const o of optional) if (overflows(true)) o.remove();
+  };
+
+  /** Gelöst: Stempel, Karte in den Ticketverlauf. Stand die Antwort schon abgeschickt da, kommt sofort das nächste. */
   const send = () => {
     typedLen = reply.length;
+    const wasReady = ready;
     showTyped();
     if (task.call) answered = task.call;
     remember(task.full);
@@ -502,8 +569,14 @@ export function createWork(
       note: fill(pick(task.line.fix ? topicPool(task.line.topic, 'notes') : TALK_NOTES), vars()),
       solution: fill(pick(DONE_LINES[task.kind]), vars()),
     });
-    el.classList.add('sent');
     celebrate();
+    if (wasReady) {
+      newTask();
+      return;
+    }
+    // mit einem Anschlag gelöst: das Abgeschickte kurz zeigen, der nächste Anschlag wartet nicht darauf
+    showReady();
+    el.classList.add('sent');
     sentTimer = window.setTimeout(() => {
       sentTimer = 0;
       newTask();
@@ -662,6 +735,7 @@ export function createWork(
       const full = Math.max(work, need - work);
       typedLen = Math.min(reply.length, Math.round((reply.length * progress) / full));
       if (progress >= need - 1e-9) send();
+      else if (typedLen >= reply.length) showReady();
     },
     /** Nach jedem Anschlag: Memes zu, Anzeige auffrischen */
     afterKey() {

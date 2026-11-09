@@ -1,5 +1,4 @@
 import { CONFIG } from '../../config';
-import { exportSave, importSave } from '../../core/save';
 import type { AppContext, Tab } from '../app';
 import { h, setText } from '../dom';
 import { formatDuration, formatNumber } from '../format';
@@ -107,79 +106,42 @@ export function systemTab(): Tab {
     none: 'Dein Gerät kann nicht vibrieren. Bei mir geht’s.',
   } as const;
 
-  const exportDialog = () => {
-    const area = h('textarea', { class: 'save-code', readonly: '', rows: '5' });
-    area.value = exportSave(ctx.state);
-    showModal({
-      title: 'tar czf spielstand.tgz',
-      body: ['Diesen Code sicher aufbewahren. Nicht auf einen Post-it am Monitor kleben.', area],
-      actions: [
-        {
-          label: 'Kopieren',
-          primary: true,
-          onClick: () => {
-            area.select();
-            void navigator.clipboard?.writeText(area.value).catch(() => {});
-            ctx.log.write('ok', 'backup[{pid}]: savegame exported. first successful backup in years.');
-          },
-        },
-        { label: 'Schließen' },
-      ],
-    });
-  };
-
-  const importDialog = () => {
-    const area = h('textarea', { class: 'save-code', rows: '5', placeholder: 'Code einfügen…' });
-    const error = h('p', { class: 'error' });
-    showModal({
-      title: 'tar xzf spielstand.tgz',
-      body: ['Überschreibt den aktuellen Spielstand.', area, error],
-      actions: [
-        {
-          label: 'Wiederherstellen',
-          primary: true,
-          onClick: () => {
-            const state = importSave(area.value, Date.now());
-            if (!state || !ctx.saver.replaceWith(state)) {
-              setText(error, 'tar: Unexpected EOF in archive. Code ungültig.');
-              ctx.haptic('error');
-              return false;
-            }
-            location.reload();
-          },
-        },
-        { label: 'Abbrechen' },
-      ],
-    });
-  };
-
+  // Alles löschen: statt „yes“ eintippen ein Kippschalter mit Sicherung; erst dann geht „Ausführen“
   const resetDialog = () => {
-    const input = h('input', { class: 'confirm-input', type: 'text', autocomplete: 'off', placeholder: 'yes' });
-    const error = h('p', { class: 'error' });
+    const sw = h('button', { class: 'kill-switch', type: 'button', role: 'switch', 'aria-checked': 'false', 'aria-label': 'Wirklich alles löschen' }, [
+      h('span', { class: 'ks-track', 'aria-hidden': 'true' }, [h('span', { class: 'ks-knob' })]),
+      h('span', { class: 'ks-label', text: 'Sicherung umlegen' }),
+    ]);
+    const armed = () => sw.getAttribute('aria-checked') === 'true';
+    let run: HTMLButtonElement | null = null;
     showModal({
       title: 'rm -rf / --no-preserve-root',
-      body: [
-        'Löscht den kompletten Spielstand. Es gibt kein Backup. (Es gab nie ein Backup.)',
-        'Zum Bestätigen „yes“ eintippen:',
-        input,
-        error,
-      ],
+      body: ['Löscht den kompletten Spielstand. Es gibt kein Backup. (Es gab nie ein Backup.)', sw],
       actions: [
         {
           label: 'Ausführen',
           danger: true,
+          init: (btn) => {
+            run = btn;
+            btn.disabled = true;
+          },
           onClick: () => {
-            if (input.value.trim().toLowerCase() !== 'yes') {
-              setText(error, 'Abgebrochen. Gute Entscheidung, eigentlich.');
-              ctx.haptic('error');
-              return false;
-            }
+            // doppelt gesichert: ohne umgelegten Schalter passiert nichts
+            if (!armed()) return false;
             ctx.saver.wipe();
             location.reload();
           },
         },
         { label: 'Abbrechen', primary: true },
       ],
+    });
+    sw.addEventListener('click', () => {
+      const on = !armed();
+      sw.setAttribute('aria-checked', String(on));
+      setText(sw.querySelector('.ks-label')!, on ? 'Scharf. Letzte Chance.' : 'Sicherung umlegen');
+      if (run) run.disabled = !on;
+      ctx.haptic(on ? 'error' : 'tap');
+      ctx.sfx.tick();
     });
   };
 
@@ -305,12 +267,6 @@ export function systemTab(): Tab {
 
         h('div', { class: 'section-title', text: '# Spielstand' }),
         h('div', { class: 'actions' }, [
-          button('Jetzt speichern', () => {
-            if (ctx.saver.saveNow()) ctx.log.write('ok', 'sync[{pid}]: savegame written to /var/lib/helpdesk');
-            ctx.haptic('buy');
-          }),
-          button('Exportieren', exportDialog),
-          button('Importieren', importDialog),
           button('Alles löschen', resetDialog, 'btn btn-danger'),
         ]),
         h('p', {

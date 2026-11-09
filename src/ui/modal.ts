@@ -6,6 +6,8 @@ export interface ModalAction {
   danger?: boolean;
   /** `false` zurückgeben hält das Modal offen */
   onClick?: () => boolean | void;
+  /** Zugriff auf den Knopf (z. B. erst nach einer Bestätigung freischalten) */
+  init?: (btn: HTMLButtonElement) => void;
 }
 
 export interface ModalOptions {
@@ -46,6 +48,7 @@ export function showModal({
     btn.addEventListener('click', () => {
       if (a.onClick?.() !== false) close();
     });
+    a.init?.(btn);
     return btn;
   });
 

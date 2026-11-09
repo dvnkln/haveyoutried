@@ -60,6 +60,8 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   a('clicks100k', 'Sehnenscheide, Stufe 3', '100.000 Anschläge. Die Physiotherapeutin kennt dich beim Namen.', (s) => s.clicks >= 100_000),
   a('callers100', 'Telefonseelsorge', '100 Anrufer angehört.', (s) => flag(s, 'callers') >= 100),
   a('callbacks10', 'Ich ruf jetzt zum dritten Mal an', '10 Rückrufe ertragen.', (s) => flag(s, 'callbacks') >= 10),
+  a('story', 'Fortsetzung folgt', 'Eine Geschichte am Telefon bis zur letzten Folge verfolgt.', (s) => flag(s, 'stories:done') >= 1),
+  a('herrk', 'Herr K. hat jetzt Zeit', 'Herrn K. bis in die Rente begleitet. Der Großrechner läuft.', (s) => flag(s, 'storyDone:herrk') >= 1, true),
   a('callers500', 'Ohr mit Headset-Abdruck', '500 Anrufer angehört. Du erkennst die Abteilungen am Klingeln.', (s) => flag(s, 'callers') >= 500),
   a('callbacks50', 'Zum fünfzigsten Mal: Geht immer noch nicht', '50 Rückrufe ertragen. Du nimmst inzwischen mit „Ja, ich weiß“ ab.', (s) => flag(s, 'callbacks') >= 50),
   a('streak10', 'Die Warteschlange hat Angst', '10 Tickets in Folge gelöst, ohne abzusetzen.', (s) => flag(s, 'bestStreak') >= 10),

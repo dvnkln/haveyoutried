@@ -3,6 +3,7 @@ import { CALLBACK_LINES, CALLERS, situationalCalls, type Call, type Line } from 
 import { topicPool } from '../content/topics';
 import { URGENT_LABELS, URGENT_TEXT } from '../content/events';
 import { VIP_TICKETS } from '../content/work';
+import { advanceStory, dueStoryCall } from '../content/stories';
 import { ALTF4_LINES, PANIC_LINES } from '../content/props';
 import { pressKey, solveTicket } from '../core/actions';
 import { rates } from '../core/economy';
@@ -165,7 +166,8 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
   };
 
 
-  const chooseCall = (): Call => {
+  /** story = false beim Anrufer zum Seitenstart: der zählt nicht als angehört, also auch keine Folge verbrauchen */
+  const chooseCall = (story = true): Call => {
     // Rückruf: gleiche Person, neues Leid
     if (call && Math.random() < CONFIG.callerCallbackChance) {
       // gleiches Anliegen wie vorher, nur genervter
@@ -176,6 +178,12 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
         about: call.about ?? call.text,
         reply: undefined,
       };
+    }
+    // Geschichte geht weiter: selten, und frühestens eine Weile nach der letzten Folge
+    const due = story && Math.random() < CONFIG.callerStoryChance ? dueStoryCall(ctx.state, Date.now()) : null;
+    if (due) {
+      advanceStory(ctx.state, due.id, Date.now());
+      return due.call;
     }
     const situational = situationalCalls(ctx.state, new Date()).filter((c) => !recent.includes(c.text));
     if (situational.length > 0 && Math.random() < CONFIG.callerSituationalChance) return pick(situational);
@@ -217,7 +225,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
 
   const spawnUrgent = () => {
     const visible =
-      !document.hidden && !document.querySelector('dialog[open]') && !incidentRunning() && !root().classList.contains('sheet-open');
+      !document.hidden && !document.querySelector('dialog[open]') && !incidentRunning() && !root().classList.contains('sheet-open') && !root().classList.contains('afk');
     if (!visible || urgentEl) return scheduleUrgent(10_000);
 
     const el = h('button', { class: 'urgent-note', type: 'button', text: pick(URGENT_LABELS) });
@@ -452,7 +460,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
       work.newTask();
       if (ctx.state.clicks >= CONFIG.onboardingClicks) {
         started = true;
-        showCall(chooseCall(), true);
+        showCall(chooseCall(false), true);
         scheduleUrgent();
       } else {
         callerEl.classList.add('quiet');

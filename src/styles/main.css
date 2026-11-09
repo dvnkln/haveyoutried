@@ -1248,6 +1248,31 @@ button {
 .modal-body {
   padding: 4px 16px;
 }
+/* Mail vom Chef nach längerer Abwesenheit */
+.boss-mail .bm-head {
+  margin-bottom: 10px;
+  padding: 6px 9px;
+  border: 1.5px solid var(--ink);
+  border-radius: 8px;
+  background: #fffaf0;
+  font-size: 13px;
+}
+.boss-mail .bm-key {
+  display: inline-block;
+  min-width: 62px;
+  color: var(--ink-soft);
+}
+.boss-mail .bm-list {
+  margin: 6px 0 10px;
+  padding-left: 18px;
+}
+.boss-mail .bm-list li + li {
+  margin-top: 6px;
+}
+.boss-mail .bm-sig {
+  color: var(--ink-soft);
+  font-style: italic;
+}
 .modal-actions {
   display: flex;
   flex-wrap: wrap;
@@ -1287,23 +1312,50 @@ button {
   color: var(--red);
   font-size: var(--fs-small);
 }
-.save-code,
-.confirm-input {
-  width: 100%;
-  padding: 8px;
-  border: 2px solid var(--line);
-  border-radius: 10px;
-  background: var(--bg);
-  color: var(--green);
-  font-family: var(--font);
-  font-size: var(--fs-small);
-  word-break: break-all;
-}
-.confirm-input {
+/* Alles löschen: Kippschalter mit Sicherung statt Texteingabe */
+.kill-switch {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 10px 0 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: 600 14px var(--font-ui);
   min-height: var(--touch);
-  font-size: 16px; /* verhindert Zoom auf iOS */
 }
-
+.ks-track {
+  position: relative;
+  flex: 0 0 auto;
+  width: 58px;
+  height: 30px;
+  border: 2.5px solid var(--ink);
+  border-radius: 16px;
+  /* gelb-schwarz gestreift: Achtung, Gefahr */
+  background: repeating-linear-gradient(135deg, #ffd166 0 7px, #3d2c2e 7px 14px);
+  transition: background 0.2s;
+}
+.ks-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 21px;
+  height: 21px;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: #fffaf0;
+  transition: transform 0.2s cubic-bezier(0.3, 0.7, 0.3, 1.3);
+}
+.kill-switch[aria-checked='true'] .ks-track {
+  background: #ff6b6b;
+}
+.kill-switch[aria-checked='true'] .ks-knob {
+  transform: translateX(27px);
+}
+.kill-switch[aria-checked='true'] .ks-label {
+  color: #c43c3c;
+}
 @media (prefers-reduced-motion: reduce) {
   .floater {
     animation-duration: 0.01s;
@@ -6158,4 +6210,196 @@ body > .incident.playing {
 .work.tighter .chat-msg,
 .work.tighter .work-label {
   display: none;
+}
+
+/* ---------- Niemand da: Bildschirm aus, Bürolicht aus ---------- */
+#app.afk .screen {
+  background: #16141b;
+}
+#app.afk .screen > * {
+  visibility: hidden;
+}
+/* Standby: Lämpchen am Monitor wird orange */
+#app.afk .chin .led {
+  background: #ffb347;
+  box-shadow: 0 0 6px #ffb347;
+}
+.lights-off {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: calc(var(--safe-bottom, 0px) + 28px);
+  background: rgba(12, 10, 24, 0.86);
+  animation: lights-out 1.6s ease-in both;
+}
+.lo-hint {
+  color: rgba(255, 250, 240, 0.45);
+  font: 500 13px var(--font-ui);
+}
+@keyframes lights-out {
+  from {
+    opacity: 0;
+  }
+}
+/* Licht an: Leuchtstoffröhre flackert kurz */
+.lights-off.waking {
+  pointer-events: none;
+  animation: tube-flicker 0.6s steps(1, end) forwards;
+}
+@keyframes tube-flicker {
+  0% {
+    opacity: 1;
+  }
+  15% {
+    opacity: 0.25;
+  }
+  30% {
+    opacity: 0.9;
+  }
+  45% {
+    opacity: 0.1;
+  }
+  60% {
+    opacity: 0.6;
+  }
+  75%,
+  100% {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lights-off.waking {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+/* ---------- Abgeschickt: letzter Zustand vor „Gelöst“, wie im echten Programm ---------- */
+.work.ready .cursor {
+  /* unsichtbar, aber mit Position: beim Mitscrollen bleibt das Ende der Nachricht im Blick */
+  visibility: hidden;
+}
+.sent-note {
+  flex: 0 0 auto;
+  padding: 1px 10px 2px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #2f9e6a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  animation: sent-pop 0.18s ease-out;
+}
+@keyframes sent-pop {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+}
+/* Chat: eigene Blase rechts mit Häkchen, darunter wieder ein leeres Eingabefeld */
+.work[data-kind='chat'].ready .work-body {
+  /* gleiche Breite wie das Eingabefeld: der Text bricht nicht neu um */
+  padding-right: 34px;
+  border-radius: 12px 12px 3px 12px;
+  background: #d8f3e4;
+  animation: sent-pop 0.18s ease-out;
+}
+.work[data-kind='chat'].ready .work-body::after {
+  content: '✓✓';
+  width: auto;
+  height: auto;
+  right: 7px;
+  bottom: 4px;
+  border: 0;
+  background: none;
+  color: #3a8dd8;
+  font-size: 9px;
+  font-weight: 700;
+}
+.chat-input-empty {
+  margin: 0 8px 4px;
+  padding: 4px 10px;
+  border: 1.5px solid var(--ink);
+  border-radius: 14px;
+  background: #fff;
+  font-size: 12px;
+  line-height: 1.3;
+  color: var(--ink-soft);
+}
+/* Ticket: Kommentar ist gespeichert, Status grün */
+.work[data-kind='ticket'].ready .work-body {
+  border-left-width: 4px;
+  border-left-color: #2f9e6a;
+  background: #f1fbf5;
+}
+.tk-status.done {
+  background: #9be3c1;
+}
+/* Terminal: Befehl ist gelaufen, Ausgabe und neuer Prompt */
+.work[data-kind='term'].ready .work-body {
+  flex: 0 0 auto;
+}
+.term-out {
+  padding: 0 9px;
+  font-family: var(--font);
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--t-fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.term-next {
+  color: #8ee6b4;
+}
+.term-next::after {
+  content: ' ▌';
+  color: #23915c;
+}
+/* Videocall: das Gesagte als Untertitel */
+.work[data-kind='call'].ready .work-body {
+  background: rgba(30, 26, 36, 0.86);
+  color: #fffaf0;
+}
+.work[data-kind='call'].ready .work-label {
+  color: #c8c0d8;
+}
+/* Webinterface: Speichern ist gedrückt */
+.web-btn.save.pressed {
+  transform: translateY(1px);
+  box-shadow: none;
+  filter: brightness(0.92);
+}
+/* Websuche: Trefferzahl, der passende Treffer markiert */
+.search-count {
+  font-size: 9px;
+  color: var(--ink-soft);
+}
+.search-hit.picked .hit-text {
+  color: #7a4fc0;
+  text-decoration: underline;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sent-note,
+  .work[data-kind='chat'].ready .work-body {
+    animation: none;
+  }
+}
+/* Fernwartung: „Ausführen“ ist zu, Bestätigung als helles Kästchen dort, wo der Fehler war */
+.work[data-kind='rdp'].ready .work-body {
+  visibility: hidden;
+}
+.work[data-kind='rdp'] .sent-note {
+  flex: 1;
+  align-self: flex-start;
+  min-width: 0;
+  margin: 0;
+  padding: 1px 8px;
+  border: 1.5px solid var(--ink);
+  border-radius: 5px;
+  background: #fffaf0;
+  color: #2f7a52;
 }

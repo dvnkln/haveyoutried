@@ -105,23 +105,6 @@ export function deserialize(json: string, now: number): GameState | null {
   return state;
 }
 
-export function exportSave(state: GameState): string {
-  const bytes = new TextEncoder().encode(serialize(state));
-  let bin = '';
-  for (const b of bytes) bin += String.fromCharCode(b);
-  return btoa(bin);
-}
-
-export function importSave(code: string, now: number): GameState | null {
-  try {
-    const bin = atob(code.trim());
-    const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
-    return deserialize(new TextDecoder().decode(bytes), now);
-  } catch {
-    return null;
-  }
-}
-
 export function loadGame(now: number): GameState | null {
   try {
     const json = localStorage.getItem(SAVE_KEY);
@@ -175,16 +158,5 @@ export class Saver {
     } catch {
       /* egal */
     }
-  }
-
-  /** Import: erst schreiben, nur bei Erfolg das Autosave stoppen (sonst läuft es normal weiter). */
-  replaceWith(state: GameState): boolean {
-    try {
-      localStorage.setItem(SAVE_KEY, serialize(state));
-    } catch {
-      return false;
-    }
-    this.disable();
-    return true;
   }
 }
