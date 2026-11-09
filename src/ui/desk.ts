@@ -8,7 +8,6 @@ import { ALTF4_LINES, PANIC_LINES } from '../content/props';
 import { espressoActive, pressKey, solveTicket, startEspresso } from '../core/actions';
 import { rates } from '../core/economy';
 import { claimUrgent } from '../core/events';
-import { incidentRunning } from '../core/incidents';
 import { bumpFlag, type GameState } from '../core/state';
 import { fill, pick, randInt } from '../util';
 import type { AppContext } from './app';
@@ -18,6 +17,7 @@ import type { Fx } from './juice';
 import { describeEffect } from './pager';
 import { nextTicketNo, ticketId } from './history';
 import { createWork } from './work';
+import { gameBlocked } from './blocked';
 
 /** Bürotelefon in drei Modellen: Grundmodell, mit AB (has-am), VoIP mit Headset (has-headset) */
 const PHONE_SVG = `<svg viewBox="0 0 64 58">
@@ -248,7 +248,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
 
   const spawnUrgent = () => {
     const visible =
-      !document.hidden && !document.querySelector('dialog[open]') && !incidentRunning() && !root().classList.contains('sheet-open') && !root().classList.contains('afk');
+      !gameBlocked({ hidden: true });
     if (!visible || urgentEl) return scheduleUrgent(10_000);
 
     const el = h('button', { class: 'urgent-note', type: 'button', text: pick(URGENT_LABELS) });
@@ -307,7 +307,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
   const spawnCup = () => {
     const r = root();
     const calm =
-      !document.hidden && !document.querySelector('dialog[open]') && !incidentRunning() && !r.classList.contains('sheet-open') && !r.classList.contains('afk');
+      !gameBlocked({ hidden: true });
     // nur für Leute, die gerade tippen (sonst fliegt sie ungesehen vorbei), und nicht doppelt
     const active = performance.now() - lastHit < 10_000;
     if (!ctx.state.upgrades.coffee || !calm || !active || espressoActive(ctx.state)) {
@@ -508,7 +508,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
   window.addEventListener('keydown', (e) => {
     if (e.repeat || shortcut(e) || e.defaultPrevented) return;
     // offenes App-Fenster verdeckt die Tastatur: dann zählt auch die echte nicht
-    if (typing(e) || document.querySelector('dialog[open]') || incidentRunning() || root().classList.contains('sheet-open')) return;
+    if (typing(e) || gameBlocked()) return;
     const el = keyFor(e);
     if (!el) return;
     e.preventDefault();
@@ -561,9 +561,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
       const now = performance.now();
       const holding = [...held.keys()].pop();
       // gleiche Sperren wie beim Tippen mit der echten Tastatur; Alt+F4 verwirft Tickets, das tippt nicht von selbst
-      const r = root();
-      const blocked =
-        !!document.querySelector('dialog[open]') || !!incidentRunning() || r.classList.contains('sheet-open') || r.classList.contains('afk');
+      const blocked = gameBlocked();
       if (espresso && holding && !blocked && holding.dataset.key !== 'F4') {
         autoAcc += Math.min(0.25, (now - autoLast) / 1_000) * CONFIG.espresso.rate;
         for (; autoAcc >= 1; autoAcc--) hit(holding, true);

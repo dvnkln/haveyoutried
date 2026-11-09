@@ -6,6 +6,7 @@ import { SWITCHES } from '../audio';
 import { TAP_SOUND_IDS } from '../../core/state';
 import { hapticSupport } from '../haptics';
 import { showModal } from '../modal';
+import { resetTutorial, setTutorialOff, tutorialOff } from '../tutorial';
 
 type SwitchType = 'clicky' | 'tactile' | 'linear';
 const TYPE_LABEL: Record<SwitchType, string> = { clicky: 'klickend', tactile: 'taktil', linear: 'linear' };
@@ -49,6 +50,7 @@ export function systemTab(): Tab {
   };
   // Symbol-Schalter: bei „aus“ rot durchgestrichen
   const hapticBtn = h('button', { class: 'icon-toggle', type: 'button', role: 'switch', 'aria-label': 'Vibration', text: '((•))' });
+  const hintBtn = h('button', { class: 'icon-toggle', type: 'button', role: 'switch', 'aria-label': 'Hinweise vom Vorgänger', text: '✎' });
   const soundBtn = h('button', { class: 'icon-toggle', type: 'button', role: 'switch', 'aria-label': 'Sound', text: '♪' });
   const volume = h('input', { class: 'volume', type: 'range', min: '0', max: '1', step: '0.1', 'aria-label': 'Lautstärke' });
   // Switch-Auswahl: ein Switch zur Zeit, Pfeile/Wischen/Punkte wechseln (= einbauen), Drücken = Probe wie am Switch-Tester
@@ -162,6 +164,10 @@ export function systemTab(): Tab {
         ctx.haptic('tap');
         ctx.sfx.tick();
       });
+      hintBtn.addEventListener('click', () => {
+        setTutorialOff(ctx.state, !tutorialOff(ctx.state));
+        ctx.sfx.tick();
+      });
       soundBtn.addEventListener('click', () => {
         ctx.state.settings.sound = !ctx.state.settings.sound;
         void ctx.sfx.unlock().then(() => ctx.sfx.tick());
@@ -264,6 +270,20 @@ export function systemTab(): Tab {
           h('div', {}, [h('div', { text: 'Vibration' }), h('div', { class: 'hint', text: HAPTIC_HINT[hapticSupport()] })]),
           hapticBtn,
         ]),
+        h('div', { class: 'setting' }, [
+          h('div', {}, [
+            h('div', { text: 'Hinweise vom Vorgänger' }),
+            h('div', { class: 'hint', text: 'Kurze Post-its, wenn etwas zum ersten Mal wichtig wird.' }),
+          ]),
+          hintBtn,
+        ]),
+        h('div', { class: 'actions' }, [
+          button('Übergabe nochmal lesen', () => {
+            resetTutorial(ctx.state);
+            ctx.log.write('info', 'hr[42]: Übergabe-Post-its wieder aufgehängt. Mit Tesafilm. Wieder schief.');
+            ctx.sfx.tick();
+          }),
+        ]),
 
         h('div', { class: 'section-title', text: '# Spielstand' }),
         h('div', { class: 'actions' }, [
@@ -285,6 +305,7 @@ export function systemTab(): Tab {
       setText(stats.since.value, new Date(s.stats.startedAt).toLocaleDateString('de-DE'));
       for (const [btn, on] of [
         [hapticBtn, s.settings.haptics],
+        [hintBtn, !tutorialOff(s)],
         [soundBtn, s.settings.sound],
       ] as const) {
         btn.setAttribute('aria-checked', String(on));

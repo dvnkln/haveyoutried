@@ -6800,3 +6800,73 @@ button.mug {
 .work.tighter .ai-row {
   display: none;
 }
+
+/* ---------- Übergabe vom Vorgänger: Hervorhebung und Post-it ---------- */
+.tut-spot[hidden],
+.tut-note[hidden] {
+  display: none;
+}
+.tut-spot {
+  position: fixed;
+  z-index: 70;
+  pointer-events: none;
+  border-radius: 14px;
+  /* sanft abdunkeln, die Stelle bleibt hell, gelber Rand wie ein Textmarker */
+  box-shadow: 0 0 0 3px #ffd166, 0 0 0 200vmax rgba(24, 18, 26, 0.45);
+  transition: left 0.2s, top 0.2s, width 0.2s, height 0.2s;
+  animation: tut-in 0.25s ease-out;
+}
+.tut-note {
+  position: fixed;
+  z-index: 71;
+  /* Taps gehen durch das Post-it hindurch aufs Spiel, nur „OK“ fängt sie */
+  pointer-events: none;
+  padding: 10px 12px 10px;
+  border: var(--outline) solid var(--ink);
+  border-radius: 3px 3px 14px 3px;
+  background: var(--butter);
+  color: var(--ink);
+  box-shadow: 0 4px 0 rgba(61, 44, 46, 0.5);
+  transform: rotate(-1.2deg);
+  animation: tut-in 0.25s ease-out;
+}
+.tut-head {
+  font-size: 11px;
+  font-weight: 700;
+  color: #8a5a3c;
+}
+.tut-text {
+  margin: 3px 0 8px;
+  font-size: 14px;
+  line-height: 1.3;
+}
+.tut-ok {
+  pointer-events: auto;
+  display: block;
+  margin-left: auto;
+  min-height: 36px;
+  padding: 4px 14px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background: #fffaf0;
+  color: var(--ink);
+  font: 700 13px var(--font-ui);
+  box-shadow: 0 2px 0 var(--ink);
+}
+@keyframes tut-in {
+  from {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tut-spot,
+  .tut-note {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* nie zwei Hinweise gleichzeitig: solange ein Post-it vom Vorgänger hängt, schweigt die Tipp-Blase */
+body:has(.tut-note) .tap-hint {
+  display: none;
+}

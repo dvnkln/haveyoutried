@@ -2,6 +2,7 @@ import './styles/main.css';
 import { BOOT_LINES, RETURN_LINES } from './content/syslog';
 import { awayRule, BOSS_REPORT_MIN_MS, bossReport } from './content/report';
 import { createAfk } from './ui/afk';
+import { startTutorial } from './ui/tutorial';
 import { startLoop } from './core/loop';
 import { applyOfflineProgress, type OfflineReport } from './core/offline';
 import { EXP_REVALUED_FLAG, loadGame, Saver } from './core/save';
@@ -56,6 +57,8 @@ const ctx = { state, log, history, saver, sfx, haptic };
 const app = mountApp(root, ctx, [logTab(), infraTab(), upgradesTab(), careerTab(), systemTab()]);
 startFlavor(ctx, app);
 mountIncidentOverlay(ctx);
+// Übergabe vom Vorgänger: kurze Hinweise, wenn etwas zum ersten Mal wichtig wird
+startTutorial(state);
 
 // Seite während eines Incidents geschlossen → gilt als eskaliert
 settleAbandoned(state, rates(state));
