@@ -37,6 +37,16 @@ export const BOFH_EXCUSES = [
   'internet box too far from Big Ben',
   'the dependency maintained by one person in Nebraska took a day off',
   'polarity needs reversing (worked on TV)',
+  'the cloud is cloudy today',
+  'packets took the scenic route',
+  'someone microwaved fish near the router',
+  'bit rot (organic)',
+  'the backup was watching',
+  'Mercury in retrograde, port 443 affected',
+  'printer driver wanted attention',
+  'the server is on strike for better cooling',
+  'uncaught exception in the user',
+  'TCP handshake declined (germ phobia)',
 ];
 
 /** Hintergrundrauschen im Syslog. {pid} wird zufällig ersetzt. */
@@ -146,6 +156,36 @@ export const AMBIENT: LogTemplate[] = [
   t('info', 'outlook[{pid}]: out-of-office: "Bis auf Weiteres im Urlaub. Bei Fragen: siehe oben."'),
   t('info', 'dishwasher[{pid}]: firmware 2.1 installed. now requires login.'),
   t('info', 'cupsd[631]: printer "Dieter" renamed by works council vote'),
+  // Nachschub
+  t('info', 'cupsd[631]: printer "Dieter": ready. printing nothing. with confidence.'),
+  t('warn', 'cupsd[631]: job "Kundenliste_vertraulich.pdf" waiting in hallway tray since tuesday'),
+  t('info', 'helpdesk[1337]: user asks if the cloud is "upstairs". pointed upstairs. user satisfied.'),
+  t('info', 'helpdesk[1337]: caller put on hold. hold music: "Lüfterrauschen, Remix"'),
+  t('warn', 'helpdesk[1337]: ticket "dringend" created friday 16:58. assignee: you. obviously.'),
+  t('info', 'helpdesk[1337]: survey result: 4.2/5. one person rated the coffee.'),
+  t('info', 'teams[{pid}]: "Hast du kurz?" received. it was not short.'),
+  t('info', 'teams[{pid}]: user changed status to "Fokuszeit". then called you.'),
+  t('info', 'outlook[{pid}]: rule "alles nach Ordner Später" moved 11.000 mails. later never came.'),
+  t('warn', 'outlook[{pid}]: user attached "Bild.bmp" (48 MB) to reply-all.'),
+  t('info', 'excel[{pid}]: macro "Auto_Open" from 2008 says hello'),
+  t('info', 'wiki[{pid}]: page "Wie man das Wiki benutzt" has 0 views'),
+  t('warn', 'dns[53]: TTL 0 on intranet. someone was "testing". in 2022.'),
+  t('info', 'dhcpd[{pid}]: DHCPACK to "Galaxy-von-Kevin". third one this week.'),
+  t('warn', 'wifi[{pid}]: guest password "Willkommen123" printed on 400 flyers'),
+  t('info', 'ssh[{pid}]: login from praktikant-laptop. hostname: "DESKTOP-L0L1337"'),
+  t('warn', 'sudo[{pid}]: user "chef" asked for root. was given a sticker instead.'),
+  t('info', 'cron[{pid}]: job "aufraeumen.sh" finished. nothing found. suspicious.'),
+  t('info', 'kernel: usb 3-2: new device "Raketenwerfer (USB, Spielzeug)". allowed.'),
+  t('warn', 'kernel: thermal zone 0: 87 °C. someone put a plant on the server.'),
+  t('info', 'monitoring[{pid}]: ticket count graph looks like a ski jump. ski season.'),
+  t('info', 'backup[{pid}]: backup succeeded. restore not tested. faith-based recovery.'),
+  t('warn', 'ups[{pid}]: switched to battery. reason: vacuum cleaner. again.'),
+  t('info', 'coffee[{pid}]: cup 7 of the day. productivity: unchanged. heart rate: changed.'),
+  t('info', 'pbx[{pid}]: caller "Unbekannt" redialed 14 times. it was the printer.'),
+  t('info', 'calendar[{pid}]: "Kurzer Sync" moved to "Langer Sync"'),
+  t('warn', 'git[{pid}]: branch "final" diverged from "final2". both in production.'),
+  t('info', 'bofh[666]: user asked "Ist das sicher?". said yes. it was not a question about safety.'),
+  t('info', 'pfy[{pid}]: labelled the off switch "Turbo". usage up 400 %.'),
 ];
 
 export const BOOT_LINES: LogTemplate[] = [
@@ -153,6 +193,8 @@ export const BOOT_LINES: LogTemplate[] = [
   t('info', 'systemd[1]: Started Helpdesk Ticket Daemon.'),
   t('warn', 'helpdesk[1337]: queue loaded: ∞ open tickets'),
   t('info', 'helpdesk[1337]: on-call: you. always you.'),
+  t('info', 'coffee.service: Started Coffee Maker (pre-heating, please wait).'),
+  t('warn', 'helpdesk[1337]: documentation not found. continuing anyway.'),
 ];
 
 export const RETURN_LINES: LogTemplate[] = [
@@ -160,6 +202,9 @@ export const RETURN_LINES: LogTemplate[] = [
   t('info', 'login[{pid}]: session resumed. 47 unread "Dringend!!" mails.'),
   t('info', 'helpdesk[1337]: welcome back. nobody noticed you were gone. nobody ever does.'),
   t('info', 'pbx[{pid}]: 47 voicemails. 46 of them: "Hallo? Ist da die IT?"'),
+  t('info', 'coffee[{pid}]: you are back. the coffee is cold. so is the queue.'),
+  t('info', 'helpdesk[1337]: while you were gone, 3 people tried turning it off and on again. 2 succeeded.'),
+  t('warn', 'teams[{pid}]: 12 messages "Bist du da?", 1 message "egal, hat sich erledigt"'),
 ];
 
 /** Wenn ein Upgrade gekauft wird; {name} = Upgrade-Name */
@@ -167,6 +212,9 @@ export const UPGRADE_BUY_LINES: LogTemplate[] = [
   t('ok', 'procurement[{pid}]: "{name}" approved. budget code: "Sonstiges"'),
   t('ok', 'changelog[{pid}]: deployed "{name}". no change request. works anyway.'),
   t('ok', 'helpdesk[1337]: "{name}" installed. productivity up, morale unchanged.'),
+  t('ok', 'procurement[{pid}]: "{name}" delivered. invoice sent to "Kostenstelle ???".'),
+  t('ok', 'inventory[{pid}]: "{name}" added. asset tag: a post-it.'),
+  t('ok', 'cab[{pid}]: "{name}" approved retroactively. as is tradition.'),
 ];
 
 /** Neues Upgrade verfügbar */

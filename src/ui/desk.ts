@@ -242,7 +242,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
         status: 'Sofort gelöst (natürlich)',
         cause: vip.cause,
         note: fill(pick(topicPool(vip.topic, 'notes')), { who: vip.who }),
-        solution: `${URGENT_TEXT[res.effect] ?? 'VIP-Ticket gelöst.'} (${describeEffect(res)})`,
+        solution: `${pick(URGENT_TEXT[res.effect] ?? ['VIP-Ticket gelöst.'])} (${describeEffect(res)})`,
         vip: true,
       });
       ctx.sfx.unlock();

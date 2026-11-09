@@ -100,10 +100,10 @@ describe('Inhalte vollständig', () => {
   it('Anrufer: genug Auswahl, situative Anrufe hängen an Zustand und Uhrzeit', () => {
     expect(CALLERS.flatMap((c) => c.lines).length).toBeGreaterThan(50);
     const s = createInitialState(0);
-    const tuesdayNoonish = new Date(2026, 10, 10, 10, 0);
-    expect(situationalCalls(s, tuesdayNoonish)).toEqual([]);
+    const wednesdayMorning = new Date(2026, 10, 11, 10, 0);
+    expect(situationalCalls(s, wednesdayMorning)).toEqual([]);
     s.generators.undertable.owned = 1;
-    expect(situationalCalls(s, tuesdayNoonish).some((c) => c.reply?.text === 'admin[1]: NEIN.')).toBe(true);
+    expect(situationalCalls(s, wednesdayMorning).some((c) => c.reply?.text === 'admin[1]: NEIN.')).toBe(true);
     const friday = new Date(2026, 10, 13, 16, 55);
     expect(situationalCalls(createInitialState(0), friday).length).toBeGreaterThan(0);
   });

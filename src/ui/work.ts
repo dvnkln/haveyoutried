@@ -1,15 +1,39 @@
 import { SOLVE } from '../config';
 import { ticketWork } from '../core/economy';
 import { CALLERS, QUEUE_LINE, type Call, type Line } from '../content/callers';
-import { BOSSES, STREAK_LINES, CALL_LINES, CHAT_LINES, MEME_SUBS, MEME_USERS, MEMES, RDP_ERRORS, SEARCH_RESULTS, TICKET_PRIOS, WEB_GENERIC, DONE_LINES, TICKET_STATES } from '../content/work';
+import {
+  BOSSES,
+  STREAK_LINES,
+  CALL_LINES,
+  CHAT_LINES,
+  CHAT_STATES,
+  MAIL_SIGS,
+  MAIL_TITLES,
+  MEME_ENTER_LINES,
+  MEME_LEAVE_LINES,
+  MEME_SUBS,
+  MEME_USERS,
+  MEMES,
+  RDP_ERRORS,
+  RDP_ICONS,
+  SEARCH_RESULTS,
+  TICKET_OPEN_STATES,
+  TICKET_PRIOS,
+  WEB_FOOTERS,
+  WEB_GENERIC,
+  DONE_LINES,
+  TICKET_STATES,
+} from '../content/work';
 import { DEVICE_SETTINGS, TALK_NOTES, TOPICS, topicPool, type Device } from '../content/topics';
-import { fill, pick, randInt, weightedPick } from '../util';
+import { fill, pick, randInt, shuffle, weightedPick } from '../util';
 import type { AppContext } from './app';
 import { h, setText } from './dom';
 import { nextTicketNo, ticketId } from './history';
 
 /** Ohne Anschlag so lange, dann wird heimlich durch Memes gescrollt */
 const IDLE_MEMES_MS = 15_000;
+/** Memes je Seite (Forum, Bilderseite): genug, dass auch hohe Fenster nie leer durchscrollen */
+const MEMES_PER_SITE = 10;
 /** Kanal im Ticketverlauf */
 const CHANNELS: Record<Kind, string> = {
   mail: 'Mail',
@@ -131,13 +155,13 @@ const row = (label: string, value: string, cls = '') =>
 const PROGRAMS: Record<Kind, Program> = {
   mail: {
     weight: 3,
-    title: () => 'Posteingang (4.812 ungelesen)',
+    title: () => pick(MAIL_TITLES),
     head: (t) => [
       h('div', { class: 'mail-tools' }, ['↩ Antworten', '↪ Weiterleiten', '🗑︎ Löschen'].map((x) => h('span', { class: 'mail-tool', text: x }))),
       h('div', { class: 'mail-fields' }, [row('An:', t.who), row('Betreff:', `Re: ${t.subject}`)]),
     ],
     lines: (t) => [t.line.answer],
-    extra: () => [h('div', { class: 'mail-sig', text: '-- Mit freundlichen Grüßen, Ihre IT (Durchwahl -666)' })],
+    extra: () => [h('div', { class: 'mail-sig', text: pick(MAIL_SIGS) })],
     log: (t, x) => `mail[25]: Re: ${t.subject} → ${t.who}: „${x}“`,
   },
   ticket: {
@@ -148,7 +172,7 @@ const PROGRAMS: Record<Kind, Program> = {
       h('div', { class: 'tk-card' }, [
         h('div', { class: 'tk-chips' }, [
           h('span', { class: 'tk-id', text: ticketId(t.no) }),
-          h('span', { class: 'tk-status', text: pick(['Neu', 'In Bearbeitung', 'Wieder geöffnet (3×)']) }),
+          h('span', { class: 'tk-status', text: pick(TICKET_OPEN_STATES) }),
           h('span', { class: 'tk-prio', text: t.prio }),
         ]),
         h('div', { class: 'tk-who' }, [avatar(t.who, 'small'), h('span', { text: `${t.who} · vor ${randInt(2, 59)} Min.` })]),
@@ -173,7 +197,7 @@ const PROGRAMS: Record<Kind, Program> = {
     head: (t) => [
       h('div', { class: 'chat-top' }, [
         avatar(t.who),
-        h('span', { class: 'chat-name' }, [t.who, h('span', { class: 'chat-status', text: pick(['● online', '● beschäftigt', '● „im Meeting“']) })]),
+        h('span', { class: 'chat-name' }, [t.who, h('span', { class: 'chat-status', text: pick(CHAT_STATES) })]),
       ]),
       h('div', { class: 'chat-msg' }, [
         avatar(t.who, 'small'),
@@ -203,7 +227,7 @@ const PROGRAMS: Record<Kind, Program> = {
     head: (t) => [
       h('div', { class: 'rdp-conn' }, [h('span', { class: 'rdp-pin', text: '📌︎' }), h('span', { text: `${t.target} (sehr langsam)` }), h('span', { class: 'rdp-win', text: '–  ▢  ×' })]),
       h('div', { class: 'rdp-desk' }, [
-        h('div', { class: 'rdp-icons' }, ['Papierkorb', 'Excel (alt)', 'NEU NEU.docx'].map((n) => h('span', { class: 'rdp-icon', text: n }))),
+        h('div', { class: 'rdp-icons' }, ['Papierkorb', ...shuffle(RDP_ICONS).slice(0, 2)].map((n) => h('span', { class: 'rdp-icon', text: n }))),
         h('div', { class: 'rdp-dialog' }, [
           h('div', { class: 'rdp-dtitle' }, [h('span', { text: 'Fehler' }), h('span', { text: '×' })]),
           h('div', { class: 'rdp-dbody' }, [h('span', { class: 'rdp-err', text: pick(RDP_ERRORS) }), h('span', { class: 'rdp-ok', text: 'OK' })]),
@@ -228,7 +252,7 @@ const PROGRAMS: Record<Kind, Program> = {
     label: 'Wert:',
     extra: () => [
       h('div', { class: 'web-actions' }, [h('span', { class: 'web-btn save', text: 'Speichern' }), h('span', { class: 'web-btn', text: 'Abbrechen' })]),
-      h('div', { class: 'web-foot', text: '© 2009 · Firmware 1.0 · Best viewed with IE 6' }),
+      h('div', { class: 'web-foot', text: pick(WEB_FOOTERS) }),
     ],
     lines: (t) => (Math.random() < 0.25 || !t.device ? WEB_GENERIC : DEVICE_SETTINGS[t.device]),
     log: (t, x) => `web[80]: ${t.target}: ${x} – gespeichert`,
@@ -244,7 +268,7 @@ const PROGRAMS: Record<Kind, Program> = {
       h(
         'div',
         { class: 'search-hits' },
-        [...SEARCH_RESULTS].sort(() => Math.random() - 0.5).slice(0, 3).map((r) =>
+        shuffle(SEARCH_RESULTS).slice(0, 3).map((r) =>
           h('div', { class: 'search-hit' }, [h('span', { class: 'hit-url', text: pick(['forum.example', 'stackoverflow.example', 'support.example', 'video.example']) }), h('span', { class: 'hit-text', text: r })]),
         ),
       ),
@@ -315,7 +339,26 @@ export function createWork(
   const body = h('div', { class: 'work-body' }, [label, promptSlot, typedEl, cursorEl, restEl]);
   const extra = h('div', { class: 'work-extra' });
   const last = h('div', { class: 'last-closed', 'aria-live': 'polite' });
-  const feed = h('div', { class: 'meme-feed', 'aria-hidden': 'true' });
+  // Memes: Browser mit Tabs, wechselt zwischen Forum (hell) und Bilderseite (dunkel); Parodien, keine echten Logos
+  const forumFeed = h('div', { class: 'meme-feed meme-feed-forum' });
+  const gagFeed = h('div', { class: 'meme-feed meme-feed-gag' });
+  const memeTab = (site: string, text: string) =>
+    h('span', { class: 'br-tab', 'data-site': site }, [h('span', { class: 'br-fav' }), h('span', { class: 'br-tab-title', text }), h('span', { class: 'br-x', text: '×' })]);
+  const memeTabs = [memeTab('forum', 'r/all – readit'), memeTab('gag', '404GAG – Hot'), memeTab('alibi', 'Ticketsystem 3.1 (Legacy)')];
+  const memeAddr = h('span', { class: 'br-addr' });
+  const memeWindow = h('div', { class: 'meme-window', 'aria-hidden': 'true' }, [
+    h('div', { class: 'browser meme-browser' }, [
+      h('div', { class: 'br-tabs' }, [...memeTabs, h('span', { class: 'br-new', text: '+' })]),
+      h('div', { class: 'br-bar' }, [
+        h('span', { class: 'br-nav', text: '‹ › ↻' }),
+        h('span', { class: 'br-url' }, [h('span', { class: 'br-lock', text: '🔒︎' }), memeAddr]),
+      ]),
+    ]),
+    h('div', { class: 'meme-page' }, [forumFeed, gagFeed]),
+  ]);
+  let siteTimer = 0;
+  /** Fenstertitel der aktuellen Aufgabe: einmal gewürfelt, bleibt auch nach der Meme-Pause */
+  let taskTitle = '';
   // eigenes Element statt ::after: blendet über dem nächsten Ticket weiter aus
   const stamp = h('div', { class: 'solved-stamp', 'aria-hidden': 'true' });
   const stampText = h('span', { class: 'ss-text' });
@@ -327,7 +370,7 @@ export function createWork(
     head,
     body,
     extra,
-    h('div', { class: 'meme-window' }, [feed]),
+    memeWindow,
     stamp,
   ]);
 
@@ -403,7 +446,8 @@ export function createWork(
     progress = 0;
     presses = 0;
     if (!memes) el.dataset.kind = kind;
-    setText(title, prog.title(task));
+    taskTitle = prog.title(task);
+    setText(title, taskTitle);
     head.replaceChildren(...prog.head(task));
     extra.replaceChildren(...(prog.extra?.(task) ?? []));
     setText(label, prog.label ?? '');
@@ -420,7 +464,8 @@ export function createWork(
   };
   const celebrate = () => {
     setStreak(streak + 1);
-    const line = STREAK_LINES[streak] ?? '';
+    const lines = STREAK_LINES[streak];
+    const line = lines ? pick(lines) : '';
     setText(stampText, `✓ ${pick(task.line.fix ? FIX_STAMPS : STAMPS)}`);
     setText(stampStreak, streak >= 2 ? `×${streak}` : '');
     setText(stampLine, line);
@@ -464,11 +509,10 @@ export function createWork(
 
   // --- Memes beim Nichtstun ---
   const fillFeed = () => {
-    const cards = [...MEMES].sort(() => Math.random() - 0.5).slice(0, 12);
+    const cards = shuffle(MEMES).slice(0, 2 * MEMES_PER_SITE);
     const k = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1).replace('.', ',')} Tsd.` : String(n));
-    // abwechselnd Forum (hell, Abstimmpfeile) und Bilderseite (dunkel): Parodien, keine echten Logos
-    const card = (m: (typeof MEMES)[number], i: number) => {
-      const forum = i % 2 === 0;
+    // Forum: hell, Unterforen, Abstimmpfeile; Bilderseite: dunkel
+    const card = (m: (typeof MEMES)[number], i: number, forum: boolean) => {
       return h('div', { class: `meme ${forum ? 'meme-forum' : 'meme-gag'}` }, [
         h('div', { class: 'meme-head' }, [
           h('span', { class: 'meme-src', text: forum ? pick(MEME_SUBS) : '404GAG' }),
@@ -486,23 +530,44 @@ export function createWork(
         ]),
       ]);
     };
-    // doppelt (gleiche Karten), damit das Endlos-Scrollen nahtlos läuft; gerade Anzahl hält den Wechsel Forum/Bilderseite an der Naht
-    const once = cards.map(card);
-    feed.replaceChildren(...once, ...once.map((n) => n.cloneNode(true)));
+    // je Seite einige Karten, doppelt, damit das Endlos-Scrollen nahtlos läuft
+    const renderFeed = (target: HTMLElement, list: typeof cards, forum: boolean) => {
+      const once = list.map((m, i) => card(m, i, forum));
+      target.replaceChildren(...once, ...once.map((n) => n.cloneNode(true)));
+    };
+    renderFeed(forumFeed, cards.slice(0, MEMES_PER_SITE), true);
+    renderFeed(gagFeed, cards.slice(MEMES_PER_SITE), false);
+  };
+  /** Aktiver Tab: Forum oder Bilderseite; ab und zu wird umgeschaltet (Seite lädt dann von oben) */
+  const showSite = (site: 'forum' | 'gag') => {
+    memeWindow.dataset.site = site;
+    for (const t of memeTabs) t.classList.toggle('on', t.dataset.site === site);
+    setText(memeAddr, site === 'forum' ? 'readit.example/r/all/hot' : '404gag.example/hot');
+  };
+  const nextSite = () => {
+    // kein ständiger Hell-dunkel-Wechsel für alle, die weniger Bewegung wollen
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    siteTimer = window.setTimeout(() => {
+      showSite(memeWindow.dataset.site === 'forum' ? 'gag' : 'forum');
+      nextSite();
+    }, randInt(7_000, 11_000));
   };
   const enterMemes = () => {
     memes = true;
     fillFeed();
+    showSite(Math.random() < 0.5 ? 'forum' : 'gag');
+    nextSite();
     el.dataset.kind = 'memes';
     setText(title, 'Memes (nur ganz kurz)');
-    ctx.log.write('info', 'browser[42]: Pause. Nur ganz kurz Memes.');
+    ctx.log.write('info', pick(MEME_ENTER_LINES));
   };
   const leaveMemes = () => {
     memes = false;
+    clearTimeout(siteTimer);
     el.dataset.kind = task.kind;
-    setText(title, PROGRAMS[task.kind].title(task));
+    setText(title, taskTitle);
     fitBody();
-    ctx.log.write('info', pick(['browser[42]: Tab gewechselt. Der Chef kam vorbei.', 'browser[42]: Zurück an die Arbeit. Niemand hat was gesehen.']));
+    ctx.log.write('info', pick(MEME_LEAVE_LINES));
   };
 
   // Drehen, Fenstergröße, nachgeladene Schrift: Platz neu ausmessen (nur bei echter Größenänderung, sonst Schleife)

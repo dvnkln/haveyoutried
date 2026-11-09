@@ -128,6 +128,42 @@ export const COMPANIES: Company[] = [
     host: 'kita-bits',
     welcome: 'Das WLAN-Passwort steht auf dem Kühlschrank. Die Kinder kennen es längst.',
   },
+  {
+    id: 'reederei',
+    name: 'Reederei Leck & Co. KG',
+    host: 'leck-srv01',
+    welcome: 'Der Serverraum ist im Unterdeck. Bei Seegang laufen die Festplatten im Kreis.',
+  },
+  {
+    id: 'zoo',
+    name: 'Tierpark Bitfeld',
+    host: 'zoo-gehege-it',
+    welcome: 'Die Pinguine haben eine eigene Webcam. Sie ist das einzige System mit Monitoring.',
+  },
+  {
+    id: 'pommes',
+    name: 'Imbiss „Zum goldenen Router“',
+    host: 'pommes-kasse',
+    welcome: 'Die Kasse ist ein Laptop in der Nähe der Fritteuse. Die Tastatur glänzt. Nicht vor Sauberkeit.',
+  },
+  {
+    id: 'theater',
+    name: 'Stadttheater, Abteilung Technik und Drama',
+    host: 'theater-buehne',
+    welcome: 'Die Lichtsteuerung läuft auf Windows 2000. Wenn sie abstürzt, wird das Stück spontan ein Hörspiel.',
+  },
+  {
+    id: 'weingut',
+    name: 'Weingut Bitterling (seit 1612)',
+    host: 'weingut-keller',
+    welcome: 'Der Server reift im Weinkeller. Konstante 12 °C, sagt der Winzer. Gut fürs Backup, schlecht für den Admin.',
+  },
+  {
+    id: 'unicorn',
+    name: 'SynergyHub.ai (Series A, kein Produkt)',
+    host: 'synergy-pitch',
+    welcome: 'Es gibt 14 Slack-Kanäle, einen Tischkicker und keine Server. Die KI im Pitchdeck bist du.',
+  },
 ];
 
 export const companyOf = (id: string): Company => COMPANIES.find((c) => c.id === id) ?? COMPANIES[0]!;
@@ -141,4 +177,9 @@ export const FAREWELLS = [
   'Dein Nachfolger fragt nach der Doku. Du gibst ihm das Post-it.',
   'Im Abschiedsgespräch fragt der Chef, was du eigentlich gemacht hast. Gute Frage.',
   'Dein Account wird gesperrt, bevor du die Tür erreichst. Endlich funktioniert mal ein Prozess.',
+  'Dein Abschiedsgeschenk: eine Tasse mit „Bester Admin“. Die Tasse ist vom Vorgänger.',
+  'Der Server unterm Tisch piept zum Abschied. Einmal. Du nimmst es persönlich.',
+  'In der Abschiedsmail stehen 340 Empfänger. 12 antworten mit „Wer?“.',
+  'HR fragt nach dem Laptop. Du gibst ihn ab. Mit allen 147 Tabs.',
+  'Die Kollegen singen. Leise. Damit der Server nicht aufwacht.',
 ];

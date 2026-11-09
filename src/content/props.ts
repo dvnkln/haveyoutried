@@ -26,6 +26,18 @@ export const POSTITS: string[] = [
   'PEBKAC',
   'RTFM (freundlich)',
   'Nicht füttern: Praktikant',
+  'Kein Backup, kein Mitleid',
+  'Montag: alles ausschalten?',
+  'Zuständig: nicht ich',
+  'Hast du es eingesteckt?',
+  'It works on my machine™',
+  ':q!',
+  'Prod ≠ Test',
+  'Druckerluft ist aus',
+  'Ruhe bewahren. Logs lesen.',
+  'Anrufer zählen: |||| ||',
+  'Wer ist K.?',
+  'TODO: Doku (2014)',
 ];
 
 /** Rubber-Duck-Debugging: Log-Zeilen beim Antippen der Ente. */
@@ -39,6 +51,10 @@ export const DUCK_LINES: string[] = [
   'duckd[42]: quack. Senior Rubber Duck Engineer, 20 Jahre Erfahrung.',
   'duckd[42]: quack! Die Ente fordert mehr Budget.',
   'duckd[42]: quack. Ticket an die Ente eskaliert. Ente: „Nicht mein Bereich.“',
+  'duckd[42]: quack. Die Ente hat „It works on my machine“ gesagt. Die Ente hat keine Maschine.',
+  'duckd[42]: quack… Die Ente fragt, ob du schon mal die Fehlermeldung gelesen hast. Ganz.',
+  'duckd[42]: quack. Die Ente schlägt vor, es Montag zu deployen.',
+  'duckd[42]: QUACK! Die Ente hat das Wort „Freitag“ gehört.',
 ];
 
 /** Ab und zu im Log, wenn jemand Alt+F4 drückt. */
@@ -46,6 +62,7 @@ export const ALTF4_LINES: string[] = [
   'kernel: Alt+F4 erkannt. Nice try. Der Helpdesk schließt sich nicht.',
   'helpdesk[1337]: Alt+F4 zählt nicht als Feierabend.',
   'windowmanager[2]: Alt+F4 ignoriert. Die Tickets bleiben.',
+  'helpdesk[1337]: Alt+F4? Netter Versuch. Der Anrufer ist noch dran.',
 ];
 
 /** Ab und zu im Log, wenn jemand die Panik-Taste drückt. */
@@ -53,6 +70,8 @@ export const PANIC_LINES: string[] = [
   'helpdesk[1337]: Panik-Taste gedrückt. Hat nichts gebracht. Wie immer.',
   'helpdesk[1337]: DON’T PANIC. (Handtuch liegt in der Schublade.)',
   'helpdesk[1337]: Panik registriert. Ticket für Panik angelegt.',
+  'helpdesk[1337]: Panik eskaliert. An dich. Du bist die Eskalation.',
+  'helpdesk[1337]: Panik-Taste gedrückt. Kaffee wird vorbereitet.',
 ];
 
 /** Schild an der Wand („Arbeitstage ohne Unfall“). */
@@ -70,6 +89,9 @@ export const MOUSE_LINES: string[] = [
   'mouse[3]: Kugelmaus. Die Kugel fehlt seit 2008.',
   'mouse[3]: Mausrad klemmt. Scrollt nur noch nach unten. Wie die Stimmung.',
   'mouse[3]: Klick. Nichts passiert. Fühlt sich trotzdem produktiv an.',
+  'mouse[3]: Dreifachklick. Ganzer Absatz markiert. Aus Versehen gelöscht. Strg+Z.',
+  'mouse[3]: Mauszeiger springt. Grund: Krümel. Von wem: unklar.',
+  'mouse[3]: Akku 3 %. Seit 2 Jahren. Hält ewig.',
 ];
 
 /** Papierkorb auf dem Desktop: Antippen gibt einen Spruch im Log. */
@@ -79,6 +101,9 @@ export const TRASH_LINES: string[] = [
   'trash[99]: Inhalt: drei Lebensläufe von Kollegen. Interessant.',
   'trash[99]: Der Papierkorb ist voll. Wie dein Postfach. Und dein Kalender.',
   'trash[99]: Gefunden: die Doku von 2014. Gelöscht von: dir.',
+  'trash[99]: Inhalt: ein Ordner „Nicht löschen“. Ironie erkannt.',
+  'trash[99]: Wiederherstellen? Nein. Das hat einen Grund.',
+  'trash[99]: 1 Element: „Kündigung_Entwurf.docx“. Nur ein Entwurf.',
 ];
 
 /**

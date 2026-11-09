@@ -385,16 +385,142 @@ export const EVENTS: GameEventDef[] = [
     ],
     ignore: o('lossSmall', 'Keiner hat widersprochen. Der Heißkleber trocknet gerade.'),
   },
+  {
+    id: 'cert',
+    title: 'Zertifikat abgelaufen',
+    text: 'Das Intranet zeigt „Ihre Verbindung ist nicht privat“. Das Zertifikat ist heute Nacht abgelaufen. Die Erinnerung ging an einen Kollegen, der seit 2021 nicht mehr da ist.',
+    options: [
+      {
+        label: 'Neues Zertifikat ausstellen',
+        outcomes: [
+          o('win', 'Neues Zertifikat, automatische Verlängerung an. Die Erinnerung geht jetzt an dich. Und an deinen Nachfolger.', 1, {
+            level: 'ok',
+            text: 'certbot[{pid}]: certificate renewed. reminder now goes to someone who exists.',
+          }),
+        ],
+      },
+      {
+        label: 'Rundmail: „Einfach auf Weiter klicken“',
+        outcomes: [
+          o('tip', 'Alle klicken auf Weiter. Läuft. Die Awareness-Schulung war damit leider umsonst.', 0.5),
+          o('fire', 'Alle klicken auf Weiter. Auch auf der Phishing-Seite am Tag danach. Passwörter werden zurückgesetzt.', 0.5),
+        ],
+      },
+      {
+        label: 'Systemzeit zurückdrehen',
+        outcomes: [o('lossSmall', 'Das Zertifikat ist wieder gültig. Dafür glaubt jeder Server, es sei 2019. Die Backups auch.')],
+      },
+    ],
+    ignore: o('fire', 'Niemand hat reagiert. Der Browser warnt weiter, die Leute rufen weiter an. Alle.'),
+  },
+  {
+    id: 'meeting',
+    title: 'Einladung: „Kurzer Sync“',
+    text: 'Pflichttermin „Kurzer Sync zur Ticketlage“. 90 Minuten, 17 Teilnehmer, Agenda folgt. Sie folgt nie.',
+    options: [
+      { label: 'Hingehen', outcomes: [o('lossSmall', '90 Minuten. Ergebnis: ein Folgetermin. Die Queue ist in der Zwischenzeit gewachsen.')] },
+      {
+        label: 'Kamera aus, nebenbei Tickets',
+        outcomes: [
+          o('rush', 'Kamera aus, Mikro aus, Tickets an. Einmal „Ja, sehe ich auch so“ gesagt. Hat gereicht.', 0.8),
+          o('lossSmall', 'Du wurdest etwas gefragt. Stille. Alle schauen auf deine schwarze Kachel. Du bist jetzt „das Thema“.', 0.2),
+        ],
+      },
+      { label: 'Ablehnen: „Kollidiert mit Arbeit“', outcomes: [o('tip', 'Abgelehnt. Die gesparten 90 Minuten gehen komplett in die Queue.')] },
+    ],
+    ignore: o('none', 'Du warst nicht da. Niemand hat es gemerkt. Das sagt viel. Über das Meeting.'),
+  },
+  {
+    id: 'forcedupdate',
+    title: 'Neustart in 10 Minuten',
+    text: 'Dein Rechner meldet: „Updates werden installiert. Neustart in 10 Minuten.“ Der Knopf „Später“ ist ausgegraut. Seit wann gibt es das?',
+    options: [
+      { label: 'Jetzt neu starten', outcomes: [o('lossSmall', 'Update 1 von 147. Kaffee geholt. Zurück. Update 2 von 147.')] },
+      { label: 'Schnell noch alles wegtippen', outcomes: [o('overtime', 'Zehn Minuten Endspurt. Du tippst wie noch nie. Dann ging er trotzdem aus. Mitten im Wort.')] },
+      { label: 'Netzwerkkabel ziehen', outcomes: [o('none', 'Kein Netz, kein Update. Aber auch keine Tickets. Unentschieden.')] },
+    ],
+    ignore: o('lossSmall', 'Er hat neu gestartet. Mitten im Satz. Der Entwurf ist weg, die Updates sind da.'),
+  },
+  {
+    id: 'printerghost',
+    title: 'Dieter druckt von allein',
+    text: 'Drucker „Dieter“ (3. OG) druckt seit 20 Minuten. Geschickt hat niemand etwas. Auf jeder Seite steht nur ein Wort: „WARUM“.',
+    options: [
+      { label: 'Stecker ziehen', outcomes: [o('tip', 'Ruhe. Im Fach liegen 412 Seiten „WARUM“. Der Betriebsrat hat eine davon eingerahmt.')] },
+      {
+        label: 'Druckwarteschlange prüfen',
+        outcomes: [o('win', 'Ein Testjob aus der Entwicklung, in einer Endlosschleife. Gelöscht. Die Entwicklung darf jetzt nur noch auf PDF drucken.')],
+      },
+      {
+        label: 'Dieter gut zureden',
+        outcomes: [
+          o('rush', 'Du redest leise mit ihm. Er hört auf. Das Stockwerk hält dich jetzt für einen Druckerflüsterer und arbeitet beeindruckt weiter.', 0.5),
+          o('fire', 'Er druckt jetzt beidseitig. Und schneller. Das ganze Stockwerk sucht Papier statt Tickets zu schreiben.', 0.5),
+        ],
+      },
+    ],
+    ignore: o('fire', 'Das Papier ist alle. Dieter hat begonnen, um Hilfe zu faxen.'),
+  },
+  {
+    id: 'audit-license',
+    title: 'Lizenz-Audit angekündigt',
+    text: 'Ein großer Softwarehersteller kündigt ein Lizenz-Audit an. Sehr freundlich. Mit Anwalt in CC.',
+    options: [
+      { label: 'Alle Lizenzen zählen', outcomes: [o('win', 'Gezählt: 197 Lizenzen zu viel. Der Hersteller ist enttäuscht. Der Einkauf auch, aus anderen Gründen.')] },
+      { label: 'Auf das „Cloud-Abo“ umsteigen', outcomes: [o('loss', 'Audit erledigt, Abo abgeschlossen. Es kostet jetzt jeden Monat so viel wie früher einmal.')] },
+      { label: 'Die Rechtsabteilung antworten lassen', outcomes: [o('none', 'Die Anwälte schreiben sich jetzt gegenseitig. Du bist raus. Für Jahre.')] },
+    ],
+    ignore: o('loss', 'Keine Antwort. Das Audit kam trotzdem. Mit Nachzahlung und Obstkorb.'),
+  },
+  {
+    id: 'agentclose',
+    title: 'Der KI-Agent hat eine Idee',
+    text: 'Ein AI-Agent möchte „zur Effizienzsteigerung“ alle offenen Tickets auf einmal schließen. Er bittet sehr höflich um Freigabe. Mit drei Emojis.',
+    when: (s) => s.generators.agent.owned > 0,
+    options: [
+      {
+        label: 'Freigeben',
+        outcomes: [
+          o('jackpot', 'Alle Tickets zu. Die meisten waren tatsächlich erledigt. Du fühlst dich überflüssig, aber reich.', 0.3),
+          o('fireBig', 'Alle Tickets zu. Auch die echten. Jetzt rufen alle gleichzeitig an. In Großbuchstaben.', 0.7, {
+            level: 'crit',
+            text: 'agent[{pid}]: closed 4812 tickets. reopened: 4811. "I apologize for the inconvenience."',
+          }),
+        ],
+      },
+      { label: 'Nur alles vor 2019 schließen', outcomes: [o('win', 'Alles von vor 2019 ist zu. Beschwert hat sich niemand. Die meisten arbeiten nicht mehr hier.')] },
+      { label: 'Agent neu starten', outcomes: [o('none', 'Neu gestartet. Er entschuldigt sich und erzählt einen Witz über Drucker. Keinen guten.')] },
+    ],
+    ignore: o('rush', 'Keine Antwort. Der Agent hat das als „vielleicht“ verstanden und nur die einfachen geschlossen. Gar nicht schlecht.'),
+  },
+  {
+    id: 'chefpw',
+    title: 'Chef will das Admin-Passwort',
+    text: 'Der Chef möchte „für Notfälle“ das Admin-Passwort. Er will es ins Handy schreiben. In die Notizen. Unter „Passwörter“.',
+    options: [
+      { label: 'Freundlich ablehnen', outcomes: [o('tip', 'Abgelehnt. Er ist beleidigt, aber die Firma ist sicher. Und du hast deine Ruhe.')] },
+      { label: 'Ihm ein eigenes Konto geben', outcomes: [o('win', 'Er hat jetzt ein Konto namens „admin-chef“. Es darf nichts. Er ist sehr stolz darauf.')] },
+      {
+        label: 'Passwort geben',
+        outcomes: [o('fire', 'Er hat es versehentlich in die Familiengruppe geschickt. Alle Passwörter werden geändert. Die Tante hat gefragt, was „sudo“ ist.')],
+      },
+    ],
+    ignore: o('lossSmall', 'Er hat es sich selbst „besorgt“. Über den Praktikanten. Zwei Stunden Aufräumen.'),
+  },
 ];
 
 /** „!! DRINGEND !!“-Ticket erwischt: Texte je Effekt */
-export const URGENT_TEXT: Record<string, string> = {
-  win: 'VIP-Ticket vom Vorstand in 2 Sekunden gelöst. Beförderung: nein. Tickets: ja.',
-  overtime: 'Adrenalin! Du tippst eine Weile siebenmal so schnell.',
-  flow: 'Du bist im Flow. Die ganze Abteilung läuft dreifach.',
+export const URGENT_TEXT: Record<string, string[]> = {
+  win: [
+    'VIP-Ticket vom Vorstand in 2 Sekunden gelöst. Beförderung: nein. Tickets: ja.',
+    'Chef-Ticket erledigt, bevor er aufgelegt hat. Er hält das jetzt für normal.',
+    'Erledigt. Der Vorstand hat „Danke“ gesagt. Das Protokoll vermerkt es.',
+  ],
+  overtime: ['Adrenalin! Du tippst eine Weile siebenmal so schnell.', 'Puls 140, Finger glühen. Eine Weile tippst du siebenmal so schnell.'],
+  flow: ['Du bist im Flow. Die ganze Abteilung läuft dreifach.', 'Das hat sich rumgesprochen. Alle arbeiten plötzlich dreimal so schnell. Für eine Weile.'],
 };
 
-export const URGENT_LABELS = ['!! DRINGEND !!', '!! VIP !!', '!! CHEF !!', '!! PROD DOWN !!', '!! ASAP !!'];
+export const URGENT_LABELS = ['!! DRINGEND !!', '!! VIP !!', '!! CHEF !!', '!! PROD DOWN !!', '!! ASAP !!', '!! GESTERN !!', '!! SEHR WICHTIG !!'];
 
 /** Anzeigenamen der Boosts/Bremsen im Header */
 export const BUFF_LABELS: Record<string, string> = {

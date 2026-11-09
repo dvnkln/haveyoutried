@@ -3991,14 +3991,63 @@ button {
   background: #f3e1ff;
 }
 .work[data-kind='memes'] .meme-window {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+/* Browser mit mehreren Tabs: aktiver Tab weiß, die anderen gedämpft */
+.meme-browser .br-tabs {
+  overflow: hidden;
+}
+.meme-browser .br-tab {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 42%;
+  background: #ddd5ea;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+.meme-browser .br-tab.on {
+  flex-shrink: 0;
+  background: #fff;
+  font-weight: 600;
+  color: var(--ink);
+}
+.meme-browser .br-tab[data-site='alibi'] {
+  flex-shrink: 2;
+}
+.br-fav {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ff5a1f;
+}
+.br-tab[data-site='gag'] .br-fav {
+  border-radius: 2px;
+  background: #1b1b1f;
+}
+.br-tab[data-site='alibi'] .br-fav {
+  border-radius: 2px;
+  background: #7a8bd6;
+}
+.meme-page {
   flex: 1;
   min-height: 0;
   overflow: hidden;
   background: #dae0e6;
 }
+.meme-window[data-site='gag'] .meme-page {
+  background: #0f0f12;
+}
+.meme-window[data-site='forum'] .meme-feed-gag,
+.meme-window[data-site='gag'] .meme-feed-forum {
+  display: none;
+}
 .meme-feed {
-  animation: meme-scroll 56s linear infinite;
+  animation: meme-scroll 47s linear infinite;
 }
 @keyframes meme-scroll {
   to {
@@ -4118,7 +4167,7 @@ button {
 }
 @media (prefers-reduced-motion: reduce) {
   .meme-feed {
-    animation-duration: 240s;
+    animation-duration: 200s;
   }
 }
 

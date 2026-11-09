@@ -29,6 +29,9 @@ export const GENERATOR_TEXT: Record<GeneratorId, GeneratorText> = {
       'praktikant[{pid}]: googled the error. applied first answer from 2009.',
       'praktikant[{pid}]: replaced toner. ticket closed. hands now permanently blue.',
       'praktikant[{pid}]: "kein Netz" -> cable plugged in. ticket closed.',
+      'praktikant[{pid}]: brought coffee to the server room. was told to leave. coffee stayed.',
+      'praktikant[{pid}]: printed the wiki. all 3 pages. proudly.',
+      'praktikant[{pid}]: asked where the "Druckerluft" is. colleagues delighted.',
     ],
     milestones: {
       1: 'hr[201]: first intern. they still believe in documentation.',
@@ -36,6 +39,8 @@ export const GENERATOR_TEXT: Record<GeneratorId, GeneratorText> = {
       25: 'ldap[389]: 25 interns in group "Domain Admins". this is fine.',
       50: 'hr[201]: intern pool exceeds parking spots. new policy: bike.',
       100: 'kernel: intern overflow. spawning more desks.',
+      200: 'hr[201]: interns now onboard new interns. nobody remembers who started it.',
+      500: 'hr[201]: the interns have elected a head intern. he has no admin rights. yet.',
     },
   },
   bash: {
@@ -53,6 +58,8 @@ export const GENERATOR_TEXT: Record<GeneratorId, GeneratorText> = {
       'restart_if_slow.sh[{pid}]: service restarted (3rd time this hour)',
       'cleanup.sh[{pid}]: rm -rf "$DIR/"* -- DIR was set. this time.',
       'bash[{pid}]: warning: script last modified by "temp_user" in 2013',
+      'fix_all.sh[{pid}]: sleep 5 # damit es professioneller wirkt',
+      'deploy.sh[{pid}]: "are you sure? [y/N]" -> yes | ./deploy.sh',
     ],
     milestones: {
       1: 'bash[1]: first script deployed. it has no error handling. it never fails.',
@@ -60,6 +67,8 @@ export const GENERATOR_TEXT: Record<GeneratorId, GeneratorText> = {
       25: 'bash[1]: someone found "set -e" in one script. it was removed.',
       50: 'bash[1]: script count exceeds employee count.',
       100: 'bash[1]: the scripts are now maintaining the scripts.',
+      200: 'bash[1]: a script was found that only calls itself. it has 400 users.',
+      500: 'bash[1]: 500 scripts. one of them is the whole company.',
     },
   },
   cron: {
@@ -77,6 +86,8 @@ export const GENERATOR_TEXT: Record<GeneratorId, GeneratorText> = {
       'anacron[{pid}]: catching up 14 missed runs. sorry.',
       'CRON[{pid}]: (root) CMD (find /tmp -mtime +7 -delete) # hopefully /tmp',
       'CRON[{pid}]: closed tickets that resolved themselves. counts as work.',
+      'CRON[{pid}]: (root) CMD (/opt/legacy/bitte_nicht_loeschen.sh) # still running, still unknown',
+      'CRON[{pid}]: job ran on feb 30th. nobody can explain it.',
     ],
     milestones: {
       1: 'cron[1]: first cronjob. 03:00 is now a dangerous time.',
@@ -84,6 +95,8 @@ export const GENERATOR_TEXT: Record<GeneratorId, GeneratorText> = {
       25: 'cron[1]: nobody knows what job #17 does. disabling it broke payroll.',
       50: 'cron[1]: crontab has more lines than the wiki.',
       100: 'cron[1]: the server now has a social life at night.',
+      200: 'cron[1]: 03:00 is fully booked. new jobs are scheduled for 03:01.',
+      500: 'cron[1]: night shift outnumbers day shift. day shift is you.',
     },
   },
   ansible: {
@@ -101,6 +114,8 @@ export const GENERATOR_TEXT: Record<GeneratorId, GeneratorText> = {
       'ansible[{pid}]: PLAY RECAP: ok=212 changed=212. idempotent, btw.',
       'ansible[{pid}]: gathering facts… (4 minutes later) fact: this is slow.',
       'ansible[{pid}]: ERROR! mapping values are not allowed here (line 1, column: whitespace)',
+      'ansible[{pid}]: TASK [make coffee] skipping: [kaffeemaschine] (when: not monday)',
+      'ansible[{pid}]: "become: yes" — so much for least privilege.',
     ],
     milestones: {
       1: 'ansible[1]: first playbook. "nie wieder von Hand." famous last words.',
@@ -108,6 +123,8 @@ export const GENERATOR_TEXT: Record<GeneratorId, GeneratorText> = {
       25: 'ansible[1]: ansible now deploys the ansible that deploys ansible.',
       50: 'ansible[1]: someone wrote a playbook for the coffee machine. it is idempotent. the coffee is not.',
       100: 'ansible[1]: YAML became self-aware. indentation is now 2.5 spaces.',
+      200: 'ansible[1]: inventory includes the cantina. and the parking lot.',
+      500: 'ansible[1]: idempotence achieved. nothing changes anymore. ever.',
     },
   },
   k8s: {
@@ -125,6 +142,8 @@ export const GENERATOR_TEXT: Record<GeneratorId, GeneratorText> = {
       'kube-scheduler[{pid}]: pod pending: 0/3 nodes available: 3 Insufficient patience.',
       'etcd[{pid}]: leader election #4711. democracy is exhausting.',
       'kubectl[{pid}]: "works on my cluster"',
+      'kubelet[{pid}]: pod evicted. reason: the wiki needed more memory. for 3 visitors.',
+      'helm[{pid}]: upgrade failed. rollback failed. helm suggests: hope.',
     ],
     milestones: {
       1: 'k8s[1]: first cluster. YAML budget exceeded.',
@@ -132,6 +151,8 @@ export const GENERATOR_TEXT: Record<GeneratorId, GeneratorText> = {
       25: 'k8s[1]: every CV in the team lists "Kubernetes". nobody can explain a pod.',
       50: 'k8s[1]: cloud bill exceeds the GDP of a small island.',
       100: 'k8s[1]: the wiki page still has 3 visitors. uptime: 99.9999%.',
+      200: 'k8s[1]: one cluster per visitor. finally scalable.',
+      500: 'k8s[1]: the YAML is longer than the company history.',
     },
   },
   agent: {
@@ -150,6 +171,8 @@ export const GENERATOR_TEXT: Record<GeneratorId, GeneratorText> = {
       'agent[{pid}]: escalated to another agent. loop detected. productivity +400%.',
       'agent[{pid}]: "Great question!" (it was not)',
       'agent[{pid}]: "I\'m sorry, Dave. I\'m afraid I can\'t close that ticket."',
+      'agent[{pid}]: replied to printer ticket with a poem about printers. ticket closed. user moved.',
+      'agent[{pid}]: tried to order more GPUs "for the users". request denied.',
     ],
     milestones: {
       1: 'agent[1]: first AI agent. it is "excited to help".',
@@ -157,6 +180,8 @@ export const GENERATOR_TEXT: Record<GeneratorId, GeneratorText> = {
       25: 'agent[1]: management asks if we still need the admin. the admin restarts the agents.',
       50: 'agent[1]: an agent requested a raise. and a standing desk.',
       100: 'agent[1]: agents formed a change advisory board. all changes rejected.',
+      200: 'agent[1]: agents now hold standups. with each other. they are all blocked.',
+      500: 'agent[1]: the agents asked who you are. you are "legacy human".',
     },
   },
   undertable: {
@@ -174,6 +199,8 @@ export const GENERATOR_TEXT: Record<GeneratorId, GeneratorText> = {
       'srv-tisch[{pid}]: kernel 2.4.37. do not patch. do not breathe.',
       'srv-tisch[{pid}]: someone touched the cable. everything stopped. touched again. everything works.',
       'srv-tisch[{pid}]: running services: 1 ("das Ding von K.")',
+      'srv-tisch[{pid}]: someone put their feet on it. it got faster.',
+      'srv-tisch[{pid}]: case open, fan tied with a hair tie. stable since 2015.',
     ],
     milestones: {
       1: 'srv-tisch[1]: found it. do not touch it.',
@@ -181,6 +208,8 @@ export const GENERATOR_TEXT: Record<GeneratorId, GeneratorText> = {
       25: 'srv-tisch[1]: legs have nowhere to go. sacrifice accepted.',
       50: 'srv-tisch[1]: they run the company now. we just sit at them.',
       100: 'srv-tisch[1]: K. has been found. K. does not remember either.',
+      200: 'srv-tisch[1]: no desk left without a server. the meeting room is a datacenter now.',
+      500: 'srv-tisch[1]: the building is technically a server now. it has a desk somewhere.',
     },
   },
 };

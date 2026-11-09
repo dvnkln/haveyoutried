@@ -150,9 +150,15 @@ describe('Achievements', () => {
 describe('Neue Achievements und Zähler', () => {
   it('Firmen werden beim Kündigen mitgezählt', () => {
     const s = createInitialState(0);
+    // immer eine noch unbekannte Firma wählen: sonst kann der Zufall dieselben Firmen wiederholen
+    const fresh = () => {
+      const options = COMPANIES.filter((c) => c.id !== s.prestige.company);
+      const idx = options.findIndex((c) => !s.flags[`company:${c.id}`] && c.id !== s.prestige.company);
+      return (Math.max(0, idx) + 0.5) / options.length;
+    };
     for (let i = 1; i <= 5; i++) {
       s.ticketsAllTime = ticketsForNextPoint(s);
-      quitJob(s);
+      quitJob(s, fresh);
     }
     const companies = Object.keys(s.flags).filter((k) => k.startsWith('company:'));
     expect(companies.length).toBeGreaterThanOrEqual(5);

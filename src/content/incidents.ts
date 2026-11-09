@@ -24,10 +24,12 @@ export const INCIDENT_TEXT: Record<IncidentId, IncidentText> = {
     good: [
       'Alle Platten getauscht. Hot-Spare war sogar da. Wer hat den eingebaut? Egal.',
       'Rebuild durch. Die Platten waren alle aus derselben Charge. Das wird nicht der letzte Abend gewesen sein.',
+      'Array gerettet. Die alten Platten stehen jetzt als Briefbeschwerer auf dem Schreibtisch. Mahnmal.',
     ],
     bad: [
       'Array verloren. Restore aus dem Backup läuft. Hoffentlich gibt es eins.',
       'RAID ist kein Backup. Das hast du gerade sehr praktisch gelernt.',
+      'Die dritte Platte ist beim Rebuild gestorben. Aus Solidarität.',
     ],
   },
   spam: {
@@ -39,10 +41,12 @@ export const INCIDENT_TEXT: Record<IncidentId, IncidentText> = {
     good: [
       'Queue leer. Die Phishing-Mails sind weg, der Kuchen im 3. OG ist angekündigt. Ordnung.',
       'Sauber sortiert. Die Buchhaltung bekommt ihre Mails, der Prinz aus Nigeria nicht.',
+      'Fehlerfrei. Der „CEO“ mit der iPhone-Signatur wartet jetzt vergeblich auf seine 48.000 €.',
     ],
     bad: [
       'Zwei Kollegen haben auf „Gehaltserhöhung“ geklickt. Passwörter werden zurückgesetzt.',
       'Der Kuchen-Hinweis landete im Spam. Das Büro wird dir das nie verzeihen.',
+      'Die Rechnung vom Provider liegt im Spam, das Bitcoin-Angebot im Posteingang. Die Buchhaltung ist interessiert.',
     ],
   },
   services: {
@@ -54,10 +58,12 @@ export const INCIDENT_TEXT: Record<IncidentId, IncidentText> = {
     good: [
       'Ursache gefunden, nur den einen Dienst neu gestartet, alles grün. Wie im Lehrbuch.',
       'Root Cause sauber behoben. Du schreibst sogar ein Postmortem. Vielleicht.',
+      'Ein Dienst neu gestartet, acht wieder grün. Das Monitoring ist irritiert.',
     ],
     bad: [
       'Alles neu gestartet, was rot war. Irgendwann war es grün. Warum, weiß keiner.',
       'Die Ursache hat sich am Ende selbst erholt. Du nimmst das trotzdem auf deine Kappe.',
+      'Am Ende war alles neu gestartet. Auch Dienste, die gar nicht rot waren. Sicher ist sicher.',
     ],
   },
   loggrep: {
@@ -69,10 +75,12 @@ export const INCIDENT_TEXT: Record<IncidentId, IncidentText> = {
     good: [
       'Ursache im Log gefunden. Du hast sogar den Stacktrace bis zum Ende gelesen. Respekt.',
       'grep -v "known issue" | grep FATAL – und schon war es offensichtlich.',
+      'Treffer. Die üblichen ERRORs von 2014 hast du stehen lassen. Die gehören inzwischen zur Familie.',
     ],
     bad: [
       'Im Rauschen untergegangen. Der Kollege hat „tail -f“ gemacht und es sofort gesehen. Sagt er.',
       'Du hast die falsche ERROR-Zeile gefixt. Die war seit 2014 kaputt und hat niemanden gestört.',
+      'Das FATAL ist oben rausgescrollt. Du hast es nur noch winken sehen.',
     ],
   },
   network: {
@@ -84,10 +92,12 @@ export const INCIDENT_TEXT: Record<IncidentId, IncidentText> = {
     good: [
       'Netz wieder da. Systematisch von Layer 1 nach oben. Wie im Lehrbuch. Das Lehrbuch ist von 2003.',
       'Online. Die Queue ist in der Zwischenzeit nicht kürzer geworden. Komisch.',
+      'Fehler gefunden, ohne einmal „Hast du es neu gestartet?“ zu sagen. Persönliche Bestleistung.',
     ],
     bad: [
       'Ein Kollege kam vorbei und hat es in 30 Sekunden gefunden. Er erzählt es gerade in der Teeküche.',
       'Nach 20 Minuten Wireshark gefunden. Von unten nach oben wäre schneller gewesen. Du nimmst ein Ticket für dich selbst auf.',
+      'Am Ende war es das, was du zuerst ausgeschlossen hattest. Wie immer.',
     ],
   },
   patch: {
@@ -99,10 +109,12 @@ export const INCIDENT_TEXT: Record<IncidentId, IncidentText> = {
     good: [
       'Alles gepatcht. Diesmal sogar beschriftet. Das hält bis zur nächsten Aufräumaktion.',
       'Ports up. Das Immobilienmanagement hat versprochen, nie wieder „Kabel zu ordnen“.',
+      'Fehlerfrei gepatcht. Der Schrank sieht aus wie im Katalog. Mach ein Foto, bevor es jemand anfasst.',
     ],
     bad: [
       'Halb gepatcht. Der Drucker im 3. OG ist jetzt im VLAN der Geschäftsführung. Viel Spaß.',
       'Kabelsalat. Ein Kollege hat es mit Kabelbindern „gelöst“. Für immer.',
+      'Die Kaffeemaschine hängt jetzt im Buchhaltungs-VLAN. Sie hat Zugriff auf die Gehälter.',
     ],
   },
 };
@@ -117,10 +129,17 @@ export const TAKE_LABELS = [
   'Hab ich schon mal gemacht. Glaub ich.',
   'Ich schau mal drüber.',
   'Kurz vor Feierabend? Klar.',
+  'Ich hol mal den Feuerlöscher.',
+  'Hab gerade eh nichts vor. (Lüge)',
+  'Einmal tief durchatmen.',
+  'On-Call ist mein zweiter Vorname.',
 ];
 
 /** Button-Texte zum Abschließen */
-export const DONE_LABELS = { good: ['Ticket schließen', 'Postmortem? Nö.', 'Zurück zum Kaffee'], bad: ['Nicht mehr mein Problem', 'Seufz.', 'Kollege macht das schon'] };
+export const DONE_LABELS = {
+  good: ['Ticket schließen', 'Postmortem? Nö.', 'Zurück zum Kaffee', 'Ich bin ein Held. Weiter.', 'Mic drop'],
+  bad: ['Nicht mehr mein Problem', 'Seufz.', 'Kollege macht das schon', 'Es war DNS. Bestimmt.', 'Ab in die Lessons Learned'],
+};
 
 // --- Spamfilter ---
 
@@ -147,6 +166,10 @@ export const MAILS: Mail[] = [
   m('voicemail@firma.de-voice.app', 'Neue Sprachnachricht (0:47)', 'Öffnen Sie den Anhang voicemail.html.', true),
   m('noreply@docu-sign-secure.xyz', 'Dokument zur Unterschrift', 'Vertrag_final_FINAL.pdf.exe wartet auf Sie.', true),
   m('marketing@seo-ranking-1a.de', 'Platz 1 bei Google garantiert', 'Nur heute: SEO-Paket für Ihre Firma.', true),
+  m('it-abteilung@firma-it.support', 'Dringende Wartung', 'Bitte installieren Sie das angehängte Update.exe. Ihre IT.', true),
+  m('gewinn@lotto-sofort.win', 'Sie haben gewonnen!', 'An einer Verlosung, an der Sie nie teilgenommen haben.', true),
+  m('amazon@amaz0n-konto.click', 'Bestellung storniert', 'Ihre Bestellung über 1.299 € wurde storniert. Hier klicken, um sie nicht zu stornieren.', true),
+  m('chef.privat@gmail-mail.co', 'Bin im Meeting, kurze Bitte', 'Können Sie 10 Gutscheinkarten kaufen? Ich erkläre es später.', true),
 
   m('buchhaltung@firma.de', 'WICHTIG!!! Drucker 3. OG', 'Der Drucker druckt wieder nur Hieroglyphen. Bitte sofort!!!', false),
   m('teamassistenz@firma.de', 'Kuchen in der Teeküche', 'Geburtstag von Petra. Wer zuerst kommt …', false),
@@ -160,6 +183,10 @@ export const MAILS: Mail[] = [
   m('support@hersteller.de', 'Ihr Ticket #88213', 'Bitte aktualisieren Sie zunächst die Firmware.', false),
   m('datenschutz@firma.de', 'Schulung: Phishing erkennen', 'Pflichttermin am Donnerstag. Ja, auch für die IT.', false),
   m('projektleitung@firma.de', 'Einladung: Kurzer Sync (90 min)', '17 Teilnehmer. Agenda folgt.', false),
+  m('kantine@firma.de', 'Speiseplan KW 46', 'Montag: Schnitzel. Dienstag: Schnitzel (Rest von Montag).', false),
+  m('herr.k@firma.de', 'WG: WG: WG: Lustig!!!', 'Ein Witz aus dem Jahr 2003. Mit Anhang: witz.pps', false),
+  m('betriebsrat@firma.de', 'Abstimmung: Name für den neuen Drucker', 'Vorschläge bitte bis Freitag. „Dieter 2“ ist schon vergeben.', false),
+  m('controlling@firma.de', 'IT-Kosten Q3', 'Bitte erklären Sie Position 14: „Kaffee (Server)“.', false),
 ];
 
 // --- Dienste-Dashboard ---
@@ -198,7 +225,7 @@ export const ROOT_CAUSES: { id: string; weight: number }[] = [
 ];
 
 /** Warnungen ohne Zusammenhang (Störer) */
-export const NOISE_WARNINGS = ['disk 87 %', 'cert expires in 12 days', 'load 4.2', 'swap 61 %', 'NTP offset 0.8 s'];
+export const NOISE_WARNINGS = ['disk 87 %', 'cert expires in 12 days', 'load 4.2', 'swap 61 %', 'NTP offset 0.8 s', 'fan 2 sounds sad', 'uptime 1284 d (do not touch)'];
 
 // --- Log-Grep ---
 
@@ -218,6 +245,11 @@ export const LOG_DECOYS = [
   'INFO  nginx: 304 Not Modified /favicon.ico',
   'ERROR java: NullPointerException in LegacyReport (ignored since 2014)',
   'INFO  backup: skipped (we believe in it)',
+  'WARN  printer03: toner low (since 2021)',
+  'INFO  coffee-api: POST /brew 418 I\'m a teapot',
+  'ERROR sso: user "chef" forgot password (known issue #1)',
+  'INFO  cron: reboot_if_monday.sh – not monday, skipped',
+  'WARN  disk /var/log 89 % (log about full log)',
 ];
 
 /** Echte neue Fehler – die muss man erwischen */
@@ -229,6 +261,8 @@ export const LOG_TARGETS = [
   'FATAL ticket-api: Segmentation fault (core dumped)',
   'CRIT  nfs: server fs02 not responding, still trying',
   'FATAL auth: LDAP bind failed – invalid credentials (svc-helpdesk)',
+  'CRIT  disk: /dev/sdb – I/O error, sector 4711',
+  'FATAL queue: ticket-worker died – no workers left',
 ];
 
 // --- Netzwerkausfall ---
@@ -294,6 +328,9 @@ export const NET_DISTRACTORS: { id: string; label: string; reply: string }[] = [
   { id: 'escalate', label: 'Ticket ans Netzwerkteam', reply: 'Das Netzwerkteam bist du.' },
   { id: 'yell', label: 'Router anschreien', reply: 'Hat gutgetan. Hilft aber nicht.' },
   { id: 'wifi', label: 'Ins Gäste-WLAN', reply: 'Gäste-WLAN-Passwort steht am Empfang. Der Empfang ist nicht erreichbar.' },
+  { id: 'duck', label: 'Gummiente fragen', reply: 'Die Ente sagt: „Fang unten an.“ Die Ente hat recht.' },
+  { id: 'forum', label: 'Im Forum fragen', reply: 'Du bist offline. Das Forum auch. Für dich.' },
+  { id: 'firmware', label: 'Firmware updaten', reply: 'Das Update braucht Internet. Haha.' },
 ];
 
 // --- Patchkabel ---
