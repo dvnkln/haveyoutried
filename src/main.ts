@@ -2,7 +2,7 @@ import './styles/main.css';
 import { BOOT_LINES, RETURN_LINES } from './content/syslog';
 import { startLoop } from './core/loop';
 import { applyOfflineProgress, type OfflineReport } from './core/offline';
-import { loadGame, Saver } from './core/save';
+import { EXP_REVALUED_FLAG, loadGame, Saver } from './core/save';
 import { createInitialState } from './core/state';
 import { tick } from './core/tick';
 import { registerServiceWorker } from './pwa/register';
@@ -68,6 +68,14 @@ if (import.meta.env.MODE === 'e2e') {
 
 for (const line of BOOT_LINES) log.template(line);
 if (loaded) log.write('info', 'helpdesk[1337]: savegame restored from /var/lib/helpdesk');
+const revaluedFrom = state.flags[EXP_REVALUED_FLAG];
+if (revaluedFrom !== undefined) {
+  log.write(
+    'warn',
+    `hr[42]: Berufserfahrung neu bewertet: ${revaluedFrom} → ${state.prestige.experience} Punkte. Begründung: „Marktanpassung“. Einspruch bitte per Fax.`,
+  );
+  delete state.flags[EXP_REVALUED_FLAG];
+}
 
 const showOfflineReport = (r: OfflineReport) => {
   if (r.gained <= 0) return;

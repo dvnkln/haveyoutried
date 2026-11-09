@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { deserialize, exportSave, importSave, serialize } from '../../src/core/save';
+import { deserialize, EXP_REVALUED_FLAG, exportSave, importSave, serialize } from '../../src/core/save';
 import { createInitialState } from '../../src/core/state';
 import { prestigeGain } from '../../src/core/prestige';
 
@@ -60,6 +60,17 @@ describe('Spielstand', () => {
     expect(big.prestige.experience).toBe(46);
     expect(prestigeGain(big)).toBe(0);
     expect(load(0, 0).prestige.experience).toBe(0);
+    expect(load(-5, 0).prestige.experience).toBe(0); // negativ wird nicht zum Bonus
+  });
+
+  it('Spielstand v2: Verlust durch die Umrechnung wird für den Logeintrag gemerkt, Gewinn nicht', () => {
+    const load = (experience: number) =>
+      deserialize(JSON.stringify({ version: 2, flags: { solved: 7 }, prestige: { experience, jobs: 1, company: 'x' } }), 0)!;
+    const lost = load(100);
+    expect(lost.flags[EXP_REVALUED_FLAG]).toBe(100);
+    expect(lost.flags.solved).toBe(7);
+    expect(load(2).flags[EXP_REVALUED_FLAG]).toBeUndefined(); // 2 → 3
+    expect(load(10).flags[EXP_REVALUED_FLAG]).toBeUndefined();
   });
 
   it('ungültiges JSON → null', () => {

@@ -107,8 +107,8 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   // --- Karriere ---
   a('quit1', 'Neuer Job, alte Probleme', 'Zum ersten Mal gekündigt.', (s) => s.prestige.jobs >= 1),
   a('quit5', 'Jobhopper', '5 Mal gekündigt. Der Lebenslauf wird lang.', (s) => s.prestige.jobs >= 5),
-  a('exp25', 'Senior (laut Signatur)', '25 Punkte Berufserfahrung.', (s) => s.prestige.experience >= 25),
-  a('exp100', 'Principal Staff Lead Architect', '100 Punkte Berufserfahrung. Dein Titel passt nicht mehr auf die Visitenkarte.', (s) => s.prestige.experience >= 100),
+  a('exp25', 'Senior (laut Signatur)', '15 Punkte Berufserfahrung.', (s) => s.prestige.experience >= 15),
+  a('exp100', 'Principal Staff Lead Architect', '50 Punkte Berufserfahrung. Dein Titel passt nicht mehr auf die Visitenkarte.', (s) => s.prestige.experience >= 50),
   a('quit10', 'Lebenslauf länger als die Doku', '10 Mal gekündigt.', (s) => s.prestige.jobs >= 10),
   a('companies5', 'Branchenkenner', 'Bei 5 verschiedenen Firmen gearbeitet. Überall dasselbe.', (s) => companiesSeen(s) >= 5),
 

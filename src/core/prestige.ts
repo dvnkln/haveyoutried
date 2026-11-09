@@ -9,11 +9,12 @@ import { bumpFlag, type GameState } from './state';
 /** Gesamte Berufserfahrung, die Tickets aller Jobs zusammen wert sind. */
 export function experienceFor(ticketsAllTime: number): number {
   const t = Math.max(0, ticketsAllTime);
-  // Potenzen mit Bruch-Exponent runden knapp daneben (1000 ** (1/3) = 9,999…): an den exakten Schwellen nachkorrigieren
-  let n = Math.floor((t / PRESTIGE.ticketsPerPoint) ** PRESTIGE.exponent);
-  while (pointThreshold(n + 1) <= t) n++;
-  while (n > 0 && pointThreshold(n) > t) n--;
-  return n;
+  const root = (t / PRESTIGE.ticketsPerPoint) ** PRESTIGE.exponent;
+  // Potenzen mit Bruch-Exponent runden knapp daneben (1000 ** (1/3) = 9,999…): zur nächsten ganzen Zahl
+  // runden und einmal an der exakten Schwelle prüfen. Jenseits sicherer Ganzzahlen bringt das nichts mehr.
+  const n = Math.round(root);
+  if (!Number.isSafeInteger(n)) return Math.floor(root);
+  return pointThreshold(n) > t ? n - 1 : n;
 }
 
 /** Ab so vielen Tickets (über alle Jobs) hat man n Punkte. */

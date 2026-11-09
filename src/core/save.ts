@@ -3,6 +3,9 @@ import { BUY_AMOUNTS, TAP_SOUND_IDS, createInitialState, SAVE_VERSION, type BuyA
 
 export const SAVE_KEY = 'hyt.save';
 
+/** Flag mit der alten Berufserfahrung, wenn die Umrechnung auf v3 Punkte gekostet hat (main.ts meldet das einmal) */
+export const EXP_REVALUED_FLAG = 'expRevalued';
+
 /** Nachfrist für ein beim Laden gefundenes Pager-Event */
 const EVENT_GRACE_MS = 15_000;
 
@@ -20,8 +23,12 @@ const migrations: Record<number, (raw: Record<string, unknown>) => Record<string
   2: (raw) => {
     const p = raw.prestige;
     if (!isPlain(p) || typeof p.experience !== 'number') return { ...raw, version: 3 };
-    const e = p.experience;
-    return { ...raw, version: 3, prestige: { ...p, experience: Math.floor(Math.cbrt(10 * e * e) + 1e-9) } };
+    const e = Math.max(0, p.experience);
+    const next = Math.floor(Math.cbrt(10 * e * e) + 1e-9);
+    // Weniger als vorher: alten Wert merken, beim Start gibt es dazu einen Logeintrag
+    const flags = isPlain(raw.flags) ? raw.flags : {};
+    const notice = next < e ? { flags: { ...flags, [EXP_REVALUED_FLAG]: e } } : {};
+    return { ...raw, ...notice, version: 3, prestige: { ...p, experience: next } };
   },
 };
 

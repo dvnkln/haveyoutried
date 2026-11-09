@@ -21,6 +21,9 @@ describe('Berufserfahrung', () => {
     expect(experienceFor(P)).toBe(1);
     expect(experienceFor(1_000 * P)).toBe(10);
     expect(experienceFor(1_000_000 * P)).toBe(100);
+    // riesige Werte (manipulierter Import) dürfen nicht hängen
+    expect(experienceFor(1e60)).toBeGreaterThan(1e17);
+    expect(experienceFor(Infinity)).toBe(Infinity);
     for (let n = 1; n <= 300; n++) {
       expect(experienceFor(P * n ** 3), `n=${n}`).toBe(n);
       expect(experienceFor(P * n ** 3 - 1), `n=${n}`).toBe(n - 1);

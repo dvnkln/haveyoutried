@@ -15,7 +15,7 @@ export const UPGRADE_TEXT: Record<string, UpgradeText> = {
   },
   mouse: {
     name: 'Ergonomische Maus',
-    desc: 'Rund, gummiert, mit grünem Mausrad, 89 €. Das Handgelenk dankt. Die Kollegen fragen, ob das ein Ufo ist.',
+    desc: 'Rund, gummiert, mit grünem Mausrad, 89 €. Nebenbei ein Klick ins Dashboard, und die Skripte laufen weiter, während du tippst. Die Kollegen fragen, ob das ein Ufo ist.',
   },
   keyboard: { name: 'Mechanische Tastatur', desc: 'Cherry MX Blue. Das Großraumbüro hasst dich. Du tippst doppelt so schnell.' },
   answering: {
@@ -24,14 +24,14 @@ export const UPGRADE_TEXT: Record<string, UpgradeText> = {
   },
   headset: {
     name: 'Headset mit Mute-Taste',
-    desc: 'Beide Hände frei zum Tippen. Die Mute-Taste rettet dich in jedem Call, in dem du gerade „Kann der nicht einfach…“ sagen wolltest.',
+    desc: 'Telefonieren und nebenbei die Cronjobs anschubsen. Die Mute-Taste rettet dich in jedem Call, in dem du gerade „Kann der nicht einfach…“ sagen wolltest.',
   },
   basement: { name: 'Büro im Keller', desc: 'Kein Fenster, kein Handyempfang, keine Besucher. Die Produktivität ist beängstigend.' },
   monitor2: {
     name: 'Neuer Monitor: HYT-3000 PRO',
     desc: '17 Zoll Röhre, platingrau, blaue Power-LED. Wiegt 23 kg, der Tisch biegt sich. Flimmert nur noch dienstags.',
   },
-  macro: { name: 'Textbaustein', desc: 'Strg+Alt+R: „Haben Sie es schon aus- und wieder eingeschaltet?“' },
+  macro: { name: 'Textbaustein', desc: 'Strg+Alt+R: „Haben Sie es schon aus- und wieder eingeschaltet?“ Die gesparte Zeit verbringst du im Monitoring. Angeblich.' },
   duck: { name: 'Rubber Duck', desc: 'Hört zu. Urteilt nicht. Löst die Hälfte aller Probleme durch Schweigen.' },
 
   // Global
@@ -80,7 +80,7 @@ export function effectLabel(effect: UpgradeEffect): string {
     case 'clickPps':
       return `Anschlag +${Math.round(effect.fraction * 100)} % der Tickets/s`;
     case 'solveSec':
-      return `Ticket +${String(effect.sec).replace('.', ',')} s Produktion`;
+      return `Ticket +${effect.sec.toLocaleString('de-DE')} s Produktion`;
     case 'gen':
       return `${GENERATOR_TEXT[effect.gen].name} ×${effect.mult}`;
     case 'global':
