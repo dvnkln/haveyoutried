@@ -3004,44 +3004,78 @@ button {
   color: #a33a3a;
 }
 
-/* ---------- Switch-Auswahl: Karten mit Switch von oben ---------- */
-.switch-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+/* ---------- Switch-Auswahl: ein Switch, Pfeile links/rechts, Punkte darunter ---------- */
+.switch-carousel {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
   margin-top: 6px;
 }
+.switch-arrow {
+  flex: 0 0 40px;
+  padding: 0 0 3px;
+  border: var(--outline) solid var(--ink);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--ink);
+  font: 700 28px/1 var(--font-ui);
+  box-shadow: inset 0 -4px 0 var(--key-edge);
+}
+.switch-arrow:active {
+  transform: translateY(2px);
+  box-shadow: inset 0 -2px 0 var(--key-edge);
+}
 .switch-card {
-  position: relative;
+  flex: 1;
   min-width: 0;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
-  padding: 10px;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
   border: var(--outline) solid var(--ink);
   border-radius: 14px;
-  background: #fff;
+  background: #fff3c4;
   color: var(--ink);
   font-family: var(--font-ui);
   text-align: left;
-  box-shadow: inset 0 -4px 0 var(--key-edge);
+  box-shadow: inset 0 -4px 0 #e8c46a;
+  /* gleiche Höhe für alle Switches: Pfeile springen beim Durchblättern nicht */
+  min-height: 140px;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
 }
-.switch-card[aria-checked='true'] {
-  background: #fff3c4;
-  box-shadow: inset 0 -4px 0 #e8c46a, 0 0 0 3px var(--butter);
+.switch-card.slide-r {
+  animation: switch-in-r 0.22s cubic-bezier(0.2, 0.8, 0.3, 1.2);
+}
+.switch-card.slide-l {
+  animation: switch-in-l 0.22s cubic-bezier(0.2, 0.8, 0.3, 1.2);
+}
+@keyframes switch-in-r {
+  from {
+    transform: translateX(18px);
+    opacity: 0.4;
+  }
+}
+@keyframes switch-in-l {
+  from {
+    transform: translateX(-18px);
+    opacity: 0.4;
+  }
 }
 .switch-pic {
-  width: 44px;
-  height: 44px;
+  flex: 0 0 auto;
+  width: 64px;
+  height: 64px;
+  transition: transform 0.06s;
 }
 .switch-pic svg {
   display: block;
   width: 100%;
   height: 100%;
 }
-.switch-card:active .switch-pic {
-  transform: translateY(2px) scale(0.95);
+.switch-card.pressed .switch-pic {
+  transform: translateY(3px) scale(0.93);
 }
 .switch-info {
   display: flex;
@@ -3106,26 +3140,57 @@ button {
   color: var(--ink-soft);
   font-style: italic;
 }
-.switch-check {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 24px;
-  height: 24px;
+/* schmale Handys: kleinere Pfeile und Switch, damit Name und Federkraft-Balken Platz haben */
+@media (max-width: 379px) {
+  .switch-carousel {
+    gap: 6px;
+  }
+  .switch-arrow {
+    flex-basis: 32px;
+    font-size: 24px;
+  }
+  .switch-card {
+    gap: 9px;
+    padding: 9px 10px;
+    min-height: 150px;
+  }
+  .switch-pic {
+    width: 46px;
+    height: 46px;
+  }
+}
+.switch-name {
+  white-space: nowrap;
+}
+.switch-dots {
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+  margin-top: 4px;
+}
+/* großes Tippfeld, kleiner Punkt in der Stem-Farbe */
+.switch-dot {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  background: none;
   display: grid;
   place-items: center;
+}
+.switch-dot::before {
+  content: '';
+  width: 12px;
+  height: 12px;
   border: 2px solid var(--ink);
   border-radius: 50%;
-  background: var(--mint);
-  font-weight: 700;
-  font-size: 13px;
-  opacity: 0;
-  transform: scale(0.5);
-  transition: opacity 0.15s, transform 0.2s cubic-bezier(0.2, 0.8, 0.3, 1.5);
+  background: var(--stem);
+  opacity: 0.5;
+  transition: transform 0.15s, opacity 0.15s;
 }
-.switch-card[aria-checked='true'] .switch-check {
+.switch-dot[aria-checked='true']::before {
   opacity: 1;
-  transform: scale(1);
+  transform: scale(1.35);
 }
 
 /* Papierkorb: Papier schaut oben raus, je voller desto mehr */

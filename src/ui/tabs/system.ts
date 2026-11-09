@@ -1,7 +1,7 @@
 import { CONFIG } from '../../config';
 import { exportSave, importSave } from '../../core/save';
 import type { AppContext, Tab } from '../app';
-import { h, juice, POP, setText } from '../dom';
+import { h, setText } from '../dom';
 import { formatDuration, formatNumber } from '../format';
 import { SWITCHES } from '../audio';
 import { TAP_SOUND_IDS } from '../../core/state';
@@ -48,30 +48,52 @@ export function systemTab(): Tab {
   const hapticBtn = h('button', { class: 'icon-toggle', type: 'button', role: 'switch', 'aria-label': 'Vibration', text: '((•))' });
   const soundBtn = h('button', { class: 'icon-toggle', type: 'button', role: 'switch', 'aria-label': 'Sound', text: '♪' });
   const volume = h('input', { class: 'volume', type: 'range', min: '0', max: '1', step: '0.1', 'aria-label': 'Lautstärke' });
-  const tapButtons = TAP_SOUND_IDS.map((id) => {
+  // Switch-Auswahl: ein Switch zur Zeit, Pfeile/Wischen/Punkte wechseln (= einbauen), Drücken = Probe wie am Switch-Tester
+  type SwitchId = (typeof TAP_SOUND_IDS)[number];
+  const pic = h('span', { class: 'switch-pic', 'aria-hidden': 'true' });
+  const name = h('span', { class: 'switch-name' });
+  const type = h('span', { class: 'switch-type' });
+  const force = h('span', { class: 'meter-label' });
+  const forceFill = h('span', { class: 'meter-fill' });
+  const loud = h('span', { class: 'switch-loud' });
+  const quip = h('span', { class: 'switch-quip' });
+  const card = h('button', { class: 'switch-card', type: 'button' }, [
+    pic,
+    h('span', { class: 'switch-info' }, [
+      name,
+      type,
+      h('span', { class: 'switch-meter' }, [force, h('span', { class: 'meter' }, [forceFill])]),
+      loud,
+      quip,
+    ]),
+  ]);
+  const prevBtn = h('button', { class: 'switch-arrow', type: 'button', 'aria-label': 'Vorheriger Switch', text: '‹' });
+  const nextBtn = h('button', { class: 'switch-arrow', type: 'button', 'aria-label': 'Nächster Switch', text: '›' });
+  const dots = TAP_SOUND_IDS.map((id) =>
+    h('button', { class: 'switch-dot', type: 'button', role: 'radio', 'aria-label': `Cherry ${SWITCHES[id].label}, ${SWITCHES[id].hint}`, style: `--stem:${SWITCH_LOOK[id].stem}` }),
+  );
+  /** angezeigter Switch; null = Karte noch nicht befüllt */
+  let shown: SwitchId | null = null;
+  const showSwitch = (id: SwitchId, dir = 0) => {
+    if (shown === id) return;
+    shown = id;
     const look = SWITCH_LOOK[id];
-    const pic = h('span', { class: 'switch-pic', 'aria-hidden': 'true' });
     pic.innerHTML = switchSvg(look.stem, look.housing);
-    const el = h(
-      'button',
-      { class: 'switch-btn switch-card', type: 'button', role: 'radio', 'aria-label': `Cherry ${SWITCHES[id].label}, ${SWITCHES[id].hint}` },
-      [
-        pic,
-        h('span', { class: 'switch-info' }, [
-          h('span', { class: 'switch-name', text: SWITCHES[id].label }),
-          h('span', { class: `switch-type type-${look.type}`, text: TYPE_LABEL[look.type] }),
-          h('span', { class: 'switch-meter' }, [
-            h('span', { class: 'meter-label', text: `${look.force} cN` }),
-            h('span', { class: 'meter' }, [h('span', { class: 'meter-fill', style: `width:${Math.round((look.force / 80) * 100)}%` })]),
-          ]),
-          h('span', { class: 'switch-loud', text: `${'●'.repeat(look.loud)}${'○'.repeat(3 - look.loud)} Lautstärke` }),
-          h('span', { class: 'switch-quip', text: look.quip }),
-        ]),
-        h('span', { class: 'switch-check', 'aria-hidden': 'true', text: '✓' }),
-      ],
-    );
-    return { id, el };
-  });
+    setText(name, SWITCHES[id].label);
+    setText(type, TYPE_LABEL[look.type]);
+    type.className = `switch-type type-${look.type}`;
+    setText(force, `${look.force} cN`);
+    forceFill.style.width = `${Math.round((look.force / 80) * 100)}%`;
+    setText(loud, `${'●'.repeat(look.loud)}${'○'.repeat(3 - look.loud)} Lautstärke`);
+    setText(quip, look.quip);
+    card.setAttribute('aria-label', `Cherry ${SWITCHES[id].label}: drücken zum Probehören`);
+    dots.forEach((d, i) => d.setAttribute('aria-checked', String(TAP_SOUND_IDS[i] === id)));
+    if (dir) {
+      card.classList.remove('slide-l', 'slide-r');
+      void card.offsetWidth; // Animation neu starten
+      card.classList.add(dir > 0 ? 'slide-r' : 'slide-l');
+    }
+  };
   const HAPTIC_HINT = {
     vibrate: 'Vibriert beim Tippen und Kaufen. Spürst du nichts? In Android „Berührungs-Feedback“ einschalten.',
     ios: 'iPhone: Safari erlaubt nur ein leichtes Klicken (ab iOS 18). Mehr gibt Apple nicht her.',
@@ -175,14 +197,60 @@ export function systemTab(): Tab {
         ctx.state.settings.sound = !ctx.state.settings.sound;
         void ctx.sfx.unlock().then(() => ctx.sfx.tick());
       });
-      for (const b of tapButtons) {
-        b.el.addEventListener('click', () => {
-          ctx.state.settings.tapSound = b.id;
-          ctx.state.settings.sound = true;
-          void ctx.sfx.unlock().then(() => ctx.sfx.preview(b.id));
-          juice(b.el, POP, 240);
-        });
-      }
+      const current = (): SwitchId => (TAP_SOUND_IDS as readonly string[]).includes(ctx.state.settings.tapSound) ? (ctx.state.settings.tapSound as SwitchId) : 'blue';
+      /** Wechseln = einbauen; mit Probe, außer beim Wischen (da hat der Finger schon geklickt) */
+      const choose = (id: SwitchId, dir: number, preview = true) => {
+        ctx.state.settings.tapSound = id;
+        ctx.state.settings.sound = true;
+        showSwitch(id, dir);
+        if (preview) void ctx.sfx.unlock().then(() => ctx.sfx.preview(id));
+        ctx.haptic('tap');
+      };
+      const step = (dir: number, preview = true) => {
+        const i = TAP_SOUND_IDS.indexOf(current());
+        choose(TAP_SOUND_IDS[(i + dir + TAP_SOUND_IDS.length) % TAP_SOUND_IDS.length]!, dir, preview);
+      };
+      prevBtn.addEventListener('click', () => step(-1));
+      nextBtn.addEventListener('click', () => step(1));
+      dots.forEach((d, i) =>
+        d.addEventListener('click', () => {
+          const target = TAP_SOUND_IDS[i]!;
+          if (target !== current()) choose(target, i > TAP_SOUND_IDS.indexOf(current()) ? 1 : -1);
+        }),
+      );
+      // Switch-Tester: runter = Klick, hoch = Rückklick; seitlich wischen = wechseln
+      let downX: number | null = null;
+      card.addEventListener('pointerdown', (e) => {
+        if (e.button !== 0) return;
+        downX = e.clientX;
+        card.classList.add('pressed');
+        ctx.state.settings.sound = true;
+        void ctx.sfx.unlock().then(() => ctx.sfx.tap(current()));
+        ctx.haptic('tap');
+      });
+      const up = (e: PointerEvent) => {
+        if (downX === null) return;
+        const dx = e.clientX - downX;
+        downX = null;
+        card.classList.remove('pressed');
+        ctx.sfx.release(current());
+        if (e.type === 'pointerup' && Math.abs(dx) > 40) step(dx < 0 ? 1 : -1, false);
+      };
+      card.addEventListener('pointerup', up);
+      card.addEventListener('pointercancel', up);
+      card.addEventListener('pointerleave', up);
+      // Tastatur (Enter/Leertaste) löst nur „click“ aus: dann einmal komplett probehören
+      card.addEventListener('click', (e) => {
+        if (e.detail !== 0) return;
+        ctx.state.settings.sound = true;
+        void ctx.sfx.unlock().then(() => ctx.sfx.preview(current()));
+      });
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+          e.preventDefault();
+          step(e.key === 'ArrowLeft' ? -1 : 1);
+        }
+      });
       volume.value = String(ctx.state.settings.volume);
       volume.addEventListener('input', () => {
         ctx.state.settings.volume = Number(volume.value);
@@ -206,8 +274,9 @@ export function systemTab(): Tab {
         h('div', { class: 'setting' }, [h('div', { text: 'Lautstärke' }), volume]),
         h('div', { class: 'setting-col' }, [
           h('div', { text: 'Tastatur-Switch (Klang beim Tippen)' }),
-          h('div', { class: 'hint', text: 'Antippen = Probe hören und einbauen.' }),
-          h('div', { class: 'switch-grid', role: 'radiogroup', 'aria-label': 'Klick-Sound' }, tapButtons.map((b) => b.el)),
+          h('div', { class: 'hint', text: 'Switch drücken = Probe hören. Pfeile oder Wischen = anderen einbauen.' }),
+          h('div', { class: 'switch-carousel' }, [prevBtn, card, nextBtn]),
+          h('div', { class: 'switch-dots', role: 'radiogroup', 'aria-label': 'Klick-Sound' }, dots),
         ]),
         h('div', { class: 'setting' }, [
           h('div', {}, [h('div', { text: 'Vibration' }), h('div', { class: 'hint', text: HAPTIC_HINT[hapticSupport()] })]),
@@ -246,11 +315,8 @@ export function systemTab(): Tab {
         btn.classList.toggle('off', !on);
       }
       volume.disabled = !s.settings.sound;
-      for (const b of tapButtons) {
-        const on = s.settings.tapSound === b.id;
-        b.el.classList.toggle('active', on);
-        b.el.setAttribute('aria-checked', String(on));
-      }
+      const sel = (TAP_SOUND_IDS as readonly string[]).includes(s.settings.tapSound) ? (s.settings.tapSound as SwitchId) : 'blue';
+      showSwitch(sel);
     },
   };
 }
