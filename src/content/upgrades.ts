@@ -79,6 +79,8 @@ export function effectLabel(effect: UpgradeEffect): string {
       return `Tippen ×${effect.mult} schneller`;
     case 'clickPps':
       return `Anschlag +${Math.round(effect.fraction * 100)} % der Tickets/s`;
+    case 'solveSec':
+      return `Ticket +${String(effect.sec).replace('.', ',')} s Produktion`;
     case 'gen':
       return `${GENERATOR_TEXT[effect.gen].name} ×${effect.mult}`;
     case 'global':

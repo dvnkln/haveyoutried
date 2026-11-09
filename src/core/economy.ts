@@ -129,6 +129,13 @@ export function pressPpsFraction(state: GameState): number {
   return f;
 }
 
+/** Sekunden Produktion, die jede Lösung zusätzlich bringt (Grundwert plus Maus, Headset & Co.) */
+export function solvePpsSec(state: GameState): number {
+  let sec = SOLVE.ppsSec;
+  for (const u of owns(state)) if (u.effect.kind === 'solveSec') sec += u.effect.sec;
+  return sec;
+}
+
 /** Tickets für eine Lösung ohne Serie: Grundwert, Tempo-Überschuss zählt als Wert. Berufserfahrung steckt im Tempo. */
 export function ticketReward(state: GameState): number {
   const surplus = Math.max(1, (tempo(state) * SOLVE.minPresses) / ticketWork(state));
@@ -138,7 +145,7 @@ export function ticketReward(state: GameState): number {
 /** Wert eines Anschlags im Schnitt (für Ereignisse, die in „Klicks“ rechnen) */
 export function clickValue(state: GameState): number {
   const pps = productionPerSec(state);
-  return ticketReward(state) / pressesPerTicket(state) + pps * (pressPpsFraction(state) + SOLVE.ppsSec / pressesPerTicket(state));
+  return ticketReward(state) / pressesPerTicket(state) + pps * (pressPpsFraction(state) + solvePpsSec(state) / pressesPerTicket(state));
 }
 
 export function generatorProduction(state: GameState, id: GeneratorId): number {

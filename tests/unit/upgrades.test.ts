@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { GENERATORS, UPGRADES } from '../../src/config';
+import { GENERATORS, SOLVE, UPGRADES } from '../../src/config';
 import { CALLERS, situationalCalls } from '../../src/content/callers';
 import { GENERATOR_TEXT } from '../../src/content/generators';
 import { UPGRADE_TEXT } from '../../src/content/upgrades';
 import { buyUpgrade, pressKey, solveTicket } from '../../src/core/actions';
-import { pressPpsFraction, tempo, ticketReward } from '../../src/core/economy';
+import { pressPpsFraction, solvePpsSec, tempo, ticketReward } from '../../src/core/economy';
 import { prod } from './helpers';
 import { availableUpgrades, productionPerSec } from '../../src/core/economy';
 import { createInitialState } from '../../src/core/state';
@@ -52,6 +52,24 @@ describe('Upgrades', () => {
     const pps = productionPerSec(s);
     solveTicket(s, 1, 25);
     expect(s.tickets - before).toBeGreaterThan(pps * 0.01 * 25);
+  });
+
+  it('Maus, Headset, Textbaustein: jedes gelöste Ticket bringt mehr Sekunden Produktion', () => {
+    const s = createInitialState(0);
+    s.generators.cron.owned = 100;
+    const pps = productionPerSec(s);
+    const payout = () => {
+      const c = structuredClone(s);
+      c.tickets = 0;
+      solveTicket(c, 1, 3);
+      return c.tickets;
+    };
+    const before = payout();
+    expect(solvePpsSec(s)).toBeCloseTo(SOLVE.ppsSec);
+    for (const id of ['mouse', 'headset', 'macro']) s.upgrades[id] = true;
+    expect(solvePpsSec(s)).toBeCloseTo(SOLVE.ppsSec + 0.4);
+    expect(payout() - before).toBeCloseTo(pps * 0.4);
+    expect(tempo(s)).toBe(1); // kein Tempo-Effekt mehr
   });
 
   it('kosten nur bei genug Tickets', () => {

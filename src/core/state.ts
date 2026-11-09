@@ -1,6 +1,6 @@
 import { GENERATORS, type GeneratorId } from '../config';
 
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 
 /** Cherry-Switch-Klänge; Profile in ui/audio.ts */
 export const TAP_SOUND_IDS = ['blue', 'green', 'brown', 'red', 'black', 'silent'] as const;

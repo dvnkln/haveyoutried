@@ -1,6 +1,6 @@
 import { CONFIG, SOLVE, type GeneratorId } from '../config';
 import { bus } from './bus';
-import { isUpgradeUnlocked, pressPpsFraction, priceFor, productionPerSec, tempo, ticketReward, upgradeDef } from './economy';
+import { isUpgradeUnlocked, pressPpsFraction, priceFor, productionPerSec, solvePpsSec, tempo, ticketReward, upgradeDef } from './economy';
 import { STREAK_LINES } from '../content/work';
 import { bumpFlag, type BuyAmount, type GameState } from './state';
 import { addTickets } from './tick';
@@ -49,7 +49,7 @@ export const STREAK_MILESTONES: readonly number[] = Object.keys(STREAK_LINES).ma
  */
 export function solveTicket(state: GameState, streak: number, presses = 0): { bonus: number; milestone: boolean } {
   const pps = productionPerSec(state);
-  const reward = ticketReward(state) + pps * (SOLVE.ppsSec + pressPpsFraction(state) * presses);
+  const reward = ticketReward(state) + pps * (solvePpsSec(state) + pressPpsFraction(state) * presses);
   const mult = Math.min(SOLVE.maxStreakMult, 1 + SOLVE.perStreak * Math.max(0, streak - 1));
   const milestone = STREAK_MILESTONES.includes(streak);
   let bonus = reward * mult;

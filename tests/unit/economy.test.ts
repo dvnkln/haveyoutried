@@ -126,10 +126,10 @@ describe('Tickets von Hand', () => {
     expect(pressesPerTicket(s)).toBe(SOLVE.work);
     s.upgrades.coffee = true;
     expect(pressesPerTicket(s)).toBe(Math.ceil(SOLVE.work / 2));
-    for (const id of ['mousepad', 'keyboard', 'answering', 'mouse', 'headset', 'macro']) s.upgrades[id] = true;
+    for (const id of ['mousepad', 'keyboard', 'answering']) s.upgrades[id] = true;
     expect(pressesPerTicket(s)).toBe(SOLVE.minPresses);
-    // Tempo über das Minimum hinaus zählt als Wert
-    expect(ticketReward(s)).toBeGreaterThan(SOLVE.reward * 10);
+    // Tempo über das Minimum hinaus zählt als Wert (Tempo 12 → 12 × 3 / 25)
+    expect(ticketReward(s)).toBeCloseTo((SOLVE.reward * 12 * SOLVE.minPresses) / SOLVE.work);
   });
 
   it('Berufserfahrung macht schneller', async () => {

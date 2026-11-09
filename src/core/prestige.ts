@@ -8,7 +8,17 @@ import { bumpFlag, type GameState } from './state';
 
 /** Gesamte Berufserfahrung, die Tickets aller Jobs zusammen wert sind. */
 export function experienceFor(ticketsAllTime: number): number {
-  return Math.floor((Math.max(0, ticketsAllTime) / PRESTIGE.ticketsPerPoint) ** PRESTIGE.exponent);
+  const t = Math.max(0, ticketsAllTime);
+  // Potenzen mit Bruch-Exponent runden knapp daneben (1000 ** (1/3) = 9,999…): an den exakten Schwellen nachkorrigieren
+  let n = Math.floor((t / PRESTIGE.ticketsPerPoint) ** PRESTIGE.exponent);
+  while (pointThreshold(n + 1) <= t) n++;
+  while (n > 0 && pointThreshold(n) > t) n--;
+  return n;
+}
+
+/** Ab so vielen Tickets (über alle Jobs) hat man n Punkte. */
+function pointThreshold(n: number): number {
+  return Math.round(PRESTIGE.ticketsPerPoint * n ** (1 / PRESTIGE.exponent));
 }
 
 /** Was eine Kündigung jetzt bringen würde. */
@@ -18,8 +28,7 @@ export function prestigeGain(state: GameState): number {
 
 /** Ab so vielen Tickets (über alle Jobs) gibt es den nächsten Punkt. */
 export function ticketsForNextPoint(state: GameState): number {
-  const next = experienceFor(state.ticketsAllTime) + 1;
-  return PRESTIGE.ticketsPerPoint * next ** (1 / PRESTIGE.exponent);
+  return pointThreshold(experienceFor(state.ticketsAllTime) + 1);
 }
 
 /** Bonusfaktor aus Berufserfahrung (Produktion und Klicks). */

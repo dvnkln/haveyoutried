@@ -15,6 +15,14 @@ const migrations: Record<number, (raw: Record<string, unknown>) => Record<string
     if (!isPlain(p) || typeof p.experience !== 'number') return { ...raw, version: 2 };
     return { ...raw, version: 2, prestige: { ...p, experience: p.experience * 2 } };
   },
+  // v3: Kubikwurzel ab 25 K statt Quadratwurzel ab 250 K. Erfahrung über die gleichwertigen Tickets umrechnen:
+  // E Punkte entsprachen 250 K × E² Tickets → neu ∛(10 × E²). Bei 10 Punkten bleibt es gleich, darüber wird es weniger.
+  2: (raw) => {
+    const p = raw.prestige;
+    if (!isPlain(p) || typeof p.experience !== 'number') return { ...raw, version: 3 };
+    const e = p.experience;
+    return { ...raw, version: 3, prestige: { ...p, experience: Math.floor(Math.cbrt(10 * e * e) + 1e-9) } };
+  },
 };
 
 type Plain = Record<string, unknown>;

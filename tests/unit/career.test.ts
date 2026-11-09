@@ -15,12 +15,16 @@ import { createInitialState } from '../../src/core/state';
 afterEach(() => _resetIncidentRuntime());
 
 describe('Berufserfahrung', () => {
-  it('Wurzelformel: 1 Punkt-Schwelle → 1, 100× → 10, 10.000× → 100', () => {
+  it('Kubikwurzel: 1 Punkt-Schwelle → 1, 1.000× → 10, 1.000.000× → 100, exakt an jeder Schwelle', () => {
     const P = PRESTIGE.ticketsPerPoint;
     expect(experienceFor(P - 1)).toBe(0);
     expect(experienceFor(P)).toBe(1);
-    expect(experienceFor(100 * P)).toBe(10);
-    expect(experienceFor(10_000 * P)).toBe(100);
+    expect(experienceFor(1_000 * P)).toBe(10);
+    expect(experienceFor(1_000_000 * P)).toBe(100);
+    for (let n = 1; n <= 300; n++) {
+      expect(experienceFor(P * n ** 3), `n=${n}`).toBe(n);
+      expect(experienceFor(P * n ** 3 - 1), `n=${n}`).toBe(n - 1);
+    }
   });
 
   it('nächster Punkt: genau dort springt die Erfahrung', () => {
@@ -35,8 +39,8 @@ describe('Berufserfahrung', () => {
     const s = createInitialState(0);
     const P = PRESTIGE.ticketsPerPoint;
     s.tickets = 50 * P;
-    s.ticketsTotal = 100 * P;
-    s.ticketsAllTime = 100 * P;
+    s.ticketsTotal = 1_000 * P;
+    s.ticketsAllTime = 1_000 * P;
     s.clicks = 1234;
     s.generators.cron.owned = 40;
     s.upgrades = { coffee: true };
@@ -57,7 +61,7 @@ describe('Berufserfahrung', () => {
     expect(s.upgrades).toEqual({});
     expect(s.buffs).toEqual([]);
     // bleibt
-    expect(s.ticketsAllTime).toBe(100 * P);
+    expect(s.ticketsAllTime).toBe(1_000 * P);
     expect(s.clicks).toBe(1234);
     expect(s.achievements).toEqual({ first: 1 });
     expect(s.settings.sound).toBe(false);
@@ -144,7 +148,7 @@ describe('Neue Achievements und Zähler', () => {
   it('Firmen werden beim Kündigen mitgezählt', () => {
     const s = createInitialState(0);
     for (let i = 1; i <= 5; i++) {
-      s.ticketsAllTime = 1e6 * (i * 3) ** 2;
+      s.ticketsAllTime = ticketsForNextPoint(s);
       quitJob(s);
     }
     const companies = Object.keys(s.flags).filter((k) => k.startsWith('company:'));

@@ -27,6 +27,8 @@ export type UpgradeEffect =
   | { kind: 'click'; mult: number }
   /** Jeder Anschlag bringt beim Lösen zusätzlich diesen Anteil der Produktion/s */
   | { kind: 'clickPps'; fraction: number }
+  /** Jedes gelöste Ticket bringt zusätzlich so viele Sekunden Produktion */
+  | { kind: 'solveSec'; sec: number }
   /** Produktion eines Generators × mult */
   | { kind: 'gen'; gen: GeneratorId; mult: number }
   /** Gesamtproduktion und Klicks × mult */
@@ -63,13 +65,13 @@ const generatorUpgrades: UpgradeDef[] = GENERATORS.flatMap((g) =>
 export const UPGRADES: readonly UpgradeDef[] = [
   { id: 'coffee', cost: 40, unlock: { kind: 'clicks', n: 25 }, effect: { kind: 'click', mult: 2 } },
   { id: 'mousepad', cost: 150, unlock: { kind: 'clicks', n: 60 }, effect: { kind: 'click', mult: 1.5 } },
-  { id: 'mouse', cost: 10_000, unlock: { kind: 'clicks', n: 750 }, effect: { kind: 'click', mult: 2 } },
+  { id: 'mouse', cost: 10_000, unlock: { kind: 'clicks', n: 750 }, effect: { kind: 'solveSec', sec: 0.1 } },
   { id: 'keyboard', cost: 500, unlock: { kind: 'clicks', n: 200 }, effect: { kind: 'click', mult: 2 } },
   { id: 'answering', cost: 2_500, unlock: { kind: 'clicks', n: 500 }, effect: { kind: 'click', mult: 2 } },
-  { id: 'headset', cost: 15_000, unlock: { kind: 'clicks', n: 600 }, effect: { kind: 'click', mult: 1.5 } },
+  { id: 'headset', cost: 15_000, unlock: { kind: 'clicks', n: 600 }, effect: { kind: 'solveSec', sec: 0.1 } },
   { id: 'basement', cost: 600_000, unlock: { kind: 'total', n: 200_000 }, effect: { kind: 'global', mult: 1.1 } },
   { id: 'monitor2', cost: 15_000, unlock: { kind: 'total', n: 5_000 }, effect: { kind: 'clickPps', fraction: 0.01 } },
-  { id: 'macro', cost: 50_000, unlock: { kind: 'clicks', n: 1_000 }, effect: { kind: 'click', mult: 3 } },
+  { id: 'macro', cost: 50_000, unlock: { kind: 'clicks', n: 1_000 }, effect: { kind: 'solveSec', sec: 0.2 } },
   { id: 'duck', cost: 1_000_000, unlock: { kind: 'total', n: 500_000 }, effect: { kind: 'clickPps', fraction: 0.02 } },
   { id: 'rtfm', cost: 75_000, unlock: { kind: 'total', n: 25_000 }, effect: { kind: 'global', mult: 1.1 } },
   { id: 'kanban', cost: 6_000_000, unlock: { kind: 'total', n: 2_000_000 }, effect: { kind: 'global', mult: 1.1 } },
@@ -194,8 +196,8 @@ export const INCIDENTS = {
 
 export const PRESTIGE = {
   /** Berufserfahrung gesamt = floor((Tickets aller Jobs / ticketsPerPoint) ^ exponent) */
-  ticketsPerPoint: 250_000,
-  exponent: 0.5,
+  ticketsPerPoint: 25_000,
+  exponent: 1 / 3,
   /** Bonus je Punkt Berufserfahrung auf Produktion und Tipptempo */
   bonusPerPoint: 0.05,
 };
@@ -212,7 +214,7 @@ export const SOLVE = {
   /** Tickets pro Lösung (vor Multiplikatoren); Tempo über die Mindest-Anschläge hinaus zählt als Wert */
   reward: 1,
   /** jede Lösung bringt außerdem so viele Sekunden Produktion: aktives Spielen bleibt wertvoll */
-  ppsSec: 0.25,
+  ppsSec: 0.15,
   /** je Ticket in Folge +5 %, höchstens ×2 */
   perStreak: 0.05,
   maxStreakMult: 2,

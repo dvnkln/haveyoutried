@@ -45,9 +45,21 @@ describe('Spielstand', () => {
     // v1: 1 Punkt je 1 M Tickets (Wurzel) → 4 M Tickets = 2 Punkte; v2 (250 K) ergibt dafür 4
     const old = { version: 1, ticketsAllTime: 4_000_000, prestige: { experience: 2, jobs: 1, company: 'x' } };
     const s = deserialize(JSON.stringify(old), 0)!;
-    expect(s.version).toBe(2);
-    expect(s.prestige.experience).toBe(4);
+    expect(s.version).toBe(3);
+    // v3 (Kubikwurzel ab 25 K): 4 M Tickets = ∛160 → 5
+    expect(s.prestige.experience).toBe(5);
     expect(prestigeGain(s)).toBe(0);
+  });
+
+  it('Spielstand v2: Berufserfahrung auf die Kubikwurzel umgerechnet, ohne Gratis-Punkte', () => {
+    const load = (experience: number, ticketsAllTime: number) =>
+      deserialize(JSON.stringify({ version: 2, ticketsAllTime, prestige: { experience, jobs: 3, company: 'x' } }), 0)!;
+    // 10 Punkte (25 M Tickets) bleiben 10
+    expect(load(10, 25e6).prestige.experience).toBe(10);
+    const big = load(100, 2.5e9); // alt 100, neu ∛100.000 = 46
+    expect(big.prestige.experience).toBe(46);
+    expect(prestigeGain(big)).toBe(0);
+    expect(load(0, 0).prestige.experience).toBe(0);
   });
 
   it('ungültiges JSON → null', () => {
