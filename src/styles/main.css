@@ -721,7 +721,8 @@ button {
   /* feste Höhe: lange Sprüche dürfen das Layout nicht verschieben */
   height: 72px;
   display: flex;
-  align-items: flex-end;
+  /* oben am Telefon: kurze Sprüche hängen am Hörer, nicht unten an der Tastatur */
+  align-items: flex-start;
 }
 /* Tischtelefon links neben dem Monitor; die Sprechblase zeigt hinauf */
 .phone {
@@ -786,7 +787,7 @@ button {
   position: relative;
   flex: 1;
   min-width: 0;
-  transform-origin: 30px 100%;
+  transform-origin: 30px 0;
   padding: 5px 11px 6px;
   border: var(--outline) solid var(--ink);
   border-radius: 16px;
@@ -2688,6 +2689,7 @@ button {
   .mug .steam path,
   .screen.brake > *,
   .screen.crt-restart > *,
+  .screen > .incident,
   .cursor,
   .led.blink,
   .modal[open],
@@ -4480,21 +4482,17 @@ button {
   padding: 0;
   overflow: hidden;
   background: #f3f4f7;
-  animation: crt-on 0.3s ease-out;
+  transform-origin: 0 0;
+  animation: win-max 0.24s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 .screen > .incident[hidden] {
   display: none;
 }
-@keyframes crt-on {
-  0% {
-    opacity: 0;
-    transform: scaleY(0.04);
-    filter: brightness(3);
-  }
-  60% {
-    opacity: 1;
-    transform: scaleY(1);
-    filter: brightness(1.4);
+/* Vollbild: aus dem Programmfenster auf den ganzen Bildschirm */
+@keyframes win-max {
+  from {
+    border-radius: 8px;
+    transform: translate(var(--max-x, 8%), var(--max-y, 8%)) scale(var(--max-sx, 0.84), var(--max-sy, 0.84));
   }
 }
 /* Rest des Büros wird dunkel, der Monitor glüht rot */
@@ -5716,8 +5714,9 @@ button {
   position: fixed;
   z-index: 50;
   pointer-events: none;
-  border-radius: 10px / 14px;
-  box-shadow: 0 0 0 3px rgba(255, 91, 91, 0.55), 0 0 26px 8px rgba(255, 91, 91, 0.4), 0 0 0 200vmax rgba(24, 18, 26, 0.8);
+  border-radius: 12px 12px 8px 8px;
+  /* kein Rahmen um das Glas: nur der Raum wird dunkel, der Monitor wirft rotes Licht an die Wand */
+  box-shadow: 0 0 34px 6px rgba(255, 91, 91, 0.28), 0 0 0 200vmax rgba(24, 18, 26, 0.74);
   transition: opacity 0.3s;
 }
 /* Minispiel: bildschirmfüllend, gleiche Monitoring-Oberfläche */

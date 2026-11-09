@@ -82,6 +82,15 @@ export function mountIncidentOverlay(ctx: AppContext): void {
   const inMonitor = (on: boolean) => {
     const screenEl = document.querySelector<HTMLElement>('#app .screen');
     if (on && screenEl) {
+      // wie ein Programm, das auf Vollbild geht: wächst aus dem offenen Fenster heraus
+      const from = screenEl.querySelector<HTMLElement>('.work')?.getBoundingClientRect();
+      const to = screenEl.getBoundingClientRect();
+      if (from && to.width && to.height) {
+        root.style.setProperty('--max-x', `${from.left - to.left}px`);
+        root.style.setProperty('--max-y', `${from.top - to.top}px`);
+        root.style.setProperty('--max-sx', (from.width / to.width).toFixed(3));
+        root.style.setProperty('--max-sy', (from.height / to.height).toFixed(3));
+      }
       if (root.parentElement !== screenEl) screenEl.append(root);
       document.body.append(spot);
       placeSpot();
@@ -90,8 +99,9 @@ export function mountIncidentOverlay(ctx: AppContext): void {
       spot.remove();
     }
   };
+  /** ausgespart wird der ganze Monitor samt Gehäuse: der Bildschirm bleibt Teil des Geräts */
   const placeSpot = () => {
-    const r = root.parentElement?.getBoundingClientRect();
+    const r = root.parentElement?.closest('.monitor')?.getBoundingClientRect();
     if (!r || root.hidden) return;
     Object.assign(spot.style, { left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px` });
   };
