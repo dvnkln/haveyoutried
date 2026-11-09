@@ -14,6 +14,9 @@ export interface GameEvents {
   /** batch = wie viele im selben Durchgang freigeschaltet wurden */
   achievement: { id: string; batch: number };
   jobQuit: { gained: number; company: string };
+  bossTask: { text: string };
+  bossDone: { text: string; reward: number };
+  bossFailed: { text: string };
   /** abandoned = beim Laden gefunden (Seite während des Incidents geschlossen) */
   incidentResolved: { id: IncidentId; score: number; results: EffectResult[]; abandoned: boolean };
 }

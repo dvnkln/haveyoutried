@@ -1,3 +1,4 @@
+import { emptyBoss, type BossState } from './boss';
 import { GENERATORS, type GeneratorId } from '../config';
 
 export const SAVE_VERSION = 3;
@@ -57,6 +58,8 @@ export interface GameState {
   incidents: { nextAt: number; lastId: string; active: string; seen: Record<string, number>; best: Record<string, number> };
   // ---
 
+  /** Aufgabe vom Chef (kleines Ziel für die nächsten Minuten) */
+  boss: BossState;
   stats: { startedAt: number; playTimeMs: number; offlineTickets: number };
   settings: { haptics: boolean; sound: boolean; volume: number; tapSound: string; buyAmount: BuyAmount };
   /** Wall-Clock des letzten Ticks, Basis für Offline-Progress */
@@ -81,6 +84,7 @@ export function createInitialState(now: number): GameState {
     events: { nextAt: 0, active: null, lastId: '', seen: {} },
     buffs: [],
     incidents: { nextAt: 0, lastId: '', active: '', seen: {}, best: {} },
+    boss: emptyBoss(),
     stats: { startedAt: now, playTimeMs: 0, offlineTickets: 0 },
     settings: { haptics: true, sound: true, volume: 0.7, tapSound: 'blue', buyAmount: 1 },
     lastTick: now,

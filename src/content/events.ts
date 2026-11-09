@@ -494,6 +494,158 @@ export const EVENTS: GameEventDef[] = [
     ignore: o('rush', 'Keine Antwort. Der Agent hat das als „vielleicht“ verstanden und nur die einfachen geschlossen. Gar nicht schlecht.'),
   },
   {
+    id: 'vpn',
+    title: 'Chef im Hotel, VPN tot',
+    text: 'Der Chef sitzt im Hotel in Elbonien und kommt nicht ins VPN. Das Hotel-WLAN heißt „Free_WiFi_Totally_Safe“. Er hat sich schon verbunden.',
+    options: [
+      { label: 'Am Telefon durchlotsen', outcomes: [o('tip', '40 Minuten Telefon. Am Ende steckte das Kabel nicht. Im Hotel. Er hatte ein LAN-Kabel dabei. Warum auch immer.')] },
+      {
+        label: 'Ins richtige WLAN schicken',
+        outcomes: [
+          o('rush', 'Er findet das echte Hotel-WLAN. VPN läuft. Er schickt ein Foto vom Pool. Alle arbeiten aus Neid schneller.', 0.6),
+          o('lossSmall', 'Es gibt kein echtes Hotel-WLAN. Er nimmt das andere. Passwörter werden zurückgesetzt.', 0.4),
+        ],
+      },
+      { label: '„Bei mir geht’s“ sagen', outcomes: [o('none', 'Stimmt sogar. Er probiert es morgen nochmal. Aus dem Flughafen. Mit dem nächsten verdächtigen WLAN.')] },
+    ],
+    ignore: o('lossSmall', 'Er hat den Hotel-Techniker gefragt. Der hat „was installiert“. Du räumst nach seiner Rückkehr auf.'),
+  },
+  {
+    id: 'keypostit',
+    title: 'Lizenzschlüssel gefunden',
+    text: 'Am Kühlschrank in der Teeküche klebt ein Post-it mit dem Lizenzschlüssel für die teuerste Software im Haus. Und darunter das Admin-Passwort. Zur Sicherheit doppelt unterstrichen.',
+    options: [
+      { label: 'In den Passwort-Safe damit', outcomes: [o('win', 'Sicher verstaut, Post-it geschreddert. Die Firma spart sich eine Nachlizenzierung. Und einen Skandal.')] },
+      { label: 'Ein zweites Post-it: „Bitte nicht“', outcomes: [o('tip', 'Jetzt hängen da zwei Post-its. Eins davon ist von dir. Fortschritt in kleinen Schritten.')] },
+      {
+        label: 'Fürs Intranet fotografieren (Awareness!)',
+        outcomes: [o('fire', 'Das Foto ging viral. Intern. Und extern, weil jemand es weitergeleitet hat. Alles wird geändert.')],
+      },
+    ],
+    ignore: o('lossSmall', 'Der Praktikant hat das Post-it gefunden. Und ausprobiert. Und in seinen Lebenslauf geschrieben.'),
+  },
+  {
+    id: 'chatbotwelcome',
+    title: 'Der neue Begrüßungs-Bot',
+    text: 'Jemand hat im Firmenchat einen Bot installiert, der jede Nachricht mit „Willkommen im Team! 🎉“ beantwortet. Auch die vom Chef. Auch die Kündigung von Herrn B.',
+    options: [
+      { label: 'Abschalten', outcomes: [o('tip', 'Abgeschaltet. Drei Leute vermissen ihn. Der Chat ist sofort produktiver.')] },
+      {
+        label: 'Ihm Witze beibringen',
+        outcomes: [
+          o('rush', 'Er erzählt jetzt bei jeder Nachricht einen DNS-Witz. Die Stimmung steigt. Die Tickets fliegen.', 0.6),
+          o('lossSmall', 'Er erzählt jetzt bei jeder Nachricht einen DNS-Witz. Die Stimmung kippt nach dem zwölften.', 0.4),
+        ],
+      },
+      {
+        label: 'Ihn zum Teamleiter befördern',
+        outcomes: [
+          o('jackpot', 'Er führt besser als der letzte. Niemand merkt den Unterschied, aber die Meetings sind kürzer.', 0.25),
+          o('none', 'Die Personalabteilung lehnt ab. Begründung: „Kein Lebenslauf“. Der Bot schreibt einen.', 0.75),
+        ],
+      },
+    ],
+    ignore: o('none', 'Er begrüßt weiter. Inzwischen auch sich selbst. Eine Endlosschleife der Herzlichkeit.'),
+  },
+  {
+    id: 'hackathon',
+    title: 'Hackathon am Wochenende',
+    text: 'Die Geschäftsführung lädt zum Hackathon. Samstag und Sonntag. Es gibt Pizza und „Wertschätzung“. Thema: „Innovation (freiwillig, aber erwartet)“.',
+    options: [
+      { label: 'Mitmachen und durchziehen', outcomes: [o('overtime', 'Du baust ein Skript, das Tickets aus Mails anlegt. Du tippst wie im Rausch. Gewonnen hat das Marketing mit einer Folie.')] },
+      { label: 'Pizza holen, wieder gehen', outcomes: [o('tip', 'Drei Stücke Salami, ein Stück für den Server unterm Tisch. Niemand hat es bemerkt.')] },
+      { label: 'Höflich absagen', outcomes: [o('none', 'Abgesagt. Du bekommst trotzdem das Teilnahme-T-Shirt. Größe XS. Für alle.')] },
+    ],
+    ignore: o('none', 'Du warst nicht da. Das Siegerprojekt soll ab Montag die IT ersetzen. Es ist eine Excel-Tabelle.'),
+  },
+  {
+    id: 'cosmic',
+    title: 'Ein Bit ist gekippt',
+    text: 'In der Gehaltsabrechnung steht bei Frau M. plötzlich eine sehr große Zahl. Ursache laut Log: ein einzelnes Bit. Vermutlich kosmische Strahlung. Frau M. hat schon einen Porsche bestellt.',
+    options: [
+      { label: 'ECC-Speicher einbauen', outcomes: [o('win', 'Neuer Speicher, Bit repariert, Porsche storniert. Frau M. hasst dich jetzt. Die Buchhaltung liebt dich.')] },
+      { label: 'Sonnenwind als Ursache melden', outcomes: [o('tip', 'Die Geschäftsführung akzeptiert „Sonnenwind“ sofort. Es klingt teuer und unvermeidbar.')] },
+      {
+        label: 'Abwarten, vielleicht kippt es zurück',
+        outcomes: [
+          o('jackpot', 'Es kippt zurück. Und nimmt dabei aus Versehen drei alte Tickets mit. Kosmos, danke.', 0.2),
+          o('loss', 'Es kippt nicht zurück. Die Abrechnung wurde schon ausgezahlt. Der Porsche ist geliefert.', 0.8),
+        ],
+      },
+    ],
+    ignore: o('loss', 'Niemand hat reagiert. Frau M. hat gekündigt. Mit Porsche.'),
+  },
+  {
+    id: 'stackdown',
+    title: 'Stack Overflow ist down',
+    text: 'Die Seite, auf der alle Antworten stehen, ist nicht erreichbar. Die Entwicklung steht. Einer hat angefangen, die Doku zu lesen. Er wirkt verstört.',
+    options: [
+      {
+        label: 'Selbst nachdenken',
+        outcomes: [
+          o('flow', 'Es funktioniert! Ungewohnt, aber es funktioniert. Die ganze Abteilung ist im Flow.', 0.5),
+          o('lossSmall', 'Zwei Stunden selbst nachgedacht. Die Lösung war die erste Antwort auf Stack Overflow. Die Seite ist wieder da.', 0.5),
+        ],
+      },
+      { label: 'Den alten Kollegen fragen', outcomes: [o('tip', 'Er weiß es. Er hat die Antwort 2011 auf Stack Overflow geschrieben. Er ist sehr stolz.')] },
+      { label: 'Kaffeepause, bis es wieder geht', outcomes: [o('none', 'Zwölf Minuten. Die beste Kaffeepause seit Jahren. Niemand hat Schuld.')] },
+    ],
+    ignore: o('none', 'Es ging nach einer Stunde wieder. Die Entwicklung tut so, als wäre nichts gewesen.'),
+  },
+  {
+    id: 'y2k38',
+    title: 'Das Jahr-2038-Problem',
+    text: 'Ein Altsystem speichert Datum als 32-Bit-Zahl. Am 19. Januar 2038 läuft es über und denkt, es ist 1901. Das System steuert die Rentenkasse.',
+    options: [
+      { label: 'Ticket für 2037 anlegen', outcomes: [o('tip', 'Angelegt, Priorität „mittel“. In 2037 wird es jemand finden. Vermutlich dein Nachfolger. Viel Glück, Nachfolger.')] },
+      { label: 'Jetzt sofort fixen', outcomes: [o('overtime', 'Ein heldenhafter Nachmittag. Du tippst wie besessen. Das System lebt bis 2106. Dann ist es nicht mehr dein Problem.')] },
+      { label: 'Die eigene Rente vorher planen', outcomes: [o('none', 'Weise. Dein Rentenbeginn: 2037. Das Problem ist dann offiziell eine Feier zum Abschied.')] },
+    ],
+    ignore: o('none', 'Niemand hat reagiert. Es ist ja noch lange hin. Das sagten sie 1999 auch.'),
+  },
+  {
+    id: 'familymail',
+    title: '„Wir sind eine Familie“',
+    text: 'Der CEO schreibt an alle: „Wir sind eine Familie.“ Zwei Absätze später: „Darum fällt das Weihnachtsgeld aus.“ Der Verteiler „Alle“ glüht.',
+    options: [
+      { label: 'Mit Herz reagieren', outcomes: [o('tip', 'Dein Herz ist das einzige. Der CEO erwähnt dich lobend im nächsten Newsletter. Weihnachtsgeld gibt es trotzdem keins.')] },
+      {
+        label: 'Antworten-an-alle verhindern',
+        outcomes: [o('win', 'Du sperrst „Allen antworten“ für den Verteiler. Damit verhinderst du 412 Antworten und einen Betriebsratsbeschluss. Held.')],
+      },
+      { label: 'Fragen, ob die Familie Gehaltsgespräche führt', outcomes: [o('lossSmall', 'Der CEO lädt dich zu einem „Familiengespräch“ ein. 45 Minuten. Mit Folien.')] },
+    ],
+    ignore: o('fire', 'Niemand hat reagiert. Dann haben alle reagiert. An alle. Der Mailserver ist in Trauer.'),
+  },
+  {
+    id: 'cablepics',
+    title: 'Inventur: Kabelsalat',
+    text: 'Die Wirtschaftsprüfer wollen den Serverraum sehen. Hinter der Tür: ein Kabelknäuel, das einen eigenen Namen verdient hätte. Es heißt intern „Kevin“.',
+    options: [
+      { label: 'Alles beschriften', outcomes: [o('flow', 'Zwei Stunden mit Etikettendrucker. Kevin ist jetzt ordentlich. Du bist im Flow, und der Prüfer hat Tränen in den Augen.')] },
+      { label: 'Ein schönes Foto machen und vorzeigen', outcomes: [o('tip', 'Das Foto ist aus einem Forum für Kabelkunst. Der Prüfer ist zufrieden. Kevin bleibt, wie er ist.')] },
+      { label: 'Tür zu, Licht aus', outcomes: [o('none', '„Da ist nur der Hausmeister drin.“ Der Prüfer nickt. Kevin atmet.')] },
+    ],
+    ignore: o('lossSmall', 'Der Prüfer hat die Tür selbst geöffnet. Er hat ein Kabel gezogen, um „mal zu schauen“. Es war das falsche.'),
+  },
+  {
+    id: 'ceoappletv',
+    title: 'Präsentation in 5 Minuten',
+    text: 'Der Vorstand präsentiert gleich vor Investoren. Der Laptop zeigt nur das Desktop-Hintergrundbild: ein Foto vom Familienhund. Der Beamer will HDMI, der Laptop hat USB-C.',
+    options: [
+      { label: 'Adapter aus der Wunderkiste holen', outcomes: [o('win', 'Die Wunderkiste hat 47 Adapter. Der 46. passt. Die Präsentation läuft. Der Hund bleibt im Hintergrund.')] },
+      {
+        label: 'Präsentation aufs Handy, Handy in die Kamera',
+        outcomes: [
+          o('jackpot', 'Die Investoren finden es „hemdsärmelig und agil“. Sie investieren. Wegen des Hundes, sagen manche.', 0.4),
+          o('lossSmall', 'Das Handy klingelt mitten in Folie 3. Klingelton: „Highway to Hell“.', 0.6),
+        ],
+      },
+      { label: 'Frei sprechen lassen', outcomes: [o('none', 'Der Vorstand spricht frei. 40 Minuten über seinen Hund. Die Investoren lieben es. Niemand weiß, warum.')] },
+    ],
+    ignore: o('lossSmall', 'Er hat es selbst versucht und den Beamer auf Werkseinstellungen gesetzt. Sprache: Finnisch.'),
+  },
+  {
     id: 'reorg',
     title: 'Umstrukturierung',
     text: 'Die Geschäftsführung strukturiert um. Schon wieder. Die IT heißt ab Montag „Digital Excellence Hub“. Sonst ändert sich nichts. Außer den Visitenkarten.',
@@ -580,4 +732,14 @@ export const BUFF_LABELS: Record<string, string> = {
   fire: 'Es brennt',
   fireBig: 'Alles brennt',
   espresso: 'Doppelter Espresso',
+};
+
+/** Was ein Boost oder eine Bremse tut (Antippen des Chips oben) */
+export const BUFF_HELP: Record<string, string> = {
+  rush: 'Rückenwind: Infrastruktur produziert doppelt so viel.',
+  flow: 'Flow: Die ganze Abteilung läuft dreifach.',
+  overtime: 'Überstunden: Du tippst siebenmal so schnell.',
+  fire: 'Es brennt: Infrastruktur nur halb so schnell, bis gelöscht ist.',
+  fireBig: 'Alles brennt: Infrastruktur auf ein Viertel. Einfach weitertippen.',
+  espresso: 'Doppelter Espresso: Taste gedrückt halten, dann tippt es von selbst. Zehnmal pro Sekunde.',
 };

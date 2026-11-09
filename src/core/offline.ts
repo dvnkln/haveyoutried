@@ -13,22 +13,25 @@ export interface OfflineReport {
 }
 
 /** Wie viel Abwesenheit zählt: erste Stunde voll, danach ein Fünftel, nach 8 h nichts mehr */
-export function creditedAwayMs(elapsedMs: number): number {
+export function creditedAwayMs(elapsedMs: number, share: number = CONFIG.offlineRestShare): number {
   const e = Math.min(Math.max(0, elapsedMs), CONFIG.offlineCapMs);
-  return Math.min(e, CONFIG.offlineFullMs) + CONFIG.offlineRestShare * Math.max(0, e - CONFIG.offlineFullMs);
+  return Math.min(e, CONFIG.offlineFullMs) + share * Math.max(0, e - CONFIG.offlineFullMs);
 }
 
+/** Anteil nach der ersten Stunde: systemd-Timer (Cron Stufe 3) verdoppelt ihn */
+export const restShare = (state: GameState) => CONFIG.offlineRestShare * (state.upgrades['cron-3'] ? 2 : 1);
+
 /** Produktionsfaktor nach so langer Zeit ohne Spieler (für die offene, aber verlassene Seite) */
-export function awayRate(idleMs: number): number {
+export function awayRate(idleMs: number, share: number = CONFIG.offlineRestShare): number {
   if (idleMs < CONFIG.offlineFullMs) return 1;
-  return idleMs < CONFIG.offlineCapMs ? CONFIG.offlineRestShare : 0;
+  return idleMs < CONFIG.offlineCapMs ? share : 0;
 }
 
 /** Bericht für eine Abwesenheit, die schon gutgeschrieben ist (z. B. Seite offen, Licht aus) */
-export function awayReport(elapsedMs: number, gained: number): OfflineReport {
+export function awayReport(elapsedMs: number, gained: number, share: number = CONFIG.offlineRestShare): OfflineReport {
   return {
     elapsedMs,
-    creditedMs: creditedAwayMs(elapsedMs),
+    creditedMs: creditedAwayMs(elapsedMs, share),
     gained,
     capped: elapsedMs > CONFIG.offlineCapMs,
     reduced: elapsedMs > CONFIG.offlineFullMs,
@@ -49,13 +52,14 @@ export function applyOfflineProgress(state: GameState, now: number, priorAwayMs 
   }
   // war schon vorher niemand da (Seite offen, Licht aus): die Abwesenheit geht dort weiter, wo sie war
   const prior = Math.max(0, priorAwayMs);
-  const creditedMs = creditedAwayMs(prior + elapsedMs) - creditedAwayMs(prior);
+  const share = restShare(state);
+  const creditedMs = creditedAwayMs(prior + elapsedMs, share) - creditedAwayMs(prior, share);
   const gained = tickAway(state, creditedMs / 1_000, now);
   advanceTimers(state, Math.min(elapsedMs, CONFIG.offlineCapMs));
 
   if (prior + elapsedMs > CONFIG.offlineCapMs) bumpFlag(state, 'offline:capped');
   if (elapsedMs < CONFIG.offlineReportMinMs) return null;
-  return { ...awayReport(elapsedMs, gained), creditedMs, capped: prior + elapsedMs > CONFIG.offlineCapMs, reduced: prior + elapsedMs > CONFIG.offlineFullMs };
+  return { ...awayReport(elapsedMs, gained, share), creditedMs, capped: prior + elapsedMs > CONFIG.offlineCapMs, reduced: prior + elapsedMs > CONFIG.offlineFullMs };
 }
 
 /**
@@ -75,7 +79,7 @@ function advanceTimers(state: GameState, ms: number): void {
  * keine Spielzeit, keine Events. Gibt die gutgeschriebenen Tickets zurück.
  */
 export function afkTick(state: GameState, dtSec: number, now: number, idleMs: number): number {
-  return tickAway(state, dtSec * awayRate(idleMs), now);
+  return tickAway(state, dtSec * awayRate(idleMs, restShare(state)), now);
 }
 
 /** Produktion ohne Spieler: Boosts pausieren (sonst wäre ein ×3 über Stunden ein Exploit), keine Spielzeit, zählt als „nachts erledigt“ */

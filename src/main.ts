@@ -4,7 +4,7 @@ import { awayRule, BOSS_REPORT_MIN_MS, bossReport } from './content/report';
 import { createAfk } from './ui/afk';
 import { startTutorial } from './ui/tutorial';
 import { startLoop } from './core/loop';
-import { applyOfflineProgress, type OfflineReport } from './core/offline';
+import { applyOfflineProgress, restShare, type OfflineReport } from './core/offline';
 import { EXP_REVALUED_FLAG, loadGame, Saver } from './core/save';
 import { createInitialState } from './core/state';
 import { registerServiceWorker } from './pwa/register';
@@ -113,7 +113,7 @@ const showOfflineReport = (r: OfflineReport) => {
       h('ul', { class: 'bm-list' }, mail.items.map((t) => h('li', { text: t }))),
       mail.closer,
       ...(r.reduced
-        ? [h('p', { class: 'hint', text: `Angerechnet: ${formatDuration(r.creditedMs)}. ${awayRule()} Der Rest war laut Personalabteilung Schlaf.` })]
+        ? [h('p', { class: 'hint', text: `Angerechnet: ${formatDuration(r.creditedMs)}. ${awayRule(restShare(state))} Der Rest war laut Personalabteilung Schlaf.` })]
         : []),
       h('p', { class: 'bm-sig', text: mail.signature }),
     ],

@@ -70,6 +70,17 @@ export const UPGRADE_TEXT: Record<string, UpgradeText> = {
   'undertable-3': { name: 'Doku gefunden', desc: 'Ein Post-it auf der Rückseite: „Nicht neu starten. —K.“ Wer ist K.?' },
 };
 
+/** Stufe 3 jeder Infrastruktur: eine Fähigkeit, die das Spielen verändert (zusätzlich zur Wirkung) */
+export const ABILITIES: Record<string, string> = {
+  'intern-3': 'Praktikanten nehmen Rückrufe ab. „Geht immer noch nicht“ hörst du nicht mehr.',
+  'bash-3': 'Terminal-Tickets brauchen nur halb so viele Anschläge. Tab-Vervollständigung!',
+  'cron-3': 'Abwesenheit zählt nach der ersten Stunde 40 % statt 20 %. Die Nachtschicht läuft.',
+  'ansible-3': 'Schlechte Pager-Ausgänge sind nur halb so schlimm. Automatischer Rollback.',
+  'k8s-3': 'Incidents haben 30 % mehr Zeit (außer RAID: Festplatten warten auf niemanden). Selbstheilung, angeblich.',
+  'agent-3': 'Verpasste VIP-Zettel nimmt der Agent an (halbe Belohnung). „Ich verstehe die Dringlichkeit.“',
+  'undertable-3': 'Ein Fehlgriff pro Incident wird verziehen. Steht in der Doku. Auf dem Post-it.',
+};
+
 const pct = (mult: number) => `+${Math.round((mult - 1) * 100)} %`;
 
 /** Kurzbeschreibung der Wirkung für die UI. */

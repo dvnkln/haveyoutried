@@ -18,6 +18,8 @@ import { checkAchievements } from '../core/achievements';
 import { companyOf } from '../content/companies';
 import { ACHIEVEMENTS_CFG } from '../config';
 import { bus } from '../core/bus';
+import { BOSS_DONE, BOSS_FAILED } from '../content/boss';
+import { formatNumber } from './format';
 import { availableUpgrades, isUnlocked } from '../core/economy';
 import type { GameState } from '../core/state';
 import { pick, randInt, weightedPick } from '../util';
@@ -146,6 +148,26 @@ export function startFlavor(ctx: AppContext, app: App): void {
     () => checkAchievements(state, new Date(), performance.now() - lastClickAt < ACHIEVEMENTS_CFG.activeWindowMs),
     ACHIEVEMENTS_CFG.checkMs,
   );
+
+  // Aufgaben vom Chef: neue Aufgabe, geschafft, verpasst
+  bus.on('bossTask', ({ text }) => {
+    app.toast('Aufgabe vom Chef', text);
+    log.write('warn', `chef[1]: ${text}`);
+    sfx.unlockPing();
+  });
+  bus.on('bossDone', ({ reward }) => {
+    const line = pick(BOSS_DONE);
+    app.toast(`Aufgabe erledigt: +${formatNumber(reward)} Tickets`, line);
+    log.write('ok', `chef[1]: Aufgabe erledigt. ${line}`);
+    sfx.milestone();
+    haptic('milestone');
+    app.popCounter();
+  });
+  bus.on('bossFailed', () => {
+    const line = pick(BOSS_FAILED);
+    app.toast('Frist verpasst', line);
+    log.write('info', `chef[1]: ${line}`);
+  });
 
   bus.on('buffEnded', ({ id }) => {
     log.write('info', `helpdesk[1337]: ${BUFF_LABELS[id] ?? id} vorbei. Zurück zum Normalbetrieb.`);

@@ -64,17 +64,6 @@ const BOOK = `<svg viewBox="0 0 52 22">
 </svg>`;
 
 /** Kanban-Board: „Todo“, „Doing“, „Brennt“ – alles in „Brennt“ */
-const KANBAN = `<svg viewBox="0 0 60 44">
-  <rect x="2" y="2" width="56" height="40" rx="4" fill="#fffaf0" ${INK}/>
-  <path d="M20 6 v32 M40 6 v32" stroke="var(--ink-soft)" stroke-width="1.5" stroke-dasharray="2 2"/>
-  <rect x="6" y="9" width="10" height="8" fill="#ffd166" stroke="var(--ink)" stroke-width="1.2"/>
-  <rect x="25" y="9" width="10" height="8" fill="#a0c4ff" stroke="var(--ink)" stroke-width="1.2"/>
-  <rect x="44" y="7" width="10" height="8" fill="#ff9aa2" stroke="var(--ink)" stroke-width="1.2"/>
-  <rect x="45" y="17" width="10" height="8" fill="#ff9aa2" stroke="var(--ink)" stroke-width="1.2" transform="rotate(6 50 21)"/>
-  <rect x="43" y="27" width="10" height="8" fill="#ff9aa2" stroke="var(--ink)" stroke-width="1.2" transform="rotate(-5 48 31)"/>
-  <path d="M47 39 c1 -3 3 -3 2 -6 c3 2 3 4 2 6Z" fill="#ff9b42"/>
-</svg>`;
-
 /** Monitoring-Rundumleuchte: grün, bei Incident rot */
 const BEACON = `<svg viewBox="0 0 30 30">
   <path class="beacon-dome" d="M6 22 v-8 a9 9 0 0 1 18 0 v8Z" ${INK}/>
@@ -306,14 +295,12 @@ export function createProps(ctx: AppContext) {
   const dust = svg(DUST, 'prop dust');
   const kNote = h('span', { class: 'k-note', 'aria-hidden': 'true', text: 'Nicht neu starten. —K.' });
   const book = svg(BOOK, 'prop book');
-  const kanban = svg(KANBAN, 'prop kanban');
   const beacon = svg(BEACON, 'prop beacon');
 
   const owned: UpgradeProp[] = [
     { upgrade: 'coffee', el: mug },
     { upgrade: 'duck', el: duck },
     { upgrade: 'rtfm', el: book },
-    { upgrade: 'kanban', el: kanban },
     { upgrade: 'monitoring', el: beacon },
     { upgrade: 'undertable-1', el: cableTag },
     // eigener Schreibtisch für den Praktikanten: endlich eine Pflanze
@@ -329,6 +316,7 @@ export function createProps(ctx: AppContext) {
   bus.on('upgrade', ({ id }) => {
     const p = owned.find((o) => o.upgrade === id);
     if (p) requestAnimationFrame(() => juice(p.el, POP, 420, true));
+    if (id === 'kanban') requestAnimationFrame(() => juice(incidentSign, POP, 420, true));
   });
 
   let tidyUntil = 0;
@@ -348,6 +336,8 @@ export function createProps(ctx: AppContext) {
     } else setText(signValue, String(Math.floor((now - lastIncident) / 60_000)));
 
     for (const p of owned) setFlag(p.el, 'owned', !!s.upgrades[p.upgrade]);
+    // Kanban-Board: kein eigenes Brett mehr, die Zettel kleben oben am Whiteboard (oben an der Wand ist wenig Platz)
+    setFlag(incidentSign, 'has-kanban', !!s.upgrades.kanban);
     setFlag(mouse, 'has-pad', !!s.upgrades.mousepad);
     drawMug();
     // Staubmaus wohnt unterm Tisch, bis der Staubsauger kommt
@@ -372,5 +362,5 @@ export function createProps(ctx: AppContext) {
     setFlag(cables, 'tidy', now < tidyUntil);
   };
 
-  return { incidentSign, calendar, notes, plant, cables, mug, duck, mouse, mate, dust, kNote, book, kanban, beacon, render };
+  return { incidentSign, calendar, notes, plant, cables, mug, duck, mouse, mate, dust, kNote, book, beacon, render };
 }

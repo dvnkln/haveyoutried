@@ -357,7 +357,8 @@ test('Karriere: kündigen, neue Firma, Achievement-Toast', async ({ page, contex
 
   await expect(page.locator('.prompt-user')).not.toHaveText('root@mueller-spedition');
   await expect(page.locator('.counter-value')).toHaveText('0');
-  await expect(page.locator('.toasts')).toContainText('Neuer Job, alte Probleme', { timeout: 5_000 });
+  // Meldungen kommen nacheinander: vor dieser stehen evtl. noch andere Achievements an
+  await expect(page.locator('.toasts')).toContainText('Neuer Job, alte Probleme', { timeout: 20_000 });
   await shot(page, 'career-2');
   expect(await page.locator('.ach.done').count()).toBeGreaterThanOrEqual(2);
   const width = await page.evaluate(() => document.documentElement.scrollWidth);
@@ -393,7 +394,7 @@ test('Tastatur: jede Taste zählt, auch Sondertasten, physische Tasten und die M
   // Tippen schreibt eine echte Antwort ins Arbeitsfenster (Mail, Ticket oder Terminal)
   for (const k of ['W', 'E']) await page.locator(`.key[data-key="${k}"]`).tap();
   await expect(page.locator('.typed')).toHaveText(/^.{4,}$/);
-  await expect(page.locator('.work')).toHaveAttribute('data-kind', /mail|ticket|term|chat|call|rdp|web|search/);
+  await expect(page.locator('.work')).toHaveAttribute('data-kind', /mail|ticket|term|chat|call|rdp|web|search|ai/);
 
   // physische Tastatur (Desktop): Buchstaben und unbekannte Zeichen zählen, Auto-Repeat nicht
   await page.locator('body').press('x');

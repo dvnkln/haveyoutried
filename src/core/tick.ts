@@ -2,6 +2,7 @@ import { productionPerSec, rates } from './economy';
 import { updateEvents } from './events';
 import { incidentRunning, updateIncidents } from './incidents';
 import { addTickets, type GameState } from './state';
+import { updateBoss } from './boss';
 
 export { addTickets };
 
@@ -17,6 +18,7 @@ export function tick(state: GameState, dtSec: number, now: number, online = true
     state.stats.playTimeMs += dtSec * 1_000;
     updateEvents(state, dtSec * 1_000, () => rates(state), new Date(), incidentRunning() !== null);
     updateIncidents(state);
+    updateBoss(state, () => rates(state));
   }
   state.lastTick = now;
   return gained;

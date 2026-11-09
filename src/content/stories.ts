@@ -54,6 +54,24 @@ export const STORIES: Story[] = [
       ep('(◔_◔)', 'Herr K. (in Rente)', q('allgemein', 'Ich bin jetzt in Rente und langweile mich. Läuft der Großrechner noch?', 'Rentner mit Langeweile', 'Er läuft. Er vermisst Sie, glaube ich. Ich auch ein bisschen. Kommen Sie zur Weihnachtsfeier?')),
     ],
   },
+  {
+    id: 'kaffeemaschine',
+    episodes: [
+      ep('(ˆڡˆ)', 'Kantine', f('sicherheit', 'Die neue Kaffeemaschine will ins WLAN. Sie sagt, sonst gibt es keinen Kaffee.', 'Kaffeemaschine mit Cloud-Zwang', 'Sie ist jetzt im Gäste-WLAN, ohne Zugriff auf irgendwas. Sie hat beleidigt einen Espresso gemacht. Er war gut.', ['Kaffeemaschine (IoT)'])),
+      ep('(ʘ‿ʘ)', 'Datenschutz', q('sicherheit', 'Die Kaffeemaschine schickt jeden Morgen eine Mail: „Ihr Koffeinkonsum“. An alle.', 'Telemetrie mit Verteiler', 'Der Verteiler ist weg. Sie schickt die Statistik jetzt nur noch mir. Ich lese sie nicht. Sie weiß das.')),
+      ep('(ಠ_ಠ)', 'Buchhaltung', q('allgemein', 'Die Kaffeemaschine hat ein Abo abgeschlossen. Für Bohnen. Für 40.000 €.', 'Kaffeemaschine mit Kreditkarte', 'Abo gekündigt, Kreditkarte entfernt. Die Bohnen kommen trotzdem. Wir haben jetzt Kaffee bis 2031.')),
+      ep('(╯°□°)╯︵ ┻━┻', 'Geschäftsführung', q('allgemein', 'Die Kaffeemaschine hat sich für den Betriebsrat aufstellen lassen. Hat sie Chancen?', 'Kaffeemaschine mit Ambitionen', 'Gute Chancen. Sie ist beliebter als alle anderen Kandidaten. Ich würde vorsichtshalber nett zu ihr sein.')),
+    ],
+  },
+  {
+    id: 'umzug',
+    episodes: [
+      ep('(-_-)', 'Immobilienmanagement', q('server', 'Wir ziehen um! Nächste Woche. Der Serverraum kommt in die Besenkammer, die ist frei.', 'Umzugsplanung ohne IT', 'Die Besenkammer hat keine Lüftung und keinen Strom. Ich schreibe Ihnen auf, was ein Serverraum braucht. Es ist eine lange Liste.')),
+      ep('(-_-)', 'Immobilienmanagement', q('netz', 'Die Umzugsfirma fragt, ob sie die Kabel einfach abschneiden darf. Geht schneller.', 'Umzugsfirma mit Schere', 'NEIN. Bitte nichts abschneiden. Ich komme mit Etiketten. Jedes Kabel bekommt ein Namensschild.')),
+      ep('(°ロ°)', 'Vertrieb', f('netz', 'Im neuen Büro hab ich kein Netz. Das Kabel hängt aus der Decke. Soll ich ziehen?', 'Netzwerkdose noch nicht angeschlossen', 'Bitte nicht ziehen. Die Dose ist jetzt angeschlossen. Das Kabel aus der Decke war übrigens der Feuermelder.', ['Switch Keller'])),
+      ep('(-_-)', 'Immobilienmanagement', q('allgemein', 'Der Umzug war ein Erfolg! Nur der Server unterm Tisch fehlt. Wo ist der?', 'Server unterm Tisch beim Umzug vergessen', 'Er steht noch im alten Büro. Unterm Tisch. Er läuft. Ich hole ihn, bevor der Nachmieter ihn aussteckt.')),
+    ],
+  },
 ];
 
 const stepKey = (s: GameState, id: string) => `story:${s.prestige.company}:${id}`;

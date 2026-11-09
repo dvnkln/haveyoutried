@@ -1,5 +1,5 @@
 import { UPGRADES } from '../../config';
-import { effectLabel, UPGRADE_TEXT } from '../../content/upgrades';
+import { ABILITIES, effectLabel, UPGRADE_TEXT } from '../../content/upgrades';
 import { buyUpgrade } from '../../core/actions';
 import { availableUpgrades } from '../../core/economy';
 import type { AppContext, Tab } from '../app';
@@ -34,6 +34,7 @@ export function upgradesTab(): Tab {
             h('div', { class: 'gen-name', text: t.name }),
             h('div', { class: 'gen-desc', text: t.desc }),
             h('div', { class: 'upgrade-effect', text: effectLabel(u.effect) }),
+            ...(ABILITIES[u.id] ? [h('div', { class: 'upgrade-ability', text: `★ ${ABILITIES[u.id]}` })] : []),
           ]),
           btn,
         ]);
@@ -56,7 +57,14 @@ export function upgradesTab(): Tab {
     doneTitle.hidden = done.length === 0;
     setText(doneTitle, `# erledigt (${done.length})`);
     doneList.replaceChildren(
-      ...done.map((u) => h('li', {}, [h('span', { text: '✓ ' }), text(u.id).name, h('span', { class: 'dim', text: ` · ${effectLabel(u.effect)}` })])),
+      ...done.map((u) =>
+        h('li', {}, [
+          h('span', { text: '✓ ' }),
+          text(u.id).name,
+          h('span', { class: 'dim', text: ` · ${effectLabel(u.effect)}` }),
+          ...(ABILITIES[u.id] ? [h('span', { class: 'upgrade-ability', text: `★ ${ABILITIES[u.id]}` })] : []),
+        ]),
+      ),
     );
 
     const locked = UPGRADES.length - avail.length - done.length;

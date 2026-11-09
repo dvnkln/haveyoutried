@@ -356,6 +356,53 @@ export const CALLERS: Caller[] = [
   },
 ];
 
+// Mehr Abwechslung: weitere Abteilungen und Anliegen (Ursache und Antwort passen jeweils zusammen)
+CALLERS.push(
+  {
+    face: '(｀∀´)',
+    who: 'Pressestelle',
+    lines: [
+      q('wunsch', 'Können Sie die Website heute Abend bitte ausschalten? Wir haben eine schlechte Nachricht.', 'Website als Lichtschalter', 'Ausschalten nicht, aber die Meldung kann ganz unten stehen. Unter dem Impressum liest niemand.'),
+      q('sicherheit', 'Ein Journalist fragt, ob wir gehackt wurden. Wurden wir?', 'Unklare Lage', 'Nein. Sagen Sie „Wir prüfen das“. Das stimmt immer und beruhigt alle außer mir.'),
+      f('office', 'Die Pressemitteilung ist als „Entwurf_v3_FINAL_wirklich.docx“ rausgegangen. Mit allen Kommentaren.', 'Dateiname und Kommentare im Versand', 'Neue Version ohne Kommentare ist raus. „Das glaubt uns eh keiner“ war leider schon in der Zeitung.', []),
+    ],
+  },
+  {
+    face: '(◕‿◕)',
+    who: 'Innovationsmanagerin',
+    lines: [
+      q('wunsch', 'Wir machen ab sofort alles mit KI. Was haben wir eigentlich vorher gemacht?', 'Innovation ohne Bestandsaufnahme', 'Vorher haben wir Dinge funktionieren lassen. Ich schreibe Ihnen auf, welche. Das ist der Plan B.'),
+      q('allgemein', 'Ich brauche ein Metaverse. Bis zur Messe. Nur ein kleines.', 'Hype aus dem Vorjahr', 'Ich kann Ihnen einen Raum im Videocall mit Palmen-Hintergrund geben. Das ist das kleinste Metaverse.'),
+      q('wunsch', 'Können wir ein Hackathon für die Kaffeemaschine machen? Die braucht Disruption.', 'Disruption für Haushaltsgeräte', 'Die Kaffeemaschine ist das einzige System, das alle zufrieden macht. Ich bitte darum, sie nicht zu disruptieren.'),
+    ],
+  },
+  {
+    face: '(ー_ー)!!',
+    who: 'Hausmeister',
+    lines: [
+      q('hardware', 'Ich habe einen Rechner gefunden, der heiß ist. Unterm Tisch. Soll ich ihn kühlen? Ich hab einen Eimer.', 'Server unterm Tisch, überhitzt', 'Bitte KEIN Eimer! Ich komme mit einem Ventilator. Und einem Schild. Mal wieder.'),
+      f('netz', 'Ich habe im Flur die Netzwerkdosen neu gestrichen. Jetzt geht da nichts mehr.', 'Farbe in den Netzwerkdosen', 'Die Dosen waren mit Farbe zu. Neue sind drin. Die Wand sieht übrigens schön aus. Die Dosen nicht mehr.', ['Switch Keller']),
+      q('server', 'Im Serverraum blinkt es überall. Ist das Weihnachtsbeleuchtung?', 'Status-LEDs', 'Das blinkt immer, das heißt, es arbeitet. Wenn es nicht mehr blinkt, rufen Sie mich bitte sofort an.'),
+    ],
+  },
+  {
+    face: '(ﾉ´ヮ`)ﾉ',
+    who: 'Gründer (aus Lissabon)',
+    lines: [
+      q('wunsch', 'Ich bin gerade am Strand. Können Sie mal schnell die App launchen?', 'Launch per Strandanruf', 'Schnell geht es nicht, aber gründlich. Montag. Genießen Sie das Meer. Ich genieße das Testen.'),
+      q('allgemein', 'Mein MacBook ist die Produktion. Ich hab es im Café vergessen. Ist das schlimm?', 'Produktion auf dem Laptop', 'Ja. Rufen Sie das Café an. Und dann bauen wir einen richtigen Server. Mit Tür.'),
+    ],
+  },
+  {
+    face: '(◎_◎;)',
+    who: 'Qualitätsmanagement',
+    lines: [
+      q('allgemein', 'Haben Sie für jedes Ticket ein Formular QM-17 ausgefüllt? Auch für das hier?', 'Prozess über Ergebnis', 'Für dieses Ticket gibt es jetzt ein QM-17. Für das QM-17 auch. Wir sind zertifiziert. Glaube ich.'),
+      f('office', 'Die Vorlage für das Prüfprotokoll hat 47 Seiten. Davon 40 leer. Ist das normal?', 'Vorlage mit Seitenumbrüchen', 'Die 40 leeren Seiten waren Seitenumbrüche aus 2009. Jetzt sind es 7 Seiten. Die Zertifizierung bleibt gültig.', []),
+    ],
+  },
+);
+
 /** Rückruf-Zeilen (gleiche Person nochmal) */
 export const CALLBACK_LINES = [
   'Geht immer noch nicht.',
@@ -370,6 +417,12 @@ export const CALLBACK_LINES = [
   'Ist das jetzt gelöst oder nur geschlossen? Ich sehe da einen Unterschied.',
   'Nur zur Info: Ich bin ab morgen im Urlaub. Also bitte bis heute.',
   'Ich hab Ihr Ticket ausgedruckt. Wo soll ich es hinbringen?',
+  'Ich ruf nur an, weil Sie nicht zurückgerufen haben. Vor drei Minuten.',
+  'Kurze Zwischenfrage: Gibt es schon eine Zwischenlösung für die Zwischenfrage?',
+  'Mein Kollege meint, das ist ein Virus. Er hat Medizin studiert. Ein Semester.',
+  'Ich hab inzwischen eine Excel-Tabelle mit allen meinen Tickets. Wollen Sie die?',
+  'Ich wollte nur sagen: Ich bin nicht böse. Nur enttäuscht.',
+  'Es geht jetzt wieder, aber ich trau dem nicht. Bleiben Sie bitte dran.',
 ];
 
 const sit = (face: string, who: string, line: Line, reply?: LogTemplate): Call => ({ face, who, ...line, reply });

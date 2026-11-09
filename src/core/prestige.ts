@@ -3,7 +3,8 @@ import { COMPANIES } from '../content/companies';
 import { pick } from '../util';
 import { bus } from './bus';
 import { scheduleNext } from './events';
-import { incidentRunning } from './incidents';
+import { incidentRunning, scheduleNextIncident } from './incidents';
+import { resetBoss } from './boss';
 import { bumpFlag, type GameState } from './state';
 
 /** Gesamte Berufserfahrung, die Tickets aller Jobs zusammen wert sind. */
@@ -68,6 +69,9 @@ export function quitJob(state: GameState, rnd: () => number = Math.random): numb
   state.buffs = [];
   state.events.active = null;
   scheduleNext(state); // sonst piept es am ersten Arbeitstag sofort
+  // neue Firma, neue Eigenheit: Incidents neu planen (z. B. gar keine beim Esoterikversand)
+  scheduleNextIncident(state);
+  resetBoss(state);
   state.incidents.active = '';
 
   bumpFlag(state, `company:${state.prestige.company}`);

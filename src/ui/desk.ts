@@ -6,9 +6,9 @@ import { VIP_TICKETS } from '../content/work';
 import { advanceStory, dueStoryCall } from '../content/stories';
 import { ALTF4_LINES, PANIC_LINES } from '../content/props';
 import { espressoActive, pressKey, solveTicket, startEspresso } from '../core/actions';
-import { rates } from '../core/economy';
-import { claimUrgent } from '../core/events';
-import { bumpFlag, type GameState } from '../core/state';
+import { rates, ticketReward } from '../core/economy';
+import { applyEffect, claimUrgent } from '../core/events';
+import { addTickets, bumpFlag, type GameState } from '../core/state';
 import { fill, pick, randInt } from '../util';
 import type { AppContext } from './app';
 import { h, juice, NUDGE, quip, setFlag, setText } from './dom';
@@ -18,6 +18,8 @@ import { describeEffect } from './pager';
 import { nextTicketNo, ticketId } from './history';
 import { createWork } from './work';
 import { gameBlocked } from './blocked';
+import { attentionBusy } from './toast';
+import { quirkMods, scaledDelay } from '../core/quirks';
 
 /** Bürotelefon in drei Modellen: Grundmodell, mit AB (has-am), VoIP mit Headset (has-headset) */
 const PHONE_SVG = `<svg viewBox="0 0 64 58">
@@ -193,17 +195,26 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
   const chooseCall = (story = true): Call => {
     // Rückruf: gleiche Person, neues Leid
     if (call && Math.random() < CONFIG.callerCallbackChance) {
-      // gleiches Anliegen wie vorher, nur genervter
-      return {
-        ...call,
-        who: `${call.who.replace(/ \(Rückruf\)$/, '')} (Rückruf)`,
-        text: pick(CALLBACK_LINES),
-        about: call.about ?? call.text,
-        reply: undefined,
-      };
+      // Übernahmeangebot (Praktikant Stufe 3): der Praktikant nimmt den Rückruf ab, du hörst ihn gar nicht erst
+      if (ctx.state.upgrades['intern-3']) {
+        const bonus = ticketReward(ctx.state);
+        addTickets(ctx.state, bonus);
+        ctx.log.write('ok', `praktikant[${randInt(100, 999)}]: Rückruf von ${call.who.replace(/ \(Rückruf\)$/, '')} übernommen. „Haben Sie es schon aus- und wieder eingeschaltet?“ (+${formatNumber(bonus)})`);
+      } else {
+        // gleiches Anliegen wie vorher, nur genervter
+        return {
+          ...call,
+          who: `${call.who.replace(/ \(Rückruf\)$/, '')} (Rückruf)`,
+          text: pick(CALLBACK_LINES),
+          about: call.about ?? call.text,
+          reply: undefined,
+        };
+      }
     }
     // Geschichte geht weiter: selten, und frühestens eine Weile nach der letzten Folge
-    const due = story && Math.random() < CONFIG.callerStoryChance ? dueStoryCall(ctx.state, Date.now()) : null;
+    // der dritte Anruf überhaupt beginnt eine Geschichte (früh etwas Erzählenswertes), danach nur ab und zu
+    const thirdCall = (ctx.state.flags.callers ?? 0) === 2 && !Object.keys(ctx.state.flags).some((k) => k.startsWith('story:'));
+    const due = story && (thirdCall || Math.random() < CONFIG.callerStoryChance) ? dueStoryCall(ctx.state, Date.now()) : null;
     if (due) {
       advanceStory(ctx.state, due.id, Date.now());
       return due.call;
@@ -242,11 +253,18 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
 
   // --- „!! DRINGEND !!“-Tickets: Post-it klebt kurz auf dem Monitor ---
   let urgentEl: HTMLButtonElement | null = null;
-  const scheduleUrgent = (delay = randInt(CONFIG.urgentMinMs, CONFIG.urgentMaxMs)) => {
+  // Eigenheit der Firma: mehr oder weniger VIP-Zettel (0 = keine; dann nur ab und zu nachschauen)
+  const scheduleUrgent = (delay = Math.min(scaledDelay(randInt(CONFIG.urgentMinMs, CONFIG.urgentMaxMs), quirkMods(ctx.state).urgent), 600_000)) => {
     setTimeout(spawnUrgent, delay);
   };
 
+  /** wer noch nie einen VIP-Zettel hatte, bekommt den ersten früh (nach 45–75 s) */
+  const firstUrgentDelay = () => (ctx.state.flags.urgent ? undefined : randInt(45_000, 75_000));
   const spawnUrgent = () => {
+    // Firma ohne VIP-Zettel: nur später wieder nachschauen (nach dem nächsten Jobwechsel kann es anders sein)
+    if (quirkMods(ctx.state).urgent === 0) return scheduleUrgent();
+    // nicht zusammen mit einer Meldung, der Kaffeetasse oder einem Hinweis: kurz danach nochmal versuchen
+    if (attentionBusy()) return scheduleUrgent(5_000);
     const visible =
       !gameBlocked({ hidden: true });
     if (!visible || urgentEl) return scheduleUrgent(10_000);
@@ -295,11 +313,27 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
     setTimeout(() => {
       if (!claimed) {
         el.remove();
-        ctx.log.write('info', 'helpdesk[1337]: VIP-Ticket unbeantwortet. An den Chef eskaliert. Der hat es gelöscht.');
+        // Halluzinationsfilter (KI-Agent Stufe 3): der Agent nimmt verpasste VIP-Zettel an, mit halber Belohnung
+        if (ctx.state.upgrades['agent-3']) {
+          // nur Tickets (halb so viele), keine Boosts, und es zählt nicht als selbst erwischt (Aufgaben, Achievements)
+          const r = rates(ctx.state);
+          const res = applyEffect(ctx.state, 'win', { pps: r.pps / 2, click: r.click / 2 });
+          ctx.log.write('ok', `agent[${randInt(100, 999)}]: VIP-Ticket übernommen. „Ich verstehe die Dringlichkeit.“ (${describeEffect(res)})`);
+        } else ctx.log.write('info', 'helpdesk[1337]: VIP-Ticket unbeantwortet. An den Chef eskaliert. Der hat es gelöscht.');
       }
       urgentEl = null;
       scheduleUrgent();
     }, CONFIG.urgentVisibleMs);
+  };
+
+  /** Power-up eingesammelt: groß und kurz in der Mitte des Monitors, was es ist und was es tut */
+  const powerupBanner = (title: string, text: string) => {
+    const s = fx.rel(screen());
+    const el = h('div', { class: 'powerup-banner', role: 'status' }, [h('b', { text: title }), h('span', { text })]);
+    el.style.left = `${s.x + s.w / 2}px`;
+    el.style.top = `${s.y + s.h * 0.42}px`;
+    root().append(el);
+    setTimeout(() => el.remove(), 2_600);
   };
 
   // --- Fliegende Kaffeetasse: erwischt = Doppelter Espresso (Taste halten tippt von selbst) ---
@@ -310,7 +344,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
       !gameBlocked({ hidden: true });
     // nur für Leute, die gerade tippen (sonst fliegt sie ungesehen vorbei), und nicht doppelt
     const active = performance.now() - lastHit < 10_000;
-    if (!ctx.state.upgrades.coffee || !calm || !active || espressoActive(ctx.state)) {
+    if (!ctx.state.upgrades.coffee || !calm || !active || espressoActive(ctx.state) || attentionBusy()) {
       setTimeout(spawnCup, 20_000);
       return;
     }
@@ -329,6 +363,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
       startEspresso(ctx.state);
       const p = fx.rel(cup);
       fx.floater(p.x + p.w / 2, p.y, 'Espresso!', true);
+      powerupBanner('☕︎ Doppelter Espresso', '2 Minuten: Taste gedrückt halten, es tippt von selbst.');
       ctx.log.write('ok', pick(ESPRESSO_LINES));
       ctx.sfx.unlock();
       ctx.sfx.milestone();
@@ -404,7 +439,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
     started = true;
     callerEl.classList.remove('quiet');
     showCall(chooseCall());
-    scheduleUrgent();
+    scheduleUrgent(firstUrgentDelay());
     scheduleCup();
   };
 
@@ -537,7 +572,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
       if (ctx.state.clicks >= CONFIG.onboardingClicks) {
         started = true;
         showCall(chooseCall(false), true);
-        scheduleUrgent();
+        scheduleUrgent(firstUrgentDelay());
         scheduleCup();
       } else {
         callerEl.classList.add('quiet');

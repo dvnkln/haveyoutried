@@ -796,6 +796,8 @@ export function createWork(
     typeMore(work: number) {
       // nicht auf den Stempel warten: nächster Anschlag beginnt gleich das nächste Ticket
       if (sentTimer) newTask();
+      // ShellCheck (Bash Stufe 3): Tab-Vervollständigung, Terminal-Tickets brauchen halb so viele Anschläge
+      if (task.kind === 'term' && ctx.state.upgrades['bash-3']) work *= 2;
       progress += work;
       presses++;
       const need = ticketWork(ctx.state);

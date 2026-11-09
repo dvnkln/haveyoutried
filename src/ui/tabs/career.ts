@@ -1,6 +1,7 @@
 import { PRESTIGE } from '../../config';
 import { ACHIEVEMENTS } from '../../content/achievements';
 import { companyOf, FAREWELLS } from '../../content/companies';
+import { describeQuirk } from '../../core/quirks';
 import { achievementCount, achievementMultiplier } from '../../core/achievements';
 import { incidentRunning } from '../../core/incidents';
 import { canQuit, experienceBonus, prestigeGain, prestigeMultiplier, quitJob, ticketsForNextPoint } from '../../core/prestige';
@@ -25,6 +26,7 @@ export function careerTab(): Tab {
   let filter: AchFilter = 'open';
 
   const company = h('dd');
+  const quirkEl = h('dd');
   const jobs = h('dd');
   const exp = h('dd');
   const gain = h('dd');
@@ -76,9 +78,22 @@ export function careerTab(): Tab {
             ctx.sfx.milestone();
             ctx.haptic('milestone');
             const c = companyOf(ctx.state.prestige.company);
+            if (c.quirk) ctx.log.write('warn', `hr[42]: Neue Firma, neue Sitten: „${c.quirk.title}“ (${describeQuirk(c.quirk.mods)}).`);
             showModal({
               title: `Erster Arbeitstag: ${c.name}`,
-              body: [pick(FAREWELLS), c.welcome],
+              body: [
+                pick(FAREWELLS),
+                c.welcome,
+                ...(c.quirk
+                  ? [
+                      h('p', { class: 'quirk-line' }, [
+                        h('strong', { text: `Hier üblich: ${c.quirk.title}. ` }),
+                        c.quirk.flavor,
+                        h('span', { class: 'quirk-mods', text: describeQuirk(c.quirk.mods) }),
+                      ]),
+                    ]
+                  : []),
+              ],
               actions: [{ label: 'Na dann.', primary: true }],
             });
           },
@@ -145,6 +160,8 @@ export function careerTab(): Tab {
         h('dl', { class: 'stats' }, [
           h('dt', { text: 'Arbeitgeber' }),
           company,
+          h('dt', { text: 'Hier üblich' }),
+          quirkEl,
           h('dt', { text: 'Jobs bisher' }),
           jobs,
           h('dt', { text: 'Berufserfahrung' }),
@@ -167,7 +184,9 @@ export function careerTab(): Tab {
     render() {
       const s = ctx.state;
       const g = prestigeGain(s);
-      setText(company, companyOf(s.prestige.company).name);
+      const c = companyOf(s.prestige.company);
+      setText(company, c.name);
+      setText(quirkEl, c.quirk ? `${c.quirk.title}: ${describeQuirk(c.quirk.mods)}` : 'nichts Besonderes (zum Glück)');
       setText(jobs, String(s.prestige.jobs + 1));
       setText(exp, `${s.prestige.experience} (+${pct(prestigeMultiplier(s) - 1)})`);
       setText(gain, `+${g}`);

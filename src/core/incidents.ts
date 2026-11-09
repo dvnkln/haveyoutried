@@ -1,6 +1,7 @@
 import { INCIDENT_IDS, INCIDENTS, type IncidentId } from '../config';
 import { pick } from '../util';
 import { bus } from './bus';
+import { quirkMods, scaledDelay } from './quirks';
 import { applyEffect, type EffectResult } from './events';
 import type { GameState } from './state';
 
@@ -18,15 +19,20 @@ export const isIncidentId = (id: string): id is IncidentId => (INCIDENT_IDS as r
 /** Gemeinsame Wertung der Minispiele: Fortschritt, abgezogen für Fehlgriffe (mit Untergrenze). */
 export function progressScore(done: number, total: number, wrong: number): number {
   const { mistakePenalty, floor } = INCIDENTS.scoring;
-  return total > 0 ? (done / total) * Math.max(floor, 1 - wrong * mistakePenalty) : 0;
+  return total > 0 ? (done / total) * Math.max(floor, 1 - countedMistakes(wrong) * mistakePenalty) : 0;
 }
+
+/** Doku gefunden (Server unterm Tisch Stufe 3): so viele Fehlgriffe pro Incident werden verziehen */
+let forgiven = 0;
+export const setForgivenMistakes = (n: number) => (forgiven = Math.max(0, n));
+export const countedMistakes = (wrong: number) => Math.max(0, wrong - forgiven);
 
 /** Gilt dieser Score als gelöst? (eine Quelle für Karte, Log und Belohnung) */
 export const isSolved = (score: number): boolean => score >= INCIDENTS.goodMin;
 
-function scheduleNext(state: GameState): void {
-  state.incidents.nextAt =
-    state.stats.playTimeMs + INCIDENTS.minMs + Math.random() * (INCIDENTS.maxMs - INCIDENTS.minMs);
+/** Nächsten Incident planen; Eigenheit der Firma: öfter, seltener oder nie */
+export function scheduleNextIncident(state: GameState): void {
+  state.incidents.nextAt = state.stats.playTimeMs + scaledDelay(INCIDENTS.minMs + Math.random() * (INCIDENTS.maxMs - INCIDENTS.minMs), quirkMods(state).incidents);
 }
 
 /** Pro Online-Tick: Incident planen und auslösen. */
@@ -52,7 +58,7 @@ export function startIncident(state: GameState, id: IncidentId): boolean {
   // sofort festhalten und neu planen: Reload startet nicht direkt den nächsten
   state.incidents.active = id;
   state.incidents.lastId = id;
-  scheduleNext(state);
+  scheduleNextIncident(state);
   bus.emit('incidentStart', { id });
   return true;
 }

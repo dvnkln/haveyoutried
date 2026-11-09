@@ -1,6 +1,7 @@
 import type { Saver } from '../core/save';
 import type { GameState } from '../core/state';
 import { bus } from '../core/bus';
+import { bossProgress } from '../core/boss';
 import { productionPerSec, rates } from '../core/economy';
 import { addTickets } from '../core/state';
 import type { Sfx } from './audio';
@@ -14,7 +15,7 @@ import type { TicketHistory } from './history';
 import { createPager } from './pager';
 import { createProps } from './props';
 import { createToaster } from './toast';
-import { BUFF_LABELS } from '../content/events';
+import { BUFF_HELP, BUFF_LABELS } from '../content/events';
 import { companyOf } from '../content/companies';
 import { TRASH_LINES } from '../content/props';
 import { pick } from '../util';
@@ -82,16 +83,42 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
   const tickets = h('span', { class: 'counter-value', text: '0' });
   const rate = h('span', { class: 'rate', text: '+0.0/s' });
   const buffsEl = h('span', { class: 'buffs', 'aria-live': 'polite' });
+  // Aufgabe vom Chef: Fortschritt als kleiner Zettel neben der Rate, Antippen zeigt die ganze Aufgabe
+  const bossChip = h('button', { class: 'boss-chip', type: 'button', hidden: '' });
+  bossChip.addEventListener('click', () => {
+    const b = ctx.state.boss;
+    if (!b.kind) return;
+    const left = Math.max(0, Math.ceil((b.until - ctx.state.stats.playTimeMs) / 1_000));
+    quip(bossChip, `Chef: ${b.text} (noch ${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')} Min.)`);
+  });
+  // Boost-Chips antippen: was tut das eigentlich?
+  buffsEl.addEventListener('click', (e) => {
+    const chip = (e.target as Element).closest('.buff');
+    const i = chip ? buffChips.indexOf(chip as HTMLElement) : -1;
+    const b = ctx.state.buffs[i];
+    if (!chip || !b) return;
+    quip(chip, `${BUFF_HELP[b.id] ?? BUFF_LABELS[b.id] ?? b.id} Noch ${Math.ceil(b.remainingMs / 1_000)} s.`);
+  });
   let buffSig = '';
   let buffChips: HTMLElement[] = [];
   /** Startdauer je Chip (für den Füllstand) */
   let buffTotal: number[] = [];
+  /** große Zahlen passen nicht immer: erst „Tickets“ weglassen, dann die Schrift verkleinern, nie abschneiden */
+  const fitCounter = () => {
+    const box = tickets.parentElement;
+    if (!box) return;
+    box.style.fontSize = '';
+    box.classList.remove('no-unit');
+    const over = () => box.scrollWidth > box.clientWidth + 1;
+    if (over()) box.classList.add('no-unit');
+    for (let size = parseFloat(getComputedStyle(box).fontSize) - 1; size >= 14 && over(); size--) box.style.fontSize = `${size}px`;
+  };
+  window.addEventListener('resize', fitCounter);
   const header = h('header', { class: 'wall' }, [
     h('div', { class: 'sign counter-sign' }, [
       h('div', { class: 'counter' }, [tickets, h('span', { class: 'counter-unit', text: ' Tickets' })]),
-      h('div', { class: 'rate-row' }, [rate, buffsEl]),
+      h('div', { class: 'rate-row' }, [rate, bossChip, buffsEl]),
     ]),
-    props.kanban,
     props.calendar,
     props.incidentSign,
   ]);
@@ -298,7 +325,13 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
   return {
     render() {
       const s = ctx.state;
-      setText(tickets, formatNumber(s.tickets));
+      const shown = formatNumber(s.tickets);
+      if (tickets.textContent !== shown) {
+        // nur bei anderer Länge neu messen (sonst jeden Frame ein Reflow)
+        const relayout = shown.length !== (tickets.textContent ?? '').length;
+        setText(tickets, shown);
+        if (relayout) fitCounter();
+      }
       const host = companyOf(s.prestige.company).host;
       setText(promptUser, `root@${host}`);
       setText(rate, `+${formatRate(productionPerSec(s))}/s`);
@@ -333,9 +366,23 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
         buffsEl.dataset.more = buffs.length > 1 ? `+${buffs.length - 1}` : '';
         setFlag(screen, 'brake', buffs.some((b) => b.mult < 1));
       }
+      // Wirkung am Ort zeigen: schnellere Produktion leuchtet an der Rate, schnelleres Tippen an der Tastatur
+      setFlag(root, 'boost-prod', buffs.some((b) => b.target === 'prod' && b.mult > 1));
+      setFlag(root, 'boost-click', buffs.some((b) => b.target === 'click' && (b.mult > 1 || b.id === 'espresso')));
+      // Aufgabe vom Chef
+      const boss = s.boss;
+      bossChip.hidden = !boss.kind;
+      if (boss.kind) {
+        const p = Math.min(boss.target, bossProgress(s));
+        const fmt = (n: number) => (boss.kind === 'earn' ? formatNumber(n) : String(Math.floor(n)));
+        setText(bossChip, `☑︎ ${fmt(p)}/${fmt(boss.target)}`);
+        bossChip.setAttribute('aria-label', `Aufgabe vom Chef: ${boss.text}`);
+      }
       buffs.forEach((b, i) => {
         const chip = buffChips[i];
         if (!chip) return;
+        // kurz vor Schluss: sichtbar, dass es gleich vorbei ist
+        setFlag(chip, 'ending', b.remainingMs < 5_000);
         buffTotal[i] = Math.max(buffTotal[i] ?? 0, b.remainingMs);
         chip.style.setProperty('--left', (b.remainingMs / (buffTotal[i] || 1)).toFixed(3));
         chip.title = `noch ${Math.ceil(b.remainingMs / 1_000)} s`;

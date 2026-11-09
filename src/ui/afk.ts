@@ -1,5 +1,5 @@
 import { CONFIG } from '../config';
-import { afkTick, applyOfflineProgress, awayReport, type OfflineReport } from '../core/offline';
+import { afkTick, applyOfflineProgress, awayReport, restShare, type OfflineReport } from '../core/offline';
 import type { GameState } from '../core/state';
 import { tick } from '../core/tick';
 import { pick } from '../util';
@@ -55,7 +55,7 @@ export function createAfk(state: GameState, log: SysLog, onWake: (r: OfflineRepo
     shade.classList.add('waking');
     setTimeout(() => shade.remove(), 700);
     log.write('info', pick(LIGHTS_ON_LINES));
-    return gained > 0 ? awayReport(idle, gained) : null;
+    return gained > 0 ? awayReport(idle, gained, restShare(state)) : null;
   };
 
   const markInput = () => {

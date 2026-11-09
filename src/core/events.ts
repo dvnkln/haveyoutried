@@ -2,6 +2,7 @@ import { CONFIG, EVENT_EFFECTS, type EventEffectId } from '../config';
 import { EVENTS, type GameEventDef, type Outcome } from '../content/events';
 import { weightedPick } from '../util';
 import { bus } from './bus';
+import { quirkMods, scaledDelay } from './quirks';
 import { addTickets, bumpFlag, type Buff, type GameState } from './state';
 
 /** Ergebnis eines angewendeten Effekts, für Anzeige und Log. */
@@ -52,12 +53,16 @@ export function applyEffect(
     }
     case 'lose': {
       const cap = Math.max(rates.pps * e.sec, rates.click * e.clicks);
-      const amount = Math.min(state.tickets * e.frac, cap);
+      // Echte Idempotenz (Ansible Stufe 3): automatischer Rollback, nur halb so schlimm
+      const soften = state.upgrades['ansible-3'] ? 0.5 : 1;
+      const amount = Math.min(state.tickets * e.frac, cap) * soften;
       state.tickets -= amount;
       return { effect, tickets: -amount, buff: null, mood: 'bad' };
     }
     case 'buff': {
-      const buff: Buff = { id: effect, target: e.target, mult: e.mult, remainingMs: e.sec * 1_000 };
+      // Bremsen dauern mit Rollback (Ansible Stufe 3) nur halb so lang
+      const soften = e.mult < 1 && state.upgrades['ansible-3'] ? 0.5 : 1;
+      const buff: Buff = { id: effect, target: e.target, mult: e.mult, remainingMs: e.sec * 1_000 * soften };
       // gleicher Effekt nochmal: Zeit auffrischen statt stapeln
       const existing = state.buffs.find((b) => b.id === effect);
       if (existing) existing.remainingMs = Math.max(existing.remainingMs, buff.remainingMs);
@@ -71,14 +76,21 @@ function pickOutcome(outcomes: Outcome[]): Outcome {
   return weightedPick(outcomes, (o) => o.chance ?? 1, random);
 }
 
+/** Allererster Pager überhaupt: etwas Lustiges und Harmloses, damit der erste Eindruck sitzt */
+export const INTRO_EVENTS = ['sqlcolor', 'internet', 'coffee'];
+
 function pickEvent(state: GameState, now: Date): GameEventDef | null {
+  const first = !Object.keys(state.flags).some((k) => k.startsWith('ev:'));
+  const intro = first ? EVENTS.filter((e) => INTRO_EVENTS.includes(e.id)) : [];
+  if (intro.length > 0) return intro[Math.floor(random() * intro.length)]!;
   const pool = EVENTS.filter((e) => e.id !== state.events.lastId && (e.when?.(state) ?? true));
   return pool.length > 0 ? weightedPick(pool, (e) => e.weight?.(state, now) ?? 1, random) : null;
 }
 
 export function scheduleNext(state: GameState): void {
   const t = state.stats.playTimeMs;
-  state.events.nextAt = t + CONFIG.eventMinMs + random() * (CONFIG.eventMaxMs - CONFIG.eventMinMs);
+  // Eigenheit der Firma: mehr oder weniger Pager (0 = gar keiner)
+  state.events.nextAt = t + scaledDelay(CONFIG.eventMinMs + random() * (CONFIG.eventMaxMs - CONFIG.eventMinMs), quirkMods(state).events);
 }
 
 /** Pro Online-Tick: Boosts ablaufen lassen, Events planen, auslösen, verfallen lassen. */

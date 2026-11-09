@@ -2,6 +2,7 @@ import { HINT_HEADS, HINT_OK, HINTS, type Hint } from '../content/tutorial';
 import type { GameState } from '../core/state';
 import { pick } from '../util';
 import { gameBlocked } from './blocked';
+import { attentionBusy } from './toast';
 import { h } from './dom';
 
 /** so oft wird geschaut, ob ein Hinweis dran ist */
@@ -127,7 +128,8 @@ export function startTutorial(state: GameState): void {
       }
       if (!replay && !hint.when(state)) continue;
       const el = document.querySelector<HTMLElement>(hint.target);
-      if (el && visible(el)) return show(hint, el);
+      // nicht gleichzeitig mit einer Meldung oder der Kaffeetasse (der VIP-Zettel darf, er ist ja oft das Thema)
+      if (el && visible(el) && !attentionBusy(['.urgent-note', '.espresso-cup', '.tut-note:not([hidden])'])) return show(hint, el);
     }
   }, CHECK_MS);
 }

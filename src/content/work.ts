@@ -271,6 +271,11 @@ export const VIP_TICKETS: { who: string; subject: string; topic: Topic; cause: s
   { who: 'Vorstandsassistenz', topic: 'server', subject: 'Chef braucht ein Foto vom Server. Für den Geschäftsbericht.', cause: 'Serverraum nicht fotogen genug' },
   { who: 'Chef', topic: 'mail', subject: 'Meine Mail an alle ist an alle gegangen.', cause: 'Verteiler „Alle“' },
   { who: 'Vorstand', topic: 'drucker', subject: 'Drucker druckt das Logo. Riesig. In Farbe. 300-mal.', cause: 'Kopien: 300, „An Seite anpassen“' },
+  { who: 'Chef', topic: 'office', subject: 'Excel hat „alles gelöscht“. Bitte sofort.', cause: 'Spalten ausgeblendet' },
+  { who: 'Geschäftsführung', topic: 'netz', subject: 'Videocall mit Investoren ruckelt. Ich sitze im Aufzug.', cause: 'Aufzug (Faradayscher Käfig)' },
+  { who: 'Vorstandsassistenz', topic: 'passwort', subject: 'Der Chef hat sein Passwort ins Teams geschrieben. In den Kanal „Alle“.', cause: 'Falsches Fenster beim Passwort-Tippen' },
+  { who: 'Vorstand', topic: 'hardware', subject: 'Tastatur geht nicht. Eilt!!!', cause: 'Tastatur war ein Untersetzer' },
+  { who: 'Chef', topic: 'mail', subject: 'Habe aus Versehen die Kündigung von allen verschickt. Entwurf! ENTWURF!', cause: 'Entwurf im falschen Fenster abgeschickt' },
 ];
 
 /** Meilensteine einer Serie gelöster Tickets: Spruch unter dem Stempel */

@@ -80,11 +80,11 @@ const hours = (ms: number) => {
   return h === 1 ? 'eine Stunde' : `${h.toLocaleString('de-DE')} Stunden`;
 };
 /** Anteil als Wort, wo es schön klingt (0,2 → „ein Fünftel“) */
-const share = (x: number) => ({ 0.5: 'die Hälfte', 0.25: 'ein Viertel', 0.2: 'ein Fünftel', 0.1: 'ein Zehntel' })[x] ?? `${Math.round(x * 100)} %`;
+const share = (x: number) => ({ 0.5: 'die Hälfte', 0.4: 'zwei Fünftel', 0.25: 'ein Viertel', 0.2: 'ein Fünftel', 0.1: 'ein Zehntel' })[x] ?? `${Math.round(x * 100)} %`;
 
 /** Die Regel für Abwesenheit in Worten, aus den echten Werten */
-export function awayRule(): string {
-  return `Die erste${CONFIG.offlineFullMs === 3_600_000 ? ' Stunde' : `n ${hours(CONFIG.offlineFullMs)}`} zählt voll, danach nur ${share(CONFIG.offlineRestShare)}, nach ${hours(CONFIG.offlineCapMs)} nichts mehr.`;
+export function awayRule(rest: number = CONFIG.offlineRestShare): string {
+  return `Die erste${CONFIG.offlineFullMs === 3_600_000 ? ' Stunde' : `n ${hours(CONFIG.offlineFullMs)}`} zählt voll, danach nur ${share(rest)}, nach ${hours(CONFIG.offlineCapMs)} nichts mehr.`;
 }
 
 /** Schlusssatz je nach Dauer */

@@ -64,6 +64,27 @@ export const HINTS: Hint[] = [
     expired: (s) => (s.flags.urgent ?? 0) > 0,
   },
   {
+    id: 'cup',
+    target: '.espresso-cup',
+    text: 'Eine fliegende Espressotasse! Schnell antippen. Danach reicht es eine Weile, eine Taste gedrückt zu halten. Koffein ist auch eine Abhängigkeit, aber die gute.',
+    when: (s) => (s.flags.espresso ?? 0) === 0,
+    expired: (s) => (s.flags.espresso ?? 0) > 0,
+  },
+  {
+    id: 'buff',
+    target: '.buffs .buff',
+    text: 'Oben am Zähler hängt ein Boost. Oder eine Bremse, je nachdem, wie dein Tag läuft. Der Balken zeigt, wie lange noch. Antippen erklärt den Rest.',
+    when: (s) => s.buffs.length > 0,
+    expired: () => false,
+  },
+  {
+    id: 'boss',
+    target: '.boss-chip:not([hidden])',
+    text: 'Der Chef hat eine Aufgabe. Hier steht, wie weit du bist, Antippen zeigt sie ganz. Schaffst du sie rechtzeitig, gibt es Tickets. Und ein Nicken. Das Nicken ist selten.',
+    when: (s) => !!s.boss.kind && s.boss.done === 0,
+    expired: (s) => s.boss.done > 0,
+  },
+  {
     id: 'career',
     target: '.app-career',
     text: 'Kündigen ist hier keine Niederlage, sondern Karriere. Du nimmst Erfahrung mit, der nächste Job läuft schneller. Steht unter „Karriere“.',

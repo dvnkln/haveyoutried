@@ -1,3 +1,4 @@
+import { quirkMods } from './quirks';
 import { CONFIG, GENERATORS, SOLVE, UPGRADES, type GeneratorDef, type GeneratorId, type UpgradeDef } from '../config';
 import { achievementMultiplier } from './achievements';
 import { buffMultiplier } from './events';
@@ -36,17 +37,18 @@ export function maxAffordable(baseCost: number, owned: number, money: number): n
   return n;
 }
 
+/** Grundpreis in dieser Firma (Eigenheit „Preise“) */
+export const baseCostIn = (state: GameState, id: GeneratorId) => generatorDef(id).baseCost * quirkMods(state).costs;
+
 /** Konkrete Kaufmenge für die gewählte Einstellung (bei 'max' mindestens 1, damit Kosten angezeigt werden können). */
 export function resolveAmount(state: GameState, id: GeneratorId, amount: BuyAmount): number {
   if (amount !== 'max') return amount;
-  const def = generatorDef(id);
-  return Math.max(1, maxAffordable(def.baseCost, state.generators[id].owned, state.tickets));
+  return Math.max(1, maxAffordable(baseCostIn(state, id), state.generators[id].owned, state.tickets));
 }
 
 export function priceFor(state: GameState, id: GeneratorId, amount: BuyAmount): { n: number; cost: number } {
   const n = resolveAmount(state, id, amount);
-  const def = generatorDef(id);
-  return { n, cost: bulkCost(def.baseCost, state.generators[id].owned, n) };
+  return { n, cost: bulkCost(baseCostIn(state, id), state.generators[id].owned, n) };
 }
 
 // --- Upgrades ---
@@ -112,14 +114,14 @@ export function tempo(state: GameState): number {
 }
 
 /** Arbeit für das nächste Ticket (in Anschlägen bei Tempo 1) */
+/** Eigenheit „Tippen“ einer Firma wirkt über die Arbeit je Ticket: so gilt sie auch, wenn nur noch die Mindestanschläge nötig sind */
 export function ticketWork(state: GameState): number {
-  void state;
-  return SOLVE.work;
+  return SOLVE.work / quirkMods(state).tempo;
 }
 
 /** So viele Anschläge braucht ein Ticket gerade (mindestens SOLVE.minPresses) */
 export function pressesPerTicket(state: GameState): number {
-  return Math.max(SOLVE.minPresses, Math.ceil(ticketWork(state) / tempo(state) - 1e-9));
+  return Math.max(Math.ceil(SOLVE.minPresses / quirkMods(state).tempo - 1e-9), Math.ceil(ticketWork(state) / tempo(state) - 1e-9));
 }
 
 /** Anteil der Produktion, den jeder Anschlag zusätzlich bringt (Zweitmonitor, Gummiente) */
@@ -138,8 +140,9 @@ export function solvePpsSec(state: GameState): number {
 
 /** Tickets für eine Lösung ohne Serie: Grundwert, Tempo-Überschuss zählt als Wert. Berufserfahrung steckt im Tempo. */
 export function ticketReward(state: GameState): number {
-  const surplus = Math.max(1, (tempo(state) * SOLVE.minPresses) / ticketWork(state));
-  return SOLVE.reward * surplus * (globalMultiplier(state) / prestigeMultiplier(state));
+  // Überschuss gegen die Grund-Arbeit messen: die Firmen-Eigenheit „Tippen“ ändert nur die Zahl der Anschläge, nicht den Wert
+  const surplus = Math.max(1, (tempo(state) * SOLVE.minPresses) / SOLVE.work);
+  return SOLVE.reward * surplus * (globalMultiplier(state) / prestigeMultiplier(state)) * quirkMods(state).reward;
 }
 
 /** Wert eines Anschlags im Schnitt (für Ereignisse, die in „Klicks“ rechnen) */
@@ -156,7 +159,7 @@ export function generatorProduction(state: GameState, id: GeneratorId): number {
 export function productionPerSec(state: GameState): number {
   let sum = 0;
   for (const def of GENERATORS) sum += generatorProduction(state, def.id);
-  return sum * globalMultiplier(state) * buffMultiplier(state, 'prod');
+  return sum * globalMultiplier(state) * buffMultiplier(state, 'prod') * quirkMods(state).prod;
 }
 
 export function isUnlocked(state: GameState, id: GeneratorId): boolean {

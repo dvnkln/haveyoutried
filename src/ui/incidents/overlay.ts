@@ -2,7 +2,7 @@ import { INCIDENTS, type IncidentId } from '../../config';
 import { DONE_LABELS, INCIDENT_TEXT, TAKE_LABELS } from '../../content/incidents';
 import { bus } from '../../core/bus';
 import { rates } from '../../core/economy';
-import { endIncident, isSolved, resolveIncident } from '../../core/incidents';
+import { endIncident, isSolved, resolveIncident, setForgivenMistakes } from '../../core/incidents';
 import { pick } from '../../util';
 import type { AppContext } from '../app';
 import { h, setText } from '../dom';
@@ -297,7 +297,13 @@ export function mountIncidentOverlay(ctx: AppContext): void {
   const run = (id: IncidentId) => {
     const text = INCIDENT_TEXT[id];
     const game = GAMES[id]();
-    const duration = INCIDENTS.games[id].durationMs;
+    // Service Mesh (Kubernetes Stufe 3): Selbstheilung verschafft 30 % mehr Zeit.
+    // Nicht beim RAID: da geht es ums Durchhalten, mehr Zeit wäre dort eine Strafe.
+    const duration = INCIDENTS.games[id].durationMs * (ctx.state.upgrades['k8s-3'] && id !== 'raid' ? 1.3 : 1);
+    // Doku gefunden (Server unterm Tisch Stufe 3): ein Fehlgriff zählt nicht, weder in der Wertung noch als Zeitstrafe
+    const forgive = ctx.state.upgrades['undertable-3'] ? 1 : 0;
+    setForgivenMistakes(forgive);
+    let forgiveTimeLeft = forgive;
 
     // --- Phase 1: Monitoring-Alarm, wartet auf manuelles Übernehmen ---
     const take = h('button', { class: 'btn btn-danger nag-ack nag-take', type: 'button', text: pick(TAKE_LABELS), disabled: '' });
@@ -381,7 +387,10 @@ export function mountIncidentOverlay(ctx: AppContext): void {
       gameRoot.inert = true;
       game.mount(gameRoot, {
         finish: () => (finished = true),
-        penalize: (ms) => (penalty += ms),
+        penalize: (ms) => {
+          if (forgiveTimeLeft > 0) forgiveTimeLeft--;
+          else penalty += ms;
+        },
         sfx: ctx.sfx,
         haptic: ctx.haptic,
       });

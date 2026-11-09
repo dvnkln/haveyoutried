@@ -2409,7 +2409,6 @@ button {
 .plant,
 .postit,
 .book,
-.kanban,
 .beacon,
 .cable-tag {
   display: none;
@@ -2493,14 +2492,6 @@ button {
 }
 
 /* an der Wand */
-.kanban {
-  position: relative;
-  flex: 0 0 auto;
-  width: 54px;
-  height: 40px;
-  margin-top: 6px;
-  transform: rotate(-2deg);
-}
 
 /* auf dem Tisch */
 .mug-spot {
@@ -6868,5 +6859,140 @@ button.mug {
 
 /* nie zwei Hinweise gleichzeitig: solange ein Post-it vom Vorgänger hängt, schweigt die Tipp-Blase */
 body:has(.tut-note) .tap-hint {
+  display: none;
+}
+
+/* Eigenheit der neuen Firma im Willkommensfenster */
+.quirk-line {
+  padding: 8px 10px;
+  border: 2px dashed var(--ink);
+  border-radius: 10px;
+  background: #fff3c4;
+}
+.quirk-mods {
+  display: block;
+  margin-top: 4px;
+  font-weight: 700;
+  color: #8a5a3c;
+}
+
+/* Fähigkeit der Upgrade-Stufe 3 */
+.upgrade-ability {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #8a5a3c;
+}
+
+/* ---------- Aufgabe vom Chef: kleiner Zettel neben der Rate ---------- */
+.boss-chip {
+  flex: 0 0 auto;
+  padding: 0 6px;
+  border: 1.5px solid var(--ink);
+  border-radius: 6px;
+  background: #fff3c4;
+  color: var(--ink);
+  font: 700 11px / 1.4 var(--font-ui);
+  font-variant-numeric: tabular-nums;
+  pointer-events: auto;
+}
+.boss-chip[hidden] {
+  display: none;
+}
+
+/* ---------- Boosts: antippbar, kurz vor Schluss blinkend, Wirkung am Ort ---------- */
+.buffs .buff {
+  pointer-events: auto;
+  cursor: pointer;
+}
+.buff.ending {
+  animation: buff-ending 0.5s steps(2, jump-none) infinite;
+}
+@keyframes buff-ending {
+  50% {
+    opacity: 0.4;
+  }
+}
+#app.boost-prod .rate {
+  color: #1f8a55;
+  text-shadow: 0 0 8px rgba(47, 158, 106, 0.55);
+}
+#app.boost-click .keyboard {
+  box-shadow: 0 0 0 3px #f4a261, 0 0 16px 2px rgba(244, 162, 97, 0.55);
+}
+
+/* ---------- Power-up eingesammelt: kurzer Einblender in der Monitormitte ---------- */
+.powerup-banner {
+  position: absolute;
+  z-index: 47;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  max-width: 240px;
+  padding: 8px 14px;
+  border: var(--outline) solid var(--ink);
+  border-radius: 14px;
+  background: #fff3c4;
+  box-shadow: 0 4px 0 var(--ink);
+  color: var(--ink);
+  text-align: center;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  animation: powerup-in 2.6s ease-out forwards;
+}
+.powerup-banner b {
+  font-size: 17px;
+}
+.powerup-banner span {
+  font-size: 12.5px;
+  line-height: 1.25;
+}
+@keyframes powerup-in {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.6);
+  }
+  12% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.06);
+  }
+  20%,
+  80% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -60%) scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .buff.ending,
+  .powerup-banner {
+    animation: none;
+  }
+}
+
+/* Kanban-Upgrade: drei Zettel-Spalten oben am Whiteboard (Todo gelb, Doing blau, Brennt rot, rot gestapelt) */
+.incident-sign.has-kanban::before {
+  content: '';
+  position: absolute;
+  z-index: 2;
+  left: 5px;
+  right: 5px;
+  top: -5px;
+  height: 11px;
+  background: linear-gradient(90deg, #ffd166 0 26%, transparent 26% 37%, #a0c4ff 37% 63%, transparent 63% 74%, #ff9aa2 74% 100%);
+  border-radius: 2px;
+  -webkit-mask: linear-gradient(90deg, #000 0 26%, transparent 26% 37%, #000 37% 63%, transparent 63% 74%, #000 74% 100%);
+  mask: linear-gradient(90deg, #000 0 26%, transparent 26% 37%, #000 37% 63%, transparent 63% 74%, #000 74% 100%);
+  filter: drop-shadow(0 1px 0 var(--ink)) drop-shadow(0 -1px 0 var(--ink));
+  transform: rotate(-2deg);
+}
+
+/* Zähler: bei großen Zahlen fällt „Tickets“ weg, statt dass die Zahl abgeschnitten wird */
+.counter.no-unit .counter-unit {
   display: none;
 }

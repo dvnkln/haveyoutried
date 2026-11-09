@@ -1,3 +1,4 @@
+import { countedMistakes } from '../../core/incidents';
 import { INCIDENTS } from '../../config';
 import { MAILS, type Mail } from '../../content/incidents';
 import { shuffle } from '../../util';
@@ -48,7 +49,10 @@ export class SpamSim {
 
   score(): number {
     if (this.answered === 0) return 0;
-    const accuracy = this.correct / this.answered;
+    // verziehene Fehlgriffe zählen nicht (Doku gefunden, Server unterm Tisch Stufe 3)
+    if (this.correct === 0) return 0;
+    const wrong = countedMistakes(this.answered - this.correct);
+    const accuracy = this.correct / (this.correct + wrong);
     return Math.min(1, this.correct / this.target) * accuracy;
   }
 }

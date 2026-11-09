@@ -149,3 +149,28 @@ describe('Event-Inhalte', () => {
     expect(new Set(EVENTS.map((e) => e.id)).size).toBe(EVENTS.length);
   });
 });
+
+describe('Erster Pager', () => {
+  it('der allererste ist aus der lustigen, harmlosen Auswahl; danach alles', async () => {
+    const { INTRO_EVENTS } = await import('../../src/core/events');
+    for (let i = 0; i < 20; i++) {
+      const s = createInitialState(0);
+      s.events.nextAt = 1;
+      s.stats.playTimeMs = 10;
+      updateEvents(s, 0, () => rates(s));
+      expect(INTRO_EVENTS).toContain(s.events.active?.id);
+    }
+    const s = createInitialState(0);
+    s.flags['ev:dns:0:win'] = 1;
+    const seen = new Set<string>();
+    for (let i = 0; i < 200; i++) {
+      s.events.active = null;
+      s.events.nextAt = 1;
+      s.stats.playTimeMs = 10;
+      updateEvents(s, 0, () => rates(s));
+      const act = s.events.active as { id: string } | null; // TS kennt die Änderung durch updateEvents nicht
+      if (act) seen.add(act.id);
+    }
+    expect([...seen].some((id) => !INTRO_EVENTS.includes(id))).toBe(true);
+  });
+});
