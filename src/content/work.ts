@@ -54,22 +54,58 @@ export const SEARCH_RESULTS: string[] = [
 /** Chat-Kontakte für den Firmen-Messenger, falls gerade niemand anruft */
 export const CHAT_FALLBACK = 'Chef';
 
-/** Memes beim Nichtstun: nur Text, Anspielungen statt Bilder */
-export const MEMES: { top: string; bottom: string }[] = [
-  { top: 'Es funktioniert auf meinem Rechner.', bottom: 'Dann liefern wir eben deinen Rechner aus.' },
-  { top: 'Es ist nicht DNS. Es kann nicht DNS sein.', bottom: 'Es war DNS.' },
-  { top: '99 kleine Bugs im Code. Einen gefixt …', bottom: '127 kleine Bugs im Code.' },
-  { top: 'Ich, beim Schreiben der Doku:', bottom: 'Ich, drei Wochen später: „Was soll das heißen?“' },
-  { top: 'Freitag, 16:59.', bottom: '„Kurze Frage …“' },
-  { top: 'Passwort muss enthalten:', bottom: 'Großbuchstaben, Zahl, Sonderzeichen, Hieroglyphe.' },
-  { top: 'Backup machen? Später.', bottom: 'Restore? … Oh.' },
-  { top: 'Ticket: „Internet kaputt“', bottom: 'Ursache: WLAN-Schalter am Laptop.' },
-  { top: 'Kein Deploy am Freitag.', bottom: 'Der Deploy am Freitag: *schwitzt*' },
-  { top: 'Der Server, der seit 1.284 Tagen läuft:', bottom: 'Niemand weiß, was er tut. Niemand fasst ihn an.' },
-  { top: 'Change Advisory Board:', bottom: '„Klingt riskant. Machen wir’s Montag früh.“' },
-  { top: 'Ich: kurz Memes gucken.', bottom: 'Die Warteschlange: *starrt*' },
+/** Memes beim Nichtstun: Bildmakros (oben/unten), in der Mitte ein Text-Gesicht als „Foto“ */
+export const MEMES: { top: string; bottom: string; face: string }[] = [
+  { top: 'Es funktioniert auf meinem Rechner.', bottom: 'Dann liefern wir eben deinen Rechner aus.', face: '(¬‿¬)' },
+  { top: 'Es ist nicht DNS. Es kann nicht DNS sein.', bottom: 'Es war DNS.', face: 'ಠ_ಠ' },
+  { top: '99 kleine Bugs im Code. Einen gefixt …', bottom: '127 kleine Bugs im Code.', face: '(⊙_☉)' },
+  { top: 'Ich, beim Schreiben der Doku', bottom: 'Ich, drei Wochen später: „Was soll das heißen?“', face: '(・_・;)' },
+  { top: 'Freitag, 16:59', bottom: '„Kurze Frage …“', face: '(╯°□°)╯︵ ┻━┻' },
+  { top: 'Passwort muss enthalten:', bottom: 'Großbuchstaben, Zahl, Sonderzeichen, Hieroglyphe', face: '(ʘ‿ʘ)' },
+  { top: 'Backup machen? Später.', bottom: 'Restore? … Oh.', face: '(°ロ°)' },
+  { top: 'Ticket: „Internet kaputt“', bottom: 'Ursache: WLAN-Schalter am Laptop', face: '¯\\_(ツ)_/¯' },
+  { top: 'Kein Deploy am Freitag', bottom: 'Der Deploy am Freitag: *schwitzt*', face: '(；一_一)' },
+  { top: 'Der Server, der seit 1.284 Tagen läuft', bottom: 'Niemand weiß, was er tut. Niemand fasst ihn an.', face: '(◔_◔)' },
+  { top: 'Change Advisory Board:', bottom: '„Klingt riskant. Machen wir’s Montag früh.“', face: '(￣ヘ￣)' },
+  { top: 'Ich: kurz Memes gucken', bottom: 'Die Warteschlange: *starrt*', face: '(ಠ_ಠ)' },
+  { top: 'Hast du es aus- und wieder eingeschaltet?', bottom: 'Ich hab es aus- und wieder eingeschaltet. Jetzt brennt es.', face: '(o_O)' },
+  { top: 'Wenn der Kunde sagt „Ich hab nichts geändert“', bottom: 'Der Verlauf: 14 Änderungen', face: '(¬_¬)' },
+  // BOFH
+  { top: 'User: „Ich brauche mehr Speicherplatz.“', bottom: 'BOFH: *löscht den Ordner „Wichtig“*. Jetzt ist Platz.', face: '(¬‿¬)' },
+  { top: 'Ausrede des Tages:', bottom: 'Sonnenwind stört die Glasfaser.', face: '(￣▽￣)' },
+  { top: 'Chef will Adminrechte', bottom: 'Chef bekommt einen Knopf. Der Knopf ist nicht angeschlossen.', face: '(◕‿◕)' },
+  { top: 'Wie ich den Praktikanten nenne:', bottom: 'Lebende Firewall', face: '(⌐■_■)' },
+  { top: 'Helpdesk-Hotline', bottom: 'Seit gestern auf das Faxgerät umgeleitet. Anrufe −80 %.', face: '(͡° ͜ʖ ͡°)' },
+  { top: '„Können Sie mein Passwort zurücksetzen?“', bottom: 'Klar. Auf welches Passwort von 2009?', face: '(ʘ‿ʘ)' },
+  // IT Crowd
+  { top: 'Notfallnummer auswendig?', bottom: '0118 999 881 999 119 725 … 3', face: '(°ロ°)' },
+  { top: 'Das hier ist das Internet.', bottom: 'Es wiegt nichts. Bitte nicht fallen lassen.', face: '(⊙_⊙)' },
+  { top: '„Hallo, IT. Schon mal aus- und wieder eingeschaltet?“', bottom: 'Anrufer: „Woher wissen Sie das?!“', face: '(¬‿¬)' },
+  { top: 'Feuer im Serverraum', bottom: 'Ich schick dazu mal ’ne Mail.', face: '(ノಠ益ಠ)ノ' },
+  { top: 'Kollegen: „Was macht die IT eigentlich?“', bottom: 'Kellerraum, kein Fenster, Leuchtstoffröhre: alles läuft.', face: '(・_・)' },
+  // xkcd und Klassiker
+  { top: 'Schule ruft an:', bottom: 'Ihr Sohn heißt Robert\'); DROP TABLE Schüler;--?', face: '(°ロ°)' },
+  { top: 'Gesamte IT-Infrastruktur', bottom: 'Ein Paket, gepflegt von einem Typen in Nebraska seit 2003', face: '(◔_◔)' },
+  { top: 'Ich: „Das automatisiere ich schnell.“', bottom: 'Sechs Wochen später: Skript spart 4 Sekunden pro Monat.', face: '(；一_一)' },
+  { top: 'Standards: 14 konkurrierende', bottom: 'Wir machen einen, der alle vereint. Standards: 15', face: '(ಠ_ಠ)' },
+  { top: 'Frage im Forum, 2011: „Hat jemand das gelöst?“', bottom: 'Einzige Antwort: „Hat sich erledigt, danke.“', face: '(╥_╥)' },
+  { top: 'Fehlerursache gefunden:', bottom: 'PEBKAC. Problem sitzt vor dem Bildschirm.', face: '(¬_¬)' },
+  { top: 'Layer 1 bis 7: geprüft.', bottom: 'Layer 8 hat den Stecker gezogen.', face: '(ಥ﹏ಥ)' },
+  { top: 'Drucker: „Papierstau“', bottom: 'Kein Papier drin. Kein Papierstau. Drucker lügt.', face: '(╯°□°)╯︵ ┻━┻' },
+  { top: 'Rauch aus dem Netzteil', bottom: 'Magischer Rauch entwichen. Gerät läuft nicht ohne.', face: '(⊙_☉)' },
+  { top: 'sudo mach mir ein Sandwich', bottom: 'Okay.', face: '(⌐■_■)' },
+  { top: 'Chef: „Warum spielt ihr Schwertkampf?“', bottom: '„Kompiliert gerade.“, Chef: „Ah. Weitermachen.“', face: '(•̀ᴗ•́)و' },
+  { top: 'Passwort: Tr0ub4dor&3', bottom: 'Besser: korrekt pferd batterie heftklammer', face: '(⊙_⊙)' },
+  { top: 'Kollege: „Ist das in Produktion?“', bottom: 'Ich, mit dem Finger über Enter: „…jetzt schon.“', face: '(°ー°〃)' },
+  { top: 'Ticket schließen', bottom: 'Ticket wieder offen. Bevor ich die Hand von der Maus hab.', face: '(；′⌒`)' },
+  { top: 'Kunde: „Das Internet ist langsam.“', bottom: 'Kunde hat 47 Tabs mit Wetter-Radar offen.', face: '(¬‿¬)' },
+  { top: 'Gelöst durch: Neustart', bottom: 'Ursache: unbekannt. Doku: „Neustart hilft.“', face: '(ツ)' },
+  { top: 'Mein Kalender', bottom: 'Meeting über das Meeting, in dem wir Meetings reduzieren.', face: '(-_-;)' },
 ];
-export const MEME_ACCOUNTS: string[] = ['@sysadmin_memes', '@it_crowd_fans', '@dns_was_it', '@ticketqueue', '@bofh_daily'];
+
+/** Meme-Plattformen (Parodien): helle Forum-Variante und dunkle Bilderseite */
+export const MEME_SUBS = ['r/sysadmin', 'r/ProgrammerHumor', 'r/talesfromtechsupport', 'r/homelab', 'r/ichbinkeinroboter'];
+export const MEME_USERS = ['u/bofh_42', 'u/pfy_intern', 'u/dns_was_it', 'u/ticketqueue', 'u/printer_hater', 'u/root_not_root'];
 
 /**
  * Abschluss-Spruch im Ticketverlauf („Lösung“): passt zum Programm, das gerade offen war.

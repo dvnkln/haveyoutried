@@ -135,6 +135,9 @@ export class Sfx {
       const Ctor: AudioCtor | undefined =
         window.AudioContext ?? (window as unknown as { webkitAudioContext?: AudioCtor }).webkitAudioContext;
       if (!Ctor) return Promise.resolve();
+      // iOS: als Medienwiedergabe gelten, sonst schluckt der Lautlos-Schalter alle Töne (Safari 17+)
+      const session = (navigator as unknown as { audioSession?: { type: string } }).audioSession;
+      if (session) session.type = 'playback';
       const ctx = new Ctor();
       const comp = ctx.createDynamicsCompressor();
       comp.threshold.value = -12;
@@ -150,7 +153,8 @@ export class Sfx {
       this.master = master;
       this.noise = noise;
     }
-    if (this.ctx.state === 'suspended') return this.ctx.resume().catch(() => {});
+    // iOS kennt zusätzlich „interrupted“ (nach Anruf, Sperrbildschirm, App-Wechsel): auch dann neu anwerfen
+    if (this.ctx.state !== 'running' && this.ctx.state !== 'closed') return this.ctx.resume().catch(() => {});
     return Promise.resolve();
   }
 

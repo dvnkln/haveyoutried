@@ -1,7 +1,7 @@
 import { SOLVE } from '../config';
 import { ticketWork } from '../core/economy';
 import { CALLERS, QUEUE_LINE, type Call, type Line } from '../content/callers';
-import { BOSSES, STREAK_LINES, CALL_LINES, CHAT_LINES, MEME_ACCOUNTS, MEMES, RDP_ERRORS, SEARCH_RESULTS, TICKET_PRIOS, WEB_GENERIC, DONE_LINES, TICKET_STATES } from '../content/work';
+import { BOSSES, STREAK_LINES, CALL_LINES, CHAT_LINES, MEME_SUBS, MEME_USERS, MEMES, RDP_ERRORS, SEARCH_RESULTS, TICKET_PRIOS, WEB_GENERIC, DONE_LINES, TICKET_STATES } from '../content/work';
 import { DEVICE_SETTINGS, TALK_NOTES, TOPICS, topicPool, type Device } from '../content/topics';
 import { fill, pick, randInt, weightedPick } from '../util';
 import type { AppContext } from './app';
@@ -10,9 +10,6 @@ import { nextTicketNo, ticketId } from './history';
 
 /** Ohne Anschlag so lange, dann wird heimlich durch Memes gescrollt */
 const IDLE_MEMES_MS = 15_000;
-/** So viele Zeichen des Getippten bleiben sichtbar (der Anfang rutscht raus) */
-const TYPED_VISIBLE = 88;
-
 /** Kanal im Ticketverlauf */
 const CHANNELS: Record<Kind, string> = {
   mail: 'Mail',
@@ -312,6 +309,10 @@ export function createWork(
   const label = h('span', { class: 'work-label' });
   const promptSlot = h('span', { class: 'typed-prompt', text: '$ ' });
   const typedEl = h('span', { class: 'typed' });
+  /** Rest der Antwort, unsichtbar: der Text steht von Anfang an fest, nichts bricht beim Tippen neu um */
+  const restEl = h('span', { class: 'typed-rest', 'aria-hidden': 'true' });
+  const cursorEl = h('span', { class: 'cursor', 'aria-hidden': 'true' });
+  const body = h('div', { class: 'work-body' }, [label, promptSlot, typedEl, cursorEl, restEl]);
   const extra = h('div', { class: 'work-extra' });
   const last = h('div', { class: 'last-closed', 'aria-live': 'polite' });
   const feed = h('div', { class: 'meme-feed', 'aria-hidden': 'true' });
@@ -324,17 +325,45 @@ export function createWork(
   const el = h('div', { class: 'work' }, [
     h('div', { class: 'work-bar' }, [h('span', { class: 'term-dots', 'aria-hidden': 'true' }), title]),
     head,
-    h('div', { class: 'work-body' }, [label, promptSlot, typedEl, h('span', { class: 'cursor', text: '▌' })]),
+    body,
     extra,
     h('div', { class: 'meme-window' }, [feed]),
     stamp,
   ]);
 
+  /** Antwort passt trotz Anpassung nicht ganz: beim Tippen zum Cursor scrollen */
+  let scrolls = false;
+  /** Ganze Antwort muss ins Feld passen (lesen vor dem letzten Anschlag): sonst Schrift etwas kleiner */
+  const fitBody = () => {
+    // während der Memes ist das Fenster versteckt: messen erst beim Zurückkommen
+    if (memes) return showTyped();
+    const over = () => body.scrollHeight > body.clientHeight + 1 || el.scrollHeight > el.clientHeight + 1;
+    el.classList.remove('tight', 'tighter');
+    body.style.fontSize = '';
+    // eng (niedrige Displays): erst Deko im Fenster weglassen, dann Kopfzeilen, zuletzt kleinere Schrift
+    if (over()) el.classList.add('tight');
+    if (over()) el.classList.add('tighter');
+    if (over()) {
+      const base = parseFloat(getComputedStyle(body).fontSize);
+      for (let size = base - 0.5; size >= 9.5 && over(); size -= 0.5) body.style.fontSize = `${size}px`;
+    }
+    // Länge steht fest (Rest unsichtbar): nur wenn es trotzdem nicht passt, muss beim Tippen mitgescrollt werden
+    scrolls = body.scrollHeight > body.clientHeight + 1 || body.scrollWidth > body.clientWidth + 1;
+    showTyped();
+  };
   const showTyped = () => {
     // Füllstand der Statuszeile = Arbeit am Ticket
     last.style.setProperty('--p', Math.min(1, progress / ticketWork(ctx.state)).toFixed(3));
-    const t = reply.slice(0, typedLen);
-    setText(typedEl, t.length > TYPED_VISIBLE ? `…${t.slice(-TYPED_VISIBLE)}` : t);
+    setText(typedEl, reply.slice(0, typedLen));
+    setText(restEl, reply.slice(typedLen));
+    body.classList.toggle('empty', typedLen === 0);
+    if (!scrolls) return;
+    // wie ein echtes Eingabefeld: nur weiterscrollen, wenn der Cursor sonst rausläuft (neue Zeile bzw. Feldende)
+    const b = body.getBoundingClientRect();
+    const c = cursorEl.getBoundingClientRect();
+    if (c.bottom > b.bottom) body.scrollTop += c.bottom - b.bottom + 2;
+    else if (c.top < b.top) body.scrollTop -= b.top - c.top;
+    if (c.right > b.right - 8) body.scrollLeft += c.right - b.right + 40;
   };
 
   /** Nächste Aufgabe: anderes Programm; erst der aktuelle Anrufer, dann Tickets aus der Warteschlange */
@@ -368,6 +397,8 @@ export function createWork(
     };
     const prog = PROGRAMS[kind];
     reply = pick(prog.lines(task));
+    body.scrollTop = 0;
+    body.scrollLeft = 0;
     typedLen = 0;
     progress = 0;
     presses = 0;
@@ -379,7 +410,7 @@ export function createWork(
     el.classList.remove('sent');
     // Statuszeile: Ticketnummer und Betreff, Füllstand zeigt den Fortschritt der Antwort
     setStatus(`${ticketId(task.no)} · ${task.subject}`);
-    showTyped();
+    fitBody();
   };
 
   /** Erfolg! Stempel springt auf, ab dem zweiten Ticket in Folge mit Zähler und höherem Ton */
@@ -433,16 +464,31 @@ export function createWork(
 
   // --- Memes beim Nichtstun ---
   const fillFeed = () => {
-    const cards = [...MEMES].sort(() => Math.random() - 0.5).slice(0, 5);
-    const card = (m: (typeof MEMES)[number], i: number) =>
-      h('div', { class: `meme meme-${i % 4}` }, [
-        h('div', { class: 'meme-acc', text: `${pick(MEME_ACCOUNTS)} · ${randInt(1, 23)} Std.` }),
-        h('div', { class: 'meme-top', text: m.top }),
-        h('div', { class: 'meme-bottom', text: m.bottom }),
-        h('div', { class: 'meme-likes', text: `♥ ${randInt(2, 98) / 10} Tsd.` }),
+    const cards = [...MEMES].sort(() => Math.random() - 0.5).slice(0, 12);
+    const k = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1).replace('.', ',')} Tsd.` : String(n));
+    // abwechselnd Forum (hell, Abstimmpfeile) und Bilderseite (dunkel): Parodien, keine echten Logos
+    const card = (m: (typeof MEMES)[number], i: number) => {
+      const forum = i % 2 === 0;
+      return h('div', { class: `meme ${forum ? 'meme-forum' : 'meme-gag'}` }, [
+        h('div', { class: 'meme-head' }, [
+          h('span', { class: 'meme-src', text: forum ? pick(MEME_SUBS) : '404GAG' }),
+          h('span', { class: 'meme-meta', text: forum ? ` · ${pick(MEME_USERS)} · ${randInt(1, 23)} Std.` : ` · Hot · ${randInt(1, 59)} Min.` }),
+        ]),
+        h('div', { class: `meme-img meme-bg-${i % 4}` }, [
+          h('span', { class: 'meme-top', text: m.top }),
+          h('span', { class: 'meme-face', 'aria-hidden': 'true', text: m.face }),
+          h('span', { class: 'meme-bottom', text: m.bottom }),
+        ]),
+        h('div', { class: 'meme-foot' }, [
+          h('span', { class: 'meme-votes' }, [h('b', { class: 'up', text: '▲' }), ` ${k(randInt(120, 48_000))} `, h('b', { class: 'down', text: '▼' })]),
+          h('span', { text: `${k(randInt(12, 2_400))} Kommentare` }),
+          ...(forum ? [h('span', { text: 'Teilen' })] : []),
+        ]),
       ]);
-    // doppelt, damit das Endlos-Scrollen nahtlos läuft
-    feed.replaceChildren(...cards.map(card), ...cards.map(card));
+    };
+    // doppelt (gleiche Karten), damit das Endlos-Scrollen nahtlos läuft; gerade Anzahl hält den Wechsel Forum/Bilderseite an der Naht
+    const once = cards.map(card);
+    feed.replaceChildren(...once, ...once.map((n) => n.cloneNode(true)));
   };
   const enterMemes = () => {
     memes = true;
@@ -455,8 +501,27 @@ export function createWork(
     memes = false;
     el.dataset.kind = task.kind;
     setText(title, PROGRAMS[task.kind].title(task));
+    fitBody();
     ctx.log.write('info', pick(['browser[42]: Tab gewechselt. Der Chef kam vorbei.', 'browser[42]: Zurück an die Arbeit. Niemand hat was gesehen.']));
   };
+
+  // Drehen, Fenstergröße, nachgeladene Schrift: Platz neu ausmessen (nur bei echter Größenänderung, sonst Schleife)
+  let fitSize = '';
+  let fitFrame = 0;
+  const refit = () => {
+    cancelAnimationFrame(fitFrame);
+    fitFrame = requestAnimationFrame(() => {
+      const size = `${el.clientWidth}x${el.clientHeight}`;
+      if (size === fitSize || !el.isConnected) return;
+      fitSize = size;
+      fitBody();
+    });
+  };
+  if (typeof ResizeObserver !== 'undefined') new ResizeObserver(refit).observe(el);
+  void document.fonts?.ready.then(() => {
+    fitSize = '';
+    refit();
+  });
 
   return {
     el,
@@ -473,7 +538,9 @@ export function createWork(
       progress += work;
       presses++;
       const need = ticketWork(ctx.state);
-      typedLen = Math.min(reply.length, Math.round((reply.length * progress) / need));
+      // Text ist einen Anschlag vor dem Lösen komplett da: Zeit zum Lesen, bevor der Stempel kommt
+      const full = Math.max(work, need - work);
+      typedLen = Math.min(reply.length, Math.round((reply.length * progress) / full));
       if (progress >= need - 1e-9) send();
     },
     /** Nach jedem Anschlag: Memes zu, Anzeige auffrischen */

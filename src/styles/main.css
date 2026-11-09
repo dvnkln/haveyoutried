@@ -85,6 +85,11 @@ textarea {
   color: inherit;
 }
 
+/* Spiel, kein Dokument: kein Zoomen per Doppeltipp oder zwei Fingern (sonst verbaut man sich die Ansicht) */
+html,
+body {
+  touch-action: pan-x pan-y;
+}
 button {
   touch-action: manipulation;
   cursor: pointer;
@@ -553,8 +558,19 @@ button {
   color: #8ee6b4;
 }
 .cursor {
+  /* ohne Inhalt im Textfluss: der Cursor schafft keine Umbruchstelle, nichts springt beim Tippen */
+  position: relative;
   color: #23915c;
   animation: cursor-blink 1s steps(2, jump-none) infinite;
+}
+.cursor::before {
+  content: '▌';
+  position: absolute;
+  left: 0;
+  bottom: -0.2em;
+}
+.typed-rest {
+  color: transparent;
 }
 .work[data-kind='term'] .cursor {
   color: #8ee6b4;
@@ -3131,12 +3147,6 @@ button {
   transition: transform 0.4s;
   z-index: -1;
 }
-/* Log-App füllt das ganze Fenster */
-.sheet-body > .panel-log {
-  height: 100%;
-  min-height: 0;
-  overflow: hidden;
-}
 
 /* Ruhiger Start: Telefon steht still, noch keine Sprechblase */
 .caller.quiet .bubble {
@@ -3932,7 +3942,7 @@ button {
 }
 /* Eingabefeld mit Senden-Knopf */
 .work[data-kind='chat'] .work-body {
-  flex: 0 0 auto;
+  flex: 0 1 auto;
   margin-top: auto;
   margin: auto 8px 4px;
   padding: 4px 34px 4px 10px;
@@ -3941,23 +3951,27 @@ button {
   border-radius: 14px;
   background: #fff;
   font-size: 12px;
-  white-space: nowrap;
+  line-height: 1.3;
+  /* wie im Messenger: das Feld ist so hoch wie die Nachricht */
   overflow: hidden;
 }
-.work[data-kind='chat'] .typed:empty::before {
+.work[data-kind='chat'] .work-body.empty::before {
   content: 'Nachricht schreiben …';
+  position: absolute;
+  left: 12px;
+  top: 4px;
   color: var(--ink-soft);
+  pointer-events: none;
 }
 .work[data-kind='chat'] .work-body::after {
   content: '➤';
   position: absolute;
   right: 3px;
-  top: 50%;
+  bottom: 3px;
   width: 22px;
   height: 22px;
   display: grid;
   place-items: center;
-  transform: translateY(-50%);
   border: 1.5px solid var(--ink);
   border-radius: 50%;
   background: var(--sky);
@@ -3979,10 +3993,10 @@ button {
   flex: 1;
   min-height: 0;
   overflow: hidden;
-  background: #faf6ff;
+  background: #dae0e6;
 }
 .meme-feed {
-  animation: meme-scroll 28s linear infinite;
+  animation: meme-scroll 56s linear infinite;
 }
 @keyframes meme-scroll {
   to {
@@ -3990,47 +4004,119 @@ button {
   }
 }
 .meme {
-  margin: 8px 9px;
-  padding: 7px 10px 8px;
-  border: 2px solid var(--ink);
-  border-radius: 12px;
-  box-shadow: 0 3px 0 rgba(61, 44, 46, 0.4);
+  margin: 8px 7px;
+  border-radius: 8px;
+  overflow: hidden;
+  font-size: 10px;
 }
-.meme-0 {
-  background: #fff3c4;
+/* Forum (hell): Unterforum, Nutzer, orange Abstimmpfeile */
+.meme-forum {
+  border: 1.5px solid #d7d0e0;
+  background: #fff;
+  color: #1c1c1c;
 }
-.meme-1 {
-  background: #d6e6ff;
+.meme-forum .meme-src {
+  font-weight: 700;
 }
-.meme-2 {
-  background: #ffe1e1;
+.meme-forum .meme-src::before {
+  content: '';
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 4px;
+  border-radius: 50%;
+  background: #ff5a1f;
+  vertical-align: -1px;
 }
-.meme-3 {
-  background: #d9f5e6;
+.meme-forum .up {
+  color: #ff5a1f;
 }
-.meme-acc {
-  font-size: 9.5px;
-  color: var(--ink-soft);
+.meme-forum .down {
+  color: #7a8bd6;
+}
+/* Bilderseite (dunkel): „404GAG“ */
+.meme-gag {
+  border: 1.5px solid #000;
+  background: #1b1b1f;
+  color: #e9e9ee;
+}
+.meme-gag .meme-src {
+  padding: 0 4px;
+  border-radius: 3px;
+  background: #fff;
+  color: #000;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+.meme-gag .up {
+  color: #52c47a;
+}
+.meme-gag .down {
+  color: #9a9aa5;
+}
+.meme-head,
+.meme-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 7px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.meme-meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0.65;
+}
+.meme-foot {
+  font-weight: 600;
+  opacity: 0.8;
+}
+/* Bildmakro: Großbuchstaben, weiß mit schwarzem Rand, in der Mitte ein Gesicht als „Foto“ */
+.meme-img {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  gap: 4px;
+  min-height: 108px;
+  padding: 6px 8px;
+  text-align: center;
+}
+.meme-bg-0 {
+  background: radial-gradient(circle at 50% 45%, #7d8fa8, #2f3a4d);
+}
+.meme-bg-1 {
+  background: radial-gradient(circle at 50% 45%, #b08a6a, #4a3326);
+}
+.meme-bg-2 {
+  background: radial-gradient(circle at 50% 45%, #7aa38b, #24402f);
+}
+.meme-bg-3 {
+  background: radial-gradient(circle at 50% 45%, #a07aa8, #3c2645);
 }
 .meme-top,
 .meme-bottom {
-  font-weight: 700;
-  font-size: 13px;
-  line-height: 1.25;
+  position: relative;
+  z-index: 1;
+  color: #fff;
+  font: 900 12.5px / 1.1 Impact, 'Arial Black', 'Helvetica Neue', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.2px;
+  -webkit-text-stroke: 0.6px #000;
+  text-shadow: 0 0 2px #000, 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
 }
-.meme-bottom {
-  margin-top: 4px;
-  padding-top: 4px;
-  border-top: 1.5px dashed rgba(61, 44, 46, 0.3);
-}
-.meme-likes {
-  margin-top: 4px;
-  font-size: 10px;
-  color: #d64545;
+.meme-face {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 22px;
+  line-height: 1;
+  white-space: nowrap;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
 }
 @media (prefers-reduced-motion: reduce) {
   .meme-feed {
-    animation-duration: 120s;
+    animation-duration: 240s;
   }
 }
 
@@ -4168,7 +4254,7 @@ button {
   text-overflow: ellipsis;
 }
 .work[data-kind='ticket'] .work-body {
-  flex: 1 0 auto;
+  flex: 1 1 auto;
   margin: 4px 7px 2px;
   padding: 3px 7px;
   border: 1.5px solid var(--ink);
@@ -5946,4 +6032,25 @@ body > .incident.playing {
     font: 600 18px / 1.5 var(--font-ui);
     text-align: center;
   }
+}
+
+/* Arbeitsfenster eng (niedrige Displays): Antwort geht vor Deko – sonst ist sie vor dem letzten Anschlag nicht lesbar */
+.work.tight .mail-tools,
+.work.tight .mail-sig,
+.work.tight .tk-nav,
+.work.tight .tk-who,
+.work.tight .tk-actions,
+.work.tight .chat-top,
+.work.tight .call-tiles,
+.work.tight .web-login,
+.work.tight .web-foot,
+.work.tight .rdp-icons,
+.work.tight .search-logo {
+  display: none;
+}
+.work.tighter .mail-fields,
+.work.tighter .tk-card,
+.work.tighter .chat-msg,
+.work.tighter .work-label {
+  display: none;
 }

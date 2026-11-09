@@ -34,8 +34,10 @@ const history = new TicketHistory();
 const log = new SysLog();
 const haptic = createHaptics(() => state.settings.haptics);
 const sfx = new Sfx(() => state.settings);
+// iOS ignoriert user-scalable=no: Pinch-Zoom hier abfangen (Doppeltipp verhindert touch-action im CSS)
+for (const type of ['gesturestart', 'gesturechange'] as const) document.addEventListener(type, (e) => e.preventDefault(), { passive: false });
 // Audio darf erst nach einer Nutzergeste starten; iOS will dafür teils touchend
-for (const type of ['pointerdown', 'pointerup', 'touchend', 'keydown'] as const) {
+for (const type of ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown'] as const) {
   document.addEventListener(type, () => sfx.unlock(), { capture: true, passive: true });
 }
 const saver = new Saver(

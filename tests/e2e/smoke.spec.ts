@@ -418,3 +418,27 @@ test('Tastatur: jede Taste zählt, auch Sondertasten, physische Tasten und die M
   await expect(page.locator('.counter-value')).toHaveText('0');
   expect(errors).toEqual([]);
 });
+
+test('Ticketverlauf lässt sich scrollen, Antwort steht vor dem letzten Anschlag ganz da', async ({ page, context }) => {
+  // alle Tempo-Upgrades: Tickets sind in wenigen Anschlägen gelöst
+  const ups = ['coffee', 'mousepad', 'mouse', 'keyboard', 'answering', 'headset', 'macro'];
+  const save = { version: 2, tickets: 1e5, ticketsTotal: 1e6, clicks: 5000, lastTick: Date.now(), upgrades: Object.fromEntries(ups.map((u) => [u, true])) };
+  await context.addInitScript((json) => localStorage.setItem('hyt.save', json), JSON.stringify(save));
+  await page.goto('/');
+  const key = page.locator('.key[data-key="Q"]');
+  let fullBeforeSolve = 0;
+  for (let i = 0; i < 45; i++) {
+    const before = await page.locator('.history .hist').count();
+    const restBefore = await page.locator('.typed-rest').evaluate((e) => e.textContent ?? '');
+    await key.dispatchEvent('pointerdown', { pointerId: 1, button: 0, isPrimary: true });
+    await page.evaluate(() => window.dispatchEvent(new PointerEvent('pointerup', { pointerId: 1 })));
+    // dieser Anschlag hat gelöst: vorher war die Antwort schon komplett zu sehen
+    if ((await page.locator('.history .hist').count()) > before && restBefore === '') fullBeforeSolve++;
+  }
+  expect(fullBeforeSolve).toBeGreaterThan(5);
+  await page.locator('.app-icon.app-log').click();
+  const body = page.locator('.sheet-body');
+  await expect.poll(() => body.evaluate((e) => e.scrollHeight > e.clientHeight * 2)).toBe(true);
+  await body.evaluate((e) => (e.scrollTop = e.scrollHeight));
+  expect(await body.evaluate((e) => e.scrollTop)).toBeGreaterThan(0);
+});

@@ -3,7 +3,7 @@ import { CALLBACK_LINES, CALLERS, situationalCalls, type Call, type Line } from 
 import { topicPool } from '../content/topics';
 import { URGENT_LABELS, URGENT_TEXT } from '../content/events';
 import { VIP_TICKETS } from '../content/work';
-import { ALTF4_LINES, COMBO_LINES, PANIC_LINES } from '../content/props';
+import { ALTF4_LINES, PANIC_LINES } from '../content/props';
 import { pressKey, solveTicket } from '../core/actions';
 import { rates } from '../core/economy';
 import { claimUrgent } from '../core/events';
@@ -27,8 +27,6 @@ const PHONE_SVG = `<svg viewBox="0 0 64 58">
   <g class="headset"><path d="M27 20 c0 -19 30 -19 30 0" fill="none" stroke="var(--ink)" stroke-width="5" stroke-linecap="round"/><path d="M27 20 c0 -19 30 -19 30 0" fill="none" stroke="#7fa6e6" stroke-width="2.4" stroke-linecap="round"/><rect x="22" y="13" width="9" height="11" rx="3.5" fill="#a0c4ff" stroke="var(--ink)" stroke-width="2"/><rect x="53" y="13" width="9" height="11" rx="3.5" fill="#a0c4ff" stroke="var(--ink)" stroke-width="2"/><path d="M24 22 c-2 3 -2 6 -1 8" fill="none" stroke="var(--ink)" stroke-width="1.8" stroke-linecap="round"/><circle cx="23.2" cy="30.5" r="2" fill="var(--mint)" stroke="var(--ink)" stroke-width="1.4"/></g>
 </svg>`;
 
-/** Pause, nach der das Tippen am Stück endet (für die Combo-Sprüche) */
-const COMBO_GAP_MS = 700;
 /** Abstand zwischen zwei Log-Sprüchen derselben Sondertaste */
 const GAG_COOLDOWN_MS = 20_000;
 /** Bis zu so vielen Klicks erscheint der Tipp-Hinweis bei längerer Pause wieder */
@@ -84,7 +82,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
   let callerLeft = randInt(CONFIG.callerTicketsMin, CONFIG.callerTicketsMax);
   let callerUntil = 0;
   const recent: string[] = [];
-  let combo = 0;
+  /** Zeit des letzten Anschlags (Tipp-Hinweis, Memes bei Pause) */
   let lastHit = 0;
   /** dieser Anschlag hat ein Ticket gelöst (dann kein Tipp-Vibrieren, das die Meilenstein-Vibration abschneiden würde) */
   let solvedNow = false;
@@ -303,12 +301,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
     // Effekte: Tickets gibt es erst beim Lösen; pro Taste nur ab und zu ein Schnipsel
     const k = fx.rel(keyEl, true);
     if (Math.random() < 0.25) fx.scrap(k.x + k.w / 2, k.y + 6);
-
-    combo = now - lastHit < COMBO_GAP_MS ? combo + 1 : 1;
     lastHit = now;
-    // langes Tippen am Stück: ab und zu ein Spruch an der Tastatur (gezählt wird nur die Serie gelöster Tickets)
-    const comboLine = COMBO_LINES[combo];
-    if (comboLine) quip(keyboard, comboLine);
 
     ctx.sfx.tap();
     if (!solvedNow) ctx.haptic('tap');

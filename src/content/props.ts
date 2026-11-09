@@ -1,4 +1,4 @@
-// Texte für die Requisiten am Schreibtisch (Post-its, Gummiente, Combo, Tasten).
+// Texte für die Requisiten am Schreibtisch (Post-its, Gummiente, Tasten).
 
 /** Post-its am Monitorrahmen. Antippen blättert weiter. */
 export const POSTITS: string[] = [
@@ -40,15 +40,6 @@ export const DUCK_LINES: string[] = [
   'duckd[42]: quack! Die Ente fordert mehr Budget.',
   'duckd[42]: quack. Ticket an die Ente eskaliert. Ente: „Nicht mein Bereich.“',
 ];
-
-/** Sprechblase an der Tastatur nach so vielen Anschlägen am Stück (Anschläge → Text). */
-export const COMBO_LINES: Record<number, string> = {
-  50: 'Sehnenscheide: warm',
-  100: 'Tastatur-Garantie: erloschen',
-  250: 'Kollegen fragen, ob alles okay ist',
-  500: 'Die Tastatur raucht. Gutes Zeichen?',
-  1000: 'Du bist jetzt ein Makro.',
-};
 
 /** Ab und zu im Log, wenn jemand Alt+F4 drückt. */
 export const ALTF4_LINES: string[] = [
