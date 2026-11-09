@@ -2072,6 +2072,9 @@ button {
   touch-action: none;
   display: flex;
   flex-direction: column;
+  /* wie ein Terminal: unten kommt Neues dazu, oben fällt Altes raus, nichts wächst */
+  justify-content: flex-end;
+  overflow: hidden;
   gap: 3px;
   padding: 6px;
   border: 1px solid var(--line);
@@ -6995,4 +6998,11 @@ body:has(.tut-note) .tap-hint {
 /* Zähler: bei großen Zahlen fällt „Tickets“ weg, statt dass die Zahl abgeschnitten wird */
 .counter.no-unit .counter-unit {
   display: none;
+}
+
+/* Log-Zeilen immer einzeilig: die Box hat so eine feste Höhe, nichts wackelt, wenn Zeilen nachrücken */
+.grep-line {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

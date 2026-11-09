@@ -35,8 +35,9 @@ export class LogGrepSim {
     private rnd: () => number = Math.random,
   ) {
     this.decoysLeft = this.decoyCount();
-    // Log ist beim Start schon „in Betrieb“: ein paar normale Zeilen vorab
-    for (let i = 0; i < 4; i++) this.lines.push({ id: this.nextId++, text: this.pickText(LOG_DECOYS), target: false });
+    // Log läuft schon: wie bei „tail -f“ ist das Fenster von Anfang an voll mit älteren Zeilen.
+    // So wächst die Liste nie erst nach unten, neue Zeilen schieben alles gleichmäßig nach oben.
+    for (let i = 0; i < this.cfg.window - 1; i++) this.lines.push({ id: this.nextId++, text: this.pickText(LOG_DECOYS), target: false });
   }
 
   get roundsDone(): number {
