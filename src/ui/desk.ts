@@ -5,7 +5,7 @@ import { URGENT_LABELS, URGENT_TEXT } from '../content/events';
 import { VIP_TICKETS } from '../content/work';
 import { advanceStory, dueStoryCall } from '../content/stories';
 import { ALTF4_LINES, PANIC_LINES } from '../content/props';
-import { pressKey, solveTicket } from '../core/actions';
+import { espressoActive, pressKey, solveTicket, startEspresso } from '../core/actions';
 import { rates } from '../core/economy';
 import { claimUrgent } from '../core/events';
 import { incidentRunning } from '../core/incidents';
@@ -27,6 +27,25 @@ const PHONE_SVG = `<svg viewBox="0 0 64 58">
   <g class="model m3"><path class="cord" d="M8 50 c-5 0 -2 4 -5 5 c-3 1 -1 4 -3 5" fill="none" stroke="var(--ink)" stroke-width="1.8" stroke-linecap="round"/><path d="M11 20 h42 a4 4 0 0 1 4 3.4 l4.2 26.6 a4 4 0 0 1 -4 4.6 h-50.4 a4 4 0 0 1 -4 -4.6 l4.2 -26.6 a4 4 0 0 1 4 -3.4Z" fill="#565063" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round"/><path d="M24 23.5 h28" stroke="#6f6880" stroke-width="2.4" stroke-linecap="round"/><rect x="23.5" y="25" width="27" height="11" rx="1.8" fill="#a0c4ff" stroke="var(--ink)" stroke-width="1.6"/><path d="M25 27.6 h24" stroke="#fffaf0" stroke-width="2.2"/><g fill="#fffaf0"><rect x="26" y="30.5" width="6" height="3.6" rx="1"/><rect x="34" y="30.5" width="6" height="3.6" rx="1"/><rect x="42" y="30.5" width="6" height="3.6" rx="1"/></g><g fill="var(--mint)" stroke="var(--ink)" stroke-width=".9"><circle cx="54.3" cy="27" r="1.4"/><circle cx="54.6" cy="31" r="1.4"/><circle cx="55" cy="35" r="1.4"/></g><g fill="#ece8f2" stroke="var(--ink)" stroke-width="1"><rect x="26" y="38.5" width="5" height="3" rx="1.2"/><rect x="32.5" y="38.5" width="5" height="3" rx="1.2"/><rect x="39" y="38.5" width="5" height="3" rx="1.2"/><rect x="26" y="42.4" width="5" height="3" rx="1.2"/><rect x="32.5" y="42.4" width="5" height="3" rx="1.2"/><rect x="39" y="42.4" width="5" height="3" rx="1.2"/><rect x="26" y="46.3" width="5" height="3" rx="1.2"/><rect x="32.5" y="46.3" width="5" height="3" rx="1.2"/><rect x="39" y="46.3" width="5" height="3" rx="1.2"/><rect x="26" y="50.2" width="5" height="3" rx="1.2"/><rect x="32.5" y="50.2" width="5" height="3" rx="1.2"/><rect x="39" y="50.2" width="5" height="3" rx="1.2"/></g><g fill="#7a7390" stroke="var(--ink)" stroke-width="1"><rect x="47" y="38.5" width="7.5" height="3" rx="1.2"/><rect x="47" y="42.4" width="7.5" height="3" rx="1.2"/><rect x="47" y="46.3" width="7.5" height="3" rx="1.2"/></g><g class="handset"><rect x="6" y="13" width="14" height="40" rx="6.5" fill="#423c4d" stroke="var(--ink)" stroke-width="2.3"/><path d="M10 19 v10" stroke="#6f6880" stroke-width="2.2" stroke-linecap="round"/><g fill="var(--ink)" opacity=".55"><circle cx="13" cy="17.5" r="1"/><circle cx="13" cy="48.5" r="1"/></g></g></g>
   <g class="headset"><path d="M27 20 c0 -19 30 -19 30 0" fill="none" stroke="var(--ink)" stroke-width="5" stroke-linecap="round"/><path d="M27 20 c0 -19 30 -19 30 0" fill="none" stroke="#7fa6e6" stroke-width="2.4" stroke-linecap="round"/><rect x="22" y="13" width="9" height="11" rx="3.5" fill="#a0c4ff" stroke="var(--ink)" stroke-width="2"/><rect x="53" y="13" width="9" height="11" rx="3.5" fill="#a0c4ff" stroke="var(--ink)" stroke-width="2"/><path d="M24 22 c-2 3 -2 6 -1 8" fill="none" stroke="var(--ink)" stroke-width="1.8" stroke-linecap="round"/><circle cx="23.2" cy="30.5" r="2" fill="var(--mint)" stroke="var(--ink)" stroke-width="1.4"/></g>
 </svg>`;
+
+/** Fliegende Espressotasse: klein, weißes Porzellan, Crema, Untertasse, Flügelchen und Dampf */
+const CUP_SVG = `<svg viewBox="0 0 64 52" aria-hidden="true">
+  <g class="cup-steam" fill="none" stroke="#fffaf0" stroke-width="2.5" stroke-linecap="round" opacity=".9">
+    <path d="M27 17c-3-3 3-5 0-9"/><path d="M35 17c-3-3 3-5 0-9"/>
+  </g>
+  <path class="cup-wing cup-wing-l" d="M19 29c-8-6-13-2-12 3 4 0 7 1 12 2z" fill="#d6e6ff" stroke="#3d2c2e" stroke-width="2" stroke-linejoin="round"/>
+  <path class="cup-wing cup-wing-r" d="M44 29c8-6 13-2 12 3-4 0-7 1-12 2z" fill="#d6e6ff" stroke="#3d2c2e" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M42 26h2a4.5 4.5 0 0 1 0 9h-3" fill="none" stroke="#3d2c2e" stroke-width="2.5"/>
+  <path d="M20 22h23l-2 14a5 5 0 0 1-5 4h-9a5 5 0 0 1-5-4z" fill="#fffaf0" stroke="#3d2c2e" stroke-width="2.5" stroke-linejoin="round"/>
+  <ellipse cx="31.5" cy="22" rx="11.5" ry="2.6" fill="#c98a4b" stroke="#3d2c2e" stroke-width="2"/>
+  <path d="M22 30h19" stroke="#f4a261" stroke-width="2"/>
+  <ellipse cx="31.5" cy="43" rx="16" ry="3.6" fill="#fffaf0" stroke="#3d2c2e" stroke-width="2.5"/>
+</svg>`;
+const ESPRESSO_LINES = [
+  'coffee[{pid}]: doppelter Espresso gefangen. Puls: ja. Finger: auf Autopilot.',
+  'coffee[{pid}]: Koffein im System. Tastatur meldet Übertaktung.',
+  'coffee[{pid}]: Tasse erwischt. Die Kollegen hören dich jetzt tippen. Alle.',
+];
 
 /** Abstand zwischen zwei Log-Sprüchen derselben Sondertaste */
 const GAG_COOLDOWN_MS = 20_000;
@@ -85,6 +104,9 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
   const recent: string[] = [];
   /** Zeit des letzten Anschlags (Tipp-Hinweis, Memes bei Pause) */
   let lastHit = 0;
+  /** Espresso-Dauerfeuer: angesammelte Anschläge und letzter Frame */
+  let autoAcc = 0;
+  let autoLast = performance.now();
   /** dieser Anschlag hat ein Ticket gelöst (dann kein Tipp-Vibrieren, das die Meilenstein-Vibration abschneiden würde) */
   let solvedNow = false;
 
@@ -158,7 +180,8 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
   const hint = h('div', { class: 'tap-hint', hidden: '', text: 'Tipp drauf! Jede Taste tippt am Ticket weiter' });
   let i = 0;
   for (const el of keyboard.querySelectorAll<HTMLElement>('.key')) el.style.setProperty('--i', String(i++ % 14));
-  const keyboardWrap = h('div', { class: 'keyboard-wrap' }, [hint, keyboard]);
+  const espressoHint = h('div', { class: 'tap-hint espresso-hint', hidden: '', text: '☕︎ Taste gedrückt halten, der Espresso tippt' });
+  const keyboardWrap = h('div', { class: 'keyboard-wrap' }, [hint, espressoHint, keyboard]);
 
   const fresh = (lines: Line[]) => {
     const unused = lines.filter((l) => !recent.includes(l.text));
@@ -279,6 +302,57 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
     }, CONFIG.urgentVisibleMs);
   };
 
+  // --- Fliegende Kaffeetasse: erwischt = Doppelter Espresso (Taste halten tippt von selbst) ---
+  const scheduleCup = () => setTimeout(spawnCup, randInt(CONFIG.espresso.minMs, CONFIG.espresso.maxMs));
+  const spawnCup = () => {
+    const r = root();
+    const calm =
+      !document.hidden && !document.querySelector('dialog[open]') && !incidentRunning() && !r.classList.contains('sheet-open') && !r.classList.contains('afk');
+    // nur für Leute, die gerade tippen (sonst fliegt sie ungesehen vorbei), und nicht doppelt
+    const active = performance.now() - lastHit < 10_000;
+    if (!ctx.state.upgrades.coffee || !calm || !active || espressoActive(ctx.state)) {
+      setTimeout(spawnCup, 20_000);
+      return;
+    }
+    const cup = h('button', { class: 'espresso-cup', type: 'button', 'aria-label': 'Kaffeetasse fangen' });
+    cup.innerHTML = CUP_SVG;
+    const s = fx.rel(screen());
+    // fliegt in der oberen Hälfte des Monitors quer durchs Bild, mal von links, mal von rechts
+    cup.style.top = `${s.y + randInt(Math.round(s.h * 0.15), Math.round(s.h * 0.55))}px`;
+    cup.style.setProperty('--fly', `${CONFIG.espresso.flightMs}ms`);
+    cup.style.setProperty('--w', `${r.clientWidth}px`);
+    if (Math.random() < 0.5) cup.classList.add('from-right');
+    let caught = false;
+    const catchCup = () => {
+      if (caught) return;
+      caught = true;
+      startEspresso(ctx.state);
+      const p = fx.rel(cup);
+      fx.floater(p.x + p.w / 2, p.y, 'Espresso!', true);
+      ctx.log.write('ok', pick(ESPRESSO_LINES));
+      ctx.sfx.unlock();
+      ctx.sfx.milestone();
+      ctx.haptic('milestone');
+      espressoHint.hidden = false;
+      cup.classList.add('caught');
+      setTimeout(() => cup.remove(), 400);
+    };
+    cup.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0) return;
+      e.stopPropagation();
+      catchCup();
+    });
+    cup.addEventListener('click', catchCup); // Tastatur und Screenreader
+    r.append(cup);
+    setTimeout(() => {
+      if (!caught) {
+        cup.remove();
+        ctx.log.write('info', 'coffee[{pid}]: Tasse ist vorbeigeflogen. Jetzt trinkt sie der Praktikant.');
+      }
+      scheduleCup();
+    }, CONFIG.espresso.flightMs);
+  };
+
   // --- Anschlag ---
   const lastGag: Record<string, number> = {};
   const gag = (key: string, level: 'info' | 'warn', lines: string[], now: number, anchor: Element) => {
@@ -289,7 +363,8 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
     quip(anchor, line);
   };
 
-  const hit = (keyEl: HTMLElement) => {
+  /** auto = Dauerfeuer beim Espresso (gehaltene Taste): ohne Vibration, seltener Schnipsel */
+  const hit = (keyEl: HTMLElement, auto = false) => {
     const def = keyEl.dataset.key ?? '';
     ctx.sfx.unlock();
     solvedNow = false;
@@ -308,11 +383,11 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
 
     // Effekte: Tickets gibt es erst beim Lösen; pro Taste nur ab und zu ein Schnipsel
     const k = fx.rel(keyEl, true);
-    if (Math.random() < 0.25) fx.scrap(k.x + k.w / 2, k.y + 6);
+    if (Math.random() < (auto ? 0.08 : 0.25)) fx.scrap(k.x + k.w / 2, k.y + 6);
     lastHit = now;
 
     ctx.sfx.tap();
-    if (!solvedNow) ctx.haptic('tap');
+    if (!solvedNow && !auto) ctx.haptic('tap');
     // Ruhiger Start: erst ein bisschen tippen, dann klingelt zum ersten Mal das Telefon
     if (!started) {
       if (ctx.state.clicks >= CONFIG.onboardingClicks) begin();
@@ -330,6 +405,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
     callerEl.classList.remove('quiet');
     showCall(chooseCall());
     scheduleUrgent();
+    scheduleCup();
   };
 
   // Gedrückt-Zustand pro Taste: zählt Finger bzw. physische Tasten, damit nichts zu früh hochspringt
@@ -462,6 +538,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
         started = true;
         showCall(chooseCall(false), true);
         scheduleUrgent();
+        scheduleCup();
       } else {
         callerEl.classList.add('quiet');
       }
@@ -478,6 +555,24 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
       if (hint.hidden === invite) hint.hidden = !invite;
       setFlag(keyboardWrap, 'inviting', invite);
       if (started) work.idle(idle);
+      // Espresso: solange eine Taste gehalten wird, tippt es von selbst (Takt aus CONFIG.espresso.rate)
+      const espresso = espressoActive(s);
+      setFlag(keyboardWrap, 'espresso', espresso);
+      const now = performance.now();
+      const holding = [...held.keys()].pop();
+      // gleiche Sperren wie beim Tippen mit der echten Tastatur; Alt+F4 verwirft Tickets, das tippt nicht von selbst
+      const r = root();
+      const blocked =
+        !!document.querySelector('dialog[open]') || !!incidentRunning() || r.classList.contains('sheet-open') || r.classList.contains('afk');
+      if (espresso && holding && !blocked && holding.dataset.key !== 'F4') {
+        autoAcc += Math.min(0.25, (now - autoLast) / 1_000) * CONFIG.espresso.rate;
+        for (; autoAcc >= 1; autoAcc--) hit(holding, true);
+        espressoHint.hidden = true;
+      } else {
+        autoAcc = 0;
+        if (!espresso) espressoHint.hidden = true;
+      }
+      autoLast = now;
       if (anyKey) {
         setText(anyKey, s.upgrades.macro ? 'Makro' : 'Any');
         setFlag(anyKey, 'key-macro', !!s.upgrades.macro);

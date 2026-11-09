@@ -14,6 +14,14 @@ export function pressKey(state: GameState): number {
   return work;
 }
 
+/** Kaffeetasse erwischt: Doppelter Espresso (Taste halten tippt von selbst). Während er wirkt, fliegt keine neue Tasse. */
+export function startEspresso(state: GameState): void {
+  if (!state.buffs.some((x) => x.id === 'espresso')) state.buffs.push({ id: 'espresso', target: 'click', mult: 1, remainingMs: CONFIG.espresso.durationMs });
+  state.flags.espresso = (state.flags.espresso ?? 0) + 1;
+}
+
+export const espressoActive = (state: GameState) => state.buffs.some((b) => b.id === 'espresso');
+
 export function buyGenerator(state: GameState, id: GeneratorId, amount: BuyAmount): boolean {
   const { n, cost } = priceFor(state, id, amount);
   if (n <= 0 || cost > state.tickets) return false;

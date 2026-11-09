@@ -80,10 +80,29 @@ export function mountIncidentOverlay(ctx: AppContext): void {
   // Licht des Monitors an der Wand; die Abdunklung selbst ist eine Maske mit Loch in Monitorform
   const spot = h('div', { class: 'inc-spot', 'aria-hidden': 'true' });
   const dim = h('div', { class: 'inc-dim', 'aria-hidden': 'true' });
-  /** Alarm und Ergebnis im Monitor (Rest abgedunkelt), das Spiel selbst bildschirmfüllend */
-  const inMonitor = (on: boolean) => {
+  /** Wechsel in/aus dem Monitor; ein späterer Wechsel macht einen noch wartenden ungültig */
+  let moveSeq = 0;
+  /**
+   * Alarm und Ergebnis im Monitor (Rest abgedunkelt), das Spiel selbst bildschirmfüllend.
+   * In den Monitor geht es erst, wenn die Abdunklungs-Maske fertig geladen ist (sonst blitzt der Raum kurz hell auf).
+   */
+  const inMonitor = (on: boolean): Promise<boolean> => {
+    const seq = ++moveSeq;
     const screenEl = document.querySelector<HTMLElement>('#app .screen');
     if (on && screenEl) {
+      return placeSpot().then(() => {
+        if (seq !== moveSeq) return false;
+        enterMonitor(screenEl);
+        return true;
+      });
+    }
+    if (root.parentElement !== document.body) document.body.append(root);
+    spot.remove();
+    dim.remove();
+    return Promise.resolve(true);
+  };
+  const enterMonitor = (screenEl: HTMLElement) => {
+    {
       // wie ein Programm, das auf Vollbild geht: wächst aus dem offenen Fenster heraus
       const from = screenEl.querySelector<HTMLElement>('.work')?.getBoundingClientRect();
       const to = screenEl.getBoundingClientRect();
@@ -95,11 +114,6 @@ export function mountIncidentOverlay(ctx: AppContext): void {
       }
       if (root.parentElement !== screenEl) screenEl.append(root);
       document.body.append(dim, spot);
-      placeSpot();
-    } else {
-      if (root.parentElement !== document.body) document.body.append(root);
-      spot.remove();
-      dim.remove();
     }
   };
   /**
@@ -153,9 +167,10 @@ export function mountIncidentOverlay(ctx: AppContext): void {
    * Ausgespart werden Monitor und Fuß. Was davor steht (Telefon, Post-its), bleibt dunkel:
    * es wird in der Maske wieder aufgemalt, in seiner echten Form.
    */
-  const placeSpot = () => {
-    const monitor = root.parentElement?.closest<HTMLElement>('.monitor');
-    if (!monitor || root.hidden) return;
+  let maskSeq = 0;
+  const placeSpot = (): Promise<void> => {
+    const monitor = document.querySelector<HTMLElement>('#app .monitor');
+    if (!monitor) return Promise.resolve();
     const r = monitor.getBoundingClientRect();
     Object.assign(spot.style, { left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px` });
     // wie .inc-dim (inset: 0): ohne Scrollleiste, sonst wird die Maske gestaucht
@@ -191,9 +206,19 @@ export function mountIncidentOverlay(ctx: AppContext): void {
       else covers.push(boxCover(el, ecs, b));
     }
     const mask = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${hgt}" viewBox="0 0 ${w} ${hgt}"><path fill-rule="evenodd" d="M0 0H${w}V${hgt}H0Z${hole}"/>${covers.join('')}</svg>`;
-    const url = `url("data:image/svg+xml,${encodeURIComponent(mask)}")`;
-    dim.style.maskImage = url;
-    dim.style.setProperty('-webkit-mask-image', url);
+    const src = `data:image/svg+xml,${encodeURIComponent(mask)}`;
+    // erst dekodieren, dann setzen: sonst ist die Abdunklung einen Moment weg (heller Blitz)
+    const seq = ++maskSeq;
+    const img = new Image();
+    img.src = src;
+    // höchstens kurz warten: hängt das Dekodieren, geht es trotzdem weiter (lieber einmal blinken als hängen)
+    const timeout = new Promise<void>((resolve) => setTimeout(resolve, 150));
+    return Promise.race([img.decode().catch(() => {}), timeout])
+      .then(() => {
+        if (seq !== maskSeq) return;
+        dim.style.maskImage = `url("${src}")`;
+        dim.style.setProperty('-webkit-mask-image', `url("${src}")`);
+      });
   };
   // neu berechnen, wenn sich Fenster oder Schreibtisch ändern (gebündelt auf einen Frame)
   let spotFrame = 0;
@@ -201,7 +226,7 @@ export function mountIncidentOverlay(ctx: AppContext): void {
     if (!dim.isConnected || spotFrame) return;
     spotFrame = requestAnimationFrame(() => {
       spotFrame = 0;
-      placeSpot();
+      void placeSpot();
     });
   };
   window.addEventListener('resize', queueSpot);
@@ -238,7 +263,11 @@ export function mountIncidentOverlay(ctx: AppContext): void {
     // offenes App-Fenster zu, sonst verdeckt es den Monitor
     const sheet = document.querySelector<HTMLElement>('.sheet');
     if (sheet && !sheet.hidden) document.querySelector<HTMLElement>('.sheet-close')?.click();
-    inMonitor(true);
+    root.classList.remove('no-grow');
+    void inMonitor(true).then((ok) => ok && reveal());
+  };
+  /** Alarm sichtbar: alles außer dem Monitor stilllegen */
+  const reveal = () => {
     root.hidden = false;
     frozen = [];
     // vom Bildschirm aus nach oben: jeweils die Geschwister stilllegen
@@ -251,9 +280,9 @@ export function mountIncidentOverlay(ctx: AppContext): void {
       }
     }
     app?.classList.add('incident-on');
-    placeSpot();
   };
   const hide = () => {
+    moveSeq++;
     clearInterval(clockTimer);
     root.hidden = true;
     body.replaceChildren();
@@ -365,8 +394,6 @@ export function mountIncidentOverlay(ctx: AppContext): void {
     // --- Phase 3: RECOVERY ---
     const finish = () => {
       phase = 'done';
-      root.classList.remove('playing');
-      inMonitor(true);
       const score = game.score();
       const results = resolveIncident(ctx.state, id, score, rates(ctx.state));
       const good = isSolved(score);
@@ -379,7 +406,15 @@ export function mountIncidentOverlay(ctx: AppContext): void {
         endIncident();
       });
       const pct = Math.round(score * 100);
-      screen(
+      // erst zurück in den Monitor (wenn die Abdunklung bereit ist), dann das Ergebnis zeigen: kein Aufblitzen.
+      // Nach dem Vollbild-Spiel kein erneutes Herauswachsen aus dem Programmfenster
+      root.classList.add('no-grow');
+      void inMonitor(true).then((ok) => {
+        if (!ok) return;
+        root.classList.remove('playing');
+        showOutcome();
+      });
+      const showOutcome = () => screen(
         good ? 'ok' : 'esc',
         h('div', { class: 'mon-page mon-compact' }, [
           summary(good ? 0 : 1, 2),

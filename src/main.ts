@@ -140,4 +140,13 @@ document.addEventListener('visibilitychange', () => {
 });
 window.addEventListener('pagehide', () => saver.saveNow());
 
+// Drehen (quer ↔ hoch): Höhe neu setzen und eine von iOS stehen gelassene Verschiebung zurücksetzen
+const fitViewport = () => {
+  document.documentElement.style.setProperty('--app-h', `${window.innerHeight}px`);
+  window.scrollTo(0, 0);
+};
+fitViewport();
+window.addEventListener('resize', fitViewport);
+window.addEventListener('orientationchange', () => setTimeout(fitViewport, 300));
+
 registerServiceWorker();

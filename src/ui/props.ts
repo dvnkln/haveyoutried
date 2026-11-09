@@ -1,5 +1,5 @@
 import { CONFIG, GENERATORS } from '../config';
-import { DUCK_LINES, INCIDENT_SIGN, MOUSE_LINES, POSTERS, POSTITS } from '../content/props';
+import { CALENDAR_LINES, DUCK_LINES, INCIDENT_SIGN, MOUSE_LINES, MUG_DESIGNS, POSTITS, type MugGen } from '../content/props';
 import { bus } from '../core/bus';
 import { incidentRunning, isSolved } from '../core/incidents';
 import type { GameState } from '../core/state';
@@ -28,25 +28,25 @@ const PLANT = `<svg viewBox="0 0 44 56">
   <rect x="9" y="30" width="26" height="6" rx="2" fill="#f0a77e" ${INK}/>
 </svg>`;
 
-/** Klassische IT-Tassensprüche (zweizeilig, passend für den Becher) */
-const MUG_SLOGANS: [string, string][] = [
-  ['ES WAR', 'DNS'],
-  ['SUDO', 'KAFFEE'],
-  ['404', 'KAFFEE'],
-  ['WORKS ON', 'MY MUG'],
-  ['KEIN', 'BACKUP'],
-  ['LAYER 8', 'INSIDE'],
-];
-const mugSvg = ([a, b]: [string, string]) => `<svg viewBox="0 0 56 60">
+/** Becher: schlicht (nur Kaffeemaschine) oder mit Design der zuletzt verbesserten Infrastruktur */
+const mugSvg = (body: string, print: [string, string] | null, ink: string) => {
+  // lange Aufdrucke etwas kleiner, damit sie auf den Becher passen
+  const size = (t: string, max: number) => Math.min(max, 64 / Math.max(6, t.length)).toFixed(1);
+  const text = print
+    ? `<text x="25.5" y="35" text-anchor="middle" font-family="Fredoka, sans-serif" font-size="${size(print[0], 7.5)}" font-weight="700" fill="var(--ink)">${print[0]}</text>
+  <text x="25.5" y="45" text-anchor="middle" font-family="Fredoka, sans-serif" font-size="${size(print[1], 8.5)}" font-weight="700" fill="${ink}">${print[1]}</text>`
+    : '';
+  return `<svg viewBox="0 0 56 60">
+  <defs><linearGradient id="mug-gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe9a8"/><stop offset=".5" stop-color="#f2c14e"/><stop offset="1" stop-color="#c9902a"/></linearGradient></defs>
   <g class="steam" fill="none" stroke="var(--ink-soft)" stroke-width="2.2" stroke-linecap="round">
     <path d="M17 16 c-3 -4 3 -6 0 -11"/><path d="M26 16 c-3 -4 3 -6 0 -11"/><path d="M35 16 c-3 -4 3 -6 0 -11"/>
   </g>
   <path d="M43 28 h4 a8 8 0 0 1 0 16 h-4" fill="none" stroke="var(--ink)" stroke-width="3.5"/>
-  <path d="M7 20 h37 v30 a8 8 0 0 1 -8 8 h-21 a8 8 0 0 1 -8 -8Z" fill="#fffaf0" ${INK}/>
+  <path d="M7 20 h37 v30 a8 8 0 0 1 -8 8 h-21 a8 8 0 0 1 -8 -8Z" fill="${body}" ${INK}/>
   <ellipse cx="25.5" cy="20" rx="18.5" ry="3" fill="#8a5a3c" ${INK}/>
-  <text x="25.5" y="35" text-anchor="middle" font-family="Fredoka, sans-serif" font-size="7.5" font-weight="700" fill="var(--ink)">${a}</text>
-  <text x="25.5" y="45" text-anchor="middle" font-family="Fredoka, sans-serif" font-size="8.5" font-weight="700" fill="#d64545">${b}</text>
+  ${text}
 </svg>`;
+};
 
 const DUCK = `<svg viewBox="0 0 48 42">
   <path d="M6 26 c0 -8 8 -11 16 -9 c2 -9 16 -10 18 0 c1 6 -3 9 -6 10 c6 1 8 4 6 8 c-3 5 -14 6 -22 5 c-8 -1 -12 -6 -12 -14Z" fill="#ffd84d" ${INK}/>
@@ -127,17 +127,6 @@ const MOUSE = `<svg viewBox="0 -10 40 64">
   </g>
 </svg>`;
 
-/** Motivationsposter: schwarzes Passepartout, Bild mit Symbol, großer Titel – Rahmen je nach Stufe per CSS */
-const posterSvg = (p: (typeof POSTERS)[keyof typeof POSTERS]) => `<svg viewBox="0 0 64 46">
-  <rect class="pst-frame" x="1" y="1" width="62" height="44" rx="2"/>
-  <rect x="5" y="5" width="54" height="36" fill="#1d1a20"/>
-  <rect x="11" y="8" width="42" height="20" fill="${p.color}"/>
-  <text x="32" y="22" text-anchor="middle" font-family="Fredoka, sans-serif" font-size="${p.glyph.length > 3 ? 8 : 10}" font-weight="700" fill="var(--ink)">${p.glyph}</text>
-  <text x="32" y="35" text-anchor="middle" font-family="Fredoka, sans-serif" font-size="${p.title.length > 11 ? 5.2 : 6.5}" font-weight="700" letter-spacing=".4" fill="#fffaf0">${p.title}</text>
-  <rect x="18" y="37.5" width="28" height="1.2" rx=".6" fill="#8a8295"/>
-  <path class="pst-tape" d="M2 -1 l9 3 l-1 4 l-9 -3Z M62 -1 l-9 3 l1 4 l9 -3Z" fill="rgba(255,250,240,.85)"/>
-</svg>`;
-
 /** Club-Mate-artige Flasche: der übernommene Praktikant hat sich eingerichtet */
 const MATE = `<svg viewBox="0 0 16 44">
   <path d="M6 2 h4 v8 c0 3 4 5 4 10 v20 a3 3 0 0 1 -3 3 h-6 a3 3 0 0 1 -3 -3 v-20 c0 -5 4 -7 4 -10Z" fill="#f2b84b" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round"/>
@@ -200,7 +189,9 @@ export function createProps(ctx: AppContext) {
   cables.append(cableTag);
 
   // --- Upgrades zum Anfassen ---
-  const mug = svg(mugSvg(pick(MUG_SLOGANS)), 'prop mug');
+  const mug = svg(mugSvg('#fffaf0', null, ''), 'prop mug', 'button');
+  mug.setAttribute('type', 'button');
+  mug.setAttribute('aria-label', 'Kaffeebecher');
   const duck = svg(DUCK, 'prop duck', 'button');
   duck.setAttribute('type', 'button');
   duck.setAttribute('aria-label', 'Gummiente');
@@ -238,48 +229,79 @@ export function createProps(ctx: AppContext) {
   bus.on('upgrade', ({ id }) => {
     if (id === 'mouse' || id === 'mousepad') requestAnimationFrame(() => juice(mouse, POP, 420, true));
   });
-  // Motivationsposter an der Wand: zeigt den zuletzt verbesserten Generator, Antippen blättert
-  const POSTER_GENS = Object.keys(POSTERS) as (keyof typeof POSTERS)[];
-  const tierOf = (gen: keyof typeof POSTERS) => [3, 2, 1].find((t) => state.upgrades[`${gen}-${t}`]) ?? 0;
-  const ownedPosters = () => POSTER_GENS.filter((g) => tierOf(g) > 0);
-  let shownPoster: keyof typeof POSTERS | null = null;
-  const poster = svg('', 'prop poster', 'button');
-  poster.setAttribute('type', 'button');
-  poster.setAttribute('aria-label', 'Motivationsposter');
-  let posterSig = '';
-  const drawPoster = () => {
-    const list = ownedPosters();
-    if (!shownPoster || !list.includes(shownPoster)) shownPoster = list[list.length - 1] ?? null;
-    const sig = shownPoster ? `${shownPoster}-${tierOf(shownPoster)}` : '';
-    if (sig === posterSig) return;
-    posterSig = sig;
-    setFlag(poster, 'owned', !!shownPoster);
-    if (!shownPoster) return;
-    poster.innerHTML = posterSvg(POSTERS[shownPoster]);
-    poster.dataset.tier = String(tierOf(shownPoster));
+  // Becher-Design: die zuletzt verbesserte Infrastruktur bestimmt den Becher (Stufe 1 weiß, 2 farbig, 3 golden)
+  const MUG_GENS = Object.keys(MUG_DESIGNS) as MugGen[];
+  const tierOf = (gen: MugGen) => [3, 2, 1].find((t) => state.upgrades[`${gen}-${t}`]) ?? 0;
+  // nach dem Laden: die am weitesten verbesserte (bei Gleichstand die spätere Infrastruktur)
+  let mugGen: MugGen | null = null;
+  const pickMugGen = () => MUG_GENS.filter((g) => tierOf(g) > 0).sort((a, b) => tierOf(a) - tierOf(b)).pop() ?? null;
+  let mugSig = '';
+  const drawMug = () => {
+    if (mugGen && tierOf(mugGen) === 0) mugGen = null;
+    mugGen ??= pickMugGen();
+    const tier = mugGen ? tierOf(mugGen) : 0;
+    const sig = `${mugGen}-${tier}`;
+    if (sig === mugSig) return;
+    mugSig = sig;
+    if (!mugGen) return void (mug.innerHTML = mugSvg('#fffaf0', null, ''));
+    const d = MUG_DESIGNS[mugGen];
+    const body = tier === 3 ? 'url(#mug-gold)' : tier === 2 ? d.color : '#fffaf0';
+    mug.innerHTML = mugSvg(body, d.prints[tier - 1]!, tier === 1 ? '#d64545' : 'var(--ink)');
   };
-  poster.addEventListener('click', () => {
-    const list = ownedPosters();
-    if (!list.length) return;
-    // nächstes Poster, Spruch der aktuellen Stufe als Sprechblase
-    shownPoster = list[(list.indexOf(shownPoster!) + 1) % list.length]!;
-    drawPoster();
-    const p = POSTERS[shownPoster];
-    quip(poster, `${p.title}. ${p.lines[tierOf(shownPoster) - 1]}`);
-    juice(poster, SHAKE, 300, true);
+  const mugQuip = () => {
+    if (!mugGen) return quip(mug, 'Kaffee. Schwarz. Wie das Monitoring um 3 Uhr.');
+    const d = MUG_DESIGNS[mugGen];
+    quip(mug, `${d.title}. ${d.lines[tierOf(mugGen) - 1]}`);
+  };
+  mug.addEventListener('click', () => {
+    mugQuip();
+    juice(mug, SHAKE, 300, true);
     ctx.sfx.tick();
   });
   bus.on('upgrade', ({ id }) => {
-    const gen = id.split('-')[0] as keyof typeof POSTERS;
-    if (!POSTER_GENS.includes(gen)) return;
-    shownPoster = gen;
-    drawPoster();
+    const gen = id.split('-')[0] as MugGen;
+    if (!MUG_GENS.includes(gen)) return;
+    mugGen = gen;
+    drawMug();
+    if (!state.upgrades.coffee) return;
     requestAnimationFrame(() => {
-      juice(poster, POP, 420, true);
-      const p = POSTERS[gen];
-      quip(poster, `${p.title}. ${p.lines[tierOf(gen) - 1]}`);
+      juice(mug, POP, 420, true);
+      mugQuip();
     });
   });
+
+  // --- Abreißkalender: Antippen reißt das Blatt ab, der nächste Tag (und Spruch) kommt ---
+  const DAYS = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+  let calOffset = 0;
+  let calLine = Math.floor(Math.random() * CALENDAR_LINES.length);
+  const calPage = () => {
+    const d = new Date(Date.now() + calOffset * 86_400_000);
+    return h('span', { class: 'cal-page' }, [
+      h('span', { class: 'cal-head' }, [h('b', { text: String(d.getDate()) }), ` ${DAYS[d.getDay()]}`]),
+      h('span', { class: 'cal-text', text: CALENDAR_LINES[calLine % CALENDAR_LINES.length]! }),
+    ]);
+  };
+  const calendar = h('button', { class: 'tear-cal', type: 'button', 'aria-label': 'Abreißkalender: nächstes Blatt' }, [calPage()]);
+  calendar.addEventListener('click', () => {
+    // das oberste noch hängende Blatt ist das, was man sieht (fallende Blätter sind schon „torn“)
+    const hanging = [...calendar.querySelectorAll('.cal-page:not(.torn)')];
+    const old = hanging.pop();
+    for (const extra of hanging) extra.remove();
+    calOffset++;
+    calLine++;
+    // neues Blatt kommt unter das alte: das alte liegt beim Abreißen obenauf
+    if (old) old.before(calPage());
+    else calendar.append(calPage());
+    if (old) {
+      // altes Blatt reißt ab und segelt davon
+      old.classList.add('torn');
+      setTimeout(() => old.remove(), 600);
+    }
+    ctx.sfx.tick();
+    ctx.haptic('tap');
+    if (calOffset % 7 === 0) ctx.log.write('info', 'kalender[7]: Eine Woche abgerissen. Die Tickets sind trotzdem von heute.');
+  });
+
   const mate = svg(MATE, 'prop mate');
   const dust = svg(DUST, 'prop dust');
   const kNote = h('span', { class: 'k-note', 'aria-hidden': 'true', text: 'Nicht neu starten. —K.' });
@@ -327,7 +349,7 @@ export function createProps(ctx: AppContext) {
 
     for (const p of owned) setFlag(p.el, 'owned', !!s.upgrades[p.upgrade]);
     setFlag(mouse, 'has-pad', !!s.upgrades.mousepad);
-    drawPoster();
+    drawMug();
     // Staubmaus wohnt unterm Tisch, bis der Staubsauger kommt
     setFlag(dust, 'owned', s.generators.undertable.owned > 0 && !s.upgrades['undertable-2']);
     setFlag(mouse, 'ergo', !!s.upgrades.mouse);
@@ -350,5 +372,5 @@ export function createProps(ctx: AppContext) {
     setFlag(cables, 'tidy', now < tidyUntil);
   };
 
-  return { incidentSign, notes, plant, cables, mug, duck, mouse, poster, mate, dust, kNote, book, kanban, beacon, render };
+  return { incidentSign, calendar, notes, plant, cables, mug, duck, mouse, mate, dust, kNote, book, kanban, beacon, render };
 }

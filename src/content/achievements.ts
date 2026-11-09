@@ -98,10 +98,14 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   a('denvercoder', 'Antwort aus 2009', 'Der Fragesteller aus dem Forum hat nach 17 Jahren geantwortet.', evHappened('forum', 'Den Fragesteller anschreiben', 'jackpot'), true),
   a('cert', 'Ihre Verbindung ist privat', 'Ein abgelaufenes Zertifikat ordentlich erneuert. Statt „Weiter“ zu klicken.', evHappened('cert', 'Neues Zertifikat ausstellen', 'win')),
   a('licenses', 'Lizenz zum Zählen', 'Beim Lizenz-Audit 197 Lizenzen zu viel gefunden. Der Einkauf will nicht darüber reden.', evHappened('audit-license', 'Alle Lizenzen zählen', 'win')),
+  a('mission', 'Wir leben Synergien', 'Das Firmenleitbild per Zufallsgenerator geschrieben. Und es wurde genommen.', evHappened('mission', 'Einen Leitbild-Generator schreiben', 'jackpot'), true),
+  a('mauve', 'Mauve hat den meisten RAM', 'Den Chef gefragt, in welcher Farbe er seine Datenbank möchte.', evHappened('sqlcolor', 'Fragen, welche Farbe sie haben soll', 'jackpot'), true),
   a('chefbutton', 'Der Knopf ist nicht angeschlossen', 'Dem Chef ein Admin-Konto gegeben, das nichts darf. Er ist glücklich.', evHappened('chefpw', 'Ihm ein eigenes Konto geben', 'win'), true),
   a('agentyolo', 'Inbox Zero (technisch)', 'Den KI-Agenten alle Tickets schließen lassen. Und es ging gut. Diesmal.', evHappened('agentclose', 'Freigeben', 'jackpot'), true),
   a('whisperer', 'Druckerflüsterer', 'Dieter gut zugeredet. Er hat aufgehört. Das Stockwerk ist beeindruckt.', evHappened('printerghost', 'Dieter gut zureden', 'rush'), true),
   a('ignore5', 'Nicht mein Problem', '5 Pager-Alarme einfach ignoriert.', (s) => flag(s, 'ev:ignored') >= 5),
+  a('espresso1', 'Doppelter Espresso', 'Eine fliegende Kaffeetasse erwischt. Die Finger tippen jetzt allein.', (s) => flag(s, 'espresso') >= 1),
+  a('espresso10', 'Koffein-Infusion', '10 Tassen erwischt. Die Hände zittern. Produktiv.', (s) => flag(s, 'espresso') >= 10),
   a('urgent10', 'VIP-Dompteur', '10 „!! DRINGEND !!“-Tickets erwischt.', (s) => flag(s, 'urgent') >= 10),
 
   // --- Incidents ---

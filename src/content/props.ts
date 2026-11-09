@@ -107,14 +107,19 @@ export const TRASH_LINES: string[] = [
 ];
 
 /**
- * Ironische Motivationsposter an der Wand: eins pro Generator, jede Upgrade-Stufe
- * macht es edler (angeklebt → schwarzer Rahmen → Goldrahmen) und bringt einen neuen Spruch.
+ * Becher-Design je Infrastruktur: die zuletzt verbesserte bestimmt den Becher.
+ * Stufe 1: weiß mit Aufdruck, 2: in der Farbe der Infrastruktur, 3: golden. Antippen zeigt das Motto.
  */
-export const POSTERS: Record<'bash' | 'cron' | 'ansible' | 'k8s' | 'agent', { title: string; glyph: string; color: string; lines: [string, string, string] }> = {
+export type MugGen = 'bash' | 'cron' | 'ansible' | 'k8s' | 'agent';
+export const MUG_DESIGNS: Record<MugGen, { title: string; color: string; prints: [[string, string], [string, string], [string, string]]; lines: [string, string, string] }> = {
   bash: {
     title: 'AUTOMATISIERUNG',
-    glyph: '#!',
     color: '#a0c4ff',
+    prints: [
+      ['SET -EUO', 'PIPEFAIL'],
+      ['# KEINE', 'AHNUNG'],
+      ['SHELL', 'CHECKED'],
+    ],
     lines: [
       'Wer Fehler ignoriert, hat keine. Seit set -e leider doch.',
       'Jedes Skript beginnt mit „nur ganz kurz“. Jetzt steht es wenigstens im Kommentar.',
@@ -123,8 +128,12 @@ export const POSTERS: Record<'bash' | 'cron' | 'ansible' | 'k8s' | 'agent', { ti
   },
   cron: {
     title: 'GEDULD',
-    glyph: '*/5',
     color: '#ffd166',
+    prints: [
+      ['MAILTO=""', 'RUHE'],
+      ['NUR EINER', 'ZUR ZEIT'],
+      ['03:00', 'MEINE ZEIT'],
+    ],
     lines: [
       'Erfolg ist, wenn keiner merkt, ob es läuft. Ohne Cron-Mails merkt es wirklich keiner.',
       'Jeder Job läuft nur noch einmal gleichzeitig. Teamgeist war gestern.',
@@ -133,8 +142,12 @@ export const POSTERS: Record<'bash' | 'cron' | 'ansible' | 'k8s' | 'agent', { ti
   },
   ansible: {
     title: 'KONSISTENZ',
-    glyph: 'YAML',
     color: '#9be3c1',
+    prints: [
+      ['CHANGED: 0', '(GELOGEN)'],
+      ['PASSWORT', 'IM README'],
+      ['2× GLEICH', 'GEBRÜHT'],
+    ],
     lines: [
       'Dry Run sagt „changed: 0“. Jetzt ist es überall gleich kaputt.',
       'Alle Geheimnisse verschlüsselt. Das Passwort steht im README.',
@@ -143,8 +156,12 @@ export const POSTERS: Record<'bash' | 'cron' | 'ansible' | 'k8s' | 'agent', { ti
   },
   k8s: {
     title: 'SKALIERUNG',
-    glyph: 'k8s',
     color: '#cdb4db',
+    prints: [
+      ['HELM', 'AM STEUER'],
+      ['ICH STARTE', 'NEU'],
+      ['KEINER', 'VERSTEHT’S'],
+    ],
     lines: [
       'Ein Problem. Jetzt verteilt auf 40 Pods.',
       'Wenn es nicht läuft, starte es neu. Für immer. Automatisch.',
@@ -153,8 +170,12 @@ export const POSTERS: Record<'bash' | 'cron' | 'ansible' | 'k8s' | 'agent', { ti
   },
   agent: {
     title: 'INNOVATION',
-    glyph: 'AI',
     color: '#f4a261',
+    prints: [
+      ['SEI', 'HILFREICH'],
+      ['MENSCH', 'KLICKT OK'],
+      ['100 %', 'FAKTEN*'],
+    ],
     lines: [
       'Halluziniert schneller als jeder Praktikant.',
       'Der Mensch bleibt im Loop. Er klickt „OK“.',
@@ -162,3 +183,52 @@ export const POSTERS: Record<'bash' | 'cron' | 'ansible' | 'k8s' | 'agent', { ti
     ],
   },
 };
+
+/** Abreißkalender an der Wand: Antippen reißt das Blatt ab, der nächste Tag kommt */
+export const CALENDAR_LINES: string[] = [
+  'Es war DNS.',
+  'sudo Kaffee',
+  'Works on my mug.',
+  'Kein Backup, kein Mitleid.',
+  'Layer 8 inside.',
+  '404: Motivation not found.',
+  'Heute ist ein guter Tag für ein Backup.',
+  'Freitag: kein Deploy. Auch kein kleiner.',
+  'Montag. Wieder.',
+  'Schon aus- und wieder eingeschaltet?',
+  'Never touch a running system.',
+  'Kein Bug. Ein Feature.',
+  'RTFM. Aber freundlich.',
+  'Die Cloud ist nur der PC von jemand anderem.',
+  'Ein Ticket kommt selten allein.',
+  'Heute kein Meeting. (Lüge)',
+  'chmod 777 ist keine Lösung.',
+  'Passwort123 ist kein Passwort.',
+  'Erst denken, dann rm -rf.',
+  'Der Drucker hasst dich nicht. Er ist nur Drucker.',
+  'Nichts hält länger als ein Provisorium.',
+  'Mittagspause ist auch ein Wartungsfenster.',
+  'Heute schon gepingt?',
+  'Bei mir geht’s.',
+  'Kein Workaround. Architektur.',
+  'Ruhe bewahren. Logs lesen.',
+  'Wer kein Backup hat, hat Abenteuer.',
+  'Gestern lief es noch.',
+  'Ticket ≠ Zuruf.',
+  'Ab heute alles dokumentieren. Ab morgen.',
+  'YAML: Leerzeichen sind Gefühle.',
+  '0118 999 881 999 119 725 … 3',
+  'Have you tried …?',
+  'Es gibt 10 Arten von Menschen.',
+  'Heute ist Patchday. Irgendwo.',
+  'Wer misst, findet. Wer nicht misst, hat Ruhe.',
+  'Der Kaffee ist das eigentliche Produktivsystem.',
+  'Nur Mut. Und ein Rollback-Plan.',
+  'Es ist immer DNS. Außer wenn es der Drucker ist.',
+  'Doku ist das, was man vor dem Urlaub schreibt.',
+  'Mauve hat den meisten RAM.',
+  'Heute Umstrukturierung. Morgen zurück.',
+  'Synergie: das, was im Meeting fehlte.',
+  'Wer früh plant, hat länger Verspätung.',
+  'Die Kaffeekasse ist das stabilste System im Haus.',
+];

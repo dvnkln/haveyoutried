@@ -73,7 +73,8 @@ body {
   color: var(--ink);
   font: var(--fs) / 1.4 var(--font-ui);
   overscroll-behavior: none;
-  overflow-x: hidden;
+  /* die Seite selbst scrollt nie (iOS blieb nach dem Drehen sonst verschoben stehen) */
+  overflow: hidden;
   -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
 }
@@ -103,7 +104,8 @@ button {
 
 #app {
   position: relative;
-  height: 100dvh;
+  /* Höhe aus JS (innerHeight): iOS rechnet 100dvh nach dem Drehen nicht immer neu */
+  height: var(--app-h, 100dvh);
   max-width: 520px;
   margin: 0 auto;
   display: grid;
@@ -1554,19 +1556,6 @@ button {
 }
 .pager.urgent .pager-fill {
   background: rgba(255, 123, 123, 0.4);
-}
-.pager-tag {
-  padding: 1px 7px;
-  border-radius: 7px;
-  background: var(--ink);
-  color: #fff3c4;
-  font-weight: 700;
-  font-size: 11px;
-  letter-spacing: 0.06em;
-}
-.pager.urgent .pager-tag {
-  background: #d64545;
-  color: #fff;
 }
 .pager-title {
   flex: 1;
@@ -3840,7 +3829,11 @@ button {
 
 /* ---------- Fernwartung: Remotedesktop ---------- */
 .work[data-kind='rdp'] {
-  background: linear-gradient(160deg, #4f86e8, #2f5fb8);
+  /* Hintergrundbild: grüner Hügel unter blauem Himmel mit Wölkchen */
+  background: radial-gradient(130% 55% at 35% 112%, #7cc95f 58%, #5fae4a 62%, transparent 63%),
+    radial-gradient(40% 12% at 72% 22%, rgba(255, 255, 255, 0.85), transparent 70%),
+    radial-gradient(30% 9% at 22% 30%, rgba(255, 255, 255, 0.7), transparent 70%),
+    linear-gradient(180deg, #4f8fe0, #a9d4f5 75%);
 }
 .work[data-kind='rdp'] .work-head {
   padding: 0;
@@ -3877,20 +3870,38 @@ button {
   padding: 5px 8px 2px;
 }
 .rdp-icons {
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
+  width: 46px;
 }
 .rdp-icon {
-  padding: 0 4px;
-  border-radius: 3px;
-  background: rgba(255, 255, 255, 0.2);
-  color: #fff;
-  font-size: 8.5px;
-  white-space: nowrap;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
 }
-.rdp-icon::before {
-  content: '▣ ';
+.rdp-ipic {
+  width: 20px;
+  height: 20px;
+}
+.rdp-ipic svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.25));
+}
+.rdp-iname {
+  max-width: 100%;
+  color: #fff;
+  font-size: 7.5px;
+  line-height: 1.1;
+  text-align: center;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 .rdp-dialog {
   flex: 1;
@@ -3921,6 +3932,19 @@ button {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+.rdp-x {
+  flex: 0 0 auto;
+  width: 15px;
+  height: 15px;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid var(--ink);
+  border-radius: 50%;
+  background: #e04848;
+  color: #fff;
+  font-size: 8px;
+  font-weight: 700;
 }
 .rdp-ok {
   flex: 0 0 auto;
@@ -3980,8 +4004,21 @@ button {
   border-radius: 3px;
   background: rgba(255, 255, 255, 0.15);
 }
-.rdp-clock {
+.rdp-task-dim {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  opacity: 0.65;
+}
+.rdp-tray {
   margin-left: auto;
+  flex: 0 0 auto;
+  opacity: 0.8;
+}
+.rdp-clock {
+  flex: 0 0 auto;
 }
 
 /* ---------- Chat: Messenger-Oberfläche ---------- */
@@ -4634,6 +4671,9 @@ button {
 }
 .screen > .incident[hidden] {
   display: none;
+}
+.screen > .incident.no-grow {
+  animation: none;
 }
 /* Vollbild: aus dem Programmfenster auf den ganzen Bildschirm */
 @keyframes win-max {
@@ -5929,45 +5969,6 @@ body > .incident.playing {
   box-shadow: inset 0 -3px 0 #e0a93a;
 }
 
-/* ---------- Motivationsposter an der Wand über dem Monitor ---------- */
-.poster {
-  display: none;
-  z-index: 0;
-  left: 12%;
-  /* hängt knapp unter den Schildern, damit der Monitor es nicht verdeckt */
-  top: -5px;
-  width: 46px;
-  height: 33px;
-  opacity: 0.55;
-  filter: saturate(0.6);
-  padding: 0;
-  border: 0;
-  background: none;
-  pointer-events: auto;
-  rotate: -2deg;
-}
-.poster.owned {
-  display: block;
-}
-.poster .pst-frame {
-  fill: #fffaf0;
-  stroke: var(--ink);
-  stroke-width: 1.6;
-}
-/* Stufe 1: nur angeklebt; 2: schwarzer Rahmen; 3: Goldrahmen */
-.poster:not([data-tier='1']) .pst-tape {
-  display: none;
-}
-.poster[data-tier='2'] .pst-frame {
-  fill: #3a3440;
-  stroke-width: 2;
-}
-.poster[data-tier='3'] .pst-frame {
-  fill: #e8b84a;
-  stroke-width: 2;
-}
-
-
 /* Pflanze steht jetzt auf dem Tisch */
 .deskbar .plant {
   position: relative;
@@ -6402,4 +6403,400 @@ body > .incident.playing {
   border-radius: 5px;
   background: #fffaf0;
   color: #2f7a52;
+}
+
+/* ---------- Fliegende Kaffeetasse: antippen = Doppelter Espresso ---------- */
+.espresso-cup {
+  position: absolute;
+  z-index: 45;
+  left: 0;
+  /* großzügiges Tippfeld um die Tasse */
+  width: 84px;
+  height: 72px;
+  margin: -12px 0 0 -13px;
+  padding: 12px 13px;
+  border: 0;
+  background: none;
+  animation: cup-fly var(--fly, 5.5s) linear forwards;
+  filter: drop-shadow(0 3px 0 rgba(61, 44, 46, 0.35));
+}
+.espresso-cup svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  animation: cup-bob 0.9s ease-in-out infinite alternate;
+}
+.espresso-cup .cup-wing {
+  transform-box: fill-box;
+  animation: cup-flap 0.22s ease-in-out infinite alternate;
+}
+.espresso-cup .cup-wing-l {
+  transform-origin: 100% 60%;
+}
+.espresso-cup .cup-wing-r {
+  transform-origin: 0 60%;
+}
+@keyframes cup-fly {
+  from {
+    transform: translateX(-70px);
+  }
+  to {
+    transform: translateX(calc(var(--w, 100vw) + 10px));
+  }
+}
+.espresso-cup.from-right {
+  animation-name: cup-fly-back;
+}
+.espresso-cup.from-right svg {
+  transform: scaleX(-1);
+}
+@keyframes cup-fly-back {
+  from {
+    transform: translateX(calc(var(--w, 100vw) + 10px));
+  }
+  to {
+    transform: translateX(-70px);
+  }
+}
+@keyframes cup-bob {
+  from {
+    translate: 0 -6px;
+  }
+  to {
+    translate: 0 6px;
+  }
+}
+@keyframes cup-flap {
+  to {
+    transform: scaleY(0.4);
+  }
+}
+.espresso-cup.caught {
+  animation-play-state: paused;
+}
+.espresso-cup.caught svg {
+  animation: cup-caught 0.35s ease-out forwards;
+}
+@keyframes cup-caught {
+  to {
+    scale: 1.6;
+    opacity: 0;
+  }
+}
+.espresso-hint {
+  background: #f4a261;
+}
+/* Espresso aktiv: Tastatur glüht warm */
+.keyboard-wrap.espresso .keyboard {
+  box-shadow: 0 0 0 3px #f4a261, 0 0 16px 2px rgba(244, 162, 97, 0.55);
+}
+@media (prefers-reduced-motion: reduce) {
+  .espresso-cup svg,
+  .espresso-cup .cup-wing {
+    animation: none;
+  }
+}
+
+/* ---------- Handys mit wenig Höhe (iPhone als App, Android mit Browserleisten): mehr Platz fürs Arbeitsfenster ---------- */
+@media (max-height: 820px) and (min-height: 681px) {
+  .wall {
+    padding-top: calc(4px + var(--safe-top));
+  }
+  .monitor-area {
+    padding-top: 16px;
+    padding-bottom: 12px;
+  }
+  .monitor {
+    padding: 10px 11px 0;
+  }
+  .desktop {
+    gap: 6px;
+    padding: 6px;
+  }
+  .app-tile {
+    width: 31px;
+    height: 31px;
+    border-radius: 9px;
+  }
+  .deskbar {
+    padding-top: 6px;
+    padding-bottom: 8px;
+  }
+  .caller {
+    height: 80px;
+  }
+  .caller-says {
+    -webkit-line-clamp: 3;
+  }
+}
+
+/* ---------- Becher: jetzt antippbar (Motto der Infrastruktur) ---------- */
+button.mug {
+  padding: 0;
+  border: 0;
+  background: none;
+  pointer-events: auto;
+}
+
+/* ---------- Abreißkalender an der Wand zwischen Zähler und Whiteboard ---------- */
+.tear-cal {
+  position: relative;
+  flex: 0 0 auto;
+  width: 84px;
+  height: 64px;
+  margin-top: 2px;
+  padding: 0;
+  border: var(--outline) solid var(--ink);
+  border-radius: 6px 6px 4px 4px;
+  /* Blätterstapel darunter */
+  background: #fffaf0;
+  box-shadow: 0 3px 0 #e8dcc8, 0 5px 0 var(--ink);
+  transform: rotate(-1.5deg);
+  overflow: visible;
+  color: var(--ink);
+  font-family: var(--font-ui);
+}
+/* Ringbindung oben */
+.tear-cal::before {
+  content: '';
+  position: absolute;
+  z-index: 3;
+  left: 14px;
+  right: 14px;
+  top: -6px;
+  height: 8px;
+  background: radial-gradient(circle, var(--ink) 2.4px, transparent 2.8px) 0 0 / 14px 8px repeat-x;
+}
+.cal-page {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 4px 4px 3px 3px;
+  background: #fffaf0;
+  text-align: left;
+}
+.cal-head {
+  flex: 0 0 auto;
+  padding: 1px 6px 0;
+  background: #e04848;
+  color: #fffaf0;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.cal-head b {
+  font-size: 12px;
+}
+.cal-text {
+  padding: 2px 5px 0;
+  font-size: 9.5px;
+  font-weight: 600;
+  line-height: 1.15;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  /* hart auf drei Zeilen: line-clamp allein lässt im Flex-Layout eine vierte durchscheinen */
+  flex: 0 0 auto;
+  max-height: calc(3 * 1.15em + 2px);
+  hyphens: auto;
+  overflow-wrap: break-word;
+}
+/* abgerissenes Blatt segelt nach unten weg */
+.cal-page.torn {
+  z-index: 2;
+  pointer-events: none;
+  animation: cal-tear 0.6s ease-in forwards;
+  transform-origin: 80% 0;
+}
+@keyframes cal-tear {
+  20% {
+    transform: rotate(-8deg);
+  }
+  to {
+    transform: translate(-30px, 70px) rotate(-40deg);
+    opacity: 0;
+  }
+}
+.tear-cal:active {
+  transform: rotate(-1.5deg) translateY(1px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .cal-page.torn {
+    animation: none;
+    opacity: 0;
+  }
+}
+/* Whiteboard etwas schmaler, damit der Kalender daneben passt */
+.incident-sign {
+  width: 70px;
+}
+@media (max-width: 359px) {
+  .tear-cal {
+    width: 70px;
+  }
+  .cal-text {
+    font-size: 8.5px;
+  }
+  .incident-sign {
+    width: 62px;
+  }
+}
+
+/* ---------- Pager-Hinweis (bei offenem Menü): im Look des Pagers auf dem Tisch ---------- */
+.pager {
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: 12px 12px 14px 14px;
+  background: linear-gradient(180deg, #5a5262, #3f3947);
+  box-shadow: inset 0 -4px 0 #2e2a33, 0 4px 0 var(--ink);
+  color: #2e3a26;
+}
+.pager-mini {
+  position: relative;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 24px;
+  padding: 3px;
+  border: 2px solid var(--ink);
+  border-radius: 6px 6px 7px 7px;
+  background: linear-gradient(180deg, #6b6273, #4a4352);
+  transform: rotate(-6deg);
+}
+.pm-lcd {
+  display: block;
+  height: 100%;
+  border: 1.5px solid var(--ink);
+  border-radius: 2px;
+  background: #9fb38c;
+}
+.pm-led {
+  position: absolute;
+  top: -5px;
+  right: 4px;
+  width: 7px;
+  height: 7px;
+  border: 1.5px solid var(--ink);
+  border-radius: 50%;
+  background: #ff6b6b;
+  animation: led-blink 0.8s steps(2, jump-none) infinite;
+}
+@keyframes led-blink {
+  50% {
+    background: #7a2e2e;
+  }
+}
+.pager-lcd {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border: 2px solid var(--ink);
+  border-radius: 5px;
+  background: #9fb38c;
+  font: 700 13px / 1.2 var(--font);
+  overflow: hidden;
+}
+.pager-lcd > :not(.pager-fill) {
+  position: relative;
+}
+/* Restzeit als dunklere LCD-Segmente im Hintergrund des Displays */
+.pager .pager-fill {
+  background: repeating-linear-gradient(90deg, rgba(46, 58, 38, 0.18) 0 6px, transparent 6px 8px);
+}
+.pager.urgent {
+  background: linear-gradient(180deg, #6e4a4a, #4d3333);
+}
+.pager.urgent .pager-lcd {
+  background: #d7b08f;
+}
+.pager.urgent .pager-fill {
+  background: repeating-linear-gradient(90deg, rgba(120, 30, 30, 0.22) 0 6px, transparent 6px 8px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .pm-led {
+    animation: none;
+  }
+}
+
+/* ---------- KI-Assistent: Bot-Blase oben, Prompt-Feld unten ---------- */
+.work[data-kind='ai'] .work-bar {
+  background: #e9e0ff;
+}
+.work[data-kind='ai'] .work-head {
+  padding: 0;
+  border-bottom: 0;
+}
+.ai-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 7px 9px 2px;
+}
+.ai-bot {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid var(--ink);
+  border-radius: 8px;
+  background: #cdb4db;
+  font: 700 8px var(--font);
+}
+.ai-bubble {
+  flex: 1;
+  min-width: 0;
+  /* immer drei Zeilen hoch: die Antwort braucht nicht mehr Platz als die Begrüßung, nichts springt */
+  height: calc(3 * 1.3em + 8px);
+  padding: 3px 9px;
+  border: 1.5px solid var(--ink);
+  border-radius: 10px 10px 10px 2px;
+  background: #f3eefc;
+  font-size: 11.5px;
+  line-height: 1.3;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+.ai-bubble.answered {
+  background: #fff;
+  animation: sent-pop 0.18s ease-out;
+}
+.work[data-kind='ai'] .work-body {
+  flex: 0 1 auto;
+  margin: auto 8px 3px;
+  padding: 4px 10px;
+  border: 1.5px solid #7a5bc0;
+  border-radius: 14px;
+  background: #fff;
+  font-size: 12px;
+  line-height: 1.3;
+}
+.work[data-kind='ai'].ready .work-body {
+  border-color: var(--ink);
+  border-radius: 12px 12px 3px 12px;
+  background: #ece4ff;
+}
+.ai-foot {
+  padding: 0 10px 3px;
+  font-size: 9px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.work.tight .ai-foot {
+  display: none;
+}
+
+.work.tighter .ai-row {
+  display: none;
 }

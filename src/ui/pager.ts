@@ -31,11 +31,10 @@ export function createPager(ctx: AppContext): { el: HTMLElement; device: HTMLEle
   const countdown = h('span', { class: 'pager-count' });
   // Füllung läuft leer = verbleibende Zeit
   const fill = h('span', { class: 'pager-fill', 'aria-hidden': 'true' });
+  // sieht aus wie der Pager auf dem Tisch: kleines Gerät links, grünes Display mit Titel und Restzeit
   const el = h('button', { class: 'pager', type: 'button', hidden: '' }, [
-    fill,
-    h('span', { class: 'pager-tag', text: 'PAGER' }),
-    title,
-    countdown,
+    h('span', { class: 'pager-mini', 'aria-hidden': 'true' }, [h('span', { class: 'pm-lcd' }), h('span', { class: 'pm-led' })]),
+    h('span', { class: 'pager-lcd' }, [fill, title, countdown]),
   ]);
 
   const showResult = (res: NonNullable<ReturnType<typeof resolveEvent>>, eventTitle: string) => {
@@ -127,6 +126,8 @@ export function createPager(ctx: AppContext): { el: HTMLElement; device: HTMLEle
         return;
       }
       setText(title, eventDef(a.id)?.title ?? a.id);
+      // Screenreader: „Pager: <Titel>“ wie beim Gerät auf dem Tisch
+      el.setAttribute('aria-label', `Pager: ${title.textContent}`);
       const leftMs = Math.max(0, a.expiresAt - ctx.state.stats.playTimeMs);
       const left = Math.ceil(leftMs / 1_000);
       setText(countdown, `${left}s`);

@@ -494,6 +494,56 @@ export const EVENTS: GameEventDef[] = [
     ignore: o('rush', 'Keine Antwort. Der Agent hat das als „vielleicht“ verstanden und nur die einfachen geschlossen. Gar nicht schlecht.'),
   },
   {
+    id: 'reorg',
+    title: 'Umstrukturierung',
+    text: 'Die Geschäftsführung strukturiert um. Schon wieder. Die IT heißt ab Montag „Digital Excellence Hub“. Sonst ändert sich nichts. Außer den Visitenkarten.',
+    options: [
+      { label: 'Neue Visitenkarten bestellen', outcomes: [o('tip', 'Bestellt. Sie kommen in sechs Wochen. Bis dahin wird wieder umstrukturiert. Du hebst sie trotzdem auf.')] },
+      {
+        label: 'Mit Buzzwords antworten',
+        outcomes: [o('rush', 'Deine Mail enthält „Synergie“, „Hebel“ und „ganzheitlich“. Die Geschäftsführung ist begeistert und lässt die IT in Ruhe. Herrlich.')],
+      },
+      { label: 'Nach dem neuen Organigramm fragen', outcomes: [o('lossSmall', 'Das Organigramm hat 14 Kästchen mehr. In jedem steht dein Name. Du bist jetzt dein eigener Vorgesetzter.')] },
+    ],
+    ignore: o('none', 'In drei Monaten wird zurück umstrukturiert. Die IT heißt dann wieder IT. Die Visitenkarten nicht.'),
+  },
+  {
+    id: 'mission',
+    title: 'Leitbild-Workshop',
+    text: 'Die Firma braucht ein Leitbild. Ganztägiger Workshop, Anwesenheitspflicht. Das Ergebnis soll klingen wie alle anderen Leitbilder, nur besser.',
+    options: [
+      {
+        label: 'Einen Leitbild-Generator schreiben',
+        outcomes: [
+          o('jackpot', 'Dein Skript würfelt Buzzwords zusammen. Der Vorstand wählt „Wir leben proaktiv ganzheitliche Synergien“. Du bekommst ein Lob und den Rest des Tages frei für Tickets.', 0.6),
+          o('win', 'Dein Skript liefert „Wir synergisieren Exzellenz“. Zu ehrlich. Trotzdem angenommen.', 0.4),
+        ],
+      },
+      { label: 'Hingehen und mitdiskutieren', outcomes: [o('loss', 'Sieben Stunden über das Wort „Kundenorientierung“. Am Ende ist es ein Komma. Die Queue ist explodiert.')] },
+      { label: 'Kurzfristig „Serverprobleme“ haben', outcomes: [o('tip', 'Du hast Serverprobleme. Wirklich, du hast dir welche gesucht. Die Tickets freuen sich.')] },
+    ],
+    ignore: o('lossSmall', 'Ohne dich hat der Workshop beschlossen: „Die IT unterstützt jede Vision.“ Ab morgen ist das dein Problem.'),
+  },
+  {
+    id: 'sqlcolor',
+    title: 'Chef will eine SQL-Datenbank',
+    text: 'Der Chef hat im Flugzeugmagazin gelesen, dass jede moderne Firma eine SQL-Datenbank braucht. Er will auch eine. Bis Freitag. Was das ist, weiß er nicht.',
+    options: [
+      {
+        label: 'Fragen, welche Farbe sie haben soll',
+        outcomes: [
+          o('jackpot', 'Er denkt lange nach. „Mauve. Das hat den meisten RAM.“ Du notierst es feierlich. Bestellt wird nichts, und bis zum nächsten Magazin ist Ruhe.', 1, {
+            level: 'ok',
+            text: 'procurement[{pid}]: SQL-Datenbank, Farbe: mauve (wegen RAM). Status: wird geprüft. Für immer.',
+          }),
+        ],
+      },
+      { label: 'Erklären, was eine Datenbank ist', outcomes: [o('lossSmall', '45 Minuten Erklärung mit Excel als Beispiel. Er nickt. Dann fragt er, ob man die Datenbank auch ausdrucken kann.')] },
+      { label: 'Einfach eine aufsetzen', outcomes: [o('rush', 'Fünf Minuten, eine leere Tabelle. Er nennt sie ab sofort „unser KI-Projekt“ und lobt das Team. Alle arbeiten beflügelt weiter.')] },
+    ],
+    ignore: o('tip', 'Er hat es vergessen. Im nächsten Magazin stand „Blockchain“.'),
+  },
+  {
     id: 'chefpw',
     title: 'Chef will das Admin-Passwort',
     text: 'Der Chef möchte „für Notfälle“ das Admin-Passwort. Er will es ins Handy schreiben. In die Notizen. Unter „Passwörter“.',
@@ -529,4 +579,5 @@ export const BUFF_LABELS: Record<string, string> = {
   overtime: 'Überstunden',
   fire: 'Es brennt',
   fireBig: 'Alles brennt',
+  espresso: 'Doppelter Espresso',
 };

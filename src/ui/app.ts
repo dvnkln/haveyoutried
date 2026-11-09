@@ -92,6 +92,7 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
       h('div', { class: 'rate-row' }, [rate, buffsEl]),
     ]),
     props.kanban,
+    props.calendar,
     props.incidentSign,
   ]);
 
@@ -116,7 +117,6 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
     props.dust,
     props.kNote,
     props.beacon,
-    props.poster,
     monitor,
     desk.phone,
     ...props.notes,
@@ -192,7 +192,8 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
     ctx.haptic('milestone');
     juice(tickets, POP, 320);
   });
-  icons.append(trash);
+  // System ganz nach rechts (wie die Einstellungen am Ende der Leiste), Papierkorb davor
+  icons.insertBefore(trash, mounted.find((m) => m.tab.id === 'system')?.btn ?? null);
 
   let active: (typeof mounted)[number] | null = null;
   const showSheet = (m: (typeof mounted)[number]) => {
@@ -322,7 +323,8 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
         buffChips = buffs.map((b) =>
           h('span', { class: `buff ${b.mult >= 1 ? 'buff-good' : 'buff-bad'}`, title: `${Math.ceil(b.remainingMs / 1_000)} s` }, [
             h('span', { class: 'buff-name', text: BUFF_LABELS[b.id] ?? b.id }),
-            h('span', { class: 'buff-mult', text: ` ×${b.mult}` }),
+            // Espresso hat keinen Faktor: der Chip sagt, was zu tun ist
+            h('span', { class: 'buff-mult', text: b.id === 'espresso' ? ' · halten' : ` ×${b.mult}` }),
           ]),
         );
         buffTotal = buffs.map((b) => b.remainingMs);

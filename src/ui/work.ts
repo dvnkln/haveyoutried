@@ -23,6 +23,11 @@ import {
   WEB_GENERIC,
   DONE_LINES,
   TICKET_STATES,
+  AI_FOOTERS,
+  AI_GREETINGS,
+  AI_PROMPTS,
+  AI_REPLIES,
+  AI_TITLES,
 } from '../content/work';
 import { DEVICE_SETTINGS, TALK_NOTES, TOPICS, topicPool, type Device } from '../content/topics';
 import { fill, pick, randInt, shuffle, weightedPick } from '../util';
@@ -44,6 +49,7 @@ const CHANNELS: Record<Kind, string> = {
   rdp: 'Fernwartung {target}',
   web: 'Webinterface {target}',
   search: 'Websuche (und Hoffnung)',
+  ai: 'KI-Assistent (Beta)',
 };
 /** Überschrift des Getippten im Ticketverlauf */
 const REPLY_LABELS: Record<Kind, string> = {
@@ -55,6 +61,7 @@ const REPLY_LABELS: Record<Kind, string> = {
   rdp: 'Ausgeführt',
   web: 'Geändert',
   search: 'Gesucht',
+  ai: 'Gepromptet',
 };
 /** Rechnername passend zur Abteilung, z. B. „PC-BUCHH-07“; Chefetage hat Laptops */
 const pcOf = (who: string) =>
@@ -64,7 +71,7 @@ const pcOf = (who: string) =>
 /** ab und zu programmtypisches Geplänkel vor der eigentlichen Antwort */
 const withPrefix = (prefixes: readonly string[], answer: string, share: number) => [Math.random() < share ? `${pick(prefixes)} ${answer}` : answer];
 /** Antworten geht immer */
-const TALK: Kind[] = ['mail', 'ticket', 'chat', 'call'];
+const TALK: Kind[] = ['mail', 'ticket', 'chat', 'call', 'ai'];
 /** Werkzeuge, die zum Thema passen: genau die, für die das Thema Texte hat */
 /** Webinterfaces für ein Anliegen: eigene Liste, sonst die des Themas */
 const devicesFor = (line: Line): readonly Device[] => line.devices ?? TOPICS[line.topic].devices;
@@ -91,7 +98,7 @@ const initials = (who: string) =>
     .map((w) => w[0]?.toUpperCase())
     .join('');
 
-type Kind = 'mail' | 'ticket' | 'term' | 'chat' | 'call' | 'rdp' | 'web' | 'search';
+type Kind = 'mail' | 'ticket' | 'term' | 'chat' | 'call' | 'rdp' | 'web' | 'search' | 'ai';
 
 interface Task {
   kind: Kind;
@@ -165,6 +172,32 @@ const browser = (url: string, tab: string, secure: boolean) =>
       ]),
     ]),
   ]);
+
+/** Desktop-Symbole der Fernwartung: kleine Zeichnungen je Dateityp, darunter der Name */
+const RDP_ICON_SVG: Record<string, string> = {
+  bin: '<path d="M5 6h10l-1 11H6z" fill="#e8eef7" stroke="#3d2c2e" stroke-width="1.4" stroke-linejoin="round"/><path d="M4 5h12M8 4h4" stroke="#3d2c2e" stroke-width="1.4" stroke-linecap="round"/><path d="M8 8v7M10 8v7M12 8v7" stroke="#8aa0bd" stroke-width="1"/>',
+  sheet: '<path d="M4 2h9l3 3v13H4z" fill="#fff" stroke="#3d2c2e" stroke-width="1.4" stroke-linejoin="round"/><rect x="2" y="8" width="9" height="8" rx="1" fill="#2f9e6a" stroke="#3d2c2e" stroke-width="1.2"/><path d="M4.5 10l4 4M8.5 10l-4 4" stroke="#fff" stroke-width="1.4"/><path d="M12 9h3M12 12h3M12 15h3" stroke="#2f9e6a" stroke-width="1"/>',
+  doc: '<path d="M4 2h9l3 3v13H4z" fill="#fff" stroke="#3d2c2e" stroke-width="1.4" stroke-linejoin="round"/><rect x="2" y="8" width="9" height="8" rx="1" fill="#3a6fd8" stroke="#3d2c2e" stroke-width="1.2"/><path d="M4 10l1.2 4 1.3-3 1.3 3L9 10" fill="none" stroke="#fff" stroke-width="1.1"/><path d="M12 9h3M12 12h3M12 15h3" stroke="#3a6fd8" stroke-width="1"/>',
+  txt: '<path d="M4 2h9l3 3v13H4z" fill="#fff" stroke="#3d2c2e" stroke-width="1.4" stroke-linejoin="round"/><path d="M7 7h6M7 10h6M7 13h4" stroke="#8a8295" stroke-width="1.2" stroke-linecap="round"/>',
+  folder: '<path d="M2 5h6l2 2h8v10H2z" fill="#ffd166" stroke="#3d2c2e" stroke-width="1.4" stroke-linejoin="round"/><path d="M2 8h16" stroke="#e0a100" stroke-width="1.2"/>',
+  globe: '<circle cx="10" cy="10" r="7.5" fill="#7cc4f2" stroke="#3d2c2e" stroke-width="1.4"/><path d="M5 6c2 1 3 3 2 5s1 3 2 4M12 3c-1 2 1 3 3 3M13 17c0-2 2-3 3-5" fill="none" stroke="#2f9e6a" stroke-width="1.6" stroke-linecap="round"/>',
+  app: '<rect x="2.5" y="3.5" width="15" height="12" rx="1.5" fill="#fffaf0" stroke="#3d2c2e" stroke-width="1.4"/><path d="M2.5 6.5h15" stroke="#3d2c2e" stroke-width="1.2"/><rect x="2.5" y="3.5" width="15" height="3" fill="#cdb4db"/>',
+};
+const rdpKind = (name: string) =>
+  /Papierkorb/.test(name) ? 'bin'
+  : /xlsx|Excel/.test(name) ? 'sheet'
+  : /docx/.test(name) ? 'doc'
+  : /\.txt/.test(name) ? 'txt'
+  : /Ordner/.test(name) ? 'folder'
+  : /Internet/.test(name) ? 'globe'
+  : 'app';
+const rdpIcon = (name: string) => {
+  const pic = h('span', { class: 'rdp-ipic', 'aria-hidden': 'true' });
+  // Verknüpfungen bekommen den kleinen Pfeil unten links
+  const arrow = /\.lnk/.test(name) ? '<rect x="1" y="12" width="7" height="7" rx="1" fill="#fff" stroke="#3d2c2e" stroke-width="1"/><path d="M3 17l3-3M4 14h2v2" fill="none" stroke="#3a6fd8" stroke-width="1.2"/>' : '';
+  pic.innerHTML = `<svg viewBox="0 0 20 20">${RDP_ICON_SVG[rdpKind(name)]}${arrow}</svg>`;
+  return h('span', { class: 'rdp-icon' }, [pic, h('span', { class: 'rdp-iname', text: name })]);
+};
 
 const avatar = (who: string, cls = '') => h('span', { class: `av ${cls}`.trim(), text: initials(who) || '?' });
 
@@ -260,15 +293,27 @@ const PROGRAMS: Record<Kind, Program> = {
     head: (t) => [
       h('div', { class: 'rdp-conn' }, [h('span', { class: 'rdp-pin', text: '📌︎' }), h('span', { text: `${t.target} (sehr langsam)` }), h('span', { class: 'rdp-win', text: '–  ▢  ×' })]),
       h('div', { class: 'rdp-desk' }, [
-        h('div', { class: 'rdp-icons' }, ['Papierkorb', ...shuffle(RDP_ICONS).slice(0, 2)].map((n) => h('span', { class: 'rdp-icon', text: n }))),
+        h('div', { class: 'rdp-icons' }, ['Papierkorb', ...shuffle(RDP_ICONS).slice(0, 2)].map(rdpIcon)),
         h('div', { class: 'rdp-dialog' }, [
           h('div', { class: 'rdp-dtitle' }, [h('span', { text: 'Fehler' }), h('span', { text: '×' })]),
-          h('div', { class: 'rdp-dbody' }, [h('span', { class: 'rdp-err', text: pick(RDP_ERRORS) }), h('span', { class: 'rdp-ok', text: 'OK' })]),
+          h('div', { class: 'rdp-dbody' }, [
+            h('span', { class: 'rdp-x', 'aria-hidden': 'true', text: '✕' }),
+            h('span', { class: 'rdp-err', text: pick(RDP_ERRORS) }),
+            h('span', { class: 'rdp-ok', text: 'OK' }),
+          ]),
         ]),
       ]),
     ],
     label: 'Öffnen:',
-    extra: () => [h('div', { class: 'rdp-taskbar' }, [h('span', { class: 'rdp-start', text: 'Start' }), h('span', { class: 'rdp-task', text: 'Ausführen' }), h('span', { class: 'rdp-clock', text: clock() })])],
+    extra: () => [
+      h('div', { class: 'rdp-taskbar' }, [
+        h('span', { class: 'rdp-start', text: 'Start' }),
+        h('span', { class: 'rdp-task', text: 'Ausführen' }),
+        h('span', { class: 'rdp-task rdp-task-dim', text: 'Excel (alt) – Keine Rückmeldung' }),
+        h('span', { class: 'rdp-tray', 'aria-hidden': 'true', text: '🔈︎ ⇅' }),
+        h('span', { class: 'rdp-clock', text: clock() }),
+      ]),
+    ],
     lines: (t) => topicPool(t.line.topic, 'rdp'),
     log: (t, x) => `rdp[3389]: ${t.target}> ${x}`,
     // „Ausführen“ schließt sich, die Fehlermeldung ist weg
@@ -294,6 +339,29 @@ const PROGRAMS: Record<Kind, Program> = {
     ready: (_t, _head, extra) => {
       extra.querySelector('.web-btn.save')?.classList.add('pressed');
       swap(extra.querySelector('.web-foot'), note('✓ Einstellungen gespeichert'));
+    },
+  },
+  // KI-Assistent: Problem stumpf in einen Prompt kippen, die KI antwortet sehr selbstbewusst
+  ai: {
+    weight: 1,
+    title: () => pick(AI_TITLES),
+    head: () => [
+      h('div', { class: 'ai-row' }, [
+        h('span', { class: 'ai-bot', 'aria-hidden': 'true', text: '{•_•}' }),
+        h('span', { class: 'ai-bubble', text: pick(AI_GREETINGS) }),
+      ]),
+    ],
+    // ganzer Betreff, wenn er nicht zu lang ist; nach „…?“ kein zusätzlicher Punkt
+    lines: (t) =>
+      AI_PROMPTS.map((p) => fill(p, { subject: t.full.length <= 80 ? t.full : t.subject, who: t.who }).replace(/([.!?…])“\./g, '$1“')),
+    extra: () => [h('div', { class: 'ai-foot', text: pick(AI_FOOTERS) })],
+    log: (t, x) => `ai[{pid}]: Prompt zu ${ticketId(t.no)}: „${x}“`,
+    // Antwort kommt: selbstbewusst, mit der echten Ursache des Tickets
+    ready: (t, head) => {
+      const bubble = head.querySelector('.ai-bubble');
+      if (!bubble) return;
+      bubble.textContent = fill(pick(AI_REPLIES), { cause: t.line.cause });
+      bubble.classList.add('answered');
     },
   },
   search: {

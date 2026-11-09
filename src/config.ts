@@ -285,6 +285,16 @@ export const CONFIG = {
   eventExpireMs: 45_000,
   /** nach Abwesenheit frühestens so viel Spielzeit bis zum nächsten Pager-Event */
   eventReturnDelayMs: 5_000,
+  /** Fliegende Kaffeetasse (ab Upgrade „Kaffeemaschine“): erwischt = Doppelter Espresso, Taste halten statt tippen */
+  espresso: {
+    minMs: 4 * 60_000,
+    maxMs: 8 * 60_000,
+    /** so lange fliegt sie durchs Bild */
+    flightMs: 5_500,
+    durationMs: 2 * 60_000,
+    /** Anschläge pro Sekunde, solange eine Taste gehalten wird */
+    rate: 10,
+  },
   /** „!! DRINGEND !!“-Tickets in der Queue */
   urgentMinMs: 90_000,
   urgentMaxMs: 240_000,
