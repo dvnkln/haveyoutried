@@ -21,6 +21,10 @@ const SWITCH_LOOK: Record<(typeof TAP_SOUND_IDS)[number], { stem: string; housin
   silent: { stem: '#ff9aa2', housing: '#3a3f4b', type: 'linear', force: 45, loud: 1, quip: 'Für Telefonkonferenzen mit dem Chef.' },
 };
 
+type SwitchId = (typeof TAP_SOUND_IDS)[number];
+/** gespeicherter Switch, unbekannte Werte (alter Spielstand) → Blue */
+const validSwitch = (id: string): SwitchId => ((TAP_SOUND_IDS as readonly string[]).includes(id) ? (id as SwitchId) : 'blue');
+
 /** Switch von oben: Gehäuse mit Kreuz-Stem */
 const switchSvg = (stem: string, housing: string) => `<svg viewBox="0 0 44 44">
   <rect x="3" y="3" width="38" height="38" rx="7" fill="${housing}" stroke="var(--ink)" stroke-width="2.5"/>
@@ -49,7 +53,6 @@ export function systemTab(): Tab {
   const soundBtn = h('button', { class: 'icon-toggle', type: 'button', role: 'switch', 'aria-label': 'Sound', text: '♪' });
   const volume = h('input', { class: 'volume', type: 'range', min: '0', max: '1', step: '0.1', 'aria-label': 'Lautstärke' });
   // Switch-Auswahl: ein Switch zur Zeit, Pfeile/Wischen/Punkte wechseln (= einbauen), Drücken = Probe wie am Switch-Tester
-  type SwitchId = (typeof TAP_SOUND_IDS)[number];
   const pic = h('span', { class: 'switch-pic', 'aria-hidden': 'true' });
   const name = h('span', { class: 'switch-name' });
   const type = h('span', { class: 'switch-type' });
@@ -70,7 +73,7 @@ export function systemTab(): Tab {
   const prevBtn = h('button', { class: 'switch-arrow', type: 'button', 'aria-label': 'Vorheriger Switch', text: '‹' });
   const nextBtn = h('button', { class: 'switch-arrow', type: 'button', 'aria-label': 'Nächster Switch', text: '›' });
   const dots = TAP_SOUND_IDS.map((id) =>
-    h('button', { class: 'switch-dot', type: 'button', role: 'radio', 'aria-label': `Cherry ${SWITCHES[id].label}, ${SWITCHES[id].hint}`, style: `--stem:${SWITCH_LOOK[id].stem}` }),
+    h('button', { class: 'switch-dot', type: 'button', role: 'radio', tabindex: '-1', 'aria-label': `Cherry ${SWITCHES[id].label}, ${SWITCHES[id].hint}`, style: `--stem:${SWITCH_LOOK[id].stem}` }),
   );
   /** angezeigter Switch; null = Karte noch nicht befüllt */
   let shown: SwitchId | null = null;
@@ -86,8 +89,12 @@ export function systemTab(): Tab {
     forceFill.style.width = `${Math.round((look.force / 80) * 100)}%`;
     setText(loud, `${'●'.repeat(look.loud)}${'○'.repeat(3 - look.loud)} Lautstärke`);
     setText(quip, look.quip);
-    card.setAttribute('aria-label', `Cherry ${SWITCHES[id].label}: drücken zum Probehören`);
-    dots.forEach((d, i) => d.setAttribute('aria-checked', String(TAP_SOUND_IDS[i] === id)));
+    // Radio-Muster: nur der gewählte Punkt ist per Tab erreichbar, Pfeile wechseln
+    dots.forEach((d, i) => {
+      const on = TAP_SOUND_IDS[i] === id;
+      d.setAttribute('aria-checked', String(on));
+      d.tabIndex = on ? 0 : -1;
+    });
     if (dir) {
       card.classList.remove('slide-l', 'slide-r');
       void card.offsetWidth; // Animation neu starten
@@ -197,13 +204,14 @@ export function systemTab(): Tab {
         ctx.state.settings.sound = !ctx.state.settings.sound;
         void ctx.sfx.unlock().then(() => ctx.sfx.tick());
       });
-      const current = (): SwitchId => (TAP_SOUND_IDS as readonly string[]).includes(ctx.state.settings.tapSound) ? (ctx.state.settings.tapSound as SwitchId) : 'blue';
-      /** Wechseln = einbauen; mit Probe, außer beim Wischen (da hat der Finger schon geklickt) */
+      const current = () => validSwitch(ctx.state.settings.tapSound);
+      /** Wechseln = einbauen; mit Probe und Vibration, außer beim Wischen (da hat der Finger schon geklickt) */
       const choose = (id: SwitchId, dir: number, preview = true) => {
         ctx.state.settings.tapSound = id;
         ctx.state.settings.sound = true;
         showSwitch(id, dir);
-        if (preview) void ctx.sfx.unlock().then(() => ctx.sfx.preview(id));
+        if (!preview) return;
+        void ctx.sfx.unlock().then(() => ctx.sfx.preview(id));
         ctx.haptic('tap');
       };
       const step = (dir: number, preview = true) => {
@@ -212,20 +220,32 @@ export function systemTab(): Tab {
       };
       prevBtn.addEventListener('click', () => step(-1));
       nextBtn.addEventListener('click', () => step(1));
-      dots.forEach((d, i) =>
+      dots.forEach((d, i) => {
         d.addEventListener('click', () => {
           const target = TAP_SOUND_IDS[i]!;
           if (target !== current()) choose(target, i > TAP_SOUND_IDS.indexOf(current()) ? 1 : -1);
-        }),
-      );
+        });
+        d.addEventListener('keydown', (e) => {
+          const dir = e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : 0;
+          if (!dir) return;
+          e.preventDefault();
+          step(dir);
+          dots[TAP_SOUND_IDS.indexOf(current())]?.focus();
+        });
+      });
       // Switch-Tester: runter = Klick, hoch = Rückklick; seitlich wischen = wechseln
       let downX: number | null = null;
+      /** Rückklick erst nach dem Klick: beim ersten Antippen muss der Ton noch aufwachen */
+      let pressed: Promise<unknown> = Promise.resolve();
       card.addEventListener('pointerdown', (e) => {
         if (e.button !== 0) return;
         downX = e.clientX;
+        // Ziehen mit der Maus über den Kartenrand hinaus zählt weiter als Wischen
+        card.setPointerCapture?.(e.pointerId);
         card.classList.add('pressed');
         ctx.state.settings.sound = true;
-        void ctx.sfx.unlock().then(() => ctx.sfx.tap(current()));
+        const id = current();
+        pressed = ctx.sfx.unlock().then(() => ctx.sfx.tap(id));
         ctx.haptic('tap');
       });
       const up = (e: PointerEvent) => {
@@ -233,12 +253,12 @@ export function systemTab(): Tab {
         const dx = e.clientX - downX;
         downX = null;
         card.classList.remove('pressed');
-        ctx.sfx.release(current());
+        const id = current();
+        void pressed.then(() => ctx.sfx.release(id));
         if (e.type === 'pointerup' && Math.abs(dx) > 40) step(dx < 0 ? 1 : -1, false);
       };
       card.addEventListener('pointerup', up);
       card.addEventListener('pointercancel', up);
-      card.addEventListener('pointerleave', up);
       // Tastatur (Enter/Leertaste) löst nur „click“ aus: dann einmal komplett probehören
       card.addEventListener('click', (e) => {
         if (e.detail !== 0) return;
@@ -315,8 +335,7 @@ export function systemTab(): Tab {
         btn.classList.toggle('off', !on);
       }
       volume.disabled = !s.settings.sound;
-      const sel = (TAP_SOUND_IDS as readonly string[]).includes(s.settings.tapSound) ? (s.settings.tapSound as SwitchId) : 'blue';
-      showSwitch(sel);
+      showSwitch(validSwitch(s.settings.tapSound));
     },
   };
 }

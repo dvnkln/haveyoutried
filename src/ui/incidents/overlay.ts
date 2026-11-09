@@ -103,6 +103,53 @@ export function mountIncidentOverlay(ctx: AppContext): void {
     }
   };
   /**
+   * SVG-Gegenstand (Telefon) als Maskenform: nur was wirklich zu sehen ist. In der Maske gilt das
+   * Seiten-CSS nicht, darum werden Sichtbarkeit, Füllung und Linien aus den berechneten Stilen übernommen
+   * (sonst tauchen nicht gekaufte Modelle/Headset auf und Linien mit var(--ink) fehlen).
+   */
+  const svgCover = (svg: SVGSVGElement) => {
+    const copy = svg.cloneNode(true) as SVGSVGElement;
+    const orig = [...svg.querySelectorAll('*')];
+    const dup = [...copy.querySelectorAll('*')];
+    orig.forEach((o, i) => {
+      const d = dup[i];
+      if (!d) return;
+      const cs = getComputedStyle(o);
+      if (cs.display === 'none' || cs.visibility === 'hidden' || parseFloat(cs.opacity) === 0) {
+        d.remove();
+        return;
+      }
+      d.setAttribute('fill', cs.fill);
+      d.setAttribute('stroke', cs.stroke);
+      d.setAttribute('stroke-width', cs.strokeWidth);
+      const t = cs.transform;
+      if (t && t !== 'none') d.setAttribute('style', `transform:${t};transform-box:${cs.transformBox};transform-origin:${cs.transformOrigin}`);
+      else d.removeAttribute('style');
+      d.removeAttribute('class');
+    });
+    const sb = svg.getBoundingClientRect();
+    const n = (v: number) => v.toFixed(1);
+    return `<svg x="${n(sb.left)}" y="${n(sb.top)}" width="${n(sb.width)}" height="${n(sb.height)}" viewBox="${svg.getAttribute('viewBox') ?? ''}" overflow="visible">${copy.innerHTML}</svg>`;
+  };
+  /** Kasten (Post-it, Ente): echte Größe, Ecken, Drehung und Skalierung aus dem berechneten Stil */
+  const boxCover = (el: HTMLElement, cs: CSSStyleDeclaration, b: DOMRect) => {
+    const m = new DOMMatrix(cs.transform === 'none' ? undefined : cs.transform);
+    const deg = (Math.atan2(m.b, m.a) * 180) / Math.PI;
+    const sx = Math.hypot(m.a, m.b);
+    const sy = Math.hypot(m.c, m.d);
+    const ew = el.offsetWidth * sx;
+    const eh = el.offsetHeight * sy;
+    const cx = b.left + b.width / 2;
+    const cy = b.top + b.height / 2;
+    const r = (v: string) => Math.min(parseFloat(v) || 0, ew / 2, eh / 2);
+    const [tl, tr, br, bl] = [r(cs.borderTopLeftRadius), r(cs.borderTopRightRadius), r(cs.borderBottomRightRadius), r(cs.borderBottomLeftRadius)];
+    const x = cx - ew / 2;
+    const y = cy - eh / 2;
+    const n = (v: number) => v.toFixed(1);
+    const d = `M${n(x + tl)} ${n(y)}H${n(x + ew - tr)}A${n(tr)} ${n(tr)} 0 0 1 ${n(x + ew)} ${n(y + tr)}V${n(y + eh - br)}A${n(br)} ${n(br)} 0 0 1 ${n(x + ew - br)} ${n(y + eh)}H${n(x + bl)}A${n(bl)} ${n(bl)} 0 0 1 ${n(x)} ${n(y + eh - bl)}V${n(y + tl)}A${n(tl)} ${n(tl)} 0 0 1 ${n(x + tl)} ${n(y)}Z`;
+    return `<path d="${d}" transform="rotate(${n(deg)} ${n(cx)} ${n(cy)})"/>`;
+  };
+  /**
    * Ausgespart werden Monitor und Fuß. Was davor steht (Telefon, Post-its), bleibt dunkel:
    * es wird in der Maske wieder aufgemalt, in seiner echten Form.
    */
@@ -111,8 +158,9 @@ export function mountIncidentOverlay(ctx: AppContext): void {
     if (!monitor || root.hidden) return;
     const r = monitor.getBoundingClientRect();
     Object.assign(spot.style, { left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px` });
-    const w = window.innerWidth;
-    const hgt = window.innerHeight;
+    // wie .inc-dim (inset: 0): ohne Scrollleiste, sonst wird die Maske gestaucht
+    const w = document.documentElement.clientWidth;
+    const hgt = document.documentElement.clientHeight;
     const n = (v: number) => v.toFixed(1);
     // abgerundetes Rechteck als Pfad (oben/unten eigene Radien)
     const rounded = (x: number, y: number, rw: number, rh: number, top: number, bottom: number) =>
@@ -138,30 +186,47 @@ export function mountIncidentOverlay(ctx: AppContext): void {
       if (ecs.display === 'none' || ecs.visibility === 'hidden' || (parseInt(ecs.zIndex, 10) || 0) <= mz) continue;
       const b = el.getBoundingClientRect();
       if (b.right < r.left || b.left > r.right || b.bottom < r.top || b.top > fBottom) continue;
-      const svg = el.querySelector(':scope > svg');
-      if (svg) {
-        // SVG-Gegenstand (Telefon): Form 1:1 übernehmen, ohne das unsichtbare Klingeln
-        const copy = svg.cloneNode(true) as SVGElement;
-        copy.querySelectorAll('.ring').forEach((x) => x.remove());
-        const sb = svg.getBoundingClientRect();
-        covers.push(`<svg x="${n(sb.left)}" y="${n(sb.top)}" width="${n(sb.width)}" height="${n(sb.height)}" viewBox="${svg.getAttribute('viewBox') ?? ''}" overflow="visible">${copy.innerHTML}</svg>`);
-      } else {
-        // gedrehtes Rechteck (Post-it): echte Größe, Drehung aus der Transform-Matrix
-        const m = new DOMMatrix(ecs.transform === 'none' ? undefined : ecs.transform);
-        const deg = (Math.atan2(m.b, m.a) * 180) / Math.PI;
-        const cx = b.left + b.width / 2;
-        const cy = b.top + b.height / 2;
-        const ew = el.offsetWidth;
-        const eh = el.offsetHeight;
-        covers.push(`<rect x="${n(cx - ew / 2)}" y="${n(cy - eh / 2)}" width="${ew}" height="${eh}" rx="2" transform="rotate(${n(deg)} ${n(cx)} ${n(cy)})"/>`);
-      }
+      const svg = el.querySelector<SVGSVGElement>(':scope > svg');
+      if (svg) covers.push(svgCover(svg));
+      else covers.push(boxCover(el, ecs, b));
     }
     const mask = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${hgt}" viewBox="0 0 ${w} ${hgt}"><path fill-rule="evenodd" d="M0 0H${w}V${hgt}H0Z${hole}"/>${covers.join('')}</svg>`;
     const url = `url("data:image/svg+xml,${encodeURIComponent(mask)}")`;
     dim.style.maskImage = url;
     dim.style.setProperty('-webkit-mask-image', url);
   };
-  window.addEventListener('resize', placeSpot);
+  // neu berechnen, wenn sich Fenster oder Schreibtisch ändern (gebündelt auf einen Frame)
+  let spotFrame = 0;
+  const queueSpot = () => {
+    if (!dim.isConnected || spotFrame) return;
+    spotFrame = requestAnimationFrame(() => {
+      spotFrame = 0;
+      placeSpot();
+    });
+  };
+  window.addEventListener('resize', queueSpot);
+  const area = document.querySelector<HTMLElement>('#app .monitor-area');
+  if (area && typeof ResizeObserver !== 'undefined') new ResizeObserver(queueSpot).observe(area);
+  // Gegenstände vor dem Monitor, die sich bewegen (Telefon klingelt, neues Teil springt rein): Maske läuft mit
+  let moving = 0;
+  const follow = () => {
+    queueSpot();
+    if (moving > 0 && dim.isConnected) requestAnimationFrame(follow);
+  };
+  /** nur endliche Bewegungen außerhalb des Monitors (Dauerblinken der Rundumleuchte bewegt nichts) */
+  const tracked = (e: AnimationEvent) =>
+    !(e.target as Element).closest('.monitor') && !getComputedStyle(e.target as Element).animationIterationCount.includes('infinite');
+  area?.addEventListener('animationstart', (e) => {
+    if (!tracked(e)) return;
+    if (moving++ === 0) follow();
+  });
+  const stop = (e: AnimationEvent) => {
+    if (!tracked(e)) return;
+    moving = Math.max(0, moving - 1);
+    queueSpot();
+  };
+  area?.addEventListener('animationend', stop);
+  area?.addEventListener('animationcancel', stop);
   /** alles außer dem Monitor-Bildschirm stilllegen */
   let frozen: HTMLElement[] = [];
   // Uhr läuft mit, solange der Monitor nagmon zeigt
@@ -197,6 +262,7 @@ export function mountIncidentOverlay(ctx: AppContext): void {
     app?.classList.remove('incident-on');
     spot.remove();
     dim.remove();
+    moving = 0;
   };
 
   const run = (id: IncidentId) => {
