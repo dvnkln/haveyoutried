@@ -38,6 +38,10 @@ export const POSTITS: string[] = [
   'Anrufer zählen: |||| ||',
   'Wer ist K.?',
   'TODO: Doku (2014)',
+  'Chef = Lagerfeuer: Abstand halten',
+  'Kekse von Mutti. NICHT nehmen!',
+  'Zentrale ruft an? Bin nicht da.',
+  'Lächeln, Kamera läuft (?)',
 ];
 
 /** Rubber-Duck-Debugging: Log-Zeilen beim Antippen der Ente. */
@@ -104,6 +108,7 @@ export const TRASH_LINES: string[] = [
   'trash[99]: Inhalt: ein Ordner „Nicht löschen“. Ironie erkannt.',
   'trash[99]: Wiederherstellen? Nein. Das hat einen Grund.',
   'trash[99]: 1 Element: „Kündigung_Entwurf.docx“. Nur ein Entwurf.',
+  'trash[99]: „Witze_Teamrunde_v3.docx“ vom Abteilungsleiter. Zu Recht hier.',
 ];
 
 /**
@@ -186,6 +191,10 @@ export const MUG_DESIGNS: Record<MugGen, { title: string; color: string; prints:
 
 /** Abreißkalender an der Wand: Antippen reißt das Blatt ab, der nächste Tag kommt */
 export const CALENDAR_LINES: string[] = [
+  'Das Büro ist wie Mannschaftssport. Welcher, sagt der Chef nicht.',
+  'Kollegen sind wie Familie: Man sucht sie sich nicht aus.',
+  'Ein Chef ist mehr Kumpel als Chef. Sagt der Chef.',
+  'Joghurt im Kühlschrank: „NICHT ESSEN – Abt.-Ltr.“',
   'Es war DNS.',
   'sudo Kaffee',
   'Works on my mug.',

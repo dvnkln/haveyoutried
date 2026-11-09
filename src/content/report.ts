@@ -21,6 +21,7 @@ export const REPORT_SIGNATURES = [
   '— Der Chef (gesendet von meinem iPhone)',
   '— Der Chef. PS: Mein Drucker geht wieder nicht.',
   '— Der Chef (diese Mail wurde von einer KI zusammengefasst)',
+  '— Ihr Abteilungsleiter. Mehr Kumpel als Chef. Aber Chef.',
   '— Der Chef. Im Urlaub. Trotzdem erreichbar. Leider auch für Sie.',
 ];
 
@@ -45,6 +46,12 @@ export const REPORT_ITEMS: ReportItem[] = [
   { text: (m) => `Der Kaffeeverbrauch ist ohne Sie um ${Math.min(80, per(m, 6, 5))} % gesunken. Wollen wir darüber reden?` },
   { text: () => 'Ihr Status stand die ganze Zeit auf „Bin gleich da“. Wie definieren Sie „gleich“?' },
   { text: () => 'Die Buchhaltung hat „nichts geändert“. Ich wollte es nur gesagt haben.' },
+  {
+    // nur wenn das Kamerateam wirklich da war (Pager-Ereignis oder Telefon-Geschichte)
+    when: (s) => Object.keys(s.flags).some((k) => k.startsWith('ev:kamerateam:') || (k.startsWith('story:') && k.endsWith(':doku'))),
+    text: () => 'Es war ein Kamerateam da. Ich habe gesagt, die IT läuft wegen mir so gut. Bitte nicht widersprechen, falls jemand fragt.',
+  },
+  { text: () => 'Der Sachbearbeiter gegenüber hat eine Liste geführt, wann Sie weg waren. Ich hab sie nicht gelesen. Also nur kurz.' },
   {
     when: (s) => s.generators.intern.owned > 0,
     text: (m) => `Ihre Praktikanten haben ${fmt(per(m, 30))} Server neu gestartet. ${fmt(Math.max(0, per(m, 30) - 1))} davon absichtlich.`,

@@ -72,6 +72,15 @@ export const STORIES: Story[] = [
       ep('(-_-)', 'Immobilienmanagement', q('allgemein', 'Der Umzug war ein Erfolg! Nur der Server unterm Tisch fehlt. Wo ist der?', 'Server unterm Tisch beim Umzug vergessen', 'Er steht noch im alten Büro. Unterm Tisch. Er läuft. Ich hole ihn, bevor der Nachmieter ihn aussteckt.')),
     ],
   },
+  {
+    id: 'doku',
+    episodes: [
+      ep('(¬‿¬)', 'Abteilungsleiter', q('wunsch', 'Montag kommt ein Kamerateam. Können Sie das Büro moderner aussehen lassen? Mehr Bildschirme, mehr Blinken.', 'Büro soll für die Kamera gut aussehen', 'Ich lasse die Tür zum Serverraum offen. Da blinkt alles sehr professionell. Mehr Blinken ist nicht drin.')),
+      ep('(・o・)', 'Kamerateam', f('netz', 'Wir sind vom Fernsehen. Ihr WLAN-Passwort, bitte? Für den Upload.', 'Gäste-WLAN fürs Kamerateam', 'Sie sind im Gäste-WLAN, ins Firmennetz kommen Sie nicht. Der Abteilungsleiter wollte auch rein. Er ist jetzt auch im Gäste-WLAN.', [])),
+      ep('(¬‿¬)', 'Abteilungsleiter', q('wunsch', 'Können Sie die Aufnahme von gestern löschen? Ich hab was über die Zentrale gesagt. Und über das Catering. Und nochmal über die Zentrale.', 'Peinliche Aufnahme', 'Das Material gehört dem Sender, nicht uns. Löschen kann ich nichts. Ich kann Ihnen aber die Nummer der Rechtsabteilung raussuchen.')),
+      ep('(¬‿¬)', 'Abteilungsleiter', q('allgemein', 'Die Doku läuft heute Abend! Können wir sie in der Kantine auf dem großen Bildschirm zeigen?', 'Doku-Abend in der Kantine', 'Der Bildschirm ist eingerichtet. Ich habe vorher reingeschaut. Vielleicht bleiben Sie morgen im Homeoffice.')),
+    ],
+  },
 ];
 
 const stepKey = (s: GameState, id: string) => `story:${s.prestige.company}:${id}`;

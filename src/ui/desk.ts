@@ -1,3 +1,4 @@
+import { bus } from '../core/bus';
 import { CONFIG } from '../config';
 import { CALLBACK_LINES, CALLERS, situationalCalls, type Call, type Line } from '../content/callers';
 import { topicPool } from '../content/topics';
@@ -126,7 +127,24 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
   const callerEl = h('div', { class: 'caller' }, [bubble]);
 
   // --- Arbeitsfenster auf dem Desktop (Mail, Ticket, Shell, Chat, Call, RDP, Web, Suche) ---
-  // Gelöst: Bonus steigt aus dem Stempel auf, an Meilensteinen der Serie Konfetti und Fanfare
+  // Gelöst: Bonus steigt aus dem Stempel auf, an Meilensteinen der Serie Konfetti und Fanfare.
+  // Unter Espresso „+Tickets“ höchstens alle CONFIG.espresso.celebrateGapMs; was dazwischen gelöst wird, kommt als eine Summe.
+  let floatSum = 0;
+  let floatTimer = 0;
+  let lastFloat = -Infinity;
+  const flushFloat = (stamp: HTMLElement) => {
+    floatTimer = 0;
+    lastFloat = performance.now();
+    const p = fx.rel(stamp);
+    fx.floater(p.x + p.w / 2, p.y, `+${formatNumber(floatSum)}`, true);
+    floatSum = 0;
+  };
+  // nach einem Jobwechsel keine Summe aus dem alten Job mehr anzeigen
+  bus.on('jobQuit', () => {
+    clearTimeout(floatTimer);
+    floatTimer = 0;
+    floatSum = 0;
+  });
   const work = createWork(
     ctx,
     () => call,
@@ -134,9 +152,15 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
       const { bonus, milestone } = solveTicket(ctx.state, streak, presses);
       callerLeft--;
       solvedNow = true;
-      const p = fx.rel(stamp);
-      fx.floater(p.x + p.w / 2, p.y, `+${formatNumber(bonus)}`, true);
+      floatSum += bonus;
+      if (!floatTimer) {
+        const gap = espressoActive(ctx.state) ? CONFIG.espresso.celebrateGapMs : 0;
+        const wait = gap - (performance.now() - lastFloat);
+        if (wait <= 0) flushFloat(stamp);
+        else floatTimer = window.setTimeout(() => flushFloat(stamp), wait);
+      }
       if (milestone) {
+        const p = fx.rel(stamp);
         fx.confetti(p.x + p.w / 2, p.y + p.h / 2, 26);
         ctx.sfx.milestone();
         ctx.haptic('milestone');
@@ -411,6 +435,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
   };
 
   /** auto = Dauerfeuer beim Espresso (gehaltene Taste): ohne Vibration, seltener Schnipsel */
+  let lastAutoSound = 0;
   const hit = (keyEl: HTMLElement, auto = false) => {
     const def = keyEl.dataset.key ?? '';
     ctx.sfx.unlock();
@@ -429,11 +454,17 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
     work.afterKey();
 
     // Effekte: Tickets gibt es erst beim Lösen; pro Taste nur ab und zu ein Schnipsel
-    const k = fx.rel(keyEl, true);
-    if (Math.random() < (auto ? 0.08 : 0.25)) fx.scrap(k.x + k.w / 2, k.y + 6);
+    if (Math.random() < (auto ? 0.08 : 0.25)) {
+      const k = fx.rel(keyEl, true);
+      fx.scrap(k.x + k.w / 2, k.y + 6);
+    }
     lastHit = now;
 
-    ctx.sfx.tap();
+    // Espresso tippt schneller, als man Tastenklicks einzeln hört: Ton höchstens alle 40 ms
+    if (!auto || now - lastAutoSound >= 40) {
+      ctx.sfx.tap();
+      if (auto) lastAutoSound = now;
+    }
     if (!solvedNow && !auto) ctx.haptic('tap');
     // Ruhiger Start: erst ein bisschen tippen, dann klingelt zum ersten Mal das Telefon
     if (!started) {

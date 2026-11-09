@@ -292,8 +292,13 @@ export const CONFIG = {
     /** so lange fliegt sie durchs Bild */
     flightMs: 5_500,
     durationMs: 2 * 60_000,
-    /** Anschläge pro Sekunde, solange eine Taste gehalten wird */
-    rate: 20,
+    /** Anschläge pro Sekunde, solange eine Taste gehalten wird: deutlich schneller als jede Hand */
+    rate: 50,
+    /**
+     * Bei der Rate löst man 16–25 Tickets pro Sekunde. Stempel, Erfolgston und „+Tickets“
+     * kommen dann höchstens in diesem Abstand; dazwischen zählt nur die Serie bzw. die Summe.
+     */
+    celebrateGapMs: 250,
   },
   /** „!! DRINGEND !!“-Tickets in der Queue */
   urgentMinMs: 90_000,

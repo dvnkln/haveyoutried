@@ -16,7 +16,7 @@ const svg = (markup: string, cls: string, tag: 'div' | 'button' = 'div'): HTMLEl
 // Kleine Comic-Zeichnungen: dunkle Kontur, runde Enden, Pastellflächen.
 const INK = 'stroke="var(--ink)" stroke-width="2" stroke-linejoin="round"';
 
-/** Kübelpflanze (Gummibaum) neben dem Tisch: groß, steht halb aus dem Bild; Blätter kommen mit dem Fortschritt dazu */
+/** Topfpflanze ganz rechts auf dem Tisch, neben dem Pager; Blätter kommen mit dem Fortschritt dazu */
 const PLANT = `<svg viewBox="0 0 90 140">
   <g class="leaves" ${INK}>
     <path class="leaf l4" d="M44 88 C30 72 17 52 19 28 C34 38 44 60 44 88Z" fill="#6cc57f"/>
@@ -87,15 +87,15 @@ const CABLES = `<svg viewBox="0 0 300 60" preserveAspectRatio="none">
  * Ohne Upgrade die alte kastige Büromaus (grau wie die Gummitastatur),
  * mit Upgrade die runde ergonomische (cremefarben, Mint wie die Enter-Taste).
  */
-const MOUSE = `<svg viewBox="0 -10 40 64">
+const MOUSE = `<svg viewBox="0 -21 40 84">
   <g class="pad">
-    <rect x="1.5" y="3" width="37" height="49.5" rx="7" fill="#7fa6e6"/>
-    <rect x="1.5" y="3" width="37" height="47" rx="7" fill="#a0c4ff"/>
-    <rect x="1.5" y="3" width="37" height="49.5" rx="7" fill="none" stroke="var(--ink)" stroke-width="2"/>
-    <path d="M6 46 h10" stroke="#fffaf0" stroke-width="2" stroke-linecap="round" opacity=".7"/>
+    <rect x="1.5" y="-10" width="60" height="70" rx="7" fill="#7fa6e6"/>
+    <rect x="1.5" y="-10" width="60" height="67.5" rx="7" fill="#a0c4ff"/>
+    <rect x="1.5" y="-10" width="60" height="70" rx="7" fill="none" stroke="var(--ink)" stroke-width="2"/>
+    <path d="M6 53 h10" stroke="#fffaf0" stroke-width="2" stroke-linecap="round" opacity=".7"/>
   </g>
-  <!-- Mauskörper 1,45-fach (neben der Tastatur sonst zu winzig); Konturen per CSS nicht mitskaliert, daher in Bildschirm-Pixeln -->
-  <g class="m-body" transform="translate(20 26.5) scale(1.45) translate(-20 -26.5)">
+  <!-- Mauskörper im Maßstab der Tastatur (1,75-fach); Mauspad ragt rechts aus dem Bild; Konturen per CSS nicht mitskaliert -->
+  <g class="m-body" transform="translate(21 25) scale(1.75) translate(-20 -26.5)">
   <path class="m-cable" d="M20 14 c0 -6 -2 -9 4 -12" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linecap="round"/>
   <g class="m-old">
     <rect x="10.5" y="14" width="19" height="26" rx="3.5" fill="#cfc7b8"/>

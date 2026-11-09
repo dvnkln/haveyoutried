@@ -5854,6 +5854,10 @@ button {
   background: #fffaf0;
   transform: rotate(45deg);
 }
+/* bei offenem App-Fenster keine Sprechblasen vom Tisch darüber (Papierkorb, Ente …) */
+body:has(> #app.sheet-open) > .quip {
+  display: none;
+}
 .quip.out {
   opacity: 0;
 }
@@ -6309,15 +6313,6 @@ body > .incident.playing {
 }
 
 @media (max-width: 359px) {
-  /* Pflanze steht hinten auf dem Tisch hinter dem Pager, damit die Sprechblase Platz behält */
-  .deskbar .plant {
-    position: absolute;
-    z-index: 0;
-    right: 26px;
-    /* Topf steckt halb hinter dem Pager */
-    bottom: 42px;
-    margin: 0;
-  }
   /* Zähler, Kanban und Whiteboard teilen sich die Wand: etwas enger hängen */
   .wall {
     gap: 6px;
@@ -7251,19 +7246,66 @@ body:has(.tut-note) .tap-hint {
 
 /* ---------- Proportionen am Schreibtisch (Maßstab: die Tasse) ----------
    Deko darf angeschnitten oder halb verdeckt sein, Bedienbares (Ente, Pager, Tasten) bleibt frei. */
+/* Topfpflanze ganz rechts auf dem Tisch, neben dem Pager (nicht dahinter); Topf ~11 cm wie der Becher-Maßstab,
+   ragt rechts ein Stück aus dem Bild. Der Pager rückt dafür nach links. */
 .deskbar > .plant {
-  /* Kübelpflanze steht neben dem Tisch, halb aus dem Bild; Blätter reichen bis knapp unter die Ente */
   position: absolute;
   z-index: 1;
   top: auto;
-  right: -28px;
-  /* nicht bis in den Tastaturbereich: der liegt beim Glühen obenauf */
-  bottom: 0;
-  width: 70px;
-  height: 108px;
+  right: -26px;
+  bottom: 4px;
+  width: 52px;
+  height: 81px;
+  margin: 0;
 }
+/* echter Pager ist etwas schmaler als der Becher; hier gut 1,5-fach, damit das Display lesbar bleibt */
 .deskbar > .pager-device {
   z-index: 2;
+  width: 58px;
+  height: 38px;
+  padding: 4px 4px 6px;
+  border-radius: 8px 8px 10px 10px;
+}
+.deskbar > .pager-device .pd-lcd {
+  padding: 0 3px;
+  font-size: 7.5px;
+}
+.deskbar > .pager-device .pd-count {
+  font-size: 6.5px;
+}
+.deskbar > .pager-device .pd-led {
+  top: -4px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+}
+/* Tippfläche größer als das Gerät */
+.deskbar > .pager-device::after {
+  content: '';
+  position: absolute;
+  inset: -8px -6px;
+}
+.deskbar:has(> .plant.owned) > .pager-device {
+  margin-right: 14px;
+}
+/* Quietscheente: in echt so groß wie der Becher; Tippfläche größer als die Ente */
+.duck {
+  width: 38px;
+  height: 33px;
+}
+.duck::after {
+  content: '';
+  position: absolute;
+  inset: -8px -4px -6px -8px;
+}
+/* Maus liegt vorne bei der Tastatur und hat deren Maßstab: deutlich größer, Mauspad ragt rechts aus dem Bild */
+.keyboard-wrap .mouse {
+  height: 126px;
+  overflow: visible;
+}
+/* das Mauspad ist nur Deko: Tippen daneben ist kein Mausklick */
+.mouse .pad {
+  pointer-events: none;
 }
 /* 0,5-l-Flasche: gut doppelt so hoch wie der Becher */
 .deskbar > .mate {
@@ -7302,5 +7344,14 @@ body:has(.tut-note) .tap-hint {
     width: 28px;
     height: 80px;
     margin: -14px 0 0 -4px;
+  }
+  /* wenig Platz: Pflanze kleiner und weiter am Rand, aber weiter neben dem Pager */
+  .deskbar > .plant {
+    right: -22px;
+    width: 42px;
+    height: 65px;
+  }
+  .deskbar:has(> .plant.owned) > .pager-device {
+    margin-right: 8px;
   }
 }

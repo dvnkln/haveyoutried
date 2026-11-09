@@ -354,6 +354,28 @@ export const CALLERS: Caller[] = [
       f('hardware', 'Der Beamer im Konferenzraum zeigt alles grün. Die Folien sehen krank aus.', 'VGA-Kabel halb rausgerutscht', 'Das VGA-Kabel hing nur noch an einem Pin. Steckt wieder, die Farben sind zurück. Die Folien sind leider immer noch die Folien.', []),
     ],
   },
+  // Stromberg: Abteilungsleiter mit Vergleichen, übergenauer Sachbearbeiter (der Kollege ohne Lust ruft nur bei der Versicherung an)
+  {
+    face: '(¬‿¬)',
+    who: 'Abteilungsleiter',
+    lines: [
+      f('hardware', 'Mein Bildschirm ist schwarz. Ich sag immer: Ein Bildschirm ist wie eine Ehe. Wenn er dunkel bleibt, liegt es nicht an mir.', 'Netzkabel vom Monitor halb draußen', 'Das Netzkabel war halb raus. Jetzt ist er wieder hell. Zu Ihrer Ehe-Theorie sage ich lieber nichts.', []),
+      q('wunsch', 'Ich brauche einen zweiten Monitor. Nicht zum Arbeiten. Damit man vom Flur sieht, dass ich zwei hab.', 'Monitor als Statussymbol', 'Er steht jetzt so, dass man ihn vom Flur sieht. Angeschlossen hab ich ihn trotzdem. Man weiß ja nie.'),
+      q('mail', 'Ich hab meine Witzesammlung an den Vorstand geschickt. Aus Versehen. Sind gute Witze, aber nicht für jeden.', 'Mail an den falschen Verteiler', 'Bei 11 von 12 Empfängern zurückgeholt. Der zwölfte hat schon geantwortet: „Haha.“ Das kann alles bedeuten.'),
+      q('office', 'Ich halte morgen eine Rede vor der Abteilung. Kann PowerPoint an den richtigen Stellen Lacher einspielen?', 'Folien sollen Pointen liefern', 'Lacher einspielen kann PowerPoint nicht. Ich hab Ihnen Übergänge eingebaut. Die Leute werden lachen. Nur an anderen Stellen.'),
+      q('allgemein', 'Ich bin ja mehr Kumpel als Chef. Darum frag ich Sie als Kumpel: Können Sie meine Mails mitlesen und mir sagen, was drinsteht?', 'Chef will nicht lesen', 'Als Kumpel: Nein. Als IT: Ich stelle Ihnen eine Vorlesefunktion ein. Sie liest mit Ihrer eigenen Stimme. Na ja, fast.'),
+    ],
+  },
+  {
+    face: '(・ω・)',
+    who: 'Sachbearbeiter (sehr genau)',
+    lines: [
+      f('hardware', 'Meine Tastatur klebt. Mutti hat mir Kekse mitgegeben. Die waren sehr gut, aber offenbar auch krümelig.', 'Kekskrümel in der Tastatur', 'Ausgeklopft. Es kam ein halber Keks raus. Sehr gut übrigens. Grüßen Sie Ihre Mutter.', []),
+      q('passwort', 'Darf mein Passwort der Vorname meiner Mutter sein? Sie sagt, das ist sicher.', 'Passwort = Name der Mutter', 'Lieber nicht. Den Namen kennt die ganze Abteilung, Sie erzählen ja oft von ihr. Wir machen ein neues. Ein langes.'),
+      q('allgemein', 'Ich will nur melden, dass der Kollege gegenüber Solitär spielt. Nicht als Petze. Als Hinweis.', 'Hinweis zum Kollegen', 'Danke für den Hinweis. Ich hab ihn abgelegt, im Ordner „Hinweise“. Der hat sehr viel Platz.'),
+      f('office', 'Ich hab eine Tabelle, wer wann Mittag macht. Seitdem ist Excel so langsam.', 'Tabelle mit 40.000 Formeln für 12 Leute', 'Die Tabelle hatte 40.000 Formeln für 12 Kollegen. Jetzt sind es 12. Sie läuft wieder. Bitte nur für den Eigengebrauch.', []),
+    ],
+  },
 ];
 
 // Mehr Abwechslung: weitere Abteilungen und Anliegen (Ursache und Antwort passen jeweils zusammen)
@@ -439,6 +461,15 @@ const RARE_SHARE = 0.25;
 
 /** Anrufe, die von Uhrzeit, Wochentag oder deiner Infrastruktur abhängen. */
 export const SITUATIONS: Situation[] = [
+  {
+    // nur bei der Versicherung (Schadensregulierung M–Z): der Kollege ohne Lust
+    when: (s) => s.prestige.company === 'schaden',
+    rare: true,
+    calls: [
+      sit('(￢_￢)', 'Kollege (Schadensregulierung)', q('wunsch', 'Kann man das Telefon so einstellen, dass es nur bei wichtigen Sachen klingelt? Also nie?', 'Telefon soll nie klingeln', 'Geht. Heißt „Bitte nicht stören“. Ich hab es Ihnen eingestellt. Bis 17 Uhr, dann wieder an. Der Chef hat die gleiche Taste.')),
+      sit('(￢_￢)', 'Kollege (Schadensregulierung)', f('netz', 'Bei mir ist das Internet langsam. Ich brauch das schnell. Für, äh, Recherche. Wohnungsanzeigen in einer anderen Stadt.', 'Videostream im Hintergrund', 'Im Hintergrund lief ein Stream in 4K. Jetzt ist das Internet schnell. Viel Glück bei der Recherche.', [])),
+    ],
+  },
   {
     // Freitagnachmittag
     when: (_s, d) => d.getDay() === 5 && d.getHours() >= 14,

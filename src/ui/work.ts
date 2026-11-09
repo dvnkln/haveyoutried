@@ -1,4 +1,5 @@
-import { SOLVE } from '../config';
+import { CONFIG, SOLVE } from '../config';
+import { espressoActive } from '../core/actions';
 import { ticketWork } from '../core/economy';
 import { CALLERS, QUEUE_LINE, type Call, type Line } from '../content/callers';
 import {
@@ -656,19 +657,29 @@ export function createWork(
     streak = n;
     last.dataset.streak = n >= 2 ? `×${n}` : '';
   };
+  /** großer Stempel mit Serien-Spruch: so lange läuft seine Animation (.solved-stamp.big), so lange bleibt er stehen */
+  const STAMP_BIG_MS = 1_400;
+  /** frühester Zeitpunkt für den nächsten Stempel mit Ton (nur unter Espresso gedrosselt) */
+  let nextCelebrate = -Infinity;
   const celebrate = () => {
     setStreak(streak + 1);
     const lines = STREAK_LINES[streak];
     const line = lines ? pick(lines) : '';
-    setText(stampText, `✓ ${pick(task.line.fix ? FIX_STAMPS : STAMPS)}`);
     setText(stampStreak, streak >= 2 ? `×${streak}` : '');
-    setText(stampLine, line);
-    stamp.classList.remove('show', 'big');
-    void stamp.offsetWidth; // Animation neu starten
-    stamp.classList.add('show');
-    if (line) stamp.classList.add('big');
-    ctx.sfx.solved(streak);
-    ctx.haptic('tap');
+    const now = performance.now();
+    // Espresso löst schneller, als man feiern kann: dann nur der Zähler, solange der letzte Stempel noch steht.
+    // Serien-Sprüche kommen immer und bleiben stehen, bis man sie lesen konnte.
+    if (line || !espressoActive(ctx.state) || now >= nextCelebrate) {
+      nextCelebrate = now + (line ? STAMP_BIG_MS : CONFIG.espresso.celebrateGapMs);
+      setText(stampText, `✓ ${pick(task.line.fix ? FIX_STAMPS : STAMPS)}`);
+      setText(stampLine, line);
+      stamp.classList.remove('show', 'big');
+      void stamp.offsetWidth; // Animation neu starten
+      stamp.classList.add('show');
+      if (line) stamp.classList.add('big');
+      ctx.sfx.solved(streak);
+      ctx.haptic('tap');
+    }
     onSolved(streak, stamp, presses);
   };
 

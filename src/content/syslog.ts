@@ -51,6 +51,11 @@ export const BOFH_EXCUSES = [
 
 /** Hintergrundrauschen im Syslog. {pid} wird zufällig ersetzt. */
 export const AMBIENT: LogTemplate[] = [
+  // Stromberg
+  t('info', 'kuehlschrank[4]: Joghurt „Abteilungsleiter – NICHT ESSEN“ seit 14 Tagen drin. Status: lebt.'),
+  t('info', 'cam[24]: recording… Abteilungsleiter schaut wieder in die Kamera.'),
+  t('warn', 'hr[12]: Beschwerde eingegangen. Betreff: „Witz in der Teamrunde“. Absender: alle.'),
+  t('info', 'kantine[7]: Kekse von Mutti im Teamraum. Herkunft: Sachbearbeiter. Haltbarkeit: kurz.'),
   // Klassiker
   t('crit', 'kernel: lp0 on fire'),
   t('warn', 'named[53]: SERVFAIL resolving intranet.local'),

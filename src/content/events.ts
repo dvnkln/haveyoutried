@@ -1,4 +1,4 @@
-import type { EventEffectId } from '../config';
+import { CONFIG, type EventEffectId } from '../config';
 import type { GameState } from '../core/state';
 import type { LogTemplate } from './syslog';
 
@@ -709,6 +709,52 @@ export const EVENTS: GameEventDef[] = [
     ],
     ignore: o('lossSmall', 'Er hat es sich selbst „besorgt“. Über den Praktikanten. Zwei Stunden Aufräumen.'),
   },
+  {
+    id: 'kamerateam',
+    title: 'Kamerateam im Büro',
+    text: 'Ein Fernsehteam dreht eine Doku über „das echte Büroleben“. Der Abteilungsleiter trägt plötzlich Krawatte und duzt alle. Die Kamera steht direkt neben deinem Schreibtisch.',
+    options: [
+      {
+        label: 'Direkt in die Kamera gucken',
+        outcomes: [
+          o('win', 'Du schaust lange in die Kamera, während der Chef ihr erklärt, dass er „eigentlich mehr Kumpel als Chef“ ist. Das wird die beliebteste Szene der Doku.', 0.6),
+          o('tip', 'Du guckst in die Kamera. Der Kameramann guckt zurück. Ihr versteht euch ohne Worte.', 0.4),
+        ],
+      },
+      { label: 'Ganz normal weiterarbeiten', outcomes: [o('rush', 'Du arbeitest einfach. Das Team filmt lieber den Chef, der gerade einen Witz über die Zentrale erklärt. Niemand stört dich.')] },
+      { label: 'Dem Chef die Show stehlen', outcomes: [o('lossSmall', 'Du erzählst einen Witz. Er kommt gut an. Der Chef erzählt den gleichen Witz nochmal, lauter. Die nächste Stunde gehört ihm.')] },
+    ],
+    ignore: o('none', 'Das Team dreht ohne dich. In der Doku sieht man nur deinen Hinterkopf und ein klingelndes Telefon.'),
+  },
+  {
+    id: 'standort',
+    title: 'Gerücht: Standort zu',
+    text: 'Auf dem Flur heißt es: Die Zentrale legt Standorte zusammen. Der Abteilungsleiter versichert allen, dass nichts passiert. Er hat dabei sehr rote Ohren.',
+    options: [
+      { label: 'Das Netz sauber dokumentieren', outcomes: [o('win', 'Du dokumentierst alles. Die Zentrale ist beeindruckt und lässt den Standort, wo er ist. Der Abteilungsleiter erzählt, er habe das verhandelt.')] },
+      { label: 'Den Chef beruhigen', outcomes: [o('lossSmall', 'Der Chef hält dir einen Vortrag über Loyalität, Teamgeist und seinen alten Sportverein. 40 Minuten. Am Ende umarmt er dich.')] },
+      { label: 'In den Papierkorb gucken', outcomes: [o('tip', 'Drei Bewerbungen im Papierkorb. Eine davon vom Chef. Du sagst nichts. Er weiß, dass du es weißt. Du hast eine Woche Ruhe.')] },
+    ],
+    ignore: o('fire', 'Alle schreiben Bewerbungen statt Tickets. Die Queue wächst. Am Ende war es nur ein Gerücht.'),
+  },
+  {
+    id: 'betriebsfeier',
+    title: 'Betriebsfeier',
+    text: 'Der Abteilungsleiter organisiert die Feier selbst. Programmpunkt eins: seine Rede. Punkt zwei: Karaoke, er fängt an. Du sollst Beamer und Mikrofon machen.',
+    weight: (_s, d) => (d.getMonth() === 11 ? 3 : 1),
+    options: [
+      { label: 'Technik aufbauen', outcomes: [o('win', 'Beamer läuft, Mikro läuft. Der Chef singt drei Lieder. Die Abteilung dankt dir still für den Lautstärkeregler, den nur du bedienen kannst.')] },
+      {
+        label: 'Mikro „leider kaputt“',
+        outcomes: [
+          o('tip', 'Das Mikro ist „kaputt“. Der Chef hält seine Rede ohne. Man versteht jeden dritten Satz. Bester Abend des Jahres.', 0.5),
+          o('lossSmall', 'Der Chef hat ein Ersatzmikro dabei. Aus dem Kofferraum. Er hat immer eins dabei.', 0.5),
+        ],
+      },
+      { label: 'Dienstlich verhindert sein', outcomes: [o('rush', 'Du hast „einen Serverausfall“. Allein im Büro, die Queue für dich. Ruhigster Abend seit Monaten.')] },
+    ],
+    ignore: o('lossSmall', 'Ohne Technik nimmt der Chef einen Bluetooth-Lautsprecher. Der ist mit dem Konferenzraum verbunden. Das Vorstandsmeeting dort ist jetzt vorbei.'),
+  },
 ];
 
 /** „!! DRINGEND !!“-Ticket erwischt: Texte je Effekt */
@@ -741,5 +787,5 @@ export const BUFF_HELP: Record<string, string> = {
   overtime: 'Überstunden: Du tippst siebenmal so schnell.',
   fire: 'Es brennt: Infrastruktur nur halb so schnell, bis gelöscht ist.',
   fireBig: 'Alles brennt: Infrastruktur auf ein Viertel. Einfach weitertippen.',
-  espresso: 'Doppelter Espresso: Taste gedrückt halten, dann tippt es von selbst. Zehnmal pro Sekunde.',
+  espresso: `Doppelter Espresso: Taste gedrückt halten, dann tippt es von selbst. ${CONFIG.espresso.rate}-mal pro Sekunde. Das schafft keine Hand.`,
 };
