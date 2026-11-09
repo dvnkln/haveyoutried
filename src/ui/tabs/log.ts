@@ -1,7 +1,7 @@
 import type { Tab } from '../app';
 import { h } from '../dom';
 
-/** App „Tickets“: Verlauf der erledigten Fenster, VIP-Post-its, Pager-Einsätze und Incidents, neueste oben. */
+/** App „Tickets“: Verlauf der erledigten Fenster, VIP-Mails, Pager-Einsätze und Incidents, neueste oben. */
 export function logTab(): Tab {
   return {
     id: 'log',

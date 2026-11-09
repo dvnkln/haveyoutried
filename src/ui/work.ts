@@ -300,17 +300,36 @@ const PROGRAMS: Record<Kind, Program> = {
   call: {
     weight: 1,
     title: (t) => `Videocall — ${t.who} (3 Teilnehmer, 2 stumm)`,
+    // Meeting-App: dunkle Bühne, wer spricht, hat den Ring; man selbst klein in der Ecke; unten die Knöpfe
     head: (t) => [
-      h('div', { class: 'call-tiles' }, [
-        h('div', { class: 'call-tile' }, [h('span', { class: 'call-avatar', text: initials(t.who) || '?' }), h('span', { class: 'call-name', text: t.who })]),
-        h('div', { class: 'call-tile call-me' }, [h('span', { class: 'call-avatar', text: 'Du' }), h('span', { class: 'call-name', text: 'Kamera aus' })]),
-        h('div', { class: 'call-tile call-room' }, [h('span', { class: 'call-avatar', text: '2.14' }), h('span', { class: 'call-name', text: 'Raum 2.14 (stumm)' })]),
+      h('div', { class: 'call-stage' }, [
+        h('span', { class: 'call-time', text: `● ${String(randInt(0, 59)).padStart(2, '0')}:${String(randInt(0, 59)).padStart(2, '0')}` }),
+        h('span', { class: 'call-people', text: '👥︎ 3 · Raum 2.14 stumm' }),
+        h('div', { class: 'call-speaker speaking' }, [
+          h('span', { class: 'call-avatar', text: initials(t.who) || '?' }),
+          h('span', { class: 'call-name', text: `🎙︎ ${t.who}` }),
+        ]),
+        h('div', { class: 'call-self' }, [h('span', { class: 'call-avatar small', text: 'Du' }), h('span', { class: 'call-name', text: 'Kamera aus' })]),
       ]),
     ],
-    label: 'Du sagst:',
+    label: 'Live-Untertitel · Du:',
+    extra: () => [
+      h('div', { class: 'call-controls', 'aria-hidden': 'true' }, [
+        ...['🎙︎', '📷︎', '⬆︎', '✋︎', '⋯'].map((x) => h('span', { class: 'call-btn', text: x })),
+        h('span', { class: 'call-btn call-leave', text: '📞︎ Verlassen' }),
+      ]),
+    ],
     lines: (t) => withPrefix(CALL_LINES, t.line.answer, 0.3),
     log: (t, x) => `call[3478]: zu ${t.who}: „${x}“${Math.random() < 0.3 ? ' (Mikro war aus)' : ''}`,
-    ready: (_t, head) => head.querySelector('.call-me .call-name')?.replaceChildren('🎙︎ spricht'),
+    // jetzt spricht man selbst: Ring wandert in die eigene Kachel
+    ready: (t, head) => {
+      const speaker = head.querySelector('.call-speaker');
+      const self = head.querySelector<HTMLElement>('.call-self');
+      speaker?.classList.remove('speaking');
+      if (self && self.offsetParent !== null) self.classList.add('speaking');
+      // eigene Kachel im engen Fenster ausgeblendet: die große Kachel sagt, wer spricht
+      else speaker?.querySelector('.call-name')?.replaceChildren(`🎙︎ Du · ${t.who} hört zu`);
+    },
   },
   rdp: {
     weight: 1,
@@ -440,6 +459,8 @@ export function createWork(
   let sentTimer = 0;
   /** Antwort ist abgeschickt und steht da; der nächste Anschlag löst und holt das nächste Ticket */
   let ready = false;
+  /** abgeschickt mit Verlauf: wie er sich zurücknehmen lässt, falls das Fenster später kleiner wird */
+  let readyFallback: (() => void) | undefined;
   /** gelöste Tickets in Folge; reißt nach SOLVE.breakMs ohne Anschlag */
   let streak = 0;
   /** eine Zeile: passt der Text nicht, wird die Schrift kleiner statt abgeschnitten */
@@ -529,6 +550,24 @@ export function createWork(
   const fitBody = () => {
     // während der Memes ist das Fenster versteckt: messen erst beim Zurückkommen
     if (memes) return showTyped();
+    // abgeschickt (Größe ändert sich, z. B. Handy gedreht): Ergebnis bleibt stehen, nur enger machen;
+    // reicht „eng“ nicht, zuerst den Verlauf zurücknehmen (sonst blendet „enger“ die Nachricht davor aus)
+    if (ready) {
+      const over = () => overflows(true);
+      el.classList.remove('tight', 'tighter');
+      body.style.fontSize = '';
+      if (over()) el.classList.add('tight');
+      if (over() && readyFallback) {
+        readyFallback();
+        readyFallback = undefined;
+      }
+      if (over()) el.classList.add('tighter');
+      if (over()) {
+        const base = parseFloat(getComputedStyle(body).fontSize);
+        for (let size = base - 0.5; size >= 9.5 && over(); size -= 0.5) body.style.fontSize = `${size}px`;
+      }
+      return showTyped();
+    }
     const over = () => overflows();
     el.classList.remove('tight', 'tighter');
     body.style.fontSize = '';
@@ -639,11 +678,25 @@ export function createWork(
     ready = true;
     el.classList.add('ready');
     const fallback = PROGRAMS[task.kind].ready?.(task, head, extra, reply);
-    // kein neues Ausmessen (sonst springt das Fenster): was nicht mehr passt, fällt weg
-    const optional = [...el.querySelectorAll('.opt')].reverse();
-    for (const o of optional) if (overflows(true)) o.remove();
-    // passt der Verlauf trotzdem nicht: Nachricht bleibt wie früher im Eingabefeld stehen
-    if (fallback && overflows(true)) fallback();
+    readyFallback = fallback || undefined;
+    // kein neues Ausmessen (sonst springt das Fenster): was nicht mehr passt, fällt weg (von unten nach oben)
+    const dropOptional = () => {
+      const dropped: [Element, Node, Node | null][] = [];
+      for (const o of [...el.querySelectorAll('.opt')].reverse()) {
+        if (!overflows(true) || !o.parentNode) continue;
+        dropped.push([o, o.parentNode, o.nextSibling]);
+        o.remove();
+      }
+      return dropped;
+    };
+    const dropped = dropOptional();
+    if (fallback && overflows(true)) {
+      // Verlauf passt trotzdem nicht: Nachricht bleibt wie früher im Eingabefeld; Weggefallenes bekommt eine neue Chance
+      for (const [o, parent, next] of dropped.reverse()) parent.insertBefore(o, next?.parentNode === parent ? next : null);
+      fallback();
+      readyFallback = undefined;
+      dropOptional();
+    }
   };
 
   /** Gelöst: Stempel, Karte in den Ticketverlauf. Stand die Antwort schon abgeschickt da, kommt sofort das nächste. */

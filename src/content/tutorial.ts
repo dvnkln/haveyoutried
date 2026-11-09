@@ -59,7 +59,7 @@ export const HINTS: Hint[] = [
   {
     id: 'urgent',
     target: '.urgent-note',
-    text: 'Rote Zettel sind VIP-Tickets vom Chef. Schnell antippen, die kleben nicht lange. Er merkt sich, wer zu langsam war.',
+    text: 'Mails mit rotem Ausrufezeichen sind VIP-Tickets vom Chef. Schnell antippen, die Benachrichtigung bleibt nicht lange. Er merkt sich, wer zu langsam war.',
     when: (s) => (s.flags.urgent ?? 0) === 0,
     expired: (s) => (s.flags.urgent ?? 0) > 0,
   },

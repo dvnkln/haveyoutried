@@ -40,6 +40,6 @@ describe('Firmen-Eigenheiten', () => {
   it('Wirkung in Worten', () => {
     expect(describeQuirk({ prod: 1.3, costs: 1.3 })).toBe('Infrastruktur +30 % · Preise +30 %');
     expect(describeQuirk({ events: 0, reward: 1.1 })).toBe('kein Pager · Wert je Ticket +10 %');
-    expect(describeQuirk({ urgent: 2 })).toBe('VIP-Zettel ×2');
+    expect(describeQuirk({ urgent: 2 })).toBe('VIP-Mails ×2');
   });
 });

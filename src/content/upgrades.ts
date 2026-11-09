@@ -77,7 +77,7 @@ export const ABILITIES: Record<string, string> = {
   'cron-3': 'Abwesenheit zählt nach der ersten Stunde 40 % statt 20 %. Die Nachtschicht läuft.',
   'ansible-3': 'Schlechte Pager-Ausgänge sind nur halb so schlimm. Automatischer Rollback.',
   'k8s-3': 'Incidents haben 30 % mehr Zeit (außer RAID: Festplatten warten auf niemanden). Selbstheilung, angeblich.',
-  'agent-3': 'Verpasste VIP-Zettel nimmt der Agent an (halbe Belohnung). „Ich verstehe die Dringlichkeit.“',
+  'agent-3': 'Verpasste VIP-Mails nimmt der Agent an (halbe Belohnung). „Ich verstehe die Dringlichkeit.“',
   'undertable-3': 'Ein Fehlgriff pro Incident wird verziehen. Steht in der Doku. Auf dem Post-it.',
 };
 

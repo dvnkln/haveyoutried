@@ -16,16 +16,18 @@ const svg = (markup: string, cls: string, tag: 'div' | 'button' = 'div'): HTMLEl
 // Kleine Comic-Zeichnungen: dunkle Kontur, runde Enden, Pastellflächen.
 const INK = 'stroke="var(--ink)" stroke-width="2" stroke-linejoin="round"';
 
-const PLANT = `<svg viewBox="0 0 44 56">
+/** Kübelpflanze (Gummibaum) neben dem Tisch: groß, steht halb aus dem Bild; Blätter kommen mit dem Fortschritt dazu */
+const PLANT = `<svg viewBox="0 0 90 140">
   <g class="leaves" ${INK}>
-    <path class="leaf l1" d="M22 30 C14 26 10 18 12 12 C20 14 23 22 22 30Z" fill="#7ccf8e"/>
-    <path class="leaf l2" d="M22 30 C30 26 34 18 32 12 C24 14 21 22 22 30Z" fill="#8edb9f"/>
-    <path class="leaf l3" d="M22 28 C20 20 21 10 24 4 C28 12 26 22 22 28Z" fill="#6cc57f"/>
-    <path class="leaf l4" d="M21 32 C12 32 5 28 3 22 C11 20 18 25 21 32Z" fill="#8edb9f"/>
-    <path class="leaf l5" d="M23 32 C32 32 39 28 41 22 C33 20 26 25 23 32Z" fill="#7ccf8e"/>
+    <path class="leaf l4" d="M44 88 C30 72 17 52 19 28 C34 38 44 60 44 88Z" fill="#6cc57f"/>
+    <path class="leaf l5" d="M46 88 C60 72 73 52 71 28 C56 38 46 60 46 88Z" fill="#7ccf8e"/>
+    <path class="leaf l3" d="M45 92 C37 66 37 34 46 6 C56 34 54 66 45 92Z" fill="#8edb9f"/>
+    <path class="leaf l1" d="M45 94 C30 90 13 82 8 66 C24 61 40 74 45 94Z" fill="#7ccf8e"/>
+    <path class="leaf l2" d="M45 94 C60 90 77 82 82 66 C66 61 50 74 45 94Z" fill="#8edb9f"/>
   </g>
-  <path d="M11 32 h22 l-3 20 a2 2 0 0 1 -2 2 h-12 a2 2 0 0 1 -2 -2Z" fill="#e8956b" ${INK}/>
-  <rect x="9" y="30" width="26" height="6" rx="2" fill="#f0a77e" ${INK}/>
+  <path d="M15 98 h60 l-6 38 a3 3 0 0 1 -3 3 h-42 a3 3 0 0 1 -3 -3Z" fill="#e8956b" ${INK}/>
+  <path d="M19 112 h52" stroke="#c97a54" stroke-width="2.5" stroke-linecap="round"/>
+  <rect x="11" y="92" width="68" height="10" rx="3" fill="#f0a77e" ${INK}/>
 </svg>`;
 
 /** Becher: schlicht (nur Kaffeemaschine) oder mit Design der zuletzt verbesserten Infrastruktur */
@@ -117,6 +119,7 @@ const MOUSE = `<svg viewBox="0 -10 40 64">
 </svg>`;
 
 /** Club-Mate-artige Flasche: der übernommene Praktikant hat sich eingerichtet */
+/** 0,5-l-Flasche Mate: gut doppelt so hoch wie der Becher */
 const MATE = `<svg viewBox="0 0 16 44">
   <path d="M6 2 h4 v8 c0 3 4 5 4 10 v20 a3 3 0 0 1 -3 3 h-6 a3 3 0 0 1 -3 -3 v-20 c0 -5 4 -7 4 -10Z" fill="#f2b84b" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round"/>
   <rect x="5.5" y="1" width="5" height="3" rx="1" fill="#4b4453"/>
@@ -261,6 +264,11 @@ export function createProps(ctx: AppContext) {
 
   // --- Abreißkalender: Antippen reißt das Blatt ab, der nächste Tag (und Spruch) kommt ---
   const DAYS = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+  const CAL_AUTO_LINES = [
+    'kalender[7]: Blatt fällt von allein ab. Gefühlt war das gerade ein ganzer Tag.',
+    'kalender[7]: Ein Tag weniger bis zur Rente. Der Kalender hat es selbst gemerkt.',
+    'kalender[7]: Blatt abgefallen. Ursache: Erschöpfung. Des Blatts.',
+  ];
   let calOffset = 0;
   let calLine = Math.floor(Math.random() * CALENDAR_LINES.length);
   const calPage = () => {
@@ -271,7 +279,8 @@ export function createProps(ctx: AppContext) {
     ]);
   };
   const calendar = h('button', { class: 'tear-cal', type: 'button', 'aria-label': 'Abreißkalender: nächstes Blatt' }, [calPage()]);
-  calendar.addEventListener('click', () => {
+  /** auto = Blatt fällt von selbst (Incident überstanden, Chef-Aufgabe erledigt): so ein Tag fühlt sich wie zwei an */
+  const tear = (auto = false) => {
     // das oberste noch hängende Blatt ist das, was man sieht (fallende Blätter sind schon „torn“)
     const hanging = [...calendar.querySelectorAll('.cal-page:not(.torn)')];
     const old = hanging.pop();
@@ -287,9 +296,15 @@ export function createProps(ctx: AppContext) {
       setTimeout(() => old.remove(), 600);
     }
     ctx.sfx.tick();
-    ctx.haptic('tap');
+    if (auto) ctx.log.write('info', pick(CAL_AUTO_LINES));
+    else ctx.haptic('tap');
     if (calOffset % 7 === 0) ctx.log.write('info', 'kalender[7]: Eine Woche abgerissen. Die Tickets sind trotzdem von heute.');
+  };
+  calendar.addEventListener('click', () => tear());
+  bus.on('incidentResolved', ({ abandoned, score }) => {
+    if (!abandoned && isSolved(score)) setTimeout(() => tear(true), 1_500);
   });
+  bus.on('bossDone', () => setTimeout(() => tear(true), 1_500));
 
   const mate = svg(MATE, 'prop mate');
   const dust = svg(DUST, 'prop dust');

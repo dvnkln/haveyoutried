@@ -90,16 +90,22 @@ export function startTutorial(state: GameState): void {
     spot.hidden = false;
     card.hidden = false;
     text.textContent = hint.text;
-    follow();
+    follow(el);
   };
 
-  // jeden Frame nachführen, solange ein Hinweis steht: die Kaffeetasse fliegt ja davon
+  // jeden Frame nachschauen (die Kaffeetasse fliegt, Layout kann sich verschieben), aber nur bei Bewegung neu setzen
   let raf = 0;
-  const follow = () => {
+  const follow = (el: HTMLElement) => {
     cancelAnimationFrame(raf);
+    let last = '';
     const step = () => {
-      if (!active) return;
-      place();
+      if (active?.el !== el) return;
+      const r = el.getBoundingClientRect();
+      const key = `${r.left},${r.top},${r.width},${r.height},${window.innerWidth},${window.innerHeight}`;
+      if (key !== last) {
+        last = key;
+        place();
+      }
       raf = requestAnimationFrame(step);
     };
     step();
@@ -140,7 +146,7 @@ export function startTutorial(state: GameState): void {
       }
       if (!replay && !hint.when(state)) continue;
       const el = document.querySelector<HTMLElement>(hint.target);
-      // nicht gleichzeitig mit einer Meldung oder der Kaffeetasse (der VIP-Zettel darf, er ist ja oft das Thema)
+      // nicht gleichzeitig mit einer Meldung oder der Kaffeetasse (die VIP-Mail darf, sie ist ja oft das Thema)
       if (el && visible(el) && !attentionBusy(['.urgent-note', '.espresso-cup', '.tut-note:not([hidden])'])) return show(hint, el);
     }
   }, CHECK_MS);

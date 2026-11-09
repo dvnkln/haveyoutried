@@ -255,7 +255,7 @@ export const DONE_LINES: Record<'mail' | 'ticket' | 'term' | 'chat' | 'call' | '
 /** Status im Ticketverlauf */
 export const TICKET_STATES: string[] = ['Gelöst', 'Geschlossen', 'Gelöst (vorläufig)', 'Gelöst (hoffentlich)', 'Erledigt', 'Geschlossen (bevor es wieder aufgeht)', 'Erledigt (bis Montag)', 'Works as designed', 'Gelöst (sagt keiner weiter)'];
 
-/** VIP-Tickets (rote Post-its) im Verlauf: wer, was, Thema und die eine wahre Ursache */
+/** VIP-Tickets (wichtige Mails) im Verlauf: wer, was, Thema und die eine wahre Ursache */
 export const VIP_TICKETS: { who: string; subject: string; topic: Topic; cause: string }[] = [
   { who: 'Chef', topic: 'hardware', subject: 'Beamer im Vorstandsraum: „Kein Signal“. Meeting in 2 Min.', cause: 'Falscher HDMI-Eingang' },
   { who: 'Geschäftsführung', topic: 'netz', subject: 'Das Internet ist weg.', cause: 'WLAN-Schalter am Laptop aus' },

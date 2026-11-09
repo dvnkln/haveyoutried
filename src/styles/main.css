@@ -1619,42 +1619,114 @@ button {
   border-color: var(--red);
 }
 
-/* Dringend-Ticket: rotes Post-it, klebt kurz auf dem Monitor */
+/* VIP-Ticket: Benachrichtigung des Mailprogramms, gleitet oben rechts ins Bild; der Balken zeigt die Restzeit */
 .urgent-note {
   position: absolute;
   z-index: 25;
-  min-height: var(--touch);
-  max-width: 180px;
-  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 6px 9px 8px 12px;
+  overflow: hidden;
   border: var(--outline) solid var(--ink);
-  border-radius: 4px 4px 14px 4px;
-  background: #ff7b7b;
-  color: #fff;
-  font: 700 14px / 1.2 var(--font-ui);
-  text-shadow: 0 1px 0 rgba(61, 44, 46, 0.6);
+  border-radius: 10px;
+  background: #fffaf0;
+  color: var(--ink);
+  font: 500 11px / 1.25 var(--font-ui);
+  text-align: left;
+  box-shadow: 0 4px 0 rgba(61, 44, 46, 0.8), 0 8px 18px rgba(30, 20, 30, 0.25);
+  animation: urgent-in 0.35s cubic-bezier(0.2, 0.8, 0.3, 1.3), urgent-nudge 0.5s ease-in-out 0.35s 2;
+}
+/* roter Streifen links: Wichtigkeit hoch */
+.urgent-note::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  background: #e5484d;
+}
+.un-app {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  color: var(--ink-soft);
+}
+.un-from {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-size: 12.5px;
+}
+.un-from b {
+  overflow: hidden;
   white-space: nowrap;
-  box-shadow: 0 4px 0 rgba(61, 44, 46, 0.8);
-  transform: rotate(var(--tilt, -3deg));
-  animation: urgent-in 0.3s cubic-bezier(0.2, 0.8, 0.3, 1.5), urgent-wobble 1.4s ease-in-out 0.3s infinite;
+  text-overflow: ellipsis;
+}
+.un-flag {
+  flex: 0 0 auto;
+  padding: 0 5px;
+  border-radius: 4px;
+  background: #e5484d;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+}
+.un-subject {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+.un-time {
+  position: absolute;
+  left: 5px;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: #e5484d;
+  transform-origin: left;
+  animation: urgent-time var(--visible, 9s) linear forwards;
+}
+@keyframes urgent-time {
+  to {
+    transform: scaleX(0);
+  }
 }
 .urgent-note.peel {
-  animation: urgent-peel 0.45s ease-in forwards;
+  animation: urgent-peel 0.4s ease-in forwards;
+}
+.urgent-note.gone {
+  animation: urgent-gone 0.3s ease-in forwards;
 }
 @keyframes urgent-in {
   from {
-    transform: rotate(var(--tilt, -3deg)) scale(0.2);
     opacity: 0;
+    transform: translateX(110%);
   }
 }
-@keyframes urgent-wobble {
+/* zweimal kurz anstupsen, dann Ruhe (kein Dauerwackeln) */
+@keyframes urgent-nudge {
   50% {
-    transform: rotate(calc(var(--tilt, -3deg) * -1)) scale(1.04);
+    transform: translateX(-5px);
   }
 }
+/* beantwortet: hüpft kurz und fliegt nach rechts raus */
 @keyframes urgent-peel {
+  30% {
+    transform: scale(1.04);
+  }
   to {
     opacity: 0;
-    transform: translateY(-60px) rotate(25deg) scale(0.6);
+    transform: translateX(110%);
+  }
+}
+@keyframes urgent-gone {
+  to {
+    opacity: 0;
+    transform: translateY(-20px);
   }
 }
 .floater-big {
@@ -3570,7 +3642,9 @@ button {
   background: #ffe1e1;
 }
 .work[data-kind='call'] .work-bar {
-  background: #e7dcf0;
+  border-bottom-color: #14121a;
+  background: #2f2c3a;
+  color: #d9d3e6;
 }
 .work[data-kind='rdp'] .work-bar {
   background: #cfe0ff;
@@ -3579,51 +3653,168 @@ button {
   background: #d9f5e6;
 }
 
-/* Videocall: drei Kacheln */
-.call-tiles {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 4px;
+/* Videocall: Meeting-App im Dunkelmodus */
+.work[data-kind='call'] {
+  background: #23212b;
+  color: #f1edf7;
 }
-.call-tile {
-  position: relative;
-  height: 50px;
+/* Bühne nimmt den freien Platz, die Untertitel nur so viel wie die Antwort braucht */
+.work[data-kind='call'] .work-head {
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  border: 1.5px solid var(--ink);
+  min-height: 0;
+  padding: 5px 6px 0;
+  border-bottom: 0;
+}
+.call-stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 92px;
+  max-height: 220px;
   border-radius: 8px;
-  background: #3a3f4b;
-  color: #fffaf0;
+  background: radial-gradient(ellipse at 50% 45%, #4a4560, #2f2c3a 75%);
   overflow: hidden;
 }
-.call-avatar {
-  width: 24px;
-  height: 24px;
+.call-speaker {
+  position: absolute;
+  inset: 0;
   display: grid;
   place-items: center;
-  border: 1.5px solid var(--ink);
+}
+.call-avatar {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--ink);
   border-radius: 50%;
   background: var(--peach);
   color: var(--ink);
-  font-size: 9.5px;
+  font-size: 14px;
   font-weight: 700;
+  transition: box-shadow 0.2s;
 }
-.call-me .call-avatar {
+.call-avatar.small {
+  width: 20px;
+  height: 20px;
+  border-width: 1.5px;
   background: #cfc7b8;
+  font-size: 8px;
 }
-.call-room .call-avatar {
-  background: var(--sky);
+/* wer spricht, hat den Ring */
+.speaking .call-avatar {
+  box-shadow: 0 0 0 3px #8f7cf0, 0 0 0 6px rgba(143, 124, 240, 0.35);
+}
+.call-self.speaking {
+  outline: 2px solid #8f7cf0;
 }
 .call-name {
-  max-width: 100%;
-  padding: 0 3px;
+  position: absolute;
+  left: 5px;
+  bottom: 4px;
+  max-width: calc(100% - 10px);
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(20, 18, 26, 0.65);
   font-size: 9px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+.call-self {
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  width: 58px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid #6c6680;
+  border-radius: 6px;
+  background: #3a3646;
+}
+.call-self .call-name {
+  left: 2px;
+  bottom: 2px;
+  padding: 0 3px;
+  font-size: 7.5px;
+}
+.call-time,
+.call-people {
+  position: absolute;
+  z-index: 1;
+  top: 4px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(20, 18, 26, 0.6);
+  font-size: 8.5px;
+  white-space: nowrap;
+}
+.call-time {
+  left: 5px;
+  color: #ff8e8e;
+  font-variant-numeric: tabular-nums;
+}
+.call-people {
+  right: 5px;
+  color: #d9d3e6;
+}
+/* Untertitel: das Gesagte erscheint live unter dem Bild */
+.work[data-kind='call'] .work-body {
+  /* nur so hoch wie die Antwort, den Rest bekommt die Bühne */
+  flex: 0 1 auto;
+  margin: 4px 6px 0;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(10, 9, 14, 0.55);
+  color: #fffaf0;
+}
+.work[data-kind='call'] .work-label {
+  color: #b9b0cc;
+  font-size: 0.8em;
+}
+.call-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 6px 5px;
+}
+.call-btn {
+  min-width: 26px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  padding: 0 5px;
+  border-radius: 6px;
+  background: #3a3646;
+  font-size: 11px;
+}
+.call-leave {
+  padding: 0 8px;
+  background: #d9534f;
+  color: #fff;
+  font-size: 9.5px;
+  font-weight: 700;
+}
+.work.tight .call-stage {
+  min-height: 62px;
+}
+.work.tight .call-avatar:not(.small) {
+  width: 32px;
+  height: 32px;
+  font-size: 11px;
+}
+.work.tight .call-controls {
+  display: none;
+}
+.work.tighter .call-stage {
+  min-height: 40px;
+}
+.work.tighter .call-self,
+.work.tighter .call-people {
+  display: none;
 }
 
 /* ---------- Browser-Rahmen (Websuche, Webinterface) ---------- */
@@ -6200,7 +6391,6 @@ body > .incident.playing {
 .work.tight .tk-who,
 .work.tight .tk-actions,
 .work.tight .chat-top,
-.work.tight .call-tiles,
 .work.tight .web-login,
 .work.tight .web-foot,
 .work.tight .rdp-icons,
@@ -6364,14 +6554,6 @@ body > .incident.playing {
 .term-next::after {
   content: ' ▌';
   color: #23915c;
-}
-/* Videocall: das Gesagte als Untertitel */
-.work[data-kind='call'].ready .work-body {
-  background: rgba(30, 26, 36, 0.86);
-  color: #fffaf0;
-}
-.work[data-kind='call'].ready .work-label {
-  color: #c8c0d8;
 }
 /* Webinterface: Speichern ist gedrückt */
 .web-btn.save.pressed {
@@ -6967,24 +7149,20 @@ body:has(.tut-note) .tap-hint {
   text-shadow: 0 0 8px rgba(47, 158, 106, 0.55);
 }
 /* schneller Tippen (Espresso, Überstunden …): Tastatur glüht wie frisch aus dem Ofen, gedrückte Tasten leuchten auf */
-#app.boost-click .keyboard,
-.keyboard-wrap.espresso .keyboard {
+#app.boost-click .keyboard {
   --key-edge: #f0a868;
   background: linear-gradient(to bottom, #ffdcb0, #f6ad72);
   box-shadow: inset 0 -5px 0 #e0894c, 0 4px 0 rgba(61, 44, 46, 0.35), 0 0 0 2px #ffb070, 0 0 26px 8px rgba(255, 138, 61, 0.5);
 }
 /* Schein soll nicht unter der Schreibtischleiste verschwinden */
-#app.boost-click .keyboard-wrap,
-.keyboard-wrap.espresso {
+#app.boost-click .keyboard-wrap {
   z-index: 2;
 }
 /* Glut von unten auf jeder Taste; Grundfarbe bleibt (PANIK, Fix) */
-#app.boost-click .key,
-.keyboard-wrap.espresso .key {
+#app.boost-click .key {
   background-image: radial-gradient(ellipse 90% 70% at 50% 115%, rgba(255, 140, 50, 0.55), transparent 75%);
 }
-#app.boost-click .key.down,
-.keyboard-wrap.espresso .key.down {
+#app.boost-click .key.down {
   background-color: #ffc285;
   box-shadow: inset 0 -1px 0 var(--key-edge), 0 0 10px 3px rgba(255, 150, 60, 0.85);
 }
@@ -7069,4 +7247,60 @@ body:has(.tut-note) .tap-hint {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* ---------- Proportionen am Schreibtisch (Maßstab: die Tasse) ----------
+   Deko darf angeschnitten oder halb verdeckt sein, Bedienbares (Ente, Pager, Tasten) bleibt frei. */
+.deskbar > .plant {
+  /* Kübelpflanze steht neben dem Tisch, halb aus dem Bild; Blätter reichen bis knapp unter die Ente */
+  position: absolute;
+  z-index: 1;
+  top: auto;
+  right: -28px;
+  /* nicht bis in den Tastaturbereich: der liegt beim Glühen obenauf */
+  bottom: 0;
+  width: 70px;
+  height: 108px;
+}
+.deskbar > .pager-device {
+  z-index: 2;
+}
+/* 0,5-l-Flasche: gut doppelt so hoch wie der Becher */
+.deskbar > .mate {
+  width: 34px;
+  height: 96px;
+  /* ragt nach oben über den Tisch hinaus, statt ihn (und damit den Monitor) zu verschieben */
+  margin: -26px 4px 0 -2px;
+}
+/* Handbuch statt Streichholzschachtel */
+.deskbar .mug-spot {
+  width: 74px;
+}
+.deskbar .book {
+  width: 74px;
+  height: 26px;
+}
+/* Tischtelefon: größer als der Becher, steht halb aus dem Bild (höher geht nicht, sonst verdeckt es die Statuszeile) */
+.monitor-area > .phone {
+  left: -20px;
+  width: 76px;
+  height: 69px;
+}
+.monitor-area > .postit-1 {
+  left: 72px;
+}
+/* schmale Handys: die Sprechblase des Anrufers braucht ihren Platz */
+@media (max-width: 359px) {
+  .deskbar .mug-spot,
+  .deskbar .book {
+    width: 58px;
+  }
+  .deskbar .book {
+    height: 22px;
+  }
+  .deskbar > .mate {
+    width: 28px;
+    height: 80px;
+    margin: -14px 0 0 -4px;
+  }
 }

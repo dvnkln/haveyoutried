@@ -25,8 +25,8 @@ export const BOSS_TASKS: Record<BossKind, string[]> = {
     'Ich will {n} neue Kästen sehen. Blinkend, wenn möglich.',
   ],
   urgent: [
-    'Erwischen Sie einen VIP-Zettel. Der Vorstand testet Ihre Reflexe.',
-    'Der nächste rote Zettel ist von mir. Seien Sie schnell.',
+    'Beantworten Sie eine VIP-Mail. Sofort. Der Vorstand testet Ihre Reflexe.',
+    'Die nächste Mail mit rotem Ausrufezeichen ist von mir. Seien Sie schnell.',
   ],
 };
 

@@ -13,7 +13,7 @@ describe('Übergabe vom Vorgänger', () => {
     expect(hint('infra').when(s)).toBe(true);
     s.generators.intern.owned = 1;
     expect(hint('infra').when(s)).toBe(false);
-    // Dringend-Zettel: wer schon einen erwischt hat, braucht keinen Hinweis
+    // VIP-Mail: wer schon einen erwischt hat, braucht keinen Hinweis
     expect(hint('urgent').when(s)).toBe(true);
     s.flags.urgent = 1;
     expect(hint('urgent').when(s)).toBe(false);

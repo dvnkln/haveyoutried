@@ -293,7 +293,7 @@ export const CONFIG = {
     flightMs: 5_500,
     durationMs: 2 * 60_000,
     /** Anschläge pro Sekunde, solange eine Taste gehalten wird */
-    rate: 10,
+    rate: 20,
   },
   /** „!! DRINGEND !!“-Tickets in der Queue */
   urgentMinMs: 90_000,

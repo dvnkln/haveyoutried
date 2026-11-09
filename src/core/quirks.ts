@@ -20,14 +20,14 @@ const LABELS: Record<keyof QuirkMods, string> = {
   costs: 'Preise',
   events: 'Pager',
   incidents: 'Incidents',
-  urgent: 'VIP-Zettel',
+  urgent: 'VIP-Mails',
 };
 
 /** Wirkung in Worten, z. B. „Infrastruktur +30 % · Tippen −20 %“ */
 export function describeQuirk(mods: QuirkMods): string {
   return (Object.entries(mods) as [keyof QuirkMods, number][])
     .map(([k, v]) => {
-      if (v === 0) return `${k === 'incidents' ? 'keine' : 'kein'} ${LABELS[k]}`.replace('kein VIP-Zettel', 'keine VIP-Zettel');
+      if (v === 0) return `${k === 'incidents' || k === 'urgent' ? 'keine' : 'kein'} ${LABELS[k]}`;
       if ((k === 'events' || k === 'incidents' || k === 'urgent') && v >= 2) return `${LABELS[k]} ×${v}`;
       const pct = Math.round((v - 1) * 100);
       return `${LABELS[k]} ${pct > 0 ? '+' : '−'}${Math.abs(pct)} %`;

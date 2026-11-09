@@ -385,6 +385,20 @@ export class Sfx {
     this.tone('triangle', 1500 * p, 800 * p, r.t + 0.09, 0.1, 0.14, lp, 0.005);
   }
 
+  /** Fliegende Espressotasse kommt: Tasse klirrt zweimal auf der Untertasse, dazu Flügelflattern. */
+  cup(): void {
+    const r = this.ready();
+    if (!r) return;
+    // Porzellan: hoher Grundton mit unharmonischem Oberton, kurz und hell
+    for (const [dt, p] of [[0, 1], [0.16, 1.06]] as const) {
+      this.tone('sine', 2350 * p, 2330 * p, r.t + dt, 0.1, 0.22);
+      this.tone('sine', 5870 * p, 5850 * p, r.t + dt, 0.035, 0.1);
+      this.hiss(r.t + dt, 0.05, 0.012, 'highpass', 6000);
+    }
+    // Flattern: weiche Luftstöße
+    for (let i = 0; i < 6; i++) this.hiss(r.t + 0.35 + i * 0.075, 0.09, 0.04, 'bandpass', 900, 0.8);
+  }
+
   /** Umschalten (Tabs, Einstellungen): leises Tick. */
   tick(): void {
     const r = this.ready();

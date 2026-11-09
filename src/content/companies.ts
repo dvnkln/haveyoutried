@@ -93,7 +93,7 @@ export const COMPANIES: Company[] = [
     name: 'Hochhaus Holding AG (IT im Keller)',
     host: 'hh-keller',
     welcome: 'Dein Büro ist im Keller. Ein Kollege hat für jeden Notfall ein Formular, der andere geht nie ans Telefon.',
-    quirk: { title: 'IT im Keller', flavor: 'Niemand findet euch: halb so viele VIP-Zettel. Dafür zählt jedes Ticket etwas mehr.', mods: { urgent: 0.5, reward: 1.05 } },
+    quirk: { title: 'IT im Keller', flavor: 'Niemand findet euch: halb so viele VIP-Mails. Dafür zählt jedes Ticket etwas mehr.', mods: { urgent: 0.5, reward: 1.05 } },
   },
   {
     id: 'schaden',
@@ -163,7 +163,7 @@ export const COMPANIES: Company[] = [
     name: 'Kita Kleine Bits',
     host: 'kita-bits',
     welcome: 'Das WLAN-Passwort steht auf dem Kühlschrank. Die Kinder kennen es längst.',
-    quirk: { title: 'Mittagsschlaf', flavor: 'Halb so viel Pager und VIP-Zettel. Was bleibt, zählt mehr.', mods: { events: 0.5, urgent: 0.5, reward: 1.1 } },
+    quirk: { title: 'Mittagsschlaf', flavor: 'Halb so viel Pager und VIP-Mails. Was bleibt, zählt mehr.', mods: { events: 0.5, urgent: 0.5, reward: 1.1 } },
   },
   {
     id: 'reederei',
@@ -177,7 +177,7 @@ export const COMPANIES: Company[] = [
     name: 'Tierpark Bitfeld',
     host: 'zoo-gehege-it',
     welcome: 'Die Pinguine haben eine eigene Webcam. Sie ist das einzige System mit Monitoring.',
-    quirk: { title: 'Pinguin-Alarm', flavor: 'Doppelt so viele VIP-Zettel. Die Pinguine sind VIPs.', mods: { urgent: 2, reward: 0.92 } },
+    quirk: { title: 'Pinguin-Alarm', flavor: 'Doppelt so viele VIP-Mails. Die Pinguine sind VIPs.', mods: { urgent: 2, reward: 0.92 } },
   },
   {
     id: 'pommes',

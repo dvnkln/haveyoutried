@@ -39,7 +39,7 @@ export function createToaster(): { el: HTMLElement; show(title: string, text: st
   };
 }
 
-/** Gerade läuft etwas, das Aufmerksamkeit will (Meldung, VIP-Zettel, Kaffeetasse, Hinweis vom Vorgänger)? */
+/** Gerade läuft etwas, das Aufmerksamkeit will (Meldung, VIP-Mails, Kaffeetasse, Hinweis vom Vorgänger)? */
 export function attentionBusy(ignore: string[] = []): boolean {
   const sel = ['.toast', '.urgent-note', '.espresso-cup', '.tut-note:not([hidden])'].filter((x) => !ignore.includes(x));
   return sel.some((x) => document.querySelector(x));

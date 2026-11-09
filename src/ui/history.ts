@@ -26,7 +26,7 @@ export interface TicketCard {
   note: string;
   /** Lösung / Abschluss mit Pointe */
   solution: string;
-  /** VIP-Ticket (rotes Post-it) */
+  /** VIP-Ticket (wichtige Mail vom Chef) */
   vip?: boolean;
 }
 
@@ -34,7 +34,7 @@ export const ticketId = (no: number) => `#INC-${String(no).padStart(6, '0')}`;
 
 let lastNo = 0;
 /**
- * Nächste Ticketnummer für Fenster und VIP-Post-its: wächst grob mit den Klicks
+ * Nächste Ticketnummer für Fenster und VIP-Mails: wächst grob mit den Klicks
  * (die Warteschlange arbeitet ja mit), ist aber nie kleiner als die letzte, also eindeutig.
  */
 export function nextTicketNo(clicks: number): number {

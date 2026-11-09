@@ -251,17 +251,17 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
     }
   };
 
-  // --- „!! DRINGEND !!“-Tickets: Post-it klebt kurz auf dem Monitor ---
+  // --- VIP-Tickets: Benachrichtigung vom Mailprogramm oben rechts im Monitor, kurz antippbar ---
   let urgentEl: HTMLButtonElement | null = null;
-  // Eigenheit der Firma: mehr oder weniger VIP-Zettel (0 = keine; dann nur ab und zu nachschauen)
+  // Eigenheit der Firma: mehr oder weniger VIP-Mails (0 = keine; dann nur ab und zu nachschauen)
   const scheduleUrgent = (delay = Math.min(scaledDelay(randInt(CONFIG.urgentMinMs, CONFIG.urgentMaxMs), quirkMods(ctx.state).urgent), 600_000)) => {
     setTimeout(spawnUrgent, delay);
   };
 
-  /** wer noch nie einen VIP-Zettel hatte, bekommt den ersten früh (nach 45–75 s) */
+  /** wer noch nie eine VIP-Mail hatte, bekommt die erste früh (nach 45–75 s) */
   const firstUrgentDelay = () => (ctx.state.flags.urgent ? undefined : randInt(45_000, 75_000));
   const spawnUrgent = () => {
-    // Firma ohne VIP-Zettel: nur später wieder nachschauen (nach dem nächsten Jobwechsel kann es anders sein)
+    // Firma ohne VIP-Mails: nur später wieder nachschauen (nach dem nächsten Jobwechsel kann es anders sein)
     if (quirkMods(ctx.state).urgent === 0) return scheduleUrgent();
     // nicht zusammen mit einer Meldung, der Kaffeetasse oder einem Hinweis: kurz danach nochmal versuchen
     if (attentionBusy()) return scheduleUrgent(5_000);
@@ -269,25 +269,33 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
       !gameBlocked({ hidden: true });
     if (!visible || urgentEl) return scheduleUrgent(10_000);
 
-    const el = h('button', { class: 'urgent-note', type: 'button', text: pick(URGENT_LABELS) });
+    const vip = pick(VIP_TICKETS);
+    const prio = pick(URGENT_LABELS).replace(/!/g, '').trim();
+    const el = h('button', { class: 'urgent-note', type: 'button', 'aria-label': `Wichtige Mail von ${vip.who}: ${vip.subject}` }, [
+      h('span', { class: 'un-app' }, [h('span', { text: '✉︎ Posteingang' }), h('span', { text: 'jetzt' })]),
+      h('span', { class: 'un-from' }, [h('b', { text: vip.who }), h('span', { class: 'un-flag', text: `! ${prio}` })]),
+      h('span', { class: 'un-subject', text: vip.subject }),
+      h('span', { class: 'un-time', 'aria-hidden': 'true' }),
+    ]);
     const s = fx.rel(screen());
-    el.style.left = `${s.x + randInt(8, Math.max(8, s.w - 160))}px`;
-    el.style.top = `${s.y + randInt(Math.min(60, s.h / 3), Math.max(60, s.h - 60))}px`;
-    el.style.setProperty('--tilt', `${randInt(-6, 6)}deg`);
+    const width = Math.min(250, s.w - 12);
+    el.style.width = `${width}px`;
+    el.style.left = `${s.x + s.w - width - 6}px`;
+    el.style.top = `${s.y + 6}px`;
+    el.style.setProperty('--visible', `${CONFIG.urgentVisibleMs}ms`);
     let claimed = false;
     const claim = () => {
       if (claimed) return;
       claimed = true;
       const res = claimUrgent(ctx.state, rates(ctx.state));
       const p = fx.rel(el);
-      fx.floater(p.x + p.w / 2, p.y, describeEffect(res), true);
-      const vip = pick(VIP_TICKETS);
+      fx.floater(p.x + p.w / 2, p.y + p.h, describeEffect(res), true);
       ctx.history.add({
         id: ticketId(nextTicketNo(ctx.state.clicks)),
         subject: vip.subject,
         who: vip.who,
-        channel: 'Post-it am Monitor',
-        prio: el.textContent?.replace(/!/g, '').trim() || 'DRINGEND',
+        channel: 'Mail (Wichtigkeit: hoch)',
+        prio,
         status: 'Sofort gelöst (natürlich)',
         cause: vip.cause,
         note: fill(pick(topicPool(vip.topic, 'notes')), { who: vip.who }),
@@ -312,8 +320,11 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
 
     setTimeout(() => {
       if (!claimed) {
-        el.remove();
-        // Halluzinationsfilter (KI-Agent Stufe 3): der Agent nimmt verpasste VIP-Zettel an, mit halber Belohnung
+        // abgelaufen: beim Ausblenden nicht mehr antippbar (sonst doppelt kassiert)
+        claimed = true;
+        el.classList.add('gone');
+        setTimeout(() => el.remove(), 300);
+        // Halluzinationsfilter (KI-Agent Stufe 3): der Agent nimmt verpasste VIP-Mails an, mit halber Belohnung
         if (ctx.state.upgrades['agent-3']) {
           // nur Tickets (halb so viele), keine Boosts, und es zählt nicht als selbst erwischt (Aufgaben, Achievements)
           const r = rates(ctx.state);
@@ -379,6 +390,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
     });
     cup.addEventListener('click', catchCup); // Tastatur und Screenreader
     r.append(cup);
+    ctx.sfx.cup();
     setTimeout(() => {
       if (!caught) {
         cup.remove();
@@ -592,7 +604,6 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
       if (started) work.idle(idle);
       // Espresso: solange eine Taste gehalten wird, tippt es von selbst (Takt aus CONFIG.espresso.rate)
       const espresso = espressoActive(s);
-      setFlag(keyboardWrap, 'espresso', espresso);
       const now = performance.now();
       const holding = [...held.keys()].pop();
       // gleiche Sperren wie beim Tippen mit der echten Tastatur; Alt+F4 verwirft Tickets, das tippt nicht von selbst
