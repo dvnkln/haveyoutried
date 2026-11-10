@@ -151,13 +151,13 @@ export function startFlavor(ctx: AppContext, app: App): void {
 
   // Aufgaben vom Chef: neue Aufgabe, geschafft, verpasst
   bus.on('bossTask', ({ text }) => {
-    app.toast('Aufgabe vom Chef', text);
+    app.toast('Aufgabe vom Chef', text, 'boss');
     log.write('warn', `chef[1]: ${text}`);
     sfx.unlockPing();
   });
   bus.on('bossDone', ({ reward }) => {
     const line = pick(BOSS_DONE);
-    app.toast(`Aufgabe erledigt: +${formatNumber(reward)} Tickets`, line);
+    app.toast(`Aufgabe erledigt: +${formatNumber(reward)} Tickets`, line, 'boss-done');
     log.write('ok', `chef[1]: Aufgabe erledigt. ${line}`);
     sfx.milestone();
     haptic('milestone');
@@ -165,7 +165,7 @@ export function startFlavor(ctx: AppContext, app: App): void {
   });
   bus.on('bossFailed', () => {
     const line = pick(BOSS_FAILED);
-    app.toast('Frist verpasst', line);
+    app.toast('Frist verpasst', line, 'boss-failed');
     log.write('info', `chef[1]: ${line}`);
   });
 

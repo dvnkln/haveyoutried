@@ -67,7 +67,7 @@ const saver = new Saver(
   () => {
     log.write('crit', 'kernel: EXT4-fs error: /dev/localStorage remounted read-only. savegame NOT written.');
     // Das Log sieht keiner mehr: Speicherfehler muss sichtbar sein
-    app.toast('Speichern fehlgeschlagen', '/dev/localStorage ist schreibgeschützt. Fortschritt wird gerade nicht gesichert.');
+    app.toast('Speichern fehlgeschlagen', '/dev/localStorage ist schreibgeschützt. Fortschritt wird gerade nicht gesichert.', 'error');
   },
 );
 

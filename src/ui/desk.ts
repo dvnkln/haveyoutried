@@ -8,6 +8,7 @@ import { URGENT_LABELS, URGENT_TEXT } from '../content/events';
 import { VIP_TICKETS } from '../content/work';
 import { advanceStory, dueStoryCall } from '../content/stories';
 import { ALTF4_LINES, PANIC_LINES } from '../content/props';
+import { incidentRunning } from '../core/incidents';
 import { espressoActive, pressKey, solveTicket, startEspresso } from '../core/actions';
 import { rates, ticketReward } from '../core/economy';
 import { applyEffect, claimUrgent } from '../core/events';
@@ -108,7 +109,8 @@ function pausableTimeout(ms: number, el: Element, done: () => void, early?: () =
   let last = performance.now();
   const timer = window.setInterval(() => {
     const now = performance.now();
-    const paused = gamePaused();
+    // auch während eines Incidents: der verdeckt den Monitor (main.css blendet VIP-Mail und Tasse dann aus)
+    const paused = gamePaused() || !!incidentRunning();
     el.classList.toggle('paused', paused);
     if (!paused) left -= now - last;
     last = now;

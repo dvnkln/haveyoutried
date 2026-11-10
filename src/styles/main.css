@@ -2956,6 +2956,36 @@ button {
   content: '★ ';
   color: #e0a100;
 }
+/* Chef: gelber Zettel wie die Aufgabe neben der Rate, eckiger, ohne Glanz (ist keine Auszeichnung) */
+.toast-boss {
+  border-radius: 6px;
+  background: #fff3c4;
+}
+.toast-boss::after,
+.toast-error::after {
+  content: none;
+}
+.toast-boss .toast-title::before {
+  content: '☑︎ ';
+  color: var(--ink);
+}
+.toast-boss-done .toast-title::before {
+  content: '✔︎ ';
+  color: #2f7a52;
+}
+.toast-boss-failed .toast-title::before {
+  content: '✗ ';
+  color: #d64545;
+}
+/* Fehler: rot umrandet, Warnzeichen */
+.toast-error {
+  border-color: #d64545;
+  box-shadow: 0 4px 0 rgba(160, 40, 40, 0.85);
+}
+.toast-error .toast-title::before {
+  content: '⚠︎ ';
+  color: #d64545;
+}
 .toast-text {
   font-size: 11.5px;
   color: var(--ink-soft);
@@ -7029,10 +7059,13 @@ body > .incident.playing {
 #app.screen-off .screen > * {
   visibility: hidden;
 }
-/* VIP-Mail, Kaffeetasse und Power-up-Banner liegen über dem Monitor: bei aus-Monitor mit weg (ihre Zeit steht, desk.ts) */
+/* VIP-Mail, Kaffeetasse und Power-up-Banner liegen über dem Monitor: bei aus-Monitor oder Incident mit weg
+   (ihre Zeit steht, desk.ts; danach geht es an derselben Stelle weiter) */
 #app.screen-off > .urgent-note,
 #app.screen-off > .espresso-cup,
-#app.screen-off > .powerup-banner {
+#app.screen-off > .powerup-banner,
+#app.incident-on > .urgent-note,
+#app.incident-on > .espresso-cup {
   visibility: hidden;
 }
 /* Standby: Lämpchen am Monitor wird orange */

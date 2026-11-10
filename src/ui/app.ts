@@ -14,7 +14,7 @@ import type { SysLog } from './log';
 import type { TicketHistory } from './history';
 import { createPager } from './pager';
 import { createProps } from './props';
-import { createToaster } from './toast';
+import { createToaster, type ToastKind } from './toast';
 import { BUFF_HELP, BUFF_LABELS } from '../content/events';
 import { companyOf } from '../content/companies';
 import { TRASH_LINES } from '../content/props';
@@ -51,7 +51,7 @@ export interface App {
   start(open?: boolean): void;
   render(): void;
   popCounter(): void;
-  toast(title: string, text: string): void;
+  toast(title: string, text: string, kind?: ToastKind): void;
 }
 
 const TRASH_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">

@@ -1,3 +1,4 @@
+import { incidentRunning } from '../core/incidents';
 import { hintShowing } from './blocked';
 import { h } from './dom';
 
@@ -6,17 +7,23 @@ const VISIBLE_MS = 3_200;
 const MAX_QUEUED = 4;
 
 /**
+ * Art der Meldung, bestimmt Farbe und Zeichen vor dem Titel:
+ * Achievement (★, Glanz), Chef (gelber Zettel: neue Aufgabe ☑︎, erledigt ✔︎, verpasst ✗), Fehler (⚠).
+ */
+export type ToastKind = 'achievement' | 'boss' | 'boss-done' | 'boss-failed' | 'error';
+
+/**
  * Kurze Meldungen unten im Inhaltsbereich (z. B. Achievements), blockieren nichts.
  * Immer nur eine zur Zeit; weitere stellen sich hinten an, statt sich zu stapeln.
  */
-export function createToaster(): { el: HTMLElement; show(title: string, text: string): void } {
+export function createToaster(): { el: HTMLElement; show(title: string, text: string, kind?: ToastKind): void } {
   const el = h('div', { class: 'toasts', 'aria-live': 'polite' });
-  const queue: { title: string; text: string }[] = [];
+  const queue: { title: string; text: string; kind: ToastKind }[] = [];
   let showing = false;
 
   const next = () => {
-    // ein Hinweis vom Vorgänger hängt: Meldung wartet, bis er bestätigt ist
-    if (queue.length && hintShowing()) {
+    // ein Hinweis vom Vorgänger hängt oder ein Incident läuft (blendet die Meldungen aus): warten
+    if (queue.length && (hintShowing() || incidentRunning())) {
       showing = true;
       setTimeout(next, 300);
       return;
@@ -27,7 +34,9 @@ export function createToaster(): { el: HTMLElement; show(title: string, text: st
       return;
     }
     showing = true;
-    const t = h('div', { class: 'toast' }, [h('div', { class: 'toast-title', text: item.title }), h('div', { class: 'toast-text', text: item.text })]);
+    // Chef-Varianten teilen sich die Grundklasse toast-boss; Fehler werden sofort vorgelesen
+    const cls = item.kind.startsWith('boss-') ? `toast toast-boss toast-${item.kind}` : `toast toast-${item.kind}`;
+    const t = h('div', { class: cls, ...(item.kind === 'error' ? { role: 'alert' } : {}) }, [h('div', { class: 'toast-title', text: item.title }), h('div', { class: 'toast-text', text: item.text })]);
     el.append(t);
     setTimeout(() => t.classList.add('out'), VISIBLE_MS - 400);
     setTimeout(() => {
@@ -38,9 +47,13 @@ export function createToaster(): { el: HTMLElement; show(title: string, text: st
 
   return {
     el,
-    show(title, text) {
-      if (queue.length >= MAX_QUEUED) queue.shift();
-      queue.push({ title, text });
+    show(title, text, kind = 'achievement') {
+      // volle Schlange: älteste Meldung fällt weg, Fehler aber nie (kommen nur einmal)
+      if (queue.length >= MAX_QUEUED) {
+        const i = queue.findIndex((q) => q.kind !== 'error');
+        if (i >= 0) queue.splice(i, 1);
+      }
+      queue.push({ title, text, kind });
       if (!showing) next();
     },
   };
