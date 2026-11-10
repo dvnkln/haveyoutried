@@ -16,9 +16,9 @@
 </p>
 
 <p align="center">
-  <a href="https://dvnkln.github.io/haveyoutried/"><img src="https://img.shields.io/badge/%E2%96%B6%20jetzt%20spielen-im%20browser-3d2c2e?style=for-the-badge" alt="Jetzt im Browser spielen" /></a>
+  <a href="https://dvnkln.github.io/haveyoutried/"><img src="docs/marke/spielen.png" width="306" alt="Jetzt spielen – im Browser, auch als App" /></a>
 </p>
-<p align="center"><sub>Immer der aktuelle Prototyp. Am besten auf dem Handy – dort lässt er sich auch als App installieren.</sub></p>
+<p align="center"><sub>Immer der aktuelle Prototyp – am besten auf dem Handy.</sub></p>
 
 ## ✨ Features
 
