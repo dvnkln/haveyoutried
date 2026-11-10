@@ -2,7 +2,7 @@
   "id": "./",
   "name": "Have You Tried Turning It Off and On Again?",
   "short_name": "Have You Tried…",
-  "description": "Incremental-Game für Sysadmins. Tickets schließen, Praktikanten einstellen, Cronjobs vergessen.",
+  "description": "Incremental-Game im IT-Support. Tickets schließen, Praktikanten einstellen, Cronjobs vergessen.",
   "lang": "de",
   "start_url": "./",
   "scope": "./",

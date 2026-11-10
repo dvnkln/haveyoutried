@@ -11,22 +11,18 @@
 </p>
 
 <p align="center">
-  Incremental-Game für alle, die schon mal im IT-Support saßen: Du übernimmst den Helpdesk deines Vorgängers,
+  Incremental-Game im IT-Support: Du übernimmst den Helpdesk deines Vorgängers,
   tippst <b>Tickets</b> weg, bis Praktikanten, Skripte und Server die Arbeit machen – und der Pager trotzdem piept.
 </p>
 
 ## ✨ Features
 
-- 🖥️ **Schreibtisch statt Menü** – Röhrenmonitor mit Desktop und Apps, Tastatur, Telefon, Pager, Kaffeetasse und Gummiente. Upgrades tauchen sichtbar am Tisch auf: neue Tastatur, Mauspad, Headset, Kaffeemaschine.
-- ⌨️ **Tippen, das Sinn ergibt** – jede Taste ist richtig, aber was im Fenster erscheint, ist eine echte Antwort auf das Anliegen am Telefon, im passenden Werkzeug: Mail, Ticketsystem, Terminal, Chat, Videocall, Fernwartung oder KI-Assistent.
-- 💡 **Einschalten wie im echten Büro** – Netzschalter, Bewegungsmelder, flackernde Leuchtstoffröhren und ein Röhrenmonitor, der sich mit „Bwoing“ entmagnetisiert. Nach zehn Minuten ohne Eingabe geht das Licht aus, die Infrastruktur arbeitet weiter.
-- 🚨 **Incidents als Minispiele** – RAID retten, Spam sortieren, Dienste neu starten, Logs durchsuchen, Netzwerk von unten nach oben prüfen, Patchkabel stecken.
-- 📟 **Pager, VIP-Mails und der Chef** – Entscheidungen mit Folgen, Mails von oben, die sofort erledigt werden wollen, Aufgaben mit Frist und eine Mail mit „ein paar Fragen“, wenn du länger weg warst.
-- 🏢 **Karriere** – kündigen und mit Berufserfahrung neu anfangen: 26 Firmen mit eigenen Eigenheiten (Faxpflicht, Blockchain, Kirchengemeinde) und eigenem Hintergrundbild, dazu Achievements und Sammelbilder.
-- 🔊 **Klang aus dem Browser** – sechs mechanische Tastatur-Switches zum Probehören, Röhrenmonitor, Leuchtstoffröhren und leise Büro-Geräusche von nebenan. Keine einzige Audiodatei.
-- 📝 **Übergabe vom Vorgänger** – kurze Post-its erklären Neues genau dann, wenn es zum ersten Mal wichtig wird; solange eins hängt, steht das Spiel.
-- 📱 **Fürs Handy gemacht** – Hochformat, große Tippflächen, Vibration, als App installierbar und offline spielbar. Der Spielstand bleibt im Browser.
-- 🤓 **Insider-Humor** – BOFH, IT Crowd, xkcd, Dilbert, Stromberg und Silicon Valley als Anspielung, nicht als Zitat.
+- ⌨️ **Tickets wegtippen** – jede Taste ist richtig, und im Fenster entsteht eine echte Antwort auf das Anliegen am Telefon: per Mail, im Ticketsystem, im Terminal, im Chat oder per Fernwartung.
+- 🏗️ **Infrastruktur aufbauen** – Praktikanten, Bash-Skripte, Cronjobs, Ansible, Kubernetes und KI-Agents schließen Tickets auch dann, wenn du gerade nicht spielst.
+- 🚨 **Incidents als Minispiele** – RAID retten, Spam sortieren, Dienste neu starten, Logs durchsuchen, Netzwerk prüfen, Patchkabel stecken.
+- 🏢 **Karriere** – kündigen, Berufserfahrung mitnehmen und neu anfangen: 26 Firmen mit eigenen Eigenheiten, dazu Achievements.
+- 📱 **Fürs Handy gemacht** – Hochformat, als App installierbar und offline spielbar.
+- 🤓 **Viel Humor** – voller Anspielungen auf die Klassiker des IT-Humors, witzig auch ohne sie zu kennen (siehe [Vorbilder](#-vorbilder)).
 
 ## 📱 Bildschirmfotos
 
@@ -66,6 +62,15 @@ Schriften: [Fredoka](https://fonts.google.com/specimen/Fredoka) (The Fredoka Pro
 
 Alles andere – Schreibtisch, Requisiten, Hintergrundbilder, Symbole und sämtliche Klänge – ist im Code gezeichnet bzw. im Browser erzeugt.
 
+## 💾 Vorbilder
+
+Das Spiel ist die Liebeserklärung eines Fans an den IT-Humor und steckt voller Anspielungen darauf:
+[The IT Crowd](https://www.channel4.com/programmes/the-it-crowd) – von dort stammt auch der Titel –,
+die [BOFH](https://www.theregister.com/data_centre/bofh/)-Geschichten von Simon Travaglia,
+[xkcd](https://xkcd.com) von Randall Munroe, Dilbert von Scott Adams, Stromberg, Silicon Valley und allerlei Internet-Folklore.
+
+Bis auf den Titel und ein paar geflügelte Worte ist alles in eigenen Worten geschrieben, ohne Bilder oder Logos der Originale. Das Spiel steht in keiner Verbindung zu den Urhebern oder Rechteinhabern dieser Werke.
+
 ## 🤖 Mit KI gebaut
 
 Das Spiel entsteht mit starker KI-Unterstützung: Der größte Teil des Codes, der Inhalte und der Texte stammt von [Claude Code](https://claude.com/claude-code), dem Programmierassistenten von Anthropic.
@@ -80,6 +85,6 @@ Copyright (C) 2026 Devin Klein
 
 [GNU AGPL v3](LICENSE) – du darfst das Spiel frei nutzen, verändern und weitergeben. Wer eine veränderte Fassung weitergibt oder anderen über das Netz anbietet, muss den Quellcode seiner Fassung unter derselben Lizenz offenlegen.
 
-**Zusätzliche Bedingung nach § 7 Abs. e der AGPL:** Die Lizenz erlaubt nicht, den Namen „Have You Tried Turning It Off and On Again?“ (auch gekürzt „Have You Tried…“ oder „HYT“), die Wortmarke oder das App-Symbol für eigene Fassungen zu verwenden. Veränderte Fassungen müssen unter anderem Namen und mit anderem Symbol erscheinen und dürfen nicht den Eindruck erwecken, die offizielle Version zu sein.
+**Zum Namen:** Der Titel ist ein Zitat aus The IT Crowd und gehört niemandem allein – auch mir nicht. Wenn du eine eigene Fassung veröffentlichst, gib ihr bitte einen eigenen Namen und ein eigenes Symbol, damit niemand sie für die offizielle Version hält.
 
 Privates Projekt, ohne Gewähr und ohne Support – wenn es dir trotzdem Spaß macht, umso besser.
