@@ -51,6 +51,20 @@ export const WALLPAPER_MARKS: [string, string][] = [
   ['Bildschirmschoner deaktiviert', 'Der Chef soll sehen, dass was läuft.'],
 ];
 
+/** Smart-Office-Bridge (Upgrade): Licht und Monitor von selbst */
+export const SMART_ON_LINES = [
+  'smarthome[2017]: Anwesenheit erkannt. Licht an, Monitor an. Wie zufrieden sind Sie mit dieser Automatisierung?',
+  'smarthome[2017]: Guten Morgen! Ich habe Licht und Monitor eingeschaltet und 14 Analysedaten in die Cloud geschickt.',
+  'smarthome[2017]: Szene „Arbeiten“ gestartet. Szene „Feierabend“ ist ein Premium-Feature.',
+];
+/** gelegentlich installiert die Bridge gerade Updates: dann doch selbst */
+export const SMART_GLITCH_LINES = [
+  'smarthome[2017]: Firmware-Update 3 %. Bitte Licht und Monitor manuell bedienen. Wie früher.',
+  'smarthome[2017]: Cloud nicht erreichbar. Lokale Steuerung ist ein Premium-Feature.',
+  'smarthome[2017]: Anwesenheit nicht erkannt. Sind Sie sicher, dass Sie da sind?',
+];
+export const SMART_GLITCH_HINT = 'Smart-Office installiert Updates (3 %). Bitte selbst winken.';
+
 /** Nach 10 min ohne Eingabe */
 export const AFK_HINTS = [
   'Licht aus. Antippen zum Weiterarbeiten.',

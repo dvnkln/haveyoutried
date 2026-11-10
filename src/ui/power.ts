@@ -1,4 +1,7 @@
+import { SMART_GLITCH_HINT, SMART_GLITCH_LINES, SMART_ON_LINES } from '../content/boot';
+import { pick } from '../util';
 import type { Sfx } from './audio';
+import type { SysLog } from './log';
 import { h } from './dom';
 
 /** Dauer der Animationen (ms), muss zu den Keyframes in main.css passen */
@@ -15,9 +18,23 @@ const SWALLOW_AFTER_RELEASE_MS = 250;
 const KEY_RELEASE_MS = 700;
 /** Hinweise (winken, Knopf am Monitor) erst, wenn jemand so lange nicht draufkommt */
 export const HINT_DELAY_MS = 5_000;
+/** Smart-Office: so oft installiert die Bridge gerade Updates (dann doch selbst) */
+const SMART_GLITCH = 0.12;
+/** Smart-Office beim Start: so oft nachsehen, ob kein Dialog mehr im Weg ist */
+const SMART_RETRY_MS = 500;
+/** Smart-Office beim Start: kurz warten, als ob der Sensor erst reagieren muss */
+const SMART_START_MS = 500;
 
-/** Farbe der Statusleiste und des unteren Rands (iOS/Android): hell wie die Wand, im Dunkeln wie das abgedunkelte Büro */
-export const THEME_LIGHT = '#f9e8cf';
+/**
+ * Farbe der Statusleiste und des unteren Rands: hell wie die Wand, im Dunkeln wie das abgedunkelte Büro.
+ * Hell = Wandfarbe des aktuellen Büro-Stils (je Firma bzw. Keller-Upgrade, main.css). Fehlt sie oder ist sie kein
+ * sechsstelliges Hex, bleibt die Leiste, wie sie ist.
+ */
+export const themeLight = (): string | null => {
+  const wall = getComputedStyle(document.documentElement).getPropertyValue('--wall').trim();
+  return HEX.test(wall) ? wall : null;
+};
+const HEX = /^#[0-9a-f]{6}$/i;
 export const THEME_DARK = '#2d2932';
 const meta = () => document.querySelector('meta[name="theme-color"]');
 const rgb = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
@@ -27,7 +44,7 @@ export function setThemeColor(color: string, ms = 0): void {
   cancelAnimationFrame(fadeFrame);
   const el = meta();
   const from = el?.getAttribute('content') ?? color;
-  if (!el || ms <= 0 || !/^#[0-9a-f]{6}$/i.test(from)) return void el?.setAttribute('content', color);
+  if (!el || ms <= 0 || !HEX.test(from) || !HEX.test(color)) return void el?.setAttribute('content', color);
   const a = rgb(from);
   const b = rgb(color);
   const start = performance.now();
@@ -63,6 +80,12 @@ export interface Power {
   screenOn(): Promise<void>;
   /** Ab jetzt zählt die Zeit bis zum Hinweis „winken“ (Start: erst nach Splash und Zettel) */
   armHint(): void;
+  /** Smart-Office-Bridge gekauft? Dann gehen Licht und Monitor von selbst an */
+  auto: () => boolean;
+  /** Start mit Smart-Office: Licht und danach Monitor von selbst (oder Update-Aussetzer: dann von Hand) */
+  autoStart(): void;
+  /** Wahrscheinlichkeit für einen Update-Aussetzer (Test-Build: 0) */
+  glitchChance: number;
   /** Jemand hat im Dunkeln gewunken (getippt, Taste, Mausrad): Licht geht an. released = Finger wieder oben */
   onWave(cb: (released: Promise<void>) => void): void;
   /** Knopf am Monitor: Monitor geht an */
@@ -75,7 +98,7 @@ export interface Power {
  * Bei aus-Monitor tippt die Tastatur nicht; wer es versucht, bekommt gleich den Hinweis auf den Knopf,
  * sonst erst nach HINT_DELAY_MS. Auch „winken“ steht erst nach dieser Zeit da.
  */
-export function createPower(app: HTMLElement, sfx: Sfx): Power {
+export function createPower(app: HTMLElement, sfx: Sfx, log: SysLog): Power {
   const hint = h('span', { class: 'lo-hint' });
   const shade = h('div', { class: 'lights-off', 'aria-hidden': 'true' }, [hint]);
   let lit = true;
@@ -111,6 +134,31 @@ export function createPower(app: HTMLElement, sfx: Sfx): Power {
     clearTimeout(powerHintTimer);
     app.classList.remove('hint-power');
     if (now) powerHintTimer = window.setTimeout(() => app.classList.add('hint-power'), HINT_DELAY_MS);
+  };
+
+  /**
+   * Smart-Office installiert gerade Updates: einmal je Einschalten auswürfeln und merken,
+   * bis der Monitor wieder an ist (sonst sagt die Meldung „von Hand“ und der Monitor springt trotzdem an)
+   */
+  let smartDown = false;
+  const smartGlitch = (): boolean => {
+    smartDown = Math.random() < power.glitchChance;
+    if (smartDown) log.write('warn', pick(SMART_GLITCH_LINES));
+    return smartDown;
+  };
+  /** Dauer des Licht-an-Flackerns (langsame Fassung beim ersten Start) */
+  const lightsMs = () => (power.slow ? MS.lightsOnSlow : MS.lightsOn);
+  /** Monitor von selbst an, sobald die Röhren brennen */
+  const autoScreen = () =>
+    window.setTimeout(() => {
+      if (!lit || !screenOff || locked) return;
+      void power.screenOn();
+      for (const cb of screenCbs) cb();
+    }, lightsMs() + 150);
+  /** Licht an wie nach einem Winken (Zuhörer bekommen ein schon „losgelassenes“ Winken) */
+  const wave = () => {
+    void power.lightsOn();
+    for (const cb of waveCbs) cb(Promise.resolve());
   };
 
   const power: Power = {
@@ -157,7 +205,8 @@ export function createPower(app: HTMLElement, sfx: Sfx): Power {
       if (power.slow) lock(ms);
       clearTimeout(shadeTimer);
       // Leiste wird mit dem Flackern hell (am Ende, wenn die Röhren brennen)
-      setThemeColor(THEME_LIGHT, ms);
+      const wall = themeLight();
+      if (wall) setThemeColor(wall, ms);
       shadeTimer = window.setTimeout(() => shade.remove(), ms + 100);
       sync();
       return new Promise((done) => setTimeout(done, ms));
@@ -178,6 +227,7 @@ export function createPower(app: HTMLElement, sfx: Sfx): Power {
     screenOn() {
       if (!screenOff) return Promise.resolve();
       screenOff = false;
+      smartDown = false;
       const ms = power.slow ? MS.screenOnSlow : MS.screenOn;
       clearTimeout(crtTimer);
       app.classList.remove('screen-off', 'crt-off');
@@ -188,6 +238,27 @@ export function createPower(app: HTMLElement, sfx: Sfx): Power {
       crtTimer = window.setTimeout(() => app.classList.remove('crt-on', 'crt-slow'), ms);
       sync();
       return new Promise((done) => setTimeout(done, ms));
+    },
+    auto: () => false,
+    glitchChance: SMART_GLITCH,
+    autoStart() {
+      if (lit || !power.auto()) return;
+      const attempt = () => {
+        if (lit) return;
+        // Dialog oder Startbildschirm im Weg: gleich nochmal nachsehen
+        if (document.querySelector('.splash, dialog[open]')) return void window.setTimeout(attempt, SMART_RETRY_MS);
+        if (smartGlitch()) {
+          // Aussetzer: der Hinweis kommt gleich, man muss ja jetzt selbst ran
+          hint.textContent = SMART_GLITCH_HINT;
+          clearTimeout(hintTimer);
+          shade.classList.add('show-hint');
+          return;
+        }
+        log.write('info', pick(SMART_ON_LINES));
+        wave();
+        autoScreen();
+      };
+      window.setTimeout(attempt, SMART_START_MS);
     },
     armHint() {
       if (lit) return;
@@ -242,6 +313,9 @@ export function createPower(app: HTMLElement, sfx: Sfx): Power {
       const released = swallow(e);
       void power.lightsOn();
       for (const cb of waveCbs) cb(released);
+      // Smart-Office: der Monitor kommt von selbst nach (außer die Bridge installiert gerade Updates;
+      // ein Aussetzer beim Start gilt bis der Monitor an ist)
+      if (screenOff && power.auto() && !smartDown && !smartGlitch()) autoScreen();
       return;
     }
     if (!screenOff || e.type === 'wheel') return;

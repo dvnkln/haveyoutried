@@ -578,3 +578,14 @@ test('Büro-Geräusche: jedes Geräusch von nebenan spielt ohne Fehler', async (
   await page.waitForTimeout(500);
   expect(errors).toEqual([]);
 });
+
+test('Smart-Office: beim Start gehen Licht und Monitor von selbst an', async ({ page }) => {
+  const save = { version: 1, clicks: 50, lastTick: Date.now(), flags: { 'tut:off': 1 }, upgrades: { smartoffice: true } };
+  await page.addInitScript((json) => localStorage.setItem('hyt.save', json), JSON.stringify(save));
+  // ohne Update-Aussetzer
+  await page.goto('/?boot&noglitch');
+  await page.locator('.splash-power').tap();
+  await expect(page.locator('#app')).not.toHaveClass(/\bafk\b/, { timeout: 3_000 });
+  await expect(page.locator('#app')).not.toHaveClass(/screen-off/, { timeout: 3_000 });
+  await expect(page.locator('.brand')).toContainText('smart');
+});

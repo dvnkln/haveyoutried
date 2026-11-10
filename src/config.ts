@@ -72,6 +72,8 @@ export const UPGRADES: readonly UpgradeDef[] = [
   { id: 'basement', cost: 600_000, unlock: { kind: 'total', n: 200_000 }, effect: { kind: 'global', mult: 1.1 } },
   { id: 'monitor2', cost: 15_000, unlock: { kind: 'total', n: 5_000 }, effect: { kind: 'clickPps', fraction: 0.01 } },
   { id: 'macro', cost: 50_000, unlock: { kind: 'total', n: 15_000 }, effect: { kind: 'solveSec', sec: 0.2 } },
+  // Licht und Monitor gehen von selbst an (ui/power.ts), nebenbei ein bisschen schneller
+  { id: 'smartoffice', cost: 40_000, unlock: { kind: 'total', n: 12_000 }, effect: { kind: 'global', mult: 1.05 } },
   { id: 'duck', cost: 1_000_000, unlock: { kind: 'total', n: 500_000 }, effect: { kind: 'clickPps', fraction: 0.02 } },
   { id: 'rtfm', cost: 75_000, unlock: { kind: 'total', n: 25_000 }, effect: { kind: 'global', mult: 1.1 } },
   { id: 'kanban', cost: 6_000_000, unlock: { kind: 'total', n: 2_000_000 }, effect: { kind: 'global', mult: 1.1 } },

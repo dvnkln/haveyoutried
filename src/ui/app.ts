@@ -20,6 +20,7 @@ import { companyOf } from '../content/companies';
 import { TRASH_LINES } from '../content/props';
 import { POWER_HINT, WALLPAPER_MARKS } from '../content/boot';
 import { paintWall } from './wallpaper';
+import { setThemeColor, themeLight } from './power';
 import { achievementCount } from '../core/achievements';
 import { pick } from '../util';
 
@@ -141,6 +142,8 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
   ]);
   let wallKey = '';
   let wallChecked = '';
+  /** zuletzt gezeigter Büro-Stil (Firma + Keller-Upgrade) */
+  let wallKeyShown = '';
   // bis zum ersten Anschlag ist kein Werkzeug offen: nur Hintergrundbild und Apps
   screen.append(h('div', { class: 'desktop no-tool' }, [wallpaper, icons, desk.work, desk.lastClosed]), h('div', { class: 'scanlines', 'aria-hidden': 'true' }));
 
@@ -347,6 +350,16 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
     },
     render() {
       const s = ctx.state;
+      // Büro-Stil der Firma: Wand und Schreibtisch; die Statusleiste nimmt die neue Wandfarbe an (bei Licht an)
+      const office = companyOf(s.prestige.company).office;
+      const officeKey = `${office}|${!!s.upgrades.basement}`;
+      if (wallKeyShown !== officeKey) {
+        wallKeyShown = officeKey;
+        document.documentElement.dataset.office = office;
+        setFlag(document.documentElement, 'basement', !!s.upgrades.basement);
+        const wall = themeLight();
+        if (wall && !root.classList.contains('afk')) setThemeColor(wall);
+      }
       // nur neu zeichnen, wenn sich Auswahl, Firma oder Freischaltungen geändert haben (läuft jeden Frame)
       const wallSig = `${s.settings.wallpaper}|${s.prestige.company}|${achievementCount(s)}`;
       if (wallSig !== wallChecked) {
@@ -370,10 +383,13 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
       pager.render();
       props.render();
       desk.render(s);
-      setFlag(root, 'basement', !!s.upgrades.basement);
+      // Keller-Upgrade: Ziegelwand für jede Firma (an <html>, damit auch Incident-Hintergrund und Statusleiste sie kennen)
+      setFlag(document.documentElement, 'basement', !!s.upgrades.basement);
       setFlag(monitor, 'frozen', !!s.upgrades.freeze);
       setFlag(monitor, 'pro', !!s.upgrades.monitor2);
-      setText(brand, s.upgrades.monitor2 ? 'HYT-3000 PRO' : 'HYT-2000');
+      setText(brand, `${s.upgrades.monitor2 ? 'HYT-3000 PRO' : 'HYT-2000'}${s.upgrades.smartoffice ? ' smart' : ''}`);
+      // Smart-Office-Bridge: Netzschalter mit blauem Leuchtring
+      setFlag(root, 'smart', !!s.upgrades.smartoffice);
 
       // Boost-Chips: nur neu bauen, wenn sich die Menge ändert
       const buffs = s.buffs;

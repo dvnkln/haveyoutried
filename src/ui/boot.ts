@@ -119,7 +119,10 @@ export async function runBoot({ power, sfx, log, first, report }: BootOptions): 
   // erstes Mal: handgeschriebener Zettel, den liest man auch im Dunkeln
   if (first) await handoverNote();
   power.armHint();
-  await new Promise<void>((done) => power.onWave(() => done()));
+  const waved = new Promise<void>((done) => power.onWave(() => done()));
+  // Smart-Office-Bridge: Licht und Monitor gehen von selbst an
+  power.autoStart();
+  await waved;
   log.write('info', BOOT_LIGHTS_LINE);
   await new Promise<void>((done) => power.onScreen(() => done()));
   log.write('info', BOOT_SCREEN_LINE);

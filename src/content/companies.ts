@@ -1,3 +1,5 @@
+import type { Office } from './offices';
+
 export interface Company {
   id: string;
   name: string;
@@ -7,6 +9,8 @@ export interface Company {
   welcome: string;
   /** Eigenheit: verändert die Spielregeln in diesem Job (Vor- und Nachteil) */
   quirk?: Quirk;
+  /** Büro-Stil: Wand und Schreibtisch (main.css, html[data-office]) */
+  office: Office;
 }
 
 /** Faktoren je Firma; fehlt = 1. events/incidents/urgent = Häufigkeit (0 = gar nicht) */
@@ -28,12 +32,14 @@ export interface Quirk {
 export const COMPANIES: Company[] = [
   {
     id: 'mueller',
+    office: 'standard',
     name: 'Müller & Söhne Spedition GmbH',
     host: 'mueller-spedition',
     welcome: 'Dein Vorgänger hat eine Übergabe hinterlassen: ein Post-it mit „viel Glück“.',
   },
   {
     id: 'stadtwerke',
+    office: 'amt',
     name: 'Stadtwerke Hintertupfingen',
     host: 'sw-hintertupfingen',
     welcome: 'Das Fax ist hier noch Produktivsystem. Bitte nicht ausstecken.',
@@ -41,6 +47,7 @@ export const COMPANIES: Company[] = [
   },
   {
     id: 'startup',
+    office: 'startup',
     name: 'Blockchain4Bananas (4 Mitarbeiter, 3 davon CEO)',
     host: 'b4b-prod',
     welcome: 'Die Produktion läuft auf dem MacBook des Gründers. Er ist gerade in Lissabon.',
@@ -48,6 +55,7 @@ export const COMPANIES: Company[] = [
   },
   {
     id: 'klinik',
+    office: 'klinik',
     name: 'Klinikum St. Excel',
     host: 'kl-st-excel',
     welcome: 'Die Dienstpläne liegen in einer Excel-Datei mit 412 Makros. Niemand weiß, wer sie gebaut hat.',
@@ -55,6 +63,7 @@ export const COMPANIES: Company[] = [
   },
   {
     id: 'amt',
+    office: 'amt',
     name: 'Amt für Formularwesen',
     host: 'afw-intern',
     welcome: 'Für den Admin-Zugang brauchst du Formular 7b. Formular 7b gibt es nur im Intranet. Das Intranet braucht den Admin-Zugang.',
@@ -62,6 +71,7 @@ export const COMPANIES: Company[] = [
   },
   {
     id: 'agentur',
+    office: 'startup',
     name: 'Agentur für digitale Transformation',
     host: 'adt-macbook',
     welcome: 'Alle Server sind „in der Cloud“. Gemeint ist ein Dropbox-Ordner.',
@@ -69,6 +79,7 @@ export const COMPANIES: Company[] = [
   },
   {
     id: 'versicherung',
+    office: 'konzern',
     name: 'Allgemeine Versicherung (seit 1897)',
     host: 'av1897-as400',
     welcome: 'Das Kernsystem ist eine AS/400. Der einzige, der sie versteht, geht nächsten Monat in Rente.',
@@ -76,6 +87,7 @@ export const COMPANIES: Company[] = [
   },
   {
     id: 'uni',
+    office: 'amt',
     name: 'Universität, Lehrstuhl für Informatik',
     host: 'uni-lst-ws07',
     welcome: 'Der Webserver ist eine Workstation unter dem Schreibtisch eines Doktoranden. Er promoviert seit 2011.',
@@ -83,6 +95,7 @@ export const COMPANIES: Company[] = [
   },
   {
     id: 'konzern',
+    office: 'konzern',
     name: 'Konzern AG, Service-Desk-Koordination 3. Ebene',
     host: 'kag-sd3',
     welcome: 'Für jedes Ticket brauchst du drei Freigaben. Die Freigaben sind auch Tickets.',
@@ -90,6 +103,7 @@ export const COMPANIES: Company[] = [
   },
   {
     id: 'keller',
+    office: 'keller',
     name: 'Hochhaus Holding AG (IT im Keller)',
     host: 'hh-keller',
     welcome: 'Dein Büro ist im Keller. Ein Kollege hat für jeden Notfall ein Formular, der andere geht nie ans Telefon.',
@@ -97,6 +111,7 @@ export const COMPANIES: Company[] = [
   },
   {
     id: 'schaden',
+    office: 'konzern',
     name: 'Versicherung, Abteilung Schadensregulierung M–Z',
     host: 'vers-schaden-mz',
     welcome: 'Dein Abteilungsleiter erklärt das Büro mit Vergleichen aus dem Wasserball. Du verstehst keinen davon.',
@@ -104,6 +119,7 @@ export const COMPANIES: Company[] = [
   },
   {
     id: 'middleout',
+    office: 'startup',
     name: 'Middle-Out Compression Inc.',
     host: 'anton',
     welcome: 'Der einzige Server heißt Anton. Wer ihn neu startet, wird nicht mehr gegrüßt.',
@@ -111,6 +127,7 @@ export const COMPANIES: Company[] = [
   },
   {
     id: 'kirche',
+    office: 'altbau',
     name: 'Kirchengemeinde St. Patch',
     host: 'st-patch-pfarrbuero',
     welcome: 'Der Server steht in der Sakristei. Neustarts nur nach dem Gottesdienst und mit Segen.',
@@ -118,6 +135,7 @@ export const COMPANIES: Company[] = [
   },
   {
     id: 'fc',
+    office: 'bunt',
     name: 'FC Ping 04 e. V.',
     host: 'fc-ping04',
     welcome: 'Die Vereins-IT ist ein Laptop im Vereinsheim. Das Passwort ist der Vereinsname. Rückwärts.',
@@ -125,6 +143,7 @@ export const COMPANIES: Company[] = [
   },
   {
     id: 'steuer',
+    office: 'konzern',
     name: 'Kalkhoff & Partner Steuerberatung',
     host: 'kp-diskette',
     welcome: 'Alle Mandantendaten liegen auf Disketten. Im Tresor. Ein Laufwerk gibt es nicht mehr.',
@@ -132,6 +151,7 @@ export const COMPANIES: Company[] = [
   },
   {
     id: 'baeckerei',
+    office: 'bunt',
     name: 'Bäckerei Brötchen-Cloud KG',
     host: 'broetchen-cloud',
     welcome: 'Die Kasse läuft auf Windows XP. Der Ofen hat WLAN. Und offene Ports.',
@@ -139,6 +159,7 @@ export const COMPANIES: Company[] = [
   },
   {
     id: 'esoterik',
+    office: 'bunt',
     name: 'Kristallklar Esoterikversand',
     host: 'kristall-srv',
     welcome: 'Der Server wird mit Rosenquarz gekühlt. Die Uptime ist leider beeindruckend.',
@@ -146,6 +167,7 @@ export const COMPANIES: Company[] = [
   },
   {
     id: 'bundesamt',
+    office: 'amt',
     name: 'Bundesamt für Digitalisierung, Referat Fax',
     host: 'bfd-fax01',
     welcome: 'Erster Auftrag: die Digitalisierungsstrategie ausdrucken, unterschreiben und faxen.',
@@ -153,6 +175,7 @@ export const COMPANIES: Company[] = [
   },
   {
     id: 'autohaus',
+    office: 'standard',
     name: 'Autohaus Rost & Söhne',
     host: 'ah-rost-xp',
     welcome: 'Der Verkaufsleiter möchte die Firewall tunen lassen. Mit Spoiler.',
@@ -160,6 +183,7 @@ export const COMPANIES: Company[] = [
   },
   {
     id: 'kita',
+    office: 'bunt',
     name: 'Kita Kleine Bits',
     host: 'kita-bits',
     welcome: 'Das WLAN-Passwort steht auf dem Kühlschrank. Die Kinder kennen es längst.',
@@ -167,6 +191,7 @@ export const COMPANIES: Company[] = [
   },
   {
     id: 'reederei',
+    office: 'standard',
     name: 'Reederei Leck & Co. KG',
     host: 'leck-srv01',
     welcome: 'Der Serverraum ist im Unterdeck. Bei Seegang laufen die Festplatten im Kreis.',
@@ -174,6 +199,7 @@ export const COMPANIES: Company[] = [
   },
   {
     id: 'zoo',
+    office: 'bunt',
     name: 'Tierpark Bitfeld',
     host: 'zoo-gehege-it',
     welcome: 'Die Pinguine haben eine eigene Webcam. Sie ist das einzige System mit Monitoring.',
@@ -181,6 +207,7 @@ export const COMPANIES: Company[] = [
   },
   {
     id: 'pommes',
+    office: 'bunt',
     name: 'Imbiss „Zum goldenen Router“',
     host: 'pommes-kasse',
     welcome: 'Die Kasse ist ein Laptop in der Nähe der Fritteuse. Die Tastatur glänzt. Nicht vor Sauberkeit.',
@@ -188,6 +215,7 @@ export const COMPANIES: Company[] = [
   },
   {
     id: 'theater',
+    office: 'altbau',
     name: 'Stadttheater, Abteilung Technik und Drama',
     host: 'theater-buehne',
     welcome: 'Die Lichtsteuerung läuft auf Windows 2000. Wenn sie abstürzt, wird das Stück spontan ein Hörspiel.',
@@ -195,6 +223,7 @@ export const COMPANIES: Company[] = [
   },
   {
     id: 'weingut',
+    office: 'altbau',
     name: 'Weingut Bitterling (seit 1612)',
     host: 'weingut-keller',
     welcome: 'Der Server reift im Weinkeller. Konstante 12 °C, sagt der Winzer. Gut fürs Backup, schlecht für den Admin.',
@@ -202,6 +231,7 @@ export const COMPANIES: Company[] = [
   },
   {
     id: 'unicorn',
+    office: 'startup',
     name: 'SynergyHub.ai (Series A, kein Produkt)',
     host: 'synergy-pitch',
     welcome: 'Es gibt 14 Slack-Kanäle, einen Tischkicker und keine Server. Die KI im Pitchdeck bist du.',

@@ -75,7 +75,8 @@ const root = document.getElementById('app');
 if (!root) throw new Error('#app fehlt');
 const ctx = { state, log, history, saver, sfx, haptic };
 // Bürolicht und Röhrenmonitor (vor allen anderen Zuhörern, damit Weck-Gesten nicht am Ticket tippen)
-const power = createPower(root, sfx);
+const power = createPower(root, sfx, log);
+power.auto = () => !!state.upgrades.smartoffice;
 // Büro-Hintergrund: Lüftung, Röhren, Server, ab und zu etwas von nebenan (leiser als alle Spielgeräusche)
 const ambience = new Ambience(sfx, () => state, () => power.lit);
 const app = mountApp(root, ctx, [logTab(), infraTab(), upgradesTab(), careerTab(), systemTab()]);
@@ -92,6 +93,8 @@ settleAbandoned(state, rates(state));
 const e2e = import.meta.env.MODE === 'e2e' ? new URLSearchParams(location.search) : null;
 // Test-Build: Geräusche von nebenan gezielt abspielbar (im normalen Build fällt das weg)
 if (import.meta.env.MODE === 'e2e') (window as unknown as { hytAmbience: Ambience }).hytAmbience = ambience;
+// Test-Build: ?noglitch = Smart-Office ohne Update-Aussetzer
+if (e2e?.has('noglitch')) power.glitchChance = 0;
 const startForcedIncident = () => {
   const forced = e2e?.get('incident');
   if (forced && isIncidentId(forced)) setTimeout(() => startIncident(state, forced), 1_200);

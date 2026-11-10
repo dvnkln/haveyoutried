@@ -32,6 +32,10 @@ export const UPGRADE_TEXT: Record<string, UpgradeText> = {
     desc: '17 Zoll Röhre, platingrau, blaue Power-LED. Wiegt 23 kg, der Tisch biegt sich. Flimmert nur noch dienstags.',
   },
   macro: { name: 'Textbaustein', desc: 'Strg+Alt+R: „Haben Sie es schon aus- und wieder eingeschaltet?“ Die gesparte Zeit verbringst du im Monitoring. Angeblich.' },
+  smartoffice: {
+    name: 'Smart-Office-Bridge',
+    desc: 'Licht und Monitor gehen von selbst an. Firmware von 2017, Cloud-Pflicht, 94 Seiten Datenschutzerklärung. Installiert gelegentlich Updates. Ungefragt.',
+  },
   duck: { name: 'Rubber Duck', desc: 'Hört zu. Urteilt nicht. Löst die Hälfte aller Probleme durch Schweigen.' },
 
   // Global
