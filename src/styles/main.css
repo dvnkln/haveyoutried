@@ -5256,6 +5256,13 @@ html.basement {
 .tk-status {
   background: var(--sky);
 }
+/* Wird es eng, kürzt sich der Status; Nummer und Priorität bleiben ganz */
+.tk-chips > .tk-status {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .tk-prio {
   background: #ffd3d6;
   color: #a33a3a;

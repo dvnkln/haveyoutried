@@ -16,13 +16,13 @@ export const BOSS_TASKS: Record<BossKind, string[]> = {
   ],
   clicks: [
     '{n} Anschläge. Ich höre durch die Wand, ob hier gearbeitet wird.',
-    'Tippen Sie {n} Mal. Ich will Sie arbeiten hören.',
+    'Tippen Sie {n} Mal. Motivation ist wie WLAN: Im Keller schwächer. Ich will hören, dass bei Ihnen was ankommt.',
     '{n} Anschläge. Die Tastatur ist bezahlt, die soll sich lohnen.',
   ],
   earn: [
     'Ich brauche {n} Tickets. Die Zentrale guckt gerade. Also, ich glaube, sie guckt.',
     'Bis zum Meeting brauche ich {n} Tickets. Für eine Folie.',
-    '{n} Tickets. Fragen Sie nicht, wofür. Ich weiß es auch nicht.',
+    '{n} Tickets. Das Leben ist kein Ponyhof, sondern ein Serverraum: laut, kalt, voller Kabel. Also los.',
   ],
   buy: [
     'Kaufen Sie {n}-mal Infrastruktur. Wer nicht investiert, wird zusammengelegt.',
@@ -39,13 +39,15 @@ export const BOSS_DONE: string[] = [
   'Der Chef erzählt allen, er habe dich entdeckt. Ganz früh schon. Bonus trotzdem.',
   'Der Chef nickt. Fast anerkennend.',
   'Der Chef sagt „Gut.“ Das höchste Lob in diesem Haus.',
-  'Der Chef leitet es als seinen Erfolg an den Vorstand weiter. Du bekommst trotzdem was ab.',
+  'Der Chef sagt: „Ein Chef muss sein wie ein Router: Er leitet weiter.“ Deinen Erfolg leitet er an den Vorstand weiter. Als seinen.',
   'Der Chef hat es nicht gemerkt. Die Buchhaltung schon. Bonus!',
+  'Der Chef sagt: „Sehen Sie? Das hab ich Ihnen beigebracht.“',
 ];
 
 export const BOSS_FAILED: string[] = [
-  'Nicht geschafft. Der Chef erklärt es mit einer Geschichte aus seinem alten Sportverein. Es geht um Teamgeist, glaubt man.',
+  'Nicht geschafft. Der Chef nennt es „Lernkurve“. Er meint deine.',
+  'Nicht geschafft. Der Chef sagt: „Ein Chef ist wie ein Lagerfeuer. Zu nah: verbrannt. Zu weit weg: kalt.“ Du warst zu weit weg.',
   'Frist verpasst. Der Chef hat es zum Glück schon wieder vergessen.',
-  'Nicht geschafft. Der Chef erzählt dem Vorstand einfach eine andere Zahl.',
+  'Nicht geschafft. Der Chef nennt dem Vorstand eine andere Zahl. „Ehrlichkeit ist wie ein Passwort: Man gibt sie nicht jedem.“',
   'Zu spät. Der Chef ist schon im nächsten Meeting über das Meeting.',
 ];

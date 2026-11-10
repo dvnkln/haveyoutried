@@ -63,11 +63,11 @@ export const WEB_GENERIC: string[] = [
 
 /** Websuche: die üblichen Treffer (Suchanfragen je Thema in topics.ts) */
 export const SEARCH_RESULTS: string[] = [
-  'Forum, 2009: „Gleiches Problem.“ Keine Antwort.',
+  'Forum: „Warum willst du das überhaupt?“ (Niemand hat gefragt.)',
   'Stack Overflow: Als Duplikat geschlossen.',
   'Hersteller-FAQ: „Wenden Sie sich an Ihren Administrator.“',
   'Video, 14 Minuten: Lösung ab 13:50.',
-  'Forum: „Hast du es schon mal aus- und wieder eingeschaltet?“',
+  'Mailingliste, 2004: „Patch im Anhang.“ Anhang: fehlt.',
   'Seite 2 der Ergebnisse. Hier war noch nie jemand.',
   'Gelöst! (Der Link zur Lösung ist tot.)',
   'Forum: „Benutz doch einfach Linux.“',
@@ -83,71 +83,52 @@ export const CHAT_FALLBACK = 'Chef';
 
 /** Memes beim Nichtstun: Bildmakros (oben/unten), in der Mitte ein Text-Gesicht als „Foto“ */
 export const MEMES: { top: string; bottom: string; face: string }[] = [
-  { top: 'Es funktioniert auf meinem Rechner.', bottom: 'Dann liefern wir eben deinen Rechner aus.', face: '(¬‿¬)' },
-  { top: 'Es ist nicht DNS. Es kann nicht DNS sein.', bottom: 'Es war DNS.', face: 'ಠ_ಠ' },
+  { top: 'Monitoring für alles eingerichtet', bottom: 'Monitoring: „Monitoring nicht erreichbar.“', face: 'ಠ_ಠ' },
   { top: '99 kleine Bugs im Code. Einen gefixt …', bottom: '127 kleine Bugs im Code.', face: '(⊙_☉)' },
   { top: 'Ich, beim Schreiben der Doku', bottom: 'Ich, drei Wochen später: „Was soll das heißen?“', face: '(・_・;)' },
   { top: 'Freitag, 16:59', bottom: '„Kurze Frage …“', face: '(╯°□°)╯︵ ┻━┻' },
   { top: 'Passwort muss enthalten:', bottom: 'Großbuchstaben, Zahl, Sonderzeichen, Hieroglyphe', face: '(ʘ‿ʘ)' },
   { top: 'Backup machen? Später.', bottom: 'Restore? … Oh.', face: '(°ロ°)' },
-  { top: 'Ticket: „Internet kaputt“', bottom: 'Ursache: WLAN-Schalter am Laptop', face: '¯\\_(ツ)_/¯' },
-  { top: 'Kein Deploy am Freitag', bottom: 'Der Deploy am Freitag: *schwitzt*', face: '(；一_一)' },
-  { top: 'Der Server, der seit 1.284 Tagen läuft', bottom: 'Niemand weiß, was er tut. Niemand fasst ihn an.', face: '(◔_◔)' },
-  { top: 'Change Advisory Board:', bottom: '„Klingt riskant. Machen wir’s Montag früh.“', face: '(￣ヘ￣)' },
+  { top: 'Ich: rm -rf ./build', bottom: 'Auch ich, müde: rm -rf / build', face: '(°ロ°)' },
+  { top: 'YAML mit 2 Leerzeichen', bottom: 'Ich, mit 3 Leerzeichen: *Prod ist down*', face: '(⊙_☉)' },
+  { top: 'Zertifikat läuft in 30 Tagen ab', bottom: 'Ich, in 30 Tagen: *völlig überrascht*', face: '(o_O)' },
+  { top: 'Es kompiliert nicht.', bottom: 'Es kompiliert?! WARUM kompiliert es?', face: '(ʘ‿ʘ)' },
   { top: 'Ich: kurz Memes gucken', bottom: 'Die Warteschlange: *starrt*', face: '(ಠ_ಠ)' },
-  { top: 'Hast du es aus- und wieder eingeschaltet?', bottom: 'Ich hab es aus- und wieder eingeschaltet. Jetzt brennt es.', face: '(o_O)' },
-  { top: 'Wenn der Kunde sagt „Ich hab nichts geändert“', bottom: 'Der Verlauf: 14 Änderungen', face: '(¬_¬)' },
-  // BOFH
+  { top: 'Komm ins Bett, es ist drei Uhr!', bottom: 'Geht nicht. Jemand im Internet hat unrecht.', face: '(ಠ益ಠ)' },
+  { top: 'Bombe entschärfen: ein gültiger tar-Befehl. 10 Sekunden.', bottom: 'Ich, 20 Jahre Linux: „tar … -x … äh …“', face: '(°ロ°)' },
+  { top: 'Git-Konflikt', bottom: 'Ordner sichern, Repo löschen, neu klonen. So machen Profis das.', face: '(・_・;)' },
+  { top: 'Praktikant kennt Strg+Z noch nicht', bottom: 'Heute ist er einer der glücklichen 10.000.', face: '(◕‿◕)' },
+  { top: 'Datum in der Excel-Liste: 03/04/05', bottom: 'Es gibt nur ein richtiges Format: 2005-04-03.', face: '(￣ヘ￣)' },
+  { top: 'Zwei schwierige Dinge in der IT:', bottom: 'Cache-Invalidierung, Namen vergeben und Off-by-one-Fehler.', face: '(；一_一)' },
+  { top: 'Permission denied.', bottom: 'sudo !!', face: '(⌐■_■)' },
+  { top: 'Problem? Ich nehme einfach eine Regex.', bottom: 'Jetzt habe ich zwei Probleme.', face: '(╥_╥)' },
+  { top: 'Bug tritt nur auf, wenn keiner hinsieht.', bottom: 'Ich gucke: weg. Ich gehe: da. Heisenbug.', face: '(o_O)' },
+  { top: 'Projekt ist zu 90 % fertig.', bottom: 'Die restlichen 10 % brauchen noch mal 90 %.', face: '(-_-;)' },
   { top: 'User: „Ich brauche mehr Speicherplatz.“', bottom: 'BOFH: *löscht den Ordner „Wichtig“*. Jetzt ist Platz.', face: '(¬‿¬)' },
-  { top: 'Ausrede des Tages:', bottom: 'Sonnenwind stört die Glasfaser.', face: '(￣▽￣)' },
-  { top: 'Chef will Adminrechte', bottom: 'Chef bekommt einen Knopf. Der Knopf ist nicht angeschlossen.', face: '(◕‿◕)' },
+  { top: 'User: „Ich hab ein Problem.“', bottom: 'BOFH: „Ich weiß. Ich hab es gemacht.“', face: '(¬‿¬)' },
   { top: 'Wie ich den Praktikanten nenne:', bottom: 'Lebende Firewall', face: '(⌐■_■)' },
   { top: 'Helpdesk-Hotline', bottom: 'Seit gestern auf das Faxgerät umgeleitet. Anrufe −80 %.', face: '(͡° ͜ʖ ͡°)' },
   { top: '„Können Sie mein Passwort zurücksetzen?“', bottom: 'Klar. Auf welches Passwort von 2009?', face: '(ʘ‿ʘ)' },
-  // IT Crowd
-  { top: 'Notfallnummer auswendig?', bottom: '0118 999 881 999 119 725 … 3', face: '(°ロ°)' },
-  { top: 'Das hier ist das Internet.', bottom: 'Es wiegt nichts. Bitte nicht fallen lassen.', face: '(⊙_⊙)' },
-  { top: '„Hallo, IT. Schon mal aus- und wieder eingeschaltet?“', bottom: 'Anrufer: „Woher wissen Sie das?!“', face: '(¬‿¬)' },
-  { top: 'Feuer im Serverraum', bottom: 'Ich schick dazu mal ’ne Mail.', face: '(ノಠ益ಠ)ノ' },
+  { top: 'Ich bin hier, um Kaffee zu trinken und Tickets zu schließen.', bottom: 'Und der Kaffee ist alle.', face: '(•̀ᴗ•́)و' },
   { top: 'Kollegen: „Was macht die IT eigentlich?“', bottom: 'Kellerraum, kein Fenster, Leuchtstoffröhre: alles läuft.', face: '(・_・)' },
-  // xkcd und Klassiker
-  { top: 'Schule ruft an:', bottom: 'Ihr Sohn heißt Robert\'); DROP TABLE Schüler;--?', face: '(°ロ°)' },
-  { top: 'Gesamte IT-Infrastruktur', bottom: 'Ein Paket, gepflegt von einem Typen in Nebraska seit 2003', face: '(◔_◔)' },
+  { top: 'Tochter vom Chef am Server-Terminal:', bottom: '„Das ist ein Unix-System! Das kenn ich!“', face: '(⊙_⊙)' },
+  { top: 'Chef: „Jaaa … wenn Sie dann noch Samstag kommen könnten …“', bottom: '„… das wäre suuuper.“', face: '(-_-;)' },
   { top: 'Ich: „Das automatisiere ich schnell.“', bottom: 'Sechs Wochen später: Skript spart 4 Sekunden pro Monat.', face: '(；一_一)' },
-  { top: 'Standards: 14 konkurrierende', bottom: 'Wir machen einen, der alle vereint. Standards: 15', face: '(ಠ_ಠ)' },
-  { top: 'Frage im Forum, 2011: „Hat jemand das gelöst?“', bottom: 'Einzige Antwort: „Hat sich erledigt, danke.“', face: '(╥_╥)' },
-  { top: 'Fehlerursache gefunden:', bottom: 'PEBKAC. Problem sitzt vor dem Bildschirm.', face: '(¬_¬)' },
-  { top: 'Layer 1 bis 7: geprüft.', bottom: 'Layer 8 hat den Stecker gezogen.', face: '(ಥ﹏ಥ)' },
-  { top: 'Drucker: „Papierstau“', bottom: 'Kein Papier drin. Kein Papierstau. Drucker lügt.', face: '(╯°□°)╯︵ ┻━┻' },
   { top: 'Rauch aus dem Netzteil', bottom: 'Magischer Rauch entwichen. Gerät läuft nicht ohne.', face: '(⊙_☉)' },
-  { top: 'sudo mach mir ein Sandwich', bottom: 'Okay.', face: '(⌐■_■)' },
-  { top: 'Chef: „Warum spielt ihr Schwertkampf?“', bottom: '„Kompiliert gerade.“, Chef: „Ah. Weitermachen.“', face: '(•̀ᴗ•́)و' },
-  { top: 'Passwort: Tr0ub4dor&3', bottom: 'Besser: korrekt pferd batterie heftklammer', face: '(⊙_⊙)' },
   { top: 'Kollege: „Ist das in Produktion?“', bottom: 'Ich, mit dem Finger über Enter: „…jetzt schon.“', face: '(°ー°〃)' },
-  { top: 'Ticket schließen', bottom: 'Ticket wieder offen. Bevor ich die Hand von der Maus hab.', face: '(；′⌒`)' },
   { top: 'Kunde: „Das Internet ist langsam.“', bottom: 'Kunde hat 47 Tabs mit Wetter-Radar offen.', face: '(¬‿¬)' },
   { top: 'Gelöst durch: Neustart', bottom: 'Ursache: unbekannt. Doku: „Neustart hilft.“', face: '(ツ)' },
-  { top: 'Mein Kalender', bottom: 'Meeting über das Meeting, in dem wir Meetings reduzieren.', face: '(-_-;)' },
-  // Büroalltag, Dilbert & Co.
-  { top: 'Chef: „Welche Farbe soll die Datenbank haben?“', bottom: 'Ich: „Die meisten nehmen Mauve.“', face: '(◕‿◕)' },
   { top: 'Change Request', bottom: 'Risiko: niedrig. Auswirkung: alles.', face: '(；一_一)' },
   { top: '„Kannst du mal kurz auf meinen Rechner gucken?“', bottom: 'Privat-Laptop, Baujahr 2011, 37 Toolbars.', face: '(ಥ﹏ಥ)' },
   { top: 'Management: „Agil heißt, wir brauchen keine Doku.“', bottom: 'Die Doku: *war sowieso nie da*', face: '(￣ヘ￣)' },
   { top: 'Ticket: „DRINGEND!!!“', bottom: 'Erstellt vor drei Wochen. Gemeldet: jetzt.', face: '(ಠ_ಠ)' },
-  // Silicon Valley, Stromberg
-  { top: 'Unsere KI erkennt Bilder.', bottom: 'Hotdog. Kein Hotdog. Fertig.', face: '(⌐■_■)' },
-  { top: 'Chef: „Das Büro ist wie ein Dschungel.“', bottom: '„Und ich bin der Löwe mit Adminrechten.“ (Ist er nicht.)', face: '(¬_¬)' },
-  { top: 'Wir sind wie eine Familie.', bottom: 'Darum gibt es auch keine Gehaltserhöhung.', face: '(・_・;)' },
-  { top: 'Firmenleitbild', bottom: 'Wir leben proaktiv ganzheitliche Synergien. (Niemand weiß, was das heißt.)', face: '(￣▽￣)' },
-  { top: 'Umstrukturierung Nr. 7', bottom: 'Gleiches Team. Neues Organigramm. Mehr Kästchen.', face: '(-_-;)' },
+  { top: 'Ich: „Ich war drei Tage am Stück im Büro.“', bottom: 'Kollege: „Pff. Vier. Im Serverraum. Ohne Licht.“', face: '(￣▽￣)' },
   { top: 'Berater: „Ihre Prozesse sind ineffizient.“', bottom: 'Seine Rechnung: 40 Seiten. Davon 39 Deckblatt.', face: '(⌐■_■)' },
   { top: 'Chef: „Ich verstehe nichts von Technik.“', bottom: '„Darum entscheide ich das.“', face: '(╯°□°)╯︵ ┻━┻' },
-  // Klassiker der Shell
-  { top: 'Ich: rm -rf ./build', bottom: 'Auch ich, müde: rm -rf / build', face: '(°ロ°)' },
-  { top: 'vim geöffnet', bottom: 'Seit 2019 hier. Schickt Hilfe. :q!', face: '(╥_╥)' },
-  { top: 'YAML mit 2 Leerzeichen', bottom: 'Ich, mit 3 Leerzeichen: *Prod ist down*', face: '(⊙_☉)' },
-  { top: 'Zertifikat läuft in 30 Tagen ab', bottom: 'Ich, in 30 Tagen: *völlig überrascht*', face: '(o_O)' },
-  { top: 'Es kompiliert nicht.', bottom: 'Es kompiliert?! WARUM kompiliert es?', face: '(ʘ‿ʘ)' },
+  { top: 'Unsere KI erkennt Bilder.', bottom: 'Hotdog. Kein Hotdog. Fertig.', face: '(⌐■_■)' },
+  { top: 'Unser Start-up macht die Welt zu einem besseren Ort …', bottom: '… durch skalierbare, fehlertolerante Datenbanken.', face: '(◕‿◕)' },
+  { top: 'Kollege hat ein Jahr lang nichts gemacht.', bottom: 'Befördert. Eigenes Büro auf dem Dach. Ohne Aufgabe.', face: '(◔_◔)' },
+  { top: 'Chef: „Das Büro ist wie ein Dschungel.“', bottom: '„Und ich bin der Löwe mit Adminrechten.“ (Ist er nicht.)', face: '(¬_¬)' },
 ];
 
 /** Meme-Plattformen (Parodien): helle Forum-Variante und dunkle Bilderseite */
@@ -167,6 +148,7 @@ export const DONE_LINES: Record<'mail' | 'ticket' | 'term' | 'chat' | 'call' | '
     '{who}: „Danke!!“ an alle. 340 Leute. Allen antworten.',
     '{who} hat die Mail ausgedruckt. Und eingescannt. Und gemailt.',
     '{who}: Mail raus. Signatur länger als die Mail.',
+    '{who}: Mail raus. Alle lachen. Wer zuletzt lacht, hat sie nicht gelesen.',
     '{who}: Mail raus. {who} antwortet: „Siehe unten.“ Unten: nichts.',
     '{who}: Mail beantwortet. CC: der halbe Konzern. Warum auch immer.',
   ],
@@ -177,6 +159,8 @@ export const DONE_LINES: Record<'mail' | 'ticket' | 'term' | 'chat' | 'call' | '
     '{who}: Ticket geschlossen. Zufriedenheit: ★☆☆☆☆',
     '{who}: Ticket gelöst. Danke-Mail erhalten. Gerahmt.',
     '{who}: Ticket als Duplikat geschlossen. Von sich selbst.',
+    '{who}: Ticket gelöst. Zwei Dinge sind unendlich: das Universum und die Queue. Beim Universum ist man sich nicht sicher.',
+    '{who}: Ticket stand auf „Wartet auf Kunde“. Der Kunde wartete auf uns. Jetzt wartet keiner mehr.',
     '{who}: Ticket gelöst. Level 2 war Kaffee holen, also selbst gemacht.',
     '{who}: Ticket geschlossen. Umfrage dazu: 14 Fragen. Beantwortet: keine.',
     '{who}: Ticket gelöst. SLA: knapp. Die Uhr hat geschwitzt.',
@@ -190,6 +174,8 @@ export const DONE_LINES: Record<'mail' | 'ticket' | 'term' | 'chat' | 'call' | '
     'Läuft wieder. Nicht anfassen. Auch nicht angucken.',
     'Fertig. Output: 400 Zeilen. Gelesen: die letzte.',
     'Exit 0. Ich nehme das als Kompliment.',
+    'Läuft wieder. Auch ein Server hat schlechte Tage. Meistens deine.',
+    'Fertig. Aus Fehlern lernt man. Ich hab heute schon viel gelernt.',
   ],
   chat: [
     '{who} hat 👍 reagiert. Gespräch beendet.',
@@ -258,7 +244,7 @@ export const TICKET_STATES: string[] = ['Gelöst', 'Geschlossen', 'Gelöst (vorl
 /** VIP-Tickets (wichtige Mails) im Verlauf: wer, was, Thema und die eine wahre Ursache */
 export const VIP_TICKETS: { who: string; subject: string; topic: Topic; cause: string }[] = [
   { who: 'Chef', topic: 'hardware', subject: 'Beamer im Vorstandsraum: „Kein Signal“. Meeting in 2 Min.', cause: 'Falscher HDMI-Eingang' },
-  { who: 'Geschäftsführung', topic: 'netz', subject: 'Das Internet ist weg.', cause: 'WLAN-Schalter am Laptop aus' },
+  { who: 'Geschäftsführung', topic: 'hardware', subject: 'Mein Laptop ist in der Cloud, sagt die Assistentin. Wo ist die?', cause: 'Laptop im Taxi vergessen (Cloud-Symbol im Explorer)' },
   { who: 'Chef', topic: 'office', subject: 'Excel rechnet falsch.', cause: 'Zelle als Text formatiert' },
   { who: 'Vorstand', topic: 'passwort', subject: 'Passwort vergessen. Zum vierten Mal. Heute.', cause: 'Neues Passwort nicht notiert (gut so, aber …)' },
   { who: 'Chef', topic: 'drucker', subject: 'Drucker druckt nicht. Vor dem Kunden.', cause: 'Drucker im falschen Stockwerk ausgewählt' },
@@ -272,7 +258,7 @@ export const VIP_TICKETS: { who: string; subject: string; topic: Topic; cause: s
   { who: 'Chef', topic: 'mail', subject: 'Meine Mail an alle ist an alle gegangen.', cause: 'Verteiler „Alle“' },
   { who: 'Vorstand', topic: 'drucker', subject: 'Drucker druckt das Logo. Riesig. In Farbe. 300-mal.', cause: 'Kopien: 300, „An Seite anpassen“' },
   { who: 'Chef', topic: 'office', subject: 'Excel hat „alles gelöscht“. Bitte sofort.', cause: 'Spalten ausgeblendet' },
-  { who: 'Geschäftsführung', topic: 'netz', subject: 'Videocall mit Investoren ruckelt. Ich sitze im Aufzug.', cause: 'Aufzug (Faradayscher Käfig)' },
+  { who: 'Geschäftsführung', topic: 'netz', subject: 'Videocall mit Investoren ruckelt. Ich bin im Zug. Gerade Tunnel.', cause: 'Tunnel' },
   { who: 'Vorstandsassistenz', topic: 'passwort', subject: 'Der Chef hat sein Passwort ins Teams geschrieben. In den Kanal „Alle“.', cause: 'Falsches Fenster beim Passwort-Tippen' },
   { who: 'Vorstand', topic: 'hardware', subject: 'Tastatur geht nicht. Eilt!!!', cause: 'Tastatur war ein Untersetzer' },
   { who: 'Chef', topic: 'mail', subject: 'Habe aus Versehen die Kündigung von allen verschickt. Entwurf! ENTWURF!', cause: 'Entwurf im falschen Fenster abgeschickt' },
@@ -281,10 +267,10 @@ export const VIP_TICKETS: { who: string; subject: string; topic: Topic; cause: s
 /** Meilensteine einer Serie gelöster Tickets: Spruch unter dem Stempel */
 export const STREAK_LINES: Record<number, string[]> = {
   5: ['Läuft bei dir!', 'Warm getippt.', 'Der Kaffee wirkt.'],
-  10: ['Die Warteschlange hat Angst.', 'Das Telefon traut sich nicht zu klingeln.', 'Level 2 fragt, ob du Hilfe brauchst. Nein.'],
+  10: ['Die Queue sucht sich einen anderen Admin.', 'Das Telefon traut sich nicht zu klingeln.', 'Level 2 fragt, ob du Hilfe brauchst. Nein.'],
   20: ['Moss wäre stolz.', 'Die Tastatur glüht.', 'Der Chef guckt verdächtig.'],
-  42: ['Die Antwort auf alles.', 'Handtuch griffbereit?'],
-  100: ['Ludicrous Speed!', 'Du bist jetzt der Server unterm Tisch.'],
+  42: ['Jetzt fehlt nur noch die Frage.', 'Deep Thought brauchte länger.'],
+  100: ['Die Tastatur beantragt Urlaub.', 'Du bist jetzt der Server unterm Tisch.'],
 };
 
 /** Fenstertitel des Mailprogramms */
@@ -297,7 +283,7 @@ export const MAIL_SIGS: string[] = [
   '-- Ihre IT. Haben Sie es schon aus- und wieder eingeschaltet?',
 ];
 /** Status im Ticketsystem, bevor man antwortet */
-export const TICKET_OPEN_STATES: string[] = ['Neu', 'In Bearbeitung', 'Wieder geöffnet (3×)', 'Wartet auf Kunde (der wartet auf uns)', 'Eskaliert (von sich selbst)'];
+export const TICKET_OPEN_STATES: string[] = ['Neu', 'Offen', 'In Bearbeitung', 'Zum 3. Mal neu', 'Ping-Pong (7×)', 'Zugewiesen: ?'];
 /** Status-Text im Firmen-Chat */
 export const CHAT_STATES: string[] = ['● online', '● beschäftigt', '● „im Meeting“', '● zuletzt online: gerade eben', '● „Nicht stören (außer IT)“'];
 /** Desktop-Icons in der Fernwartung (der Papierkorb ist immer da und kommt extra dazu) */
@@ -337,8 +323,8 @@ export const AI_PROMPTS: string[] = [
 /** Antwort beim Abschicken; {cause} = woran es wirklich lag */
 export const AI_REPLIES: string[] = [
   'Gute Frage! Die Ursache ist eindeutig: {cause}. Ich hoffe, das hilft! 😊',
-  'Absolut! Ursache: {cause}. Quelle: RFC 9999, Abschnitt 42.',
-  'Ich verstehe deine Frustration. Laut meinen Daten: {cause}. Oder Sonnenwind.',
+  'Absolut! Ursache: {cause}. Da bin ich mir zu 100 % sicher. Oder zu 40. Eins von beiden.',
+  'Ich verstehe deine Frustration. Laut meinen Daten: {cause}. Soll ich das zusammenfassen? Es ist schon kurz.',
   'Hier ist eine Lösung in 12 Schritten. Schritt 1: {cause} beheben. Schritte 2–12: siehe Schritt 1.',
   'Als KI darf ich das eigentlich nicht sagen, aber: {cause}.',
   'Großartig, dass du fragst! {cause}. Soll ich dazu ein Gedicht schreiben?',

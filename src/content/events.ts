@@ -533,8 +533,8 @@ export const EVENTS: GameEventDef[] = [
       {
         label: 'Ihm Witze beibringen',
         outcomes: [
-          o('rush', 'Er erzählt jetzt bei jeder Nachricht einen DNS-Witz. Die Stimmung steigt. Die Tickets fliegen.', 0.6),
-          o('lossSmall', 'Er erzählt jetzt bei jeder Nachricht einen DNS-Witz. Die Stimmung kippt nach dem zwölften.', 0.4),
+          o('rush', 'Er erzählt jetzt bei jeder Nachricht einen UDP-Witz. Ob sie ankommen, ist ihm egal. Die Stimmung steigt.', 0.6),
+          o('lossSmall', 'Er erzählt jetzt bei jeder Nachricht einen UDP-Witz. Nach dem zwölften kommt keiner mehr an.', 0.4),
         ],
       },
       {
@@ -754,6 +754,111 @@ export const EVENTS: GameEventDef[] = [
       { label: 'Dienstlich verhindert sein', outcomes: [o('rush', 'Du hast „einen Serverausfall“. Allein im Büro, die Queue für dich. Ruhigster Abend seit Monaten.')] },
     ],
     ignore: o('lossSmall', 'Ohne Technik nimmt der Chef einen Bluetooth-Lautsprecher. Der ist mit dem Konferenzraum verbunden. Das Vorstandsmeeting dort ist jetzt vorbei.'),
+  },
+  {
+    id: 'tabs',
+    title: 'Tabs gegen Leerzeichen',
+    text: 'Zwei aus der Entwicklung reden nicht mehr miteinander. Grund: Einrückung. Er nimmt Tabs, sie Leerzeichen. Die Pull-Requests sind ein Schlachtfeld.',
+    options: [
+      {
+        label: 'Formatierer für alle einrichten',
+        outcomes: [o('flow', 'Ab jetzt entscheidet ein Formatierer. Beide sind gleich beleidigt, also ist es gerecht. Die Reviews laufen wie geschmiert.')],
+      },
+      { label: 'Für Tabs entscheiden', outcomes: [o('tip', 'Tabs gewinnen. Die Gegenseite schickt eine Protestmail. Eingerückt mit Leerzeichen.')] },
+      {
+        label: 'Beide auf einen Kaffee einladen',
+        outcomes: [
+          o('rush', 'Beim Kaffee finden beide einen gemeinsamen Feind: Leute, die Tabs und Leerzeichen mischen. Frieden.', 0.5),
+          o('lossSmall', 'Der Kaffee wird kalt, die Diskussion heiß. Jetzt streiten sie auch noch über vim und emacs.', 0.5),
+        ],
+      },
+    ],
+    ignore: o('lossSmall', 'Niemand hat entschieden. Die Datei ist jetzt beides. Python weigert sich, sie zu lesen.'),
+  },
+  {
+    id: 'lotto',
+    title: 'Busfaktor: Lotto',
+    text: 'Der einzige Kollege, der das Lagersystem versteht, hat im Lotto gewonnen. Er ruft vom Gate an, um sich zu verabschieden. Doku: keine.',
+    options: [
+      {
+        label: 'Schnell alles diktieren lassen',
+        outcomes: [o('overtime', 'Er diktiert bis zum Boarding. Du tippst wie besessen mit. Letzter Satz: „Und nie den Drucker im Lager neu starten.“ Dann ist er weg.')],
+      },
+      {
+        label: 'Um sein Passwort bitten',
+        outcomes: [
+          o('win', 'Er schickt es per SMS: „Lotto2026“. Im Nachhinein naheliegend. Zugriff gesichert, Passwort sofort geändert.', 0.6),
+          o('lossSmall', 'Er weiß es nicht mehr. Sein Rechner war seit 2009 nie aus, er musste es nie eingeben.', 0.4),
+        ],
+      },
+      { label: 'Gratulieren und auflegen', outcomes: [o('none', 'Er ist weg. Das Lagersystem läuft weiter. Niemand weiß, wie lange. Es wirkt aber entspannt.')] },
+    ],
+    ignore: o('loss', 'Keiner ging ran. Am Montag stürzt das Lagersystem ab. Von den Malediven kommt eine Postkarte mit dem Root-Passwort. Unleserlich. Sand.'),
+  },
+  {
+    id: 'leeroy',
+    title: 'Migration ohne Plan',
+    text: 'Planungscall zur Mail-Migration. Schritt 1 von 14 ist noch nicht besprochen, da ruft ein Kollege „Ich mach das jetzt einfach!“ und klickt auf Start. Er heißt Leeroy. Wirklich.',
+    options: [
+      {
+        label: 'Hinterher und retten, was geht',
+        outcomes: [
+          o('jackpot', 'Ihr seid schneller als die Migration. Alles drüben, nichts verloren. Leeroy hält sich jetzt für einen Strategen. Ihr lasst ihn.', 0.4),
+          o('fire', 'Die Hälfte der Postfächer ist drüben, die andere hier. Alle schreiben gleichzeitig „Wo sind meine Mails?“. An beide Server.', 0.6),
+        ],
+      },
+      { label: 'Migration abbrechen', outcomes: [o('lossSmall', 'Abgebrochen. Ein paar Postfächer gibt es jetzt doppelt. Leeroy sagt: „Wenigstens hab ich Hühnchen.“')] },
+      { label: 'Erst mal die Erfolgschance ausrechnen', outcomes: [o('tip', '32,33 Prozent, Periode. Als du fertig bist, ist die Migration durch. Hat geklappt. Rein zufällig.')] },
+    ],
+    ignore: o('fire', 'Keiner hat ihn aufgehalten. Leeroy hat das Backup gleich „mitmigriert“.'),
+  },
+  {
+    id: 'bikeshed',
+    title: 'Budget-Meeting',
+    text: 'Tagesordnung: 1. Neues Rechenzentrum, 2 Mio. €. 2. Farbe des Fahrradständers. Punkt 1 war nach vier Minuten durch. Punkt 2 läuft seit zwei Stunden.',
+    options: [
+      {
+        label: 'Zu Punkt 1 noch was fragen',
+        outcomes: [o('win', 'Du fragst nach Kühlung und Strom. Alle gucken dich böse an. Das Rechenzentrum bekommt eine Klimaanlage. Vorher war keine geplant.')],
+      },
+      { label: 'Beim Fahrradständer mitreden', outcomes: [o('lossSmall', 'Du sagst „Grün“. Jetzt bist du in der Arbeitsgruppe Fahrradständer. Nächster Termin: Donnerstag, drei Stunden.')] },
+      { label: 'Leise rausschleichen', outcomes: [o('rush', 'Niemand merkt es. Du gewinnst zwei Stunden für Tickets. Der Fahrradständer wird später grau, wie alles hier.')] },
+    ],
+    ignore: o('lossSmall', 'Der Fahrradständer wird vertagt. Das Rechenzentrum ist längst bestellt. Ohne Klimaanlage.'),
+  },
+  {
+    id: 'jahresgespraech',
+    title: 'Mitarbeitergespräch',
+    text: 'Der Abteilungsleiter lädt zum Jahresgespräch. Laut Einladung: „Feedback in beide Richtungen“. Er hat 50 Minuten für sich eingeplant und 10 für dich.',
+    options: [
+      { label: 'Zuhören und nicken', outcomes: [o('tip', 'Du nickst 50 Minuten. Er sagt, du seist „ein guter Zuhörer, das ist selten in der IT“. Das war dein Feedback.')] },
+      {
+        label: 'Nach mehr Gehalt fragen',
+        outcomes: [
+          o('jackpot', 'Er ist so überrumpelt, dass er Ja sagt. Dann fragt er, ob man das rückgängig machen kann. Kann man nicht. Ist schon gespeichert.', 0.3),
+          o('lossSmall', 'Er erklärt dir, Geld sei wie Strom: Man merkt es erst, wenn es fehlt. Dann ist die Zeit um.', 0.7),
+        ],
+      },
+      { label: 'Selbst Feedback geben', outcomes: [o('lossSmall', 'Du sagst, die Meetings seien zu lang. Er nimmt das sehr ernst und lädt zu einem Termin dazu ein. Ganztägig.')] },
+    ],
+    ignore: o('none', 'Du hast den Termin verpasst. Er hat das Gespräch trotzdem geführt. Allein. Laut Protokoll lief es sehr gut.'),
+  },
+  {
+    id: 'dienstwagen',
+    title: 'WLAN im Dienstwagen',
+    text: 'Der Abteilungsleiter aus dem 2. OG prahlt mit WLAN im Dienstwagen. Deiner hat seit gestern auch welches: ein altes Diensthandy im Handschuhfach. Jetzt will er wissen, wessen schneller ist. Vor dem Mittagessen.',
+    options: [
+      { label: 'Netzname umbenennen', outcomes: [o('rush', 'Das Netz heißt jetzt „Chef_5G_Ultra“. Gleiche Geschwindigkeit, gefühlt doppelt. Er fährt eine Stunde im Kreis. Ruhe im Büro.')] },
+      { label: 'Erklären, dass es dasselbe Netz ist', outcomes: [o('lossSmall', 'Du erklärst Mobilfunk. Er hört nur „dasselbe“ und ist gekränkt. Den Rest des Tages kommen Fragen per Mail. Mit drei Ausrufezeichen.')] },
+      {
+        label: 'Speedtest im Parkhaus',
+        outcomes: [
+          o('win', 'Dein Chef gewinnt. Um 2 Mbit. Er druckt das Ergebnis aus und hängt es in die Kantine. Für dich gibt es einen Bonus „aus der Portokasse“.', 0.5),
+          o('tip', 'Gleich schnell. Er findet, bei Gleichstand gewinnt der Ältere. Er ist der Ältere.', 0.5),
+        ],
+      },
+    ],
+    ignore: o('lossSmall', 'Er hat sich selbst einen Router gekauft. Der hängt am Zigarettenanzünder. Du räumst morgen das Kabel aus dem Kofferraum.'),
   },
 ];
 

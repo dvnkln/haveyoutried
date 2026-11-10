@@ -50,6 +50,7 @@ describe('Berufserfahrung', () => {
     s.buffs = [{ id: 'flow', target: 'prod', mult: 3, remainingMs: 1000 }];
     s.achievements = { first: 1 };
     s.settings.sound = false;
+    s.settings.buyAmount = 'max';
     const quit: number[] = [];
     const off = bus.on('jobQuit', (e) => quit.push(e.gained));
 
@@ -63,6 +64,7 @@ describe('Berufserfahrung', () => {
     expect(s.generators.cron.owned).toBe(0);
     expect(s.upgrades).toEqual({});
     expect(s.buffs).toEqual([]);
+    expect(s.settings.buyAmount).toBe(1);
     // bleibt
     expect(s.ticketsAllTime).toBe(1_000 * P);
     expect(s.clicks).toBe(1234);

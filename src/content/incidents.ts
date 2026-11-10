@@ -40,7 +40,7 @@ export const INCIDENT_TEXT: Record<IncidentId, IncidentText> = {
     goal: 'Mails sortieren: Spam nach links, echte Mails nach rechts. Achte auf den Absender.',
     good: [
       'Queue leer. Die Phishing-Mails sind weg, der Kuchen im 3. OG ist angekündigt. Ordnung.',
-      'Sauber sortiert. Die Buchhaltung bekommt ihre Mails, der Prinz aus Nigeria nicht.',
+      'Sauber sortiert. Die Buchhaltung bekommt ihre Mails, der „IT-Support“ von firma-it.support nicht.',
       'Fehlerfrei. Der „CEO“ mit der iPhone-Signatur wartet jetzt vergeblich auf seine 48.000 €.',
     ],
     bad: [
@@ -138,7 +138,7 @@ export const TAKE_LABELS = [
 /** Button-Texte zum Abschließen */
 export const DONE_LABELS = {
   good: ['Ticket schließen', 'Postmortem? Nö.', 'Zurück zum Kaffee', 'Ich bin ein Held. Weiter.', 'Mic drop'],
-  bad: ['Nicht mehr mein Problem', 'Seufz.', 'Kollege macht das schon', 'Es war DNS. Bestimmt.', 'Ab in die Lessons Learned'],
+  bad: ['Nicht mehr mein Problem', 'Seufz.', 'Kollege macht das schon', 'War bestimmt der Praktikant.', 'Ab in die Lessons Learned'],
 };
 
 // --- Spamfilter ---
@@ -171,7 +171,7 @@ export const MAILS: Mail[] = [
   m('amazon@amaz0n-konto.click', 'Bestellung storniert', 'Ihre Bestellung über 1.299 € wurde storniert. Hier klicken, um sie nicht zu stornieren.', true),
   m('chef.privat@gmail-mail.co', 'Bin im Meeting, kurze Bitte', 'Können Sie 10 Gutscheinkarten kaufen? Ich erkläre es später.', true),
 
-  m('buchhaltung@firma.de', 'WICHTIG!!! Drucker 3. OG', 'Der Drucker druckt wieder nur Hieroglyphen. Bitte sofort!!!', false),
+  m('buchhaltung@firma.de', 'WICHTIG!!! Drucker 3. OG', 'Dieter macht wieder dieses Geräusch. Bitte sofort!!!', false),
   m('teamassistenz@firma.de', 'Kuchen in der Teeküche', 'Geburtstag von Petra. Wer zuerst kommt …', false),
   m('chef@firma.de', 'Kurze Frage', 'Hast du mal fünf Minuten? Dauert nicht lang.', false),
   m('vertrieb@firma.de', 'AW: AW: AW: AW: Angebot Müller GmbH', 'Ich hänge das nochmal an, diesmal mit Anhang.', false),
@@ -182,7 +182,7 @@ export const MAILS: Mail[] = [
   m('noreply@github.com', '[firma/infra] Pull request #4711', 'praktikant wants to merge 1 commit into main: "fix"', false),
   m('support@hersteller.de', 'Ihr Ticket #88213', 'Bitte aktualisieren Sie zunächst die Firmware.', false),
   m('datenschutz@firma.de', 'Schulung: Phishing erkennen', 'Pflichttermin am Donnerstag. Ja, auch für die IT.', false),
-  m('projektleitung@firma.de', 'Einladung: Kurzer Sync (90 min)', '17 Teilnehmer. Agenda folgt.', false),
+  m('projektleitung@firma.de', 'Einladung: Retro zur letzten Retro', 'Was lief gut bei der letzten Retro? Agenda folgt.', false),
   m('kantine@firma.de', 'Speiseplan KW 46', 'Montag: Schnitzel. Dienstag: Schnitzel (Rest von Montag).', false),
   m('herr.k@firma.de', 'WG: WG: WG: Lustig!!!', 'Ein Witz aus dem Jahr 2003. Mit Anhang: witz.pps', false),
   m('betriebsrat@firma.de', 'Abstimmung: Name für den neuen Drucker', 'Vorschläge bitte bis Freitag. „Dieter 2“ ist schon vergeben.', false),
@@ -317,7 +317,7 @@ export const NET_SCENARIOS: NetScenario[] = [
       step('ip', 'IP-Adresse prüfen', 'inet 10.0.0.42/24 – passt.'),
       step('gw', 'Gateway anpingen', '64 bytes from 10.0.0.1: time=0.4 ms'),
       step('dns', 'DNS testen (nslookup)', ';; connection timed out; no servers could be reached', true),
-      step('dnsfix', 'DNS-Server eintragen', 'nameserver 10.0.0.53 – Auflösung klappt. Es war DNS.'),
+      step('dnsfix', 'DNS-Server eintragen', 'nameserver 10.0.0.53 – Auflösung klappt. Wer hat den alten eingetragen?'),
     ],
   },
 ];

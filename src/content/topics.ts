@@ -42,10 +42,12 @@ export const TOPICS: Record<Topic, TopicText> = {
     devices: ['Drucker 3. OG'],
     notes: [
       'Drucker hat sich entschuldigt. Glaube ich zumindest.',
-      'Drucker meldete während der Reparatur dreimal „Papierstau“. Es war kein Papier drin.',
+      'Drucker wollte während der Reparatur ein Update von 2011 installieren. Abgelehnt.',
       'Testseite gedruckt. Sie war schief. Gilt als Erfolg.',
       'Habe dem Drucker gedroht. Hat funktioniert.',
       'Drucker zeigt jetzt „Bereit“. Ich glaube ihm nicht.',
+      'Er hasst {who} nicht. Er ist nur Drucker. Läuft wieder.',
+      'Für den Drucker: Treiber, dafür ein Update, dafür das Admin-Passwort, das im Tresor liegt, dessen Schlüssel der Hausmeister hat. Yak rasiert.',
       '{who} stand die ganze Zeit daneben und hat „Und? Und?“ gefragt.',
       'Dieter hat zum Dank eine Testseite gedruckt. Dann noch 40.',
     ],
@@ -65,7 +67,7 @@ export const TOPICS: Record<Topic, TopicText> = {
     ],
   },
   netz: {
-    cmds: ['ping -c 4 8.8.8.8', 'dig +short intranet.local  # es ist DNS', 'traceroute internet  # wo ist es hin?', 'nmcli radio wifi on', 'ip a | grep inet  # 169.254… oh nein', 'arp -a  # wer ist 10.0.0.66?'],
+    cmds: ['ping -c 4 8.8.8.8', 'dig +short intranet.local  # bitte nicht DNS', 'traceroute internet  # wo ist es hin?', 'nmcli radio wifi on', 'ip a | grep inet  # 169.254… oh nein', 'arp -a  # wer ist 10.0.0.66?'],
     rdp: ['ipconfig /flushdns', 'ipconfig /release && ipconfig /renew', 'ncpa.cpl', 'ping -t 10.0.0.1  (und zusehen)'],
     searches: ['dns einfach erklärt für chef', 'netzwerk langsam ursache finden', 'warum ist es immer dns', 'wlan geht nur am fenster', 'internet langsam nur bei mir warum'],
     devices: ['Router Filiale', 'Switch Keller', 'Firewall'],
@@ -75,6 +77,8 @@ export const TOPICS: Record<Topic, TopicText> = {
       'Ping lief 300-mal durch, bevor ich es geglaubt habe.',
       '{who} fragte während der Fehlersuche dreimal „Und jetzt?“. Jetzt: jetzt.',
       'Der Router hat eine Notiz bekommen: „Nur die IT darf mich neu starten.“',
+      'Auf dem Weg zum Router ein WLAN-Passwort am Fenster gesehen. Zur Straße. Wer im Glashaus sitzt …',
+      'Unterwegs fast das falsche Kabel gezogen. Jedes Kabel ist das richtige, bis man es zieht.',
     ],
   },
   mail: {
@@ -94,7 +98,7 @@ export const TOPICS: Record<Topic, TopicText> = {
     searches: ['office fehler ohne fehlermeldung', 'update rückgängig machen ohne dass es jemand merkt', 'datei nicht gespeichert wiederherstellen', 'excel zeigt ##### statt zahl', 'word seitenumbruch zerstört alles'],
     devices: ['Lizenzportal'],
     notes: [
-      'Datei wiederhergestellt aus dem Autosave. {who} hält mich jetzt für einen Zauberer.',
+      'Datei wiederhergestellt aus dem Autosave. {who} will mich jetzt zur Hochzeit einladen.',
       'Programm neu installiert. {who} hat währenddessen „nur kurz“ weitergearbeitet.',
       '{who} hat 14 Versionen derselben Datei. Die richtige war Nummer 9.',
       '{who} speichert jetzt alle fünf Minuten. Mit Strg+S und einem Stoßgebet.',
