@@ -361,7 +361,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
         vip: true,
       });
       ctx.sfx.unlock();
-      ctx.sfx.milestone();
+      ctx.sfx.vipSent();
       ctx.haptic('milestone');
       el.classList.add('peel');
       setTimeout(() => el.remove(), 500);
@@ -437,7 +437,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
       powerupBanner('☕︎ Doppelter Espresso', `${Math.round(CONFIG.espresso.durationMs / 1_000)} Sekunden: Taste halten, es tippt von selbst. Zwei Daumen: doppelt.`);
       ctx.log.write('ok', pick(ESPRESSO_LINES));
       ctx.sfx.unlock();
-      ctx.sfx.milestone();
+      ctx.sfx.espresso();
       ctx.haptic('milestone');
       espressoHint.hidden = false;
       cup.classList.add('caught');

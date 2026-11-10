@@ -52,7 +52,7 @@ export function startFlavor(ctx: AppContext, app: App): void {
     else log.template(MILESTONE_FALLBACK(text.name, owned));
     if (owned > 1) {
       app.popCounter();
-      sfx.milestone();
+      sfx.register();
       haptic('milestone');
     }
   });
@@ -81,7 +81,7 @@ export function startFlavor(ctx: AppContext, app: App): void {
       note: ignored ? `Kein ACK innerhalb von ${CONFIG.eventExpireMs / 1_000} s. Ich war „kurz Kaffee holen“.` : res.outcome.text,
       solution: describeEffect(res),
     });
-    if (res.mood === 'good') sfx.good();
+    if (res.mood === 'good') sfx.pagerAck();
     else if (res.mood === 'bad') sfx.error();
   });
 
@@ -122,7 +122,7 @@ export function startFlavor(ctx: AppContext, app: App): void {
       if (!def) return;
       log.write('ok', `achievementd[777]: unlocked "${def.name}"`);
       app.toast(`Achievement: ${def.name}`, def.desc);
-      sfx.milestone();
+      sfx.achievement();
       haptic('milestone');
       return;
     }
@@ -130,7 +130,7 @@ export function startFlavor(ctx: AppContext, app: App): void {
     if (bulk.length < batch) return;
     log.write('ok', `achievementd[777]: ${batch} achievements unlocked (backlog import): ${bulk.join(', ')}`);
     app.toast(`${batch} Achievements auf einmal`, 'Nachgetragen aus der Personalakte. Details im Karriere-Tab.');
-    sfx.milestone();
+    sfx.achievement();
     haptic('milestone');
     bulk.length = 0;
   });
@@ -159,7 +159,7 @@ export function startFlavor(ctx: AppContext, app: App): void {
     const line = pick(BOSS_DONE);
     app.toast(`Aufgabe erledigt: +${formatNumber(reward)} Tickets`, line, 'boss-done');
     log.write('ok', `chef[1]: Aufgabe erledigt. ${line}`);
-    sfx.milestone();
+    sfx.bossDone();
     haptic('milestone');
     app.popCounter();
   });

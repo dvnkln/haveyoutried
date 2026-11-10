@@ -116,6 +116,7 @@ export class Sfx {
   private ctx: AudioContext | null = null;
   private master: GainNode | null = null;
   private noise: AudioBuffer | null = null;
+  private room: ConvolverNode | null = null;
 
   constructor(private settings: () => SoundSettings) {}
 
@@ -149,9 +150,26 @@ export class Sfx {
       const data = noise.getChannelData(0);
       for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
 
+      // kleiner Büroraum als Hall: abklingendes, nach hinten dunkler werdendes Rauschen
+      const irLen = Math.floor(ctx.sampleRate * 0.7);
+      const ir = ctx.createBuffer(2, irLen, ctx.sampleRate);
+      for (let c = 0; c < 2; c++) {
+        const d = ir.getChannelData(c);
+        let lp = 0;
+        for (let i = 0; i < irLen; i++) {
+          const k = i / irLen;
+          lp += (Math.random() * 2 - 1 - lp) * (0.9 - 0.75 * k);
+          d[i] = lp * Math.exp(-i / (ctx.sampleRate * 0.11));
+        }
+      }
+      const room = ctx.createConvolver();
+      room.buffer = ir;
+      room.connect(master);
+
       this.ctx = ctx;
       this.master = master;
       this.noise = noise;
+      this.room = room;
     }
     // iOS kennt zusätzlich „interrupted“ (nach Anruf, Sperrbildschirm, App-Wechsel): auch dann neu anwerfen
     if (this.ctx.state !== 'running' && this.ctx.state !== 'closed') return this.ctx.resume().catch(() => {});
@@ -212,7 +230,7 @@ export class Sfx {
     osc.stop(t + attack + decay + 0.05);
   }
 
-  private hiss(t: number, peak: number, decay: number, filter: BiquadFilterType, freq: number, q = 1): void {
+  private hiss(t: number, peak: number, decay: number, filter: BiquadFilterType, freq: number, q = 1, out?: AudioNode): void {
     const r = this.ready();
     if (!r || !this.noise) return;
     const src = r.ctx.createBufferSource();
@@ -221,7 +239,7 @@ export class Sfx {
     f.type = filter;
     f.frequency.value = freq;
     f.Q.value = q;
-    src.connect(f).connect(this.env(r.ctx, r.out, t, peak, 0.001, decay));
+    src.connect(f).connect(this.env(r.ctx, out ?? r.out, t, peak, 0.001, decay));
     // zufälliger Startpunkt im Rauschen = jedes Klacken klingt minimal anders
     src.start(t, Math.random() * 0.9, decay + 0.05);
   }
@@ -371,7 +389,319 @@ export class Sfx {
     this.tone('sine', f * 1.5, f * 1.5, r.t + 0.05, 0.06, 0.18);
   }
 
-  /** Gutes Event-Ergebnis */
+  // --- Bausteine für die Belohnungsklänge ---
+
+  /** Ausgang mit etwas Raumhall (send = Anteil Hall) */
+  private space(send: number): AudioNode | null {
+    const r = this.ready();
+    if (!r) return null;
+    const g = r.ctx.createGain();
+    g.connect(r.out);
+    if (this.room) {
+      const s = r.ctx.createGain();
+      s.gain.value = send;
+      g.connect(s).connect(this.room);
+    }
+    return g;
+  }
+
+  /** Hüllkurve mit Haltephase: einblenden, halten, ausblenden */
+  private held(ctx: AudioContext, out: AudioNode, t: number, peak: number, attack: number, hold: number, release: number): GainNode {
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(peak, t + attack);
+    g.gain.setValueAtTime(peak, t + attack + hold);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + attack + hold + release);
+    g.connect(out);
+    return g;
+  }
+
+  /** Gefiltertes Rauschen mit Haltephase; f1 lässt den Filter wandern */
+  private noiseHeld(
+    t: number,
+    out: AudioNode,
+    o: { peak: number; attack: number; hold: number; release: number; type: BiquadFilterType; f0: number; f1?: number; q?: number },
+  ): BiquadFilterNode | null {
+    const r = this.ready();
+    if (!r || !this.noise) return null;
+    const dur = o.attack + o.hold + o.release;
+    const src = r.ctx.createBufferSource();
+    src.buffer = this.noise;
+    src.loop = true;
+    const f = r.ctx.createBiquadFilter();
+    f.type = o.type;
+    f.Q.value = o.q ?? 0.7;
+    f.frequency.setValueAtTime(o.f0, t);
+    if (o.f1) f.frequency.exponentialRampToValueAtTime(o.f1, t + dur);
+    src.connect(f).connect(this.held(r.ctx, out, t, o.peak, o.attack, o.hold, o.release));
+    src.start(t, Math.random() * 0.9);
+    src.stop(t + dur + 0.05);
+    return f;
+  }
+
+  /** Angeschlagenes Metall/Glas: Teiltöne [Verhältnis, Lautstärke, Abklingzeit]; leicht verstimmte Paare schweben */
+  private strike(t: number, f: number, peak: number, partials: readonly (readonly [number, number, number])[], out: AudioNode): void {
+    for (const [ratio, amp, decay] of partials) {
+      this.tone('sine', f * ratio, f * ratio, t, peak * amp, decay, out, 0.001);
+      this.tone('sine', f * ratio * 1.0025, f * ratio * 1.0025, t, peak * amp * 0.5, decay * 0.8, out, 0.001);
+    }
+    this.hiss(t, peak * 0.6, 0.004, 'highpass', 5000, 0.7, out);
+  }
+
+  /** Abspielen eines frisch berechneten Puffers über einen Filter */
+  private buffer(t: number, data: Float32Array, out: AudioNode, gain: number, filters: BiquadFilterNode[]): void {
+    const r = this.ready();
+    if (!r) return;
+    const buf = r.ctx.createBuffer(1, data.length, r.ctx.sampleRate);
+    buf.getChannelData(0).set(data);
+    const src = r.ctx.createBufferSource();
+    src.buffer = buf;
+    const g = r.ctx.createGain();
+    g.gain.value = gain;
+    let node: AudioNode = src;
+    for (const f of filters) node = node.connect(f);
+    node.connect(g).connect(out);
+    src.start(t);
+  }
+
+  private filter(type: BiquadFilterType, freq: number, q = 0.7): BiquadFilterNode | null {
+    const r = this.ready();
+    if (!r) return null;
+    const f = r.ctx.createBiquadFilter();
+    f.type = type;
+    f.frequency.value = freq;
+    f.Q.value = q;
+    return f;
+  }
+
+  /**
+   * Knisterndes Papier: einzelne Knackser in zufälligen Abständen, deren Lautstärke stark streut
+   * (wenige laute, viele leise). grips = [Start, Länge] in Sekunden, je Griff schwillt die Dichte an und ab.
+   */
+  private paper(sr: number, dur: number, grips: readonly (readonly [number, number])[], rate: number, bed = 0.025): Float32Array {
+    const n = Math.floor(sr * dur);
+    const d = new Float32Array(n);
+    let amp = 0;
+    let fall = 0;
+    let max = 1e-6;
+    for (let i = 0; i < n; i++) {
+      const s = i / sr;
+      let dens = 0;
+      for (const [g0, gl] of grips) {
+        const x = (s - g0) / gl;
+        if (x > 0 && x < 1) dens = Math.max(dens, Math.sin(Math.PI * x));
+      }
+      if (Math.random() < (dens * dens * rate) / sr) {
+        // gedeckelt, damit kein einzelner Knackser heraussticht
+        amp = Math.min(0.7, amp + 0.06 + 0.45 * Math.random() ** 3);
+        fall = Math.exp(-1 / (sr * this.rnd(0.0015, 0.008)));
+      }
+      amp *= fall;
+      d[i] = (Math.random() * 2 - 1) * (amp + bed * dens);
+      max = Math.max(max, Math.abs(d[i]!));
+    }
+    for (let i = 0; i < n; i++) d[i]! /= max;
+    return d;
+  }
+
+  // --- Belohnungen ---
+
+  /** Chef-Aufgabe erledigt: zweimal aufs Stempelkissen, ein satter Stempel auf den Tisch, dann die Hotelklingel. */
+  bossDone(): void {
+    const r = this.ready();
+    const out = this.space(0.18);
+    if (!r || !out) return;
+    // Stempelkissen: weich und gedämpft
+    for (const dt of [0, 0.12]) {
+      this.tone('sine', 210, 150, r.t + dt, 0.2, 0.05, out);
+      this.hiss(r.t + dt, 0.1, 0.03, 'lowpass', 800, 0.7, out);
+    }
+    // Stempel: Tischplatte dröhnt, Holzgriff klackt, Papier gibt einen kurzen Klatscher
+    const s = r.t + 0.34;
+    this.tone('sine', 140, 62, s, 0.6, 0.13, out);
+    this.tone('triangle', 460, 320, s, 0.12, 0.05, out);
+    this.hiss(s, 0.3, 0.014, 'bandpass', 1900, 0.8, out);
+    this.hiss(s, 0.14, 0.07, 'lowpass', 500, 0.7, out);
+    // Hotelklingel: ein heller Schlag mit unharmonischen Teiltönen, lang ausklingend
+    this.strike(s + 0.3, 1720, 0.13, [[1, 1, 1.1], [2.38, 0.4, 0.55], [4.1, 0.16, 0.25], [6.3, 0.06, 0.12]], out);
+  }
+
+  /** Papierkorb leeren: ein kurzes, weiches Papierknüllen. */
+  crumple(): void {
+    const r = this.ready();
+    const out = this.space(0.08);
+    // sanft und dumpf: kaum Höhen, die Knackser gehen im weichen Rascheln auf
+    const hp = this.filter('highpass', 300, 0.5);
+    const lp = this.filter('lowpass', 2400, 0.5);
+    const lp2 = this.filter('lowpass', 2400, 0.5);
+    if (!r || !out || !hp || !lp || !lp2) return;
+    // ein kurzer Knüll: schnell zupacken, langsamer loslassen
+    const grips = [[0, 0.12], [0.06, 0.3]] as const;
+    this.buffer(r.t, this.paper(r.ctx.sampleRate, 0.38, grips, 600, 0.35), out, 0.3, [hp, lp, lp2]);
+  }
+
+  /** Espresso: Siebträger schabt in die Brühgruppe und rastet ein, die Pumpe brummt, Kaffee läuft in die Tasse. */
+  espresso(): void {
+    const r = this.ready();
+    const out = this.space(0.12);
+    if (!r || !out) return;
+    // Eindrehen: Metall schabt an Metall, dann rastet er ein
+    this.noiseHeld(r.t, out, { peak: 0.05, attack: 0.03, hold: 0.1, release: 0.04, type: 'bandpass', f0: 2600, f1: 4200, q: 5 });
+    this.strike(r.t + 0.17, 940, 0.07, [[1, 1, 0.08], [2.53, 0.7, 0.06], [4.16, 0.4, 0.04]], out);
+    this.tone('sine', 220, 140, r.t + 0.17, 0.14, 0.05, out);
+    // Vibrationspumpe: schnarrendes 50-Hz-Brummen
+    const p = r.t + 0.4;
+    const pumpLp = this.filter('lowpass', 750, 1.2);
+    if (!pumpLp) return;
+    pumpLp.connect(out);
+    for (const [type, f, peak] of [['sawtooth', 50, 0.14], ['square', 100.4, 0.035]] as const) {
+      const osc = r.ctx.createOscillator();
+      osc.type = type;
+      osc.frequency.value = f;
+      osc.connect(this.held(r.ctx, pumpLp, p, peak, 0.06, 0.62, 0.12));
+      osc.start(p);
+      osc.stop(p + 0.85);
+    }
+    // feiner Kaffeestrahl und Blasen in der Tasse
+    this.noiseHeld(p + 0.22, out, { peak: 0.025, attack: 0.1, hold: 0.35, release: 0.15, type: 'bandpass', f0: 1500, q: 0.8 });
+    for (let i = 0; i < 16; i++) {
+      const tt = p + 0.24 + Math.random() * 0.55;
+      const f = this.rnd(550, 1250);
+      this.tone('sine', f, f * this.rnd(1.4, 1.9), tt, this.rnd(0.025, 0.06), this.rnd(0.015, 0.035), out, 0.002);
+    }
+  }
+
+  /** VIP-Mail erledigt: Patrone klonkt in die Rohrpost, das Rohr saugt sie fauchend weg, weit hinten kommt sie an. */
+  vipSent(): void {
+    const r = this.ready();
+    const out = this.space(0.15);
+    if (!r || !out) return;
+    // Patrone in die Klappe: hohles Klonk
+    this.tone('sine', 280, 250, r.t, 0.35, 0.12, out);
+    this.tone('sine', 720, 700, r.t, 0.12, 0.08, out);
+    this.hiss(r.t, 0.2, 0.02, 'bandpass', 1400, 1, out);
+    // Sog: Rauschen durchs Rohr; Resonanzen des Rohrs als schmale Bänder, wandert weg (tiefer, leiser)
+    const s = r.t + 0.18;
+    for (const [f, peak] of [[0, 0.3], [390, 0.3], [780, 0.2], [1170, 0.12]] as const) {
+      this.noiseHeld(s, out, f === 0
+        ? { peak, attack: 0.05, hold: 0.06, release: 0.5, type: 'bandpass', f0: 2400, f1: 600, q: 0.8 }
+        : { peak, attack: 0.05, hold: 0.06, release: 0.5, type: 'bandpass', f0: f, f1: f * 0.8, q: 9 });
+    }
+    // Ankunft am anderen Ende: gedämpftes Rumms
+    const lp = this.filter('lowpass', 450);
+    if (!lp) return;
+    lp.connect(out);
+    this.tone('sine', 150, 70, s + 0.75, 0.3, 0.08, lp);
+    this.tone('triangle', 300, 260, s + 0.75, 0.12, 0.05, lp);
+  }
+
+  /** Achievement: Glockenspiel „ta-daa“ mit Glitzern. */
+  achievement(): void {
+    const r = this.ready();
+    const out = this.space(0.25);
+    if (!r || !out) return;
+    const glock = [[1, 1, 0.9], [2.76, 0.22, 0.35], [5.4, 0.07, 0.12]] as const;
+    this.strike(r.t, 1567.98, 0.09, glock, out);
+    for (const f of [2093, 2637.02, 3135.96]) this.strike(r.t + 0.13, f, 0.075, glock, out);
+    // weicher Akkord darunter
+    for (const f of [523.25, 659.25]) this.tone('sine', f, f, r.t + 0.13, 0.05, 0.8, out, 0.02);
+    // Glitzern
+    for (let i = 0; i < 9; i++) {
+      const f = this.rnd(5000, 8500);
+      this.tone('sine', f, f, r.t + 0.2 + i * 0.055 + this.rnd(0, 0.02), 0.03 * (1 - i / 10), 0.07, out, 0.001);
+    }
+  }
+
+  /** Kauf-Meilenstein: mechanische Registrierkasse, Taste ratscht, „Ching“, Schublade rollt raus, Münzen klimpern. */
+  register(): void {
+    const r = this.ready();
+    const out = this.space(0.15);
+    if (!r || !out) return;
+    // Taste: Ratsche mit vier schnellen Zähnen
+    for (let i = 0; i < 4; i++) {
+      this.hiss(r.t + i * 0.019, 0.14 * (1 - i * 0.15), 0.009, 'bandpass', this.rnd(2500, 3200), 3, out);
+      this.tone('triangle', 1100, 900, r.t + i * 0.019, 0.025, 0.012, out);
+    }
+    // Klingel
+    const c = r.t + 0.1;
+    this.strike(c, 2850, 0.12, [[1, 1, 0.9], [2.13, 0.45, 0.4], [3.35, 0.2, 0.2]], out);
+    // Schublade: rollt mit Rattern raus und schlägt an
+    this.noiseHeld(c + 0.02, out, { peak: 0.07, attack: 0.03, hold: 0.14, release: 0.04, type: 'lowpass', f0: 600 });
+    for (let i = 0; i < 6; i++) this.hiss(c + 0.03 + i * 0.03, 0.05, 0.012, 'bandpass', this.rnd(700, 1100), 3, out);
+    const s = c + 0.22;
+    this.tone('sine', 130, 75, s, 0.28, 0.08, out);
+    this.hiss(s, 0.12, 0.02, 'bandpass', 1500, 1, out);
+    // Münzen im Fach
+    for (let i = 0; i < 5; i++) {
+      this.strike(s + 0.01 + Math.random() * 0.14, this.rnd(3600, 6200), 0.03, [[1, 1, 0.09], [1.62, 0.5, 0.06]], out);
+    }
+  }
+
+  /**
+   * Knarzendes Scharnier: Haftreibung als Impulsfolge, deren Takt unruhig schwankt
+   * (langsam anlaufen, schneller, wieder langsamer). Die Resonanzen kommen über Filter dazu.
+   */
+  private creak(sr: number, dur: number): Float32Array {
+    const n = Math.floor(sr * dur);
+    const d = new Float32Array(n);
+    let phase = 0;
+    let rate = 25;
+    for (let i = 0; i < n; i++) {
+      const x = i / n;
+      const target = 25 + 75 * Math.sin(Math.PI * x);
+      rate += (target - rate) * 0.002 + (Math.random() - 0.5) * 1.2;
+      rate = Math.max(12, Math.min(130, rate));
+      phase += rate / sr;
+      if (phase >= 1) {
+        phase -= 1;
+        d[i] = (0.6 + 0.4 * Math.random()) * Math.sqrt(Math.sin(Math.PI * x));
+      }
+    }
+    return d;
+  }
+
+  /** Kündigen: Klinke runter, die Tür knarzt auf, fällt hinter einem ins Schloss, Flurhall. */
+  quit(): void {
+    const r = this.ready();
+    const out = this.space(0.45);
+    if (!r || !out) return;
+    // Klinke: runter und Falle schnappt zurück
+    this.strike(r.t, 2100, 0.06, [[1, 1, 0.04], [2.7, 0.5, 0.025]], out);
+    this.strike(r.t + 0.07, 1800, 0.05, [[1, 1, 0.04], [2.7, 0.5, 0.025]], out);
+    // Scharnier knarzt
+    const c = r.t + 0.16;
+    const creak = this.creak(r.ctx.sampleRate, 0.7);
+    for (const [f, q, gain] of [[650, 14, 14], [1450, 12, 9], [2600, 10, 3.5]] as const) {
+      const bp = this.filter('bandpass', f, q);
+      if (bp) this.buffer(c, creak, out, gain, [bp]);
+    }
+    // Tür schwingt zu und knallt: Türblatt wummert, Holz klopft, harter Anschlag
+    this.noiseHeld(c + 0.75, out, { peak: 0.05, attack: 0.14, hold: 0.02, release: 0.05, type: 'lowpass', f0: 300, f1: 500 });
+    const s = c + 0.95;
+    this.tone('sine', 78, 40, s, 0.75, 0.3, out);
+    this.tone('sine', 190, 120, s, 0.3, 0.12, out);
+    this.tone('triangle', 320, 270, s, 0.12, 0.06, out);
+    this.hiss(s, 0.45, 0.035, 'lowpass', 2400, 0.7, out);
+    this.hiss(s, 0.18, 0.008, 'highpass', 3000, 0.7, out);
+    this.strike(s + 0.012, 2300, 0.05, [[1, 1, 0.03], [2.7, 0.5, 0.02]], out);
+    // Rahmen klappert nach
+    for (let i = 0; i < 4; i++) {
+      this.hiss(s + 0.08 + i * 0.045 + this.rnd(0, 0.015), 0.09 * 0.65 ** i, 0.016, 'bandpass', this.rnd(1100, 1800), 4, out);
+    }
+  }
+
+  /** Pager-Einsatz gelöst: Quittier-Taste klickt, das Gerät piepst „alles klar“ (gleiche Stimme wie der Alarm, aber aufwärts). */
+  pagerAck(): void {
+    const r = this.ready();
+    const lp = this.lowpass(5000);
+    if (!r || !lp) return;
+    this.hiss(r.t, 0.12, 0.008, 'bandpass', 3500, 2);
+    this.tone('triangle', 900, 700, r.t, 0.05, 0.015);
+    this.tone('square', 2175, 2175, r.t + 0.08, 0.06, 0.06, lp, 0.004);
+    this.tone('square', 2900, 2900, r.t + 0.17, 0.07, 0.16, lp, 0.004);
+  }
+
+  /** Incident-Schritt geschafft */
   good(): void {
     this.upgrade();
   }

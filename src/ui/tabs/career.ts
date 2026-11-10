@@ -75,7 +75,7 @@ export function careerTab(): Tab {
           onClick: () => {
             if (!quitJob(ctx.state)) return;
             ctx.saver.saveNow(); // sonst macht Schließen vor dem Autosave die Kündigung rückgängig
-            ctx.sfx.milestone();
+            ctx.sfx.quit();
             ctx.haptic('milestone');
             const c = companyOf(ctx.state.prestige.company);
             if (c.quirk) ctx.log.write('warn', `hr[42]: Neue Firma, neue Sitten: „${c.quirk.title}“ (${describeQuirk(c.quirk.mods)}).`);

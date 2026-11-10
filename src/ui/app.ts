@@ -238,7 +238,7 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
     ctx.log.write('ok', `trash[99]: Altpapier-Pfand eingelöst: +${formatNumber(bonus)} Tickets.`);
     const p = fx.rel(trash);
     fx.floater(p.x + p.w / 2, p.y + p.h / 2, `+${formatNumber(bonus)}`, true);
-    ctx.sfx.milestone();
+    ctx.sfx.crumple();
     ctx.haptic('milestone');
     juice(tickets, POP, 320);
   });
