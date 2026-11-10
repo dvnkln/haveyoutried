@@ -2,9 +2,14 @@ name: Pages
 
 # Bei jedem Push auf main: Tests, Build, Veröffentlichung auf GitHub Pages.
 # So ist unter https://dvnkln.github.io/haveyoutried/ immer der aktuelle Prototyp spielbar.
+# Reine README-/Doku-Änderungen lösen keinen Build aus, die zeigt GitHub direkt an.
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - 'README.md'
+      - 'LICENSE'
+      - 'docs/**'
   workflow_dispatch:
 
 permissions:
