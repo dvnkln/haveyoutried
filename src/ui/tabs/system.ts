@@ -34,6 +34,9 @@ function onSwipe(el: HTMLElement, step: (dir: number) => void, hooks: { down?():
   el.addEventListener('pointercancel', up);
 }
 
+/** Quellcode des Spiels (AGPL) */
+const SOURCE_URL = 'https://github.com/dvnkln/haveyoutried';
+
 const achievementName = (id: string) => ACHIEVEMENTS.find((a) => a.id === id)?.name ?? id;
 
 type SwitchType = 'clicky' | 'tactile' | 'linear';
@@ -381,6 +384,11 @@ export function systemTab(): Tab {
           class: 'hint',
           text: `Autosave alle ${CONFIG.autosaveMs / 1_000} s. Kündigen geht im Karriere-Tab.`,
         }),
+        // freie Software (AGPL): der Quellcode ist einen Tipp entfernt
+        h('p', { class: 'hint source-link' }, [
+          h('a', { href: SOURCE_URL, target: '_blank', rel: 'noopener', text: 'Quellcode auf GitHub' }),
+          ' · freie Software unter der AGPL. Pull Requests werden gelesen. Irgendwann.',
+        ]),
       ]);
     },
     render() {

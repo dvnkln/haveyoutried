@@ -1989,6 +1989,15 @@ button {
 .conf-group > .setting:has(.volume) > div:first-child:not(:has(*)) {
   white-space: nowrap;
 }
+.source-link {
+  margin-top: 8px;
+}
+.source-link a {
+  color: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
 .actions-reset {
   margin-top: 12px;
 }
