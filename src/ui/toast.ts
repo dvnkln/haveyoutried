@@ -1,3 +1,4 @@
+import { hintShowing } from './blocked';
 import { h } from './dom';
 
 const VISIBLE_MS = 3_200;
@@ -14,6 +15,12 @@ export function createToaster(): { el: HTMLElement; show(title: string, text: st
   let showing = false;
 
   const next = () => {
+    // ein Hinweis vom Vorgänger hängt: Meldung wartet, bis er bestätigt ist
+    if (queue.length && hintShowing()) {
+      showing = true;
+      setTimeout(next, 300);
+      return;
+    }
     const item = queue.shift();
     if (!item) {
       showing = false;

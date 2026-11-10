@@ -163,10 +163,14 @@ export class Sfx {
     return this.ctx ? this.ctx.state : 'nicht gestartet';
   }
 
+  /** Zeitpunkt (performance.now) des letzten Klangs: wer schon einen eigenen Ton hatte, bekommt kein Klick-Tick dazu */
+  lastPlayed = 0;
+
   /** Kontext, falls Sound an und Audio freigegeben; setzt die Lautstärke. */
   private ready(): { ctx: AudioContext; out: GainNode; t: number } | null {
     const s = this.settings();
     if (!s.sound || !this.ctx || !this.master || this.ctx.state !== 'running') return null;
+    this.lastPlayed = performance.now();
     this.master.gain.value = s.volume * 0.8;
     return { ctx: this.ctx, out: this.master, t: this.ctx.currentTime + 0.005 };
   }
@@ -404,5 +408,101 @@ export class Sfx {
     const r = this.ready();
     if (!r) return;
     this.hiss(r.t, 0.12, 0.015, 'bandpass', 5000, 2);
+  }
+
+  // --- Strom: Netzschalter, Leuchtstoffröhren, Röhrenmonitor ---
+
+  /** Netzbrummen (100 Hz und Obertöne), weich ein- und ausgeblendet */
+  private hum(t: number, peak: number, dur: number, attack = 0.06): void {
+    const lp = this.lowpass(420);
+    if (!lp) return;
+    this.tone('sawtooth', 100, 100, t, peak, dur, lp, attack);
+    this.tone('sine', 100, 100, t, peak * 0.8, dur, undefined, attack);
+  }
+
+  /** Entmagnetisieren beim Einschalten: tiefes, schwankendes „Bwoing“ */
+  private degauss(t: number, dur: number, peak: number): void {
+    const r = this.ready();
+    if (!r) return;
+    const { ctx } = r;
+    const osc = ctx.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(62, t);
+    osc.frequency.exponentialRampToValueAtTime(48, t + dur);
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 260;
+    // Tremolo, das langsamer wird: die Spule klingt aus
+    const trem = ctx.createGain();
+    trem.gain.value = 0.55;
+    const lfo = ctx.createOscillator();
+    lfo.frequency.setValueAtTime(17, t);
+    lfo.frequency.linearRampToValueAtTime(5, t + dur);
+    const depth = ctx.createGain();
+    depth.gain.value = 0.45;
+    lfo.connect(depth).connect(trem.gain);
+    osc.connect(lp).connect(trem).connect(this.env(ctx, r.out, t, peak, 0.015, dur));
+    for (const o of [osc, lfo]) {
+      o.start(t);
+      o.stop(t + dur + 0.1);
+    }
+  }
+
+  /** Netzschalter am Startbildschirm: kräftiges Kipp-Klack mit Nachfedern */
+  powerKlack(): void {
+    const r = this.ready();
+    if (!r) return;
+    this.hiss(r.t, 0.55, 0.03, 'bandpass', 1300, 1.4);
+    this.tone('sine', 150, 55, r.t, 0.4, 0.08);
+    this.hiss(r.t + 0.05, 0.16, 0.018, 'bandpass', 2600, 2);
+  }
+
+  /** Leuchtstoffröhren an: Starter tickt, Röhre zündet mit leisem Ping, Brummen klingt aus. slow = zwei Röhren nacheinander */
+  tubeOn(slow = false): void {
+    const r = this.ready();
+    if (!r) return;
+    const tubes: { ticks: number[]; at: number }[] = slow
+      ? [
+          { ticks: [0, 0.15, 0.42], at: 0.5 },
+          { ticks: [1.18, 1.37], at: 1.55 },
+        ]
+      : [{ ticks: [0, 0.09, 0.27], at: 0.33 }];
+    for (const tube of tubes) {
+      for (const dt of tube.ticks) this.hiss(r.t + dt, 0.2, 0.012, 'bandpass', this.rnd(2800, 3600), 4);
+      this.tone('sine', 3150, 3100, r.t + tube.at, 0.025, 0.3);
+      this.hum(r.t + tube.at, 0.035, slow ? 1.6 : 1.1);
+    }
+  }
+
+  /** Leuchtstoffröhren aus: Relais-Klack, Brummen fällt ab */
+  tubeOff(): void {
+    const r = this.ready();
+    if (!r) return;
+    this.hiss(r.t, 0.3, 0.02, 'bandpass', 1800, 2);
+    this.tone('sine', 110, 70, r.t, 0.18, 0.05);
+    this.hum(r.t, 0.03, 0.45, 0.002);
+  }
+
+  /** Röhrenmonitor an: dumpfes „Tunk“, Entmagnetisieren, leises hohes Pfeifen. slow = erster Start, volles Bwoing */
+  crtOn(slow = false): void {
+    const r = this.ready();
+    if (!r) return;
+    this.tone('sine', 95, 42, r.t, 0.45, 0.14);
+    this.hiss(r.t, 0.12, 0.02, 'lowpass', 600);
+    if (slow) this.degauss(r.t + 0.45, 1.0, 0.32);
+    else this.degauss(r.t + 0.08, 0.5, 0.22);
+    // Zeilentrafo: fast unhörbar hoch, kommt mit dem Bild
+    this.tone('sine', 11800, 12000, r.t + (slow ? 0.4 : 0.05), 0.012, slow ? 1.6 : 0.9, undefined, 0.2);
+    // Bild baut sich auf: kurzes Knistern der Bildröhre
+    this.hiss(r.t + (slow ? 0.35 : 0.06), 0.05, slow ? 0.5 : 0.25, 'highpass', 4500);
+  }
+
+  /** Röhrenmonitor aus: „Zapp“, Pfeifen fällt ab */
+  crtOff(): void {
+    const r = this.ready();
+    if (!r) return;
+    this.hiss(r.t, 0.22, 0.13, 'highpass', 3000);
+    this.tone('sine', 220, 40, r.t, 0.22, 0.16);
+    this.tone('sine', 12000, 7000, r.t + 0.02, 0.012, 0.6);
   }
 }

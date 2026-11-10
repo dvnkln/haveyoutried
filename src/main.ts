@@ -2,6 +2,8 @@ import './styles/main.css';
 import { BOOT_LINES, RETURN_LINES } from './content/syslog';
 import { awayRule, BOSS_REPORT_MIN_MS, bossReport } from './content/report';
 import { createAfk } from './ui/afk';
+import { runBoot } from './ui/boot';
+import { createPower } from './ui/power';
 import { startTutorial } from './ui/tutorial';
 import { startLoop } from './core/loop';
 import { applyOfflineProgress, restShare, type OfflineReport } from './core/offline';
@@ -42,6 +44,23 @@ for (const type of ['gesturestart', 'gesturechange'] as const) document.addEvent
 for (const type of ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown'] as const) {
   document.addEventListener(type, () => sfx.unlock(), { capture: true, passive: true });
 }
+// Jeder Knopf klingt: wer beim Klicken keinen eigenen Ton spielt (Schließen, OK, Zettel …), bekommt ein leises Tick.
+// Geprüft wird nach den Klick-Handlern (auch nach deren Microtasks), ob seit dem Antippen schon etwas zu hören war.
+// Tastatur (eigene Anschläge) und Netzschalter (Klack) ausgenommen; Bezug ist das letzte Antippen bzw. die letzte Taste.
+let gestureAt = 0;
+for (const type of ['pointerdown', 'keydown'] as const) {
+  document.addEventListener(type, () => (gestureAt = performance.now()), { capture: true, passive: true });
+}
+document.addEventListener('click', (e) => {
+  // nur echte Klicks (Finger, Maus, Enter/Leertaste), keine aus dem Code ausgelösten
+  if (!e.isTrusted) return;
+  const btn = e.target instanceof Element ? e.target.closest('button, [role="button"]') : null;
+  if (!btn || btn.closest('.keyboard-wrap, .splash')) return;
+  const since = gestureAt;
+  setTimeout(() => {
+    if (sfx.lastPlayed < since) sfx.tick();
+  }, 0);
+});
 const saver = new Saver(
   () => state,
   () => {
@@ -54,6 +73,8 @@ const saver = new Saver(
 const root = document.getElementById('app');
 if (!root) throw new Error('#app fehlt');
 const ctx = { state, log, history, saver, sfx, haptic };
+// Bürolicht und Röhrenmonitor (vor allen anderen Zuhörern, damit Weck-Gesten nicht am Ticket tippen)
+const power = createPower(root, sfx);
 const app = mountApp(root, ctx, [logTab(), infraTab(), upgradesTab(), careerTab(), systemTab()]);
 startFlavor(ctx, app);
 mountIncidentOverlay(ctx);
@@ -65,10 +86,11 @@ settleAbandoned(state, rates(state));
 
 // Nur im Test-Build (vite build --mode e2e): ?incident=raid|spam|… startet das Minispiel direkt.
 // Im normalen Build fällt der Block samt Abfrage komplett weg.
-if (import.meta.env.MODE === 'e2e') {
-  const forced = new URLSearchParams(location.search).get('incident');
+const e2e = import.meta.env.MODE === 'e2e' ? new URLSearchParams(location.search) : null;
+const startForcedIncident = () => {
+  const forced = e2e?.get('incident');
   if (forced && isIncidentId(forced)) setTimeout(() => startIncident(state, forced), 1_200);
-}
+};
 
 for (const line of BOOT_LINES) log.template(line);
 if (loaded) log.write('info', 'helpdesk[1337]: savegame restored from /var/lib/helpdesk');
@@ -81,8 +103,9 @@ if (revaluedFrom !== undefined) {
   delete state.flags[EXP_REVALUED_FLAG];
 }
 
-const showOfflineReport = (r: OfflineReport) => {
-  if (r.gained <= 0) return;
+/** Bericht über die Abwesenheit; onClose kommt auch, wenn es nichts zu berichten gibt */
+const showOfflineReport = (r: OfflineReport, onClose?: () => void) => {
+  if (r.gained <= 0) return onClose?.();
   log.template(pick(RETURN_LINES));
   // kurz weg: knappe Meldung; länger weg: der Chef schreibt eine Mail mit „ein paar Fragen“
   if (r.elapsedMs < BOSS_REPORT_MIN_MS) {
@@ -93,6 +116,7 @@ const showOfflineReport = (r: OfflineReport) => {
         `Abwesend: ${formatDuration(r.elapsedMs)}`,
       ],
       actions: [{ label: 'Zur Kenntnis genommen', primary: true }],
+      onClose,
     });
     return;
   }
@@ -118,12 +142,30 @@ const showOfflineReport = (r: OfflineReport) => {
       h('p', { class: 'bm-sig', text: mail.signature }),
     ],
     actions: [{ label: mail.button, primary: true }],
+    onClose,
   });
 };
-if (startReport) showOfflineReport(startReport);
 
 // Seite offen, aber niemand da: Licht aus, Produktion wie bei Abwesenheit
-const afk = createAfk(state, log, showOfflineReport);
+const afk = createAfk(state, log, power, (r) => showOfflineReport(r));
+const started = (openTool = false) => {
+  afk.booted();
+  app.start(openTool);
+  startForcedIncident();
+};
+// Jeder Start: Splash, Zettel/Chef-Mail, Licht, Monitor. Die Testsuite (e2e-Build) überspringt das, außer mit ?boot
+if (e2e && !e2e.has('boot')) {
+  started(true);
+  if (startReport) showOfflineReport(startReport);
+} else {
+  void runBoot({
+    power,
+    sfx,
+    log,
+    first: !loaded,
+    report: () => new Promise((done) => (startReport ? showOfflineReport(startReport, done) : done())),
+  }).then(() => started());
+}
 const loop = startLoop(
   (dt) => afk.update(dt),
   () => app.render(),

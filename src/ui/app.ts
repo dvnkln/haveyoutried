@@ -18,6 +18,9 @@ import { createToaster } from './toast';
 import { BUFF_HELP, BUFF_LABELS } from '../content/events';
 import { companyOf } from '../content/companies';
 import { TRASH_LINES } from '../content/props';
+import { POWER_HINT, WALLPAPER_MARKS } from '../content/boot';
+import { paintWall } from './wallpaper';
+import { achievementCount } from '../core/achievements';
 import { pick } from '../util';
 
 export interface AppContext {
@@ -43,6 +46,8 @@ export interface Tab {
 }
 
 export interface App {
+  /** Monitor ist an: Desktop steht; open = Werkzeug gleich öffnen (sonst mit dem ersten Anschlag) */
+  start(open?: boolean): void;
   render(): void;
   popCounter(): void;
   toast(title: string, text: string): void;
@@ -129,14 +134,29 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
   const screen = h('div', { class: 'screen' });
   const desk = createDesk(ctx, fx, () => root, () => screen);
   desk.promptSlot.replaceChildren(promptUser, ':~$ ');
-  screen.append(h('div', { class: 'desktop' }, [icons, desk.work, desk.lastClosed]), h('div', { class: 'scanlines', 'aria-hidden': 'true' }));
+  // Hintergrundbild: je Firma oder aus der Sammlung (System), dazu ein Wasserzeichen, das bei jedem Start ein anderes Problem meldet
+  const [markTitle, markText] = pick(WALLPAPER_MARKS);
+  const wallpaper = h('div', { class: 'wallpaper', 'aria-hidden': 'true' }, [
+    h('div', { class: 'wp-mark' }, [h('b', { text: markTitle }), h('span', { text: markText })]),
+  ]);
+  let wallKey = '';
+  let wallChecked = '';
+  // bis zum ersten Anschlag ist kein Werkzeug offen: nur Hintergrundbild und Apps
+  screen.append(h('div', { class: 'desktop no-tool' }, [wallpaper, icons, desk.work, desk.lastClosed]), h('div', { class: 'scanlines', 'aria-hidden': 'true' }));
 
   const led = h('span', { class: 'led', 'aria-hidden': 'true' });
   // Monitor-Upgrade: neues Modell statt zweitem Bildschirm
   const brand = h('span', { class: 'brand', text: 'HYT-2000' });
   const monitor = h('div', { class: 'monitor' }, [
     screen,
-    h('div', { class: 'chin' }, [h('span', { class: 'vents', 'aria-hidden': 'true' }), brand, led]),
+    h('div', { class: 'chin' }, [
+      h('span', { class: 'vents', 'aria-hidden': 'true' }),
+      brand,
+      led,
+      // Netzschalter: schaltet den Monitor ein und aus (power.ts), Hinweis darauf erst, wenn jemand ihn sucht
+      h('button', { class: 'mon-power', type: 'button', 'aria-label': 'Monitor ein/aus' }),
+      h('span', { class: 'tap-hint power-hint', 'aria-hidden': 'true', text: POWER_HINT }),
+    ]),
     h('div', { class: 'frost', 'aria-hidden': 'true' }),
   ]);
   const monitorArea = h('section', { class: 'monitor-area' }, [
@@ -277,7 +297,6 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
 
   root.replaceChildren(header, monitorArea, deskbar, desk.keyboard, sheet, pager.el, toaster.el, fx.el);
   const background = [header, monitorArea, deskbar, desk.keyboard];
-  desk.start();
 
   // Toasts enden über der Tastatur
   const kbHeight = () => root.style.setProperty('--kb-h', `${desk.keyboard.offsetHeight}px`);
@@ -323,8 +342,17 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
   });
 
   return {
+    start(open = false) {
+      desk.start(open);
+    },
     render() {
       const s = ctx.state;
+      // nur neu zeichnen, wenn sich Auswahl, Firma oder Freischaltungen geändert haben (läuft jeden Frame)
+      const wallSig = `${s.settings.wallpaper}|${s.prestige.company}|${achievementCount(s)}`;
+      if (wallSig !== wallChecked) {
+        wallChecked = wallSig;
+        wallKey = paintWall(wallpaper, s, s.settings.wallpaper, wallKey);
+      }
       const shown = formatNumber(s.tickets);
       if (tickets.textContent !== shown) {
         // nur bei anderer Länge neu messen (sonst jeden Frame ein Reflow)

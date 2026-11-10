@@ -63,10 +63,11 @@ export const DUCK_LINES: string[] = [
 
 /** Ab und zu im Log, wenn jemand Alt+F4 drückt. */
 export const ALTF4_LINES: string[] = [
-  'kernel: Alt+F4 erkannt. Nice try. Der Helpdesk schließt sich nicht.',
+  'kernel: Alt+F4 erkannt. Fenster zu. Die Warteschlange ist noch offen.',
   'helpdesk[1337]: Alt+F4 zählt nicht als Feierabend.',
-  'windowmanager[2]: Alt+F4 ignoriert. Die Tickets bleiben.',
+  'windowmanager[2]: Fenster geschlossen. Das Ticket kommt wieder. Sie kommen immer wieder.',
   'helpdesk[1337]: Alt+F4? Netter Versuch. Der Anrufer ist noch dran.',
+  'helpdesk[1337]: Ticket per Alt+F4 gelöst. Laut Statistik eine der häufigsten Lösungen.',
 ];
 
 /** Ab und zu im Log, wenn jemand die Panik-Taste drückt. */

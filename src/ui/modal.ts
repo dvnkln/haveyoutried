@@ -20,6 +20,8 @@ export interface ModalOptions {
   armDelayMs?: number;
   /** Mit Esc/Zurück geschlossen, ohne Button */
   onDismiss?: () => void;
+  /** Nach jedem Schließen (Button oder Esc) */
+  onClose?: () => void;
   className?: string;
 }
 
@@ -31,12 +33,15 @@ export function showModal({
   stacked = false,
   armDelayMs = 0,
   onDismiss,
+  onClose,
   className = '',
 }: ModalOptions): () => void {
   const dialog = h('dialog', { class: `modal ${className}`.trim() });
   const close = () => {
+    if (!dialog.isConnected) return;
     dialog.close();
     dialog.remove();
+    onClose?.();
   };
 
   const buttons = actions.map((a) => {

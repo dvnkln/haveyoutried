@@ -1,5 +1,7 @@
 import { bus } from '../core/bus';
 import { CONFIG } from '../config';
+import { NEXT_TOOL_HINT, TOOL_HINT } from '../content/boot';
+import { HINT_DELAY_MS } from './power';
 import { CALLBACK_LINES, CALLERS, situationalCalls, type Call, type Line } from '../content/callers';
 import { topicPool } from '../content/topics';
 import { URGENT_LABELS, URGENT_TEXT } from '../content/events';
@@ -12,13 +14,13 @@ import { applyEffect, claimUrgent } from '../core/events';
 import { addTickets, bumpFlag, type GameState } from '../core/state';
 import { fill, pick, randInt } from '../util';
 import type { AppContext } from './app';
-import { h, juice, NUDGE, quip, setFlag, setText } from './dom';
+import { h, juice, NUDGE, POP, SHAKE, setFlag, setText } from './dom';
 import { formatNumber } from './format';
 import type { Fx } from './juice';
 import { describeEffect } from './pager';
 import { nextTicketNo, ticketId } from './history';
 import { createWork } from './work';
-import { gameBlocked } from './blocked';
+import { gameBlocked, gamePaused, hintShowing } from './blocked';
 import { attentionBusy } from './toast';
 import { quirkMods, scaledDelay } from '../core/quirks';
 
@@ -55,6 +57,7 @@ const GAG_COOLDOWN_MS = 20_000;
 /** Bis zu so vielen Klicks erscheint der Tipp-Hinweis bei längerer Pause wieder */
 const HINT_UNTIL_CLICKS = 60;
 const HINT_IDLE_MS = 20_000;
+const TAP_HINT = 'Tipp drauf! Jede Taste tippt am Ticket weiter';
 
 interface KeyDef {
   /** Taste auf der physischen Tastatur (KeyboardEvent.key in Großbuchstaben) */
@@ -86,7 +89,7 @@ const ROWS: KeyDef[][] = [
   ],
   [
     mod('CONTROL', 'Strg', 5),
-    mod('META', 'sudo', 5),
+    mod('META', 'Cmd', 5),
     mod('ALT', 'Alt', 5),
     { key: ' ', label: 'Leertaste (beheizt)', w: 25, cls: 'key-space' },
     mod('ALTGRAPH', 'AltGr', 5),
@@ -95,6 +98,26 @@ const ROWS: KeyDef[][] = [
     mod('CONTROLR', 'Strg', 5),
   ],
 ];
+
+/**
+ * Wie setTimeout, aber die Zeit steht, solange das Spiel pausiert (Hinweis vom Vorgänger, Dialog);
+ * el bekommt dann .paused, das CSS hält seine Animationen an. early() = sofort fertig.
+ */
+function pausableTimeout(ms: number, el: Element, done: () => void, early?: () => boolean): void {
+  let left = ms;
+  let last = performance.now();
+  const timer = window.setInterval(() => {
+    const now = performance.now();
+    const paused = gamePaused();
+    el.classList.toggle('paused', paused);
+    if (!paused) left -= now - last;
+    last = now;
+    if (left <= 0 || early?.()) {
+      clearInterval(timer);
+      done();
+    }
+  }, 100);
+}
 
 /**
  * Der Schreibtisch unter dem Monitor: Anrufer, Tastatur (jede Taste tippt die Support-Antwort weiter,
@@ -124,7 +147,8 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
   phone.addEventListener('animationend', (e) => {
     if (e.animationName === 'phone-ring') phone.classList.remove('ringing');
   });
-  const callerEl = h('div', { class: 'caller' }, [bubble]);
+  // bis der Monitor an ist, ruft niemand an
+  const callerEl = h('div', { class: 'caller quiet' }, [bubble]);
 
   // --- Arbeitsfenster auf dem Desktop (Mail, Ticket, Shell, Chat, Call, RDP, Web, Suche) ---
   // Gelöst: Bonus steigt aus dem Stempel auf, an Meilensteinen der Serie Konfetti und Fanfare.
@@ -203,7 +227,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
   keyboard.append(enter);
   const anyKey = keys.get('ANY');
   // Einstieg: Hinweis, dass hier getippt wird (verschwindet nach den ersten Anschlägen)
-  const hint = h('div', { class: 'tap-hint', hidden: '', text: 'Tipp drauf! Jede Taste tippt am Ticket weiter' });
+  const hint = h('div', { class: 'tap-hint', hidden: '', text: TAP_HINT });
   let i = 0;
   for (const el of keyboard.querySelectorAll<HTMLElement>('.key')) el.style.setProperty('--i', String(i++ % 14));
   const espressoHint = h('div', { class: 'tap-hint espresso-hint', hidden: '', text: '☕︎ Taste halten, der Espresso tippt. Zwei Daumen: doppelt.' });
@@ -342,7 +366,9 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
     urgentEl = el;
     ctx.sfx.unlockPing();
 
-    setTimeout(() => {
+    // Countdown steht, solange das Spiel pausiert (Hinweis vom Vorgänger, Dialog); erwischt = gleich fertig, sobald weggeklebt
+    pausableTimeout(CONFIG.urgentVisibleMs, el, () => finish(), () => claimed && !el.isConnected);
+    const finish = () => {
       if (!claimed) {
         // abgelaufen: beim Ausblenden nicht mehr antippbar (sonst doppelt kassiert)
         claimed = true;
@@ -358,7 +384,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
       }
       urgentEl = null;
       scheduleUrgent();
-    }, CONFIG.urgentVisibleMs);
+    };
   };
 
   /** Power-up eingesammelt: groß und kurz in der Mitte des Monitors, was es ist und was es tut */
@@ -415,23 +441,23 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
     cup.addEventListener('click', catchCup); // Tastatur und Screenreader
     r.append(cup);
     ctx.sfx.cup();
-    setTimeout(() => {
+    // Flug steht, solange das Spiel pausiert (z. B. der Hinweis zur Tasse hängt)
+    pausableTimeout(CONFIG.espresso.flightMs, cup, () => {
       if (!caught) {
         cup.remove();
         ctx.log.write('info', 'coffee[{pid}]: Tasse ist vorbeigeflogen. Jetzt trinkt sie der Praktikant.');
       }
       scheduleCup();
-    }, CONFIG.espresso.flightMs);
+    });
   };
 
   // --- Anschlag ---
   const lastGag: Record<string, number> = {};
-  const gag = (key: string, level: 'info' | 'warn', lines: string[], now: number, anchor: Element) => {
+  /** Sondertaste (Alt+F4, Panik): Spruch nur im Log, keine Sprechblase (die stört beim Tippen) */
+  const gag = (key: string, level: 'info' | 'warn', lines: string[], now: number) => {
     if (now - (lastGag[key] ?? -Infinity) < GAG_COOLDOWN_MS) return;
     lastGag[key] = now;
-    const line = pick(lines);
-    ctx.log.write(level, line);
-    quip(anchor, line);
+    ctx.log.write(level, pick(lines));
   };
 
   /** auto = Dauerfeuer beim Espresso (gehaltene Taste): ohne Vibration, seltener Schnipsel */
@@ -443,7 +469,43 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
   const clearGhosts = (until = Infinity) => {
     while (ghosts.length && ghosts[0]![1] <= until) ghosts.shift()![0].classList.remove('ghost');
   };
+  /** Erstes Werkzeug offen? Nach dem Einschalten steht erst nur der Desktop da */
+  let ready = false;
+  let toolOpen = false;
+  /** Anrufe und Dringend-Tickets laufen erst nach dem ersten offenen Werkzeug */
+  let opened = false;
+  const openTool = () => {
+    toolOpen = true;
+    lastHit = performance.now();
+    work.el.parentElement?.classList.remove('no-tool');
+    juice(work.el, POP, 260);
+    work.newTask();
+    if (opened) return;
+    opened = true;
+    if (ctx.state.clicks >= CONFIG.onboardingClicks) {
+      started = true;
+      callerEl.classList.remove('quiet');
+      showCall(chooseCall(false), true);
+      scheduleUrgent(firstUrgentDelay());
+      scheduleCup();
+    }
+  };
+  /** Alt+F4: Fenster zu, Ticket weg; der nächste Anschlag öffnet das nächste */
+  const closeTool = () => {
+    toolOpen = false;
+    lastHit = performance.now();
+    work.el.parentElement?.classList.add('no-tool');
+  };
+
   const hit = (keyEl: HTMLElement, auto = false) => {
+    // erster Anschlag auf dem leeren Desktop öffnet das Werkzeug, getippt wird ab dem nächsten
+    if (!toolOpen) {
+      if (ready && !auto) {
+        ctx.sfx.tick();
+        openTool();
+      }
+      return;
+    }
     const def = keyEl.dataset.key ?? '';
     ctx.sfx.unlock();
     solvedNow = false;
@@ -453,10 +515,10 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
     const now = performance.now();
     work.batch(() => {
       if (def === 'F4') {
-        work.newTask(); // Fenster zu, nächste Aufgabe
-        gag('F4', 'warn', ALTF4_LINES, now, keyEl);
+        closeTool(); // Fenster zu, Ticket weg
+        gag('F4', 'warn', ALTF4_LINES, now);
       } else {
-        if (def === 'CAPSLOCK') gag('CAPSLOCK', 'info', PANIC_LINES, now, keyEl);
+        if (def === 'CAPSLOCK') gag('CAPSLOCK', 'info', PANIC_LINES, now);
         work.typeMore(progress);
       }
       work.afterKey();
@@ -543,8 +605,19 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
 
   // Die ganze Tastatur ist Tippfläche: jeder Treffer zählt, optisch geht die nächste Taste runter.
   // pointerdown statt click: schneller, und jeder Finger zählt.
+  /** Hinweis vom Vorgänger hängt: Tastatur tippt nicht, das Post-it wackelt (erst lesen und bestätigen) */
+  const heldByHint = () => {
+    const note = hintShowing();
+    // nur wackeln (additiv: die Schräglage bleibt), nicht blinken
+    if (note) juice(note, SHAKE, 300, true);
+    return !!note;
+  };
   keyboardWrap.addEventListener('pointerdown', (e) => {
     if (e.button !== 0) return;
+    if (heldByHint()) {
+      e.preventDefault();
+      return;
+    }
     // Maus antippen zählt auch: dann klickt die Maus, keine Taste geht runter
     const mouse = (e.target as Element).closest<HTMLElement>('.mouse');
     if (mouse) {
@@ -599,6 +672,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
     if (e.repeat || shortcut(e) || e.defaultPrevented) return;
     // offenes App-Fenster verdeckt die Tastatur: dann zählt auch die echte nicht
     if (typing(e) || gameBlocked()) return;
+    if (heldByHint()) return;
     const el = keyFor(e);
     if (!el) return;
     e.preventDefault();
@@ -622,16 +696,11 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
     lastClosed: work.last,
     /** Platz für den Prompt (root@firma:~$) vor dem Getippten im Terminal */
     promptSlot: work.promptSlot,
-    start() {
-      work.newTask();
-      if (ctx.state.clicks >= CONFIG.onboardingClicks) {
-        started = true;
-        showCall(chooseCall(false), true);
-        scheduleUrgent(firstUrgentDelay());
-        scheduleCup();
-      } else {
-        callerEl.classList.add('quiet');
-      }
+    /** Monitor ist an: Desktop mit Apps; open = Werkzeug gleich öffnen, sonst mit dem ersten Anschlag */
+    start(open: boolean) {
+      ready = true;
+      lastHit = performance.now();
+      if (open) openTool();
     },
     /** Upgrades an der Tastatur sichtbar machen */
     render(s: GameState) {
@@ -639,9 +708,15 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
       // Telefon-Upgrades: eingebauter Anrufbeantworter, Headset statt Hörer
       setFlag(phone, 'has-am', !!s.upgrades.answering);
       setFlag(phone, 'has-headset', !!s.upgrades.headset);
-      // Neulinge: am Anfang und nach längerer Pause zeigen, wo getippt wird
+      // Hinweis, wo getippt wird: erst, wenn niemand von selbst draufkommt (HINT_DELAY_MS ohne Anschlag),
+      // für Neulinge auch nach längerer Pause; bei aus-Monitor nie (dann zeigt power.ts auf den Knopf)
       const idle = performance.now() - lastHit;
-      const invite = s.clicks < HINT_UNTIL_CLICKS && (s.clicks < 3 || idle > HINT_IDLE_MS);
+      const app = keyboardWrap.parentElement;
+      const on = !app?.classList.contains('screen-off');
+      const awaitTool = on && ready && !toolOpen;
+      const invite =
+        on && ready && (awaitTool ? idle > HINT_DELAY_MS : s.clicks < HINT_UNTIL_CLICKS && idle > (s.clicks < 3 ? HINT_DELAY_MS : HINT_IDLE_MS));
+      setText(hint, awaitTool ? (opened ? NEXT_TOOL_HINT : TOOL_HINT) : TAP_HINT);
       if (hint.hidden === invite) hint.hidden = !invite;
       setFlag(keyboardWrap, 'inviting', invite);
       if (started) work.idle(idle);
@@ -651,7 +726,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
       // Alt+F4 verwirft Tickets, das tippt nicht von selbst; zwei Daumen (auch auf einer Taste) tippen doppelt so schnell
       const holding = espresso && held.size ? [...held.keys()].filter((k) => k.dataset.key !== 'F4').slice(-2) : [];
       // gleiche Sperren wie beim Tippen mit der echten Tastatur
-      if (holding.length && !gameBlocked()) {
+      if (holding.length && !gameBlocked() && !gamePaused()) {
         const thumbs = Math.min(2, holding.reduce((n, k) => n + (held.get(k) ?? 1), 0));
         autoAcc += Math.min(0.25, (now - autoLast) / 1_000) * CONFIG.espresso.rate * thumbs;
         // alle Anschläge dieses Bilds zählen, gezeichnet wird einmal

@@ -102,6 +102,7 @@ export function deserialize(json: string, now: number): GameState | null {
   state.settings.volume = Math.min(1, Math.max(0, state.settings.volume));
   // alte Klang-IDs (mx, pop, …) auf den Standard-Switch abbilden
   if (!(TAP_SOUND_IDS as readonly string[]).includes(state.settings.tapSound)) state.settings.tapSound = 'blue';
+  if (typeof state.settings.wallpaper !== 'string') state.settings.wallpaper = 'auto';
   return state;
 }
 

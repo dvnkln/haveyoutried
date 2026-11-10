@@ -3,59 +3,37 @@ import { afkTick, applyOfflineProgress, awayReport, restShare, type OfflineRepor
 import type { GameState } from '../core/state';
 import { tick } from '../core/tick';
 import { pick } from '../util';
-import { h } from './dom';
 import type { SysLog } from './log';
+import type { Power } from './power';
+import { gamePaused } from './blocked';
+import { MAIL_AFTER_SCREEN_MS } from './boot';
+import { AFK_HINTS, LIGHTS_OFF_LINES, LIGHTS_ON_LINES, SCREEN_ON_LINES } from '../content/boot';
 
-const LIGHTS_OFF_LINES = [
-  'immobilien[42]: Bewegungsmelder: seit 10 Minuten keine Bewegung. Licht aus. Energiesparen!',
-  'immobilien[42]: Niemand da. Licht aus. Der Monitor geht auch schlafen.',
-  'dpms[7]: Bildschirm aus. Der Admin ist vermutlich beim Kaffee. Oder eingeschlafen.',
-];
-const LIGHTS_ON_LINES = [
-  'immobilien[42]: Bewegung erkannt. Licht an. Die Leuchtstoffröhre braucht einen Moment.',
-  'immobilien[42]: Wedeln erkannt. Licht an. Willkommen zurück.',
-  'dpms[7]: Bildschirm wieder an. Niemand hat gesehen, wie lange du weg warst. Außer dem Chef.',
-];
-
-/** Nach dem Loslassen so lange warten, bis der Bericht kommt (der Klick des Weck-Tippers landet sonst darauf) */
-const REPORT_AFTER_RELEASE_MS = 250;
-/** Aufwachen per Taste: Bericht nach dem Flackern */
-const REPORT_AFTER_KEY_MS = 700;
+/** Erst geht der Monitor in Standby, dann das Licht */
+const LIGHTS_AFTER_SCREEN_MS = 900;
 
 /**
  * Seite offen, aber niemand spielt: nach CONFIG.afkMs gehen Bildschirm und Bürolicht aus,
  * die Produktion läuft wie bei Abwesenheit (erste Stunde voll, dann gekürzt, irgendwann nichts).
- * Die erste Berührung macht nur das Licht an, danach kommt der Bericht.
+ * Die erste Berührung macht nur das Licht an, der Monitor geht mit der Tastatur an, dann kommt der Bericht.
  */
-export function createAfk(state: GameState, log: SysLog, onWake: (r: OfflineReport) => void) {
+export function createAfk(state: GameState, log: SysLog, power: Power, onWake: (r: OfflineReport) => void) {
   let lastInput = Date.now();
   let afk = false;
+  /** Startablauf (Splash bis Monitor an): keine Ereignisse, kein Licht-aus */
+  let booting = true;
   /** Lifetime-Tickets bei der letzten Eingabe: daraus wird der Bericht */
   let ticketsAtInput = state.ticketsAllTime;
   /** Zeitpunkt, an dem die Seite verdeckt wurde (Display aus, App gewechselt) */
   let hiddenAt = 0;
-  const app = document.getElementById('app');
-  const shade = h('div', { class: 'lights-off', 'aria-hidden': 'true' }, [h('span', { class: 'lo-hint', text: 'Licht aus. Antippen zum Weiterarbeiten.' })]);
 
   const enter = () => {
     afk = true;
-    app?.classList.add('afk');
-    shade.classList.remove('waking');
-    document.body.append(shade);
     log.write('info', pick(LIGHTS_OFF_LINES));
-  };
-
-  /** Licht an; gibt den Bericht über die Zeit seit der letzten Eingabe zurück (oder null) */
-  const lightsOn = (): OfflineReport | null => {
-    const idle = Date.now() - lastInput;
-    const gained = state.ticketsAllTime - ticketsAtInput;
-    afk = false;
-    app?.classList.remove('afk');
-    // Leuchtstoffröhre: kurz flackern, dann hell
-    shade.classList.add('waking');
-    setTimeout(() => shade.remove(), 700);
-    log.write('info', pick(LIGHTS_ON_LINES));
-    return gained > 0 ? awayReport(idle, gained, restShare(state)) : null;
+    // gilt sofort als dunkel (jede Berührung weckt), die Röhren gehen aber erst nach dem Monitor aus
+    const delayMs = power.screenOff ? 0 : LIGHTS_AFTER_SCREEN_MS;
+    power.screenOffNow();
+    power.lightsOff(pick(AFK_HINTS), { delayMs });
   };
 
   const markInput = () => {
@@ -63,50 +41,73 @@ export function createAfk(state: GameState, log: SysLog, onWake: (r: OfflineRepo
     ticketsAtInput = state.ticketsAllTime;
   };
 
-  const input = (e: Event) => {
-    if (afk) {
-      // erste Berührung weckt nur auf, sie tippt nicht am Ticket weiter und scrollt nicht
-      e.preventDefault();
-      e.stopPropagation();
-      const report = lightsOn();
-      if (e.type === 'pointerdown') {
-        // der Klick zu diesem Antippen kommt erst beim Loslassen (auch nach langem Drücken): bis dahin schlucken,
-        // erst danach den Bericht zeigen, damit der Klick nicht auf dessen Knopf landet
-        const swallow = (c: Event) => {
-          c.preventDefault();
-          c.stopPropagation();
-        };
-        document.addEventListener('click', swallow, { capture: true });
-        const released = () => {
-          setTimeout(() => {
-            document.removeEventListener('click', swallow, { capture: true });
-            if (report) onWake(report);
-          }, REPORT_AFTER_RELEASE_MS);
-        };
-        document.addEventListener('pointerup', released, { capture: true, once: true });
-        document.addEventListener('pointercancel', released, { capture: true, once: true });
-      } else if (report) {
-        setTimeout(() => onWake(report), REPORT_AFTER_KEY_MS);
-      }
-    }
-    markInput();
+  /** Bericht wartet, bis der Monitor an ist: die Mail vom Chef liest man am Bildschirm */
+  let pending: OfflineReport | null = null;
+  /** Beginn der Abwesenheit, über die der wartende Bericht geht (geht man erneut, ohne den Monitor anzumachen, zählt alles zusammen) */
+  let pendingFrom: { at: number; tickets: number } | null = null;
+  /** wartenden Bericht abholen (dann ist er erledigt) */
+  const takePending = () => {
+    const report = pending;
+    pending = null;
+    pendingFrom = null;
+    return report;
   };
-  document.addEventListener('pointerdown', input, { capture: true });
-  document.addEventListener('keydown', input, { capture: true });
-  // nicht passiv, sonst wirkt preventDefault beim Aufwachen per Mausrad nicht
-  document.addEventListener('wheel', input, { capture: true, passive: false });
+
+  /** Wieder da: gibt den Bericht über die Zeit seit der letzten Eingabe zurück (oder null) */
+  const wake = (): OfflineReport | null => {
+    if (!afk) return null;
+    const from = pendingFrom ?? { at: lastInput, tickets: ticketsAtInput };
+    pendingFrom = from;
+    const idle = Date.now() - from.at;
+    const gained = state.ticketsAllTime - from.tickets;
+    afk = false;
+    log.write('info', pick(LIGHTS_ON_LINES));
+    markInput();
+    return gained > 0 ? awayReport(idle, gained, restShare(state)) : null;
+  };
+
+  // Gewunken: Licht geht an (macht power); der Bericht kommt mit dem Monitor
+  power.onWave(() => {
+    const report = wake();
+    if (report) pending = report;
+    markInput();
+  });
+  power.onScreen(() => {
+    markInput();
+    if (booting) return;
+    log.write('info', pick(SCREEN_ON_LINES));
+    const report = takePending();
+    if (report) setTimeout(() => onWake(report), MAIL_AFTER_SCREEN_MS);
+  });
+
+  for (const type of ['pointerdown', 'keydown', 'wheel'] as const) document.addEventListener(type, markInput, { capture: true, passive: true });
 
   return {
-    /** Ein Logik-Schritt: normal oder, wenn niemand da ist, wie Abwesenheit */
+    /** Ein Logik-Schritt: normal oder, wenn niemand da ist (oder der Monitor aus ist), wie Abwesenheit */
     update(dtSec: number) {
       const now = Date.now();
       const idle = now - lastInput;
       // mitten im Minispiel oder bei offenem Dialog (Entscheidung, Bericht) bleibt das Licht an;
       // ein wartender Alarm wartet im Dunkeln (stumm) weiter
       const busy = document.querySelector('.incident.playing') || document.querySelector('dialog[open]');
-      if (!afk && idle >= CONFIG.afkMs && !document.hidden && !busy) enter();
-      if (afk) afkTick(state, dtSec, now, idle);
+      if (!afk && !booting && idle >= CONFIG.afkMs && !document.hidden && !busy) enter();
+      // Zettel vom Vorgänger oder Dialog offen: Spielzeit steht (Chef-Aufgabe, Boosts, Ereignisse), damit man in Ruhe liest;
+      // die Infrastruktur arbeitet weiter
+      if (!afk && !booting && !power.screenOff && gamePaused()) {
+        tick(state, dtSec, now, false);
+        return;
+      }
+      // Monitor aus: es läuft nur die Infrastruktur, keine Anrufe, Pager oder Incidents im Dunkeln
+      if (afk || booting || power.screenOff) afkTick(state, dtSec, now, idle);
       else tick(state, dtSec, now);
+    },
+    /** Startablauf fertig: ab jetzt zählt die Zeit bis zum Licht-aus */
+    booted() {
+      booting = false;
+      markInput();
+      // App während des Startablaufs kurz gewechselt: dieser Bericht kommt jetzt
+      const report = takePending();
+      if (report) onWake(report);
     },
     /** Seite wird verdeckt: merken, seit wann */
     hide() {
@@ -122,11 +123,18 @@ export function createAfk(state: GameState, log: SysLog, onWake: (r: OfflineRepo
       const offline = applyOfflineProgress(state, now, priorAway);
       let report = offline;
       if (afk) {
-        const whole = lightsOn();
+        const whole = wake();
+        void power.lightsOn();
         report = whole && whole.elapsedMs >= CONFIG.offlineReportMinMs ? whole : offline;
       }
       hiddenAt = 0;
       markInput();
+      // Monitor noch aus (Licht war aus) oder Startablauf läuft noch: Bericht kommt erst, wenn er an bzw. fertig ist
+      if (power.screenOff || booting) {
+        if (report) pending = report;
+        return null;
+      }
+      pendingFrom = null;
       return report;
     },
   };

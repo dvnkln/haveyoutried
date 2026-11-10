@@ -8,6 +8,10 @@ test('PWA: Manifest mit PNG-Icons, Service Worker, Offline-Start mit Spielstand'
   expect(sizes).toEqual(expect.arrayContaining(['192x192/any', '512x512/any', '512x512/maskable']));
   for (const icon of manifest.icons) expect((await request.get(`/${icon.src}`)).ok()).toBe(true);
 
+  // Hinweise vom Vorgänger aus: sie halten die Tastatur an, bis man sie bestätigt
+  await page.addInitScript(() => {
+    if (!localStorage.getItem('hyt.save')) localStorage.setItem('hyt.save', JSON.stringify({ version: 1, lastTick: Date.now(), flags: { 'tut:off': 1 } }));
+  });
   await page.goto('/');
   await page.evaluate(() => navigator.serviceWorker.ready);
   await page.reload();

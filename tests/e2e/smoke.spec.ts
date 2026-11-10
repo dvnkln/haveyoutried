@@ -13,7 +13,7 @@ test('Kern-Loop: tippen, kaufen, produzieren, speichern', async ({ page, context
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
   // Startkapital für den ersten Praktikanten (15 Tickets), ein Ticket kommt gleich dazu
-  const save = { version: 1, tickets: 14, ticketsTotal: 14, clicks: 0, lastTick: Date.now() };
+  const save = { version: 1, tickets: 14, ticketsTotal: 14, clicks: 0, lastTick: Date.now(), flags: { 'tut:off': 1 } };
   await context.addInitScript((json) => {
     if (!sessionStorage.getItem('seeded')) {
       localStorage.setItem('hyt.save', json);
@@ -98,7 +98,7 @@ test('Abwesenheit: erste Stunde voll, dann ein Fünftel, höchstens 8 h; der Che
 test('Upgrades: Badge, Kauf, Wirkung; Sound-Schalter', async ({ page, context }) => {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  const save = { version: 1, tickets: 5000, ticketsTotal: 5000, clicks: 30, lastTick: Date.now() };
+  const save = { version: 1, tickets: 5000, ticketsTotal: 5000, clicks: 30, lastTick: Date.now(), flags: { 'tut:off': 1 } };
   await context.addInitScript((json) => {
     if (!sessionStorage.getItem('seeded')) {
       localStorage.setItem('hyt.save', json);
@@ -385,8 +385,11 @@ test('Tastatur: jede Taste zählt, auch Sondertasten, physische Tasten und die M
   // verschiedene Tasten, auch Sondertasten und die Kaugummi-Taste
   for (const k of ['Q', 'A', 'CAPSLOCK', 'B', ' ']) await page.locator(`.key[data-key="${k}"]`).tap();
   await expect.poll(presses).toBe(5);
-  // Alt+F4 verwirft das Ticket, Enter tippt wie jede andere Taste weiter
+  // Alt+F4 schließt das Fenster samt Ticket; der nächste Anschlag öffnet das nächste, Enter tippt dann wie jede andere Taste
   await page.locator('.key[data-key="F4"]').tap();
+  await expect(page.locator('.work')).toBeHidden();
+  await page.locator('.key[data-key="ENTER"]').tap();
+  await expect(page.locator('.work')).toBeVisible();
   await expect.poll(presses).toBe(0);
   await page.locator('.key[data-key="ENTER"]').tap();
   await expect.poll(presses).toBe(1);
@@ -424,7 +427,7 @@ test('Tastatur: jede Taste zählt, auch Sondertasten, physische Tasten und die M
 test('Ticketverlauf lässt sich scrollen, Antwort steht vor dem letzten Anschlag ganz da', async ({ page, context }) => {
   // alle Tempo-Upgrades: Tickets sind in wenigen Anschlägen gelöst
   const ups = ['coffee', 'mousepad', 'mouse', 'keyboard', 'answering', 'headset', 'macro'];
-  const save = { version: 2, tickets: 1e5, ticketsTotal: 1e6, clicks: 5000, lastTick: Date.now(), upgrades: Object.fromEntries(ups.map((u) => [u, true])) };
+  const save = { version: 2, tickets: 1e5, ticketsTotal: 1e6, clicks: 5000, lastTick: Date.now(), flags: { 'tut:off': 1 }, upgrades: Object.fromEntries(ups.map((u) => [u, true])) };
   await context.addInitScript((json) => localStorage.setItem('hyt.save', json), JSON.stringify(save));
   await page.goto('/');
   const key = page.locator('.key[data-key="Q"]');
@@ -443,4 +446,101 @@ test('Ticketverlauf lässt sich scrollen, Antwort steht vor dem letzten Anschlag
   await expect.poll(() => body.evaluate((e) => e.scrollHeight > e.clientHeight * 2)).toBe(true);
   await body.evaluate((e) => (e.scrollTop = e.scrollHeight));
   expect(await body.evaluate((e) => e.scrollTop)).toBeGreaterThan(0);
+});
+
+test('Erster Start: Splash, Zettel, winken = Licht, Knopf = Monitor', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.goto('/?boot');
+  // alles aus, kein Werkzeug offen
+  await expect(page.locator('#app')).toHaveClass(/screen-off/);
+  await expect(page.locator('.lights-off')).toBeAttached();
+  const power = page.locator('.splash-power');
+  await expect(power).toBeVisible();
+  await expect(page.locator('.splash-title')).toHaveText('Have You Tried Turning It Off and On Again?');
+  await power.tap();
+  await expect(page.locator('.splash')).toHaveCount(0);
+  // erstes Mal: Zettel vom Vorgänger, Knopf erst nach kurzer Sperre
+  const note = page.locator('dialog.handover-note');
+  await expect(note).toBeVisible();
+  await note.getByRole('button', { name: 'Gelesen. Ungefähr.' }).tap();
+  await expect(note).toBeHidden();
+  // winken: Licht an (langsam beim ersten Mal), Monitor bleibt aus
+  await page.mouse.click(180, 200);
+  await expect(page.locator('#app')).not.toHaveClass(/\bafk\b/);
+  await expect(page.locator('#app')).toHaveClass(/screen-off/);
+  await expect(page.locator('#app')).toHaveClass(/await-power/);
+  // Hinweis auf den Knopf erst, wenn jemand sucht: Tastatur tippt bei aus-Monitor nicht, zeigt aber gleich auf den Knopf
+  await expect(page.locator('.power-hint')).toBeHidden();
+  await page.locator('.key[data-key="Q"]').tap();
+  await expect(page.locator('#app')).toHaveClass(/screen-off/);
+  await expect(page.locator('.power-hint')).toBeVisible();
+  // Knopf am Monitor: an; erst nur Hintergrundbild und Apps
+  await page.locator('.mon-power').tap();
+  await expect(page.locator('#app')).not.toHaveClass(/screen-off/);
+  await expect(page.locator('.wp-mark')).toBeVisible();
+  await expect(page.locator('.app-infra')).toBeVisible();
+  await expect(page.locator('.work')).toBeHidden();
+  // nächster Anschlag öffnet das Werkzeug, getippt wird danach
+  await page.locator('.key[data-key="Q"]').tap();
+  await expect(page.locator('.work')).toBeVisible();
+  await expect(page.locator('.work-body')).toHaveClass(/empty/);
+  await page.locator('.key[data-key="Q"]').tap();
+  await expect(page.locator('.work-body')).not.toHaveClass(/empty/);
+  // aus- und wieder einschalten (nach der langen Einschalt-Animation des ersten Starts): Werkzeug bleibt offen
+  await expect(page.locator('#app')).not.toHaveClass(/power-busy/);
+  await page.locator('.mon-power').tap();
+  await expect(page.locator('#app')).toHaveClass(/screen-off/);
+  await page.locator('.mon-power').tap();
+  await expect(page.locator('#app')).not.toHaveClass(/screen-off/);
+  await expect(page.locator('.work')).toBeVisible();
+
+  expect(errors).toEqual([]);
+});
+
+test('Start mit Spielstand: Splash, Licht, Monitor, dann Chef-Mail statt Zettel', async ({ page, context }) => {
+  const save = { version: 1, tickets: 0, clicks: 50, generators: { bash: { owned: 4 } }, lastTick: Date.now() - 48 * 3600_000 };
+  await context.addInitScript((json) => {
+    if (!sessionStorage.getItem('seeded')) {
+      localStorage.setItem('hyt.save', json);
+      sessionStorage.setItem('seeded', '1');
+    }
+  }, JSON.stringify(save));
+  await page.goto('/?boot');
+  await page.locator('.splash-power').tap();
+  await expect(page.locator('.splash')).toHaveCount(0);
+  // kein Zettel; die Chef-Mail kommt erst, wenn Licht und Monitor an sind
+  await page.mouse.click(180, 200);
+  await expect(page.locator('dialog[open]')).toHaveCount(0);
+  await page.locator('.mon-power').tap();
+  await expect(page.locator('#app')).not.toHaveClass(/screen-off/);
+  const mail = page.locator('dialog.boss-mail');
+  await expect(mail).toBeVisible();
+  await expect(page.locator('dialog.handover-note')).toHaveCount(0);
+  await mail.locator('.modal-actions .btn').tap();
+  await expect(page.locator('.work')).toBeHidden();
+  await page.locator('.key[data-key="W"]').tap();
+  await expect(page.locator('.work')).toBeVisible();
+  // mit Spielstand klingelt gleich das Telefon
+  await expect(page.locator('.caller')).not.toHaveClass(/quiet/);
+});
+
+test('Hinweis vom Vorgänger hält die Tastatur an, bis man ihn bestätigt', async ({ page }) => {
+  await page.goto('/');
+  // nach dem ersten gelösten Ticket kommt ein Hinweis
+  const typedLen = () => page.locator('.typed').evaluate((e) => e.textContent?.length ?? 0);
+  const note = page.locator('.tut-note:not([hidden])');
+  for (let i = 0; i < 40 && !(await note.count()); i++) await page.locator('.key[data-key="Q"]').tap();
+  await expect(note).toBeVisible();
+  const before = await typedLen();
+  await page.locator('.key[data-key="W"]').tap();
+  await page.locator('body').press('x');
+  expect(await typedLen()).toBe(before);
+  // woanders tippen schließt ihn nicht
+  await page.mouse.click(20, 20);
+  await expect(note).toBeVisible();
+  await note.locator('.tut-ok').tap();
+  await expect(note).toHaveCount(0);
+  await page.locator('.key[data-key="W"]').tap();
+  await expect.poll(typedLen).not.toBe(before);
 });

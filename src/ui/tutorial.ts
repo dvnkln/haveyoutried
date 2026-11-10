@@ -2,13 +2,10 @@ import { HINT_HEADS, HINT_OK, HINTS, type Hint } from '../content/tutorial';
 import type { GameState } from '../core/state';
 import { pick } from '../util';
 import { gameBlocked } from './blocked';
-import { attentionBusy } from './toast';
 import { h } from './dom';
 
 /** so oft wird geschaut, ob ein Hinweis dran ist */
 const CHECK_MS = 700;
-/** erst nach dieser Zeit schließt ein Tippen irgendwo anders den Hinweis (wer gerade wild tippt, soll ihn sehen) */
-const READ_MS = 2_500;
 /** Abstand der Hervorhebung um die Stelle */
 const PAD = 6;
 
@@ -31,8 +28,8 @@ export function resetTutorial(s: GameState): void {
 
 /**
  * „Übergabe vom Vorgänger“: zeigt einmal je Thema auf die passende Stelle, dunkelt den Rest leicht ab
- * und klebt ein Post-it daneben. Das Spiel läuft weiter; immer nur ein Hinweis zur Zeit.
- * Als gelesen gilt ein Hinweis nur, wenn er bestätigt wurde (OK, Stelle angetippt, nach der Lesezeit woanders getippt);
+ * und klebt ein Post-it daneben. Solange er hängt, steht das Spiel; immer nur ein Hinweis zur Zeit.
+ * Als gelesen gilt ein Hinweis nur, wenn er bestätigt wurde (OK oder Stelle angetippt);
  * verschwindet er, weil ein Fenster aufgeht oder das Licht ausgeht, kommt er später wieder.
  */
 export function startTutorial(state: GameState): void {
@@ -44,7 +41,7 @@ export function startTutorial(state: GameState): void {
   const card = h('div', { class: 'tut-note', role: 'status', 'aria-live': 'polite', hidden: '' }, [head, text, ok]);
   document.body.append(spot, card);
 
-  let active: { hint: Hint; el: HTMLElement; since: number } | null = null;
+  let active: { hint: Hint; el: HTMLElement } | null = null;
 
   const visible = (el: HTMLElement) => {
     const r = el.getBoundingClientRect();
@@ -84,7 +81,7 @@ export function startTutorial(state: GameState): void {
   };
 
   const show = (hint: Hint, el: HTMLElement) => {
-    active = { hint, el, since: performance.now() };
+    active = { hint, el };
     head.textContent = pick(HINT_HEADS);
     ok.textContent = pick(HINT_OK);
     spot.hidden = false;
@@ -112,21 +109,18 @@ export function startTutorial(state: GameState): void {
   };
 
   ok.addEventListener('click', () => hide(true));
-  // Antippen der gezeigten Stelle erledigt den Hinweis (und tut, was die Stelle tut); woanders erst nach der Lesezeit.
+  // Bestätigen muss man: mit „OK“ oder indem man die gezeigte Stelle antippt (die tut dann, was sie tut).
+  // Woanders tippen schließt ihn nicht; das Spiel steht so lange (afk.ts, Tastatur in desk.ts).
   // Das Post-it selbst lässt Taps durch (nur „OK“ fängt sie), damit es keine Tasten verdeckt.
   document.addEventListener(
     'pointerdown',
     (e) => {
       if (!active || e.target === ok) return;
-      if (active.el.contains(e.target as Node) || performance.now() - active.since > READ_MS) hide(true);
+      if (active.el.contains(e.target as Node)) hide(true);
     },
     { capture: true },
   );
   window.addEventListener('resize', place);
-  // zurück in den Tab: Lesezeit beginnt neu
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && active) active.since = performance.now();
-  });
 
   setInterval(() => {
     if (tutorialOff(state)) return hide(false);
@@ -146,8 +140,9 @@ export function startTutorial(state: GameState): void {
       }
       if (!replay && !hint.when(state)) continue;
       const el = document.querySelector<HTMLElement>(hint.target);
-      // nicht gleichzeitig mit einer Meldung oder der Kaffeetasse (die VIP-Mail darf, sie ist ja oft das Thema)
-      if (el && visible(el) && !attentionBusy(['.urgent-note', '.espresso-cup', '.tut-note:not([hidden])'])) return show(hint, el);
+      // Vorrang vor Meldungen (die warten in ihrer Schlange, z. B. das Achievement zum ersten Ticket);
+      // VIP-Mail und Kaffeetasse dürfen, sie sind ja oft das Thema
+      if (el && visible(el)) return show(hint, el);
     }
   }, CHECK_MS);
 }

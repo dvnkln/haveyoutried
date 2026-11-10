@@ -1,3 +1,7 @@
+Schriften in diesem Ordner, beide unter der SIL Open Font License 1.1 (Text unten):
+- fredoka.woff2: Fredoka, Copyright The Fredoka Project Authors
+- patrick-hand.woff2: Patrick Hand (latin), Copyright (c) 2010-2012 Patrick Wagesreiter, über Fontsource
+
 Google Inc.
 
 This Font Software is licensed under the SIL Open Font License, Version 1.1.

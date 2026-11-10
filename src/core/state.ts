@@ -61,7 +61,8 @@ export interface GameState {
   /** Aufgabe vom Chef (kleines Ziel für die nächsten Minuten) */
   boss: BossState;
   stats: { startedAt: number; playTimeMs: number; offlineTickets: number };
-  settings: { haptics: boolean; sound: boolean; volume: number; tapSound: string; buyAmount: BuyAmount };
+  /** wallpaper: 'auto' = Bild der aktuellen Firma, sonst ID aus ui/wallpaper.ts */
+  settings: { haptics: boolean; sound: boolean; volume: number; tapSound: string; buyAmount: BuyAmount; wallpaper: string };
   /** Wall-Clock des letzten Ticks, Basis für Offline-Progress */
   lastTick: number;
 }
@@ -86,7 +87,7 @@ export function createInitialState(now: number): GameState {
     incidents: { nextAt: 0, lastId: '', active: '', seen: {}, best: {} },
     boss: emptyBoss(),
     stats: { startedAt: now, playTimeMs: 0, offlineTickets: 0 },
-    settings: { haptics: true, sound: true, volume: 0.7, tapSound: 'blue', buyAmount: 1 },
+    settings: { haptics: true, sound: true, volume: 0.7, tapSound: 'blue', buyAmount: 1, wallpaper: 'auto' },
     lastTick: now,
   };
 }

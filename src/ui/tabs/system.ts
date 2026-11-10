@@ -7,6 +7,34 @@ import { TAP_SOUND_IDS } from '../../core/state';
 import { hapticSupport } from '../haptics';
 import { showModal } from '../modal';
 import { resetTutorial, setTutorialOff, tutorialOff } from '../tutorial';
+import { clearWall, paintWall, validWall, wallChoices } from '../wallpaper';
+import { ACHIEVEMENTS } from '../../content/achievements';
+import { achievementCount } from '../../core/achievements';
+
+/**
+ * Seitlich wischen = blättern (die Maus darf über den Rand hinausziehen).
+ * down/up für Extras wie den Switch-Tester (Klick beim Drücken, Rückklick beim Loslassen).
+ */
+function onSwipe(el: HTMLElement, step: (dir: number) => void, hooks: { down?(): void; up?(): void } = {}): void {
+  let downX: number | null = null;
+  el.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0) return;
+    downX = e.clientX;
+    el.setPointerCapture?.(e.pointerId);
+    hooks.down?.();
+  });
+  const up = (e: PointerEvent) => {
+    if (downX === null) return;
+    const dx = e.clientX - downX;
+    downX = null;
+    hooks.up?.();
+    if (e.type === 'pointerup' && Math.abs(dx) > 40) step(dx < 0 ? 1 : -1);
+  };
+  el.addEventListener('pointerup', up);
+  el.addEventListener('pointercancel', up);
+}
+
+const achievementName = (id: string) => ACHIEVEMENTS.find((a) => a.id === id)?.name ?? id;
 
 type SwitchType = 'clicky' | 'tactile' | 'linear';
 const TYPE_LABEL: Record<SwitchType, string> = { clicky: 'klickend', tactile: 'taktil', linear: 'linear' };
@@ -147,6 +175,56 @@ export function systemTab(): Tab {
     });
   };
 
+  // Hintergrundbild: Karussell wie bei den Switches. Weiterblättern = aufhängen; gesperrte zeigen, welches Achievement sie bringt
+  const wallPic = h('div', { class: 'wallpaper thumb', 'aria-hidden': 'true' });
+  const wallName = h('span', { class: 'wall-name' });
+  const wallLock = h('span', { class: 'wall-lock' });
+  const wallCount = h('span', { class: 'wall-count' });
+  const wallCard = h('div', { class: 'switch-card wall-card', 'aria-live': 'polite' }, [
+    wallPic,
+    h('span', { class: 'wall-info' }, [wallName, wallLock, wallCount]),
+  ]);
+  const wallPrev = h('button', { class: 'switch-arrow', type: 'button', 'aria-label': 'Vorheriges Hintergrundbild', text: '‹' });
+  const wallNext = h('button', { class: 'switch-arrow', type: 'button', 'aria-label': 'Nächstes Hintergrundbild', text: '›' });
+  /** angezeigtes Bild (kann ein gesperrtes sein); null = noch nicht befüllt */
+  let wallShown: string | null = null;
+  let wallSig = '';
+  const choices = () => wallChoices(ctx.state, achievementName);
+  const showWall = (id: string, dir = 0) => {
+    const list = choices();
+    const i = Math.max(0, list.findIndex((c) => c.id === id));
+    const c = list[i]!;
+    wallShown = c.id;
+    if (c.locked) clearWall(wallPic);
+    else paintWall(wallPic, ctx.state, c.id);
+    wallCard.classList.toggle('locked', !!c.locked);
+    setText(wallName, c.locked ? '???' : c.name);
+    setText(wallLock, c.locked ? `Gesperrt. Gibt’s für: ${c.locked}` : c.id === validWall(ctx.state, ctx.state.settings.wallpaper) ? 'Hängt gerade.' : '');
+    setText(wallCount, `${i + 1} / ${list.length}`);
+    if (dir) {
+      wallCard.classList.remove('slide-l', 'slide-r');
+      void wallCard.offsetWidth; // Animation neu starten
+      wallCard.classList.add(dir > 0 ? 'slide-r' : 'slide-l');
+    }
+  };
+  /** Weiterblättern: freigeschaltete werden gleich aufgehängt, gesperrte nur gezeigt */
+  const stepWall = (dir: number) => {
+    const list = choices();
+    const i = list.findIndex((c) => c.id === wallShown);
+    const next = list[(i + dir + list.length) % list.length]!;
+    if (!next.locked) ctx.state.settings.wallpaper = next.id;
+    showWall(next.id, dir);
+    ctx.sfx.tick();
+  };
+  const renderWalls = () => {
+    const s = ctx.state;
+    // neu freigeschaltet oder Firma gewechselt: Karussell zeigt wieder das aufgehängte Bild (billiger Vergleich, läuft jeden Frame)
+    const sig = `${achievementCount(s)}|${s.prestige.company}`;
+    if (sig === wallSig && wallShown !== null) return;
+    wallSig = sig;
+    showWall(validWall(s, s.settings.wallpaper));
+  };
+
   const button = (label: string, onClick: () => void, cls = 'btn') => {
     const b = h('button', { class: cls, type: 'button', text: label });
     b.addEventListener('click', onClick);
@@ -202,31 +280,22 @@ export function systemTab(): Tab {
         });
       });
       // Switch-Tester: runter = Klick, hoch = Rückklick; seitlich wischen = wechseln
-      let downX: number | null = null;
       /** Rückklick erst nach dem Klick: beim ersten Antippen muss der Ton noch aufwachen */
       let pressed: Promise<unknown> = Promise.resolve();
-      card.addEventListener('pointerdown', (e) => {
-        if (e.button !== 0) return;
-        downX = e.clientX;
-        // Ziehen mit der Maus über den Kartenrand hinaus zählt weiter als Wischen
-        card.setPointerCapture?.(e.pointerId);
-        card.classList.add('pressed');
-        ctx.state.settings.sound = true;
-        const id = current();
-        pressed = ctx.sfx.unlock().then(() => ctx.sfx.tap(id));
-        ctx.haptic('tap');
+      onSwipe(card, (dir) => step(dir, false), {
+        down() {
+          card.classList.add('pressed');
+          ctx.state.settings.sound = true;
+          const id = current();
+          pressed = ctx.sfx.unlock().then(() => ctx.sfx.tap(id));
+          ctx.haptic('tap');
+        },
+        up() {
+          card.classList.remove('pressed');
+          const id = current();
+          void pressed.then(() => ctx.sfx.release(id));
+        },
       });
-      const up = (e: PointerEvent) => {
-        if (downX === null) return;
-        const dx = e.clientX - downX;
-        downX = null;
-        card.classList.remove('pressed');
-        const id = current();
-        void pressed.then(() => ctx.sfx.release(id));
-        if (e.type === 'pointerup' && Math.abs(dx) > 40) step(dx < 0 ? 1 : -1, false);
-      };
-      card.addEventListener('pointerup', up);
-      card.addEventListener('pointercancel', up);
       // Tastatur (Enter/Leertaste) löst nur „click“ aus: dann einmal komplett probehören
       card.addEventListener('click', (e) => {
         if (e.detail !== 0) return;
@@ -239,6 +308,9 @@ export function systemTab(): Tab {
           step(e.key === 'ArrowLeft' ? -1 : 1);
         }
       });
+      wallPrev.addEventListener('click', () => stepWall(-1));
+      wallNext.addEventListener('click', () => stepWall(1));
+      onSwipe(wallCard, stepWall);
       volume.value = String(ctx.state.settings.volume);
       volume.addEventListener('input', () => {
         ctx.state.settings.volume = Number(volume.value);
@@ -285,6 +357,12 @@ export function systemTab(): Tab {
           }),
         ]),
 
+        h('div', { class: 'setting-col' }, [
+          h('div', { text: 'Hintergrundbild' }),
+          h('div', { class: 'hint', text: 'Jede Firma hat ihr eigenes. Weitere gibt’s für Achievements. Pfeile oder Wischen = anderes aufhängen.' }),
+          h('div', { class: 'switch-carousel' }, [wallPrev, wallCard, wallNext]),
+        ]),
+
         h('div', { class: 'section-title', text: '# Spielstand' }),
         h('div', { class: 'actions' }, [
           button('Alles löschen', resetDialog, 'btn btn-danger'),
@@ -297,6 +375,7 @@ export function systemTab(): Tab {
     },
     render() {
       const s = ctx.state;
+      renderWalls();
       setText(stats.total.value, formatNumber(s.ticketsTotal));
       setText(stats.solved.value, formatNumber(s.flags.solved ?? 0));
       setText(stats.clicks.value, formatNumber(s.clicks));
