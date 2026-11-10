@@ -128,8 +128,16 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
   let callerLeft = randInt(CONFIG.callerTicketsMin, CONFIG.callerTicketsMax);
   let callerUntil = 0;
   const recent: string[] = [];
-  /** Zeit des letzten Anschlags (Tipp-Hinweis, Memes bei Pause) */
+  /** Zeit des letzten Anschlags (Kaffeetasse nur für Leute, die gerade tippen) */
   let lastHit = 0;
+  /**
+   * Zuletzt anderweitig beschäftigt (Incident, Dialog, App-Fenster, Hinweis, Monitor aus, App im Hintergrund,
+   * Werkzeug gerade auf/zu). Leerlauf für Memes, Serie und Tipp-Hinweis zählt erst ab dem späteren der beiden Zeitpunkte.
+   */
+  let lastBusy = 0;
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) lastBusy = performance.now();
+  });
   /** Espresso-Dauerfeuer: angesammelte Anschläge und letzter Frame */
   let autoAcc = 0;
   let autoLast = performance.now();
@@ -476,7 +484,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
   let opened = false;
   const openTool = () => {
     toolOpen = true;
-    lastHit = performance.now();
+    lastBusy = performance.now();
     work.el.parentElement?.classList.remove('no-tool');
     juice(work.el, POP, 260);
     work.newTask();
@@ -493,7 +501,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
   /** Alt+F4: Fenster zu, Ticket weg; der nächste Anschlag öffnet das nächste */
   const closeTool = () => {
     toolOpen = false;
-    lastHit = performance.now();
+    lastBusy = performance.now();
     work.el.parentElement?.classList.add('no-tool');
   };
 
@@ -699,7 +707,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
     /** Monitor ist an: Desktop mit Apps; open = Werkzeug gleich öffnen, sonst mit dem ersten Anschlag */
     start(open: boolean) {
       ready = true;
-      lastHit = performance.now();
+      lastBusy = performance.now();
       if (open) openTool();
     },
     /** Upgrades an der Tastatur sichtbar machen */
@@ -710,7 +718,10 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
       setFlag(phone, 'has-headset', !!s.upgrades.headset);
       // Hinweis, wo getippt wird: erst, wenn niemand von selbst draufkommt (HINT_DELAY_MS ohne Anschlag),
       // für Neulinge auch nach längerer Pause; bei aus-Monitor nie (dann zeigt power.ts auf den Knopf)
-      const idle = performance.now() - lastHit;
+      // Incident, Dialog (Pager, Bericht), App-Fenster oder Hinweis: man arbeitet ja gerade, nur nicht an der Tastatur.
+      // So lange zählt die Zeit ohne Anschlag nicht (sonst kommen danach sofort Memes und die Serie reißt)
+      if (gameBlocked() || hintShowing()) lastBusy = performance.now();
+      const idle = performance.now() - Math.max(lastHit, lastBusy);
       const app = keyboardWrap.parentElement;
       const on = !app?.classList.contains('screen-off');
       const awaitTool = on && ready && !toolOpen;
@@ -726,7 +737,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
       // Alt+F4 verwirft Tickets, das tippt nicht von selbst; zwei Daumen (auch auf einer Taste) tippen doppelt so schnell
       const holding = espresso && held.size ? [...held.keys()].filter((k) => k.dataset.key !== 'F4').slice(-2) : [];
       // gleiche Sperren wie beim Tippen mit der echten Tastatur
-      if (holding.length && !gameBlocked() && !gamePaused()) {
+      if (holding.length && !gameBlocked() && !hintShowing()) {
         const thumbs = Math.min(2, holding.reduce((n, k) => n + (held.get(k) ?? 1), 0));
         autoAcc += Math.min(0.25, (now - autoLast) / 1_000) * CONFIG.espresso.rate * thumbs;
         // alle Anschläge dieses Bilds zählen, gezeichnet wird einmal

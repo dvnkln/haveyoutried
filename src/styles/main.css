@@ -767,7 +767,9 @@ button {
 .wp-mark {
   right: 10px;
   bottom: 8px;
-  max-width: 72%;
+  max-width: 78%;
+  /* Zeilen gleichmäßig umbrechen statt ein einzelnes Wort allein in die nächste Zeile */
+  text-wrap: balance;
   display: flex;
   flex-direction: column;
   color: rgba(255, 255, 255, 0.85);
@@ -1950,11 +1952,56 @@ button {
   margin-top: 12px;
 }
 .volume {
-  width: 50%;
+  /* gleich lang, egal wie viel Text daneben steht */
+  flex: 0 0 42%;
+  width: 42%;
   min-height: var(--touch);
   accent-color: var(--green);
 }
 
+/* Bereiche der Einstellungen (Sound, Vibration, Optik): dezent abgesetzte Karten */
+.conf-group {
+  margin: 10px 0 14px;
+  padding: 6px 12px 12px;
+  border: 1.5px solid rgba(61, 44, 46, 0.14);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.45);
+}
+.conf-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: var(--touch);
+}
+.conf-title {
+  font-weight: 700;
+  font-size: 15px;
+}
+.conf-hint {
+  margin: 0 0 6px;
+}
+.conf-group > .setting + .setting {
+  margin-top: 4px;
+}
+/* Beschriftung neben einem Regler: eine Zeile, der Hinweis darunter darf umbrechen */
+.conf-group > .setting:has(.volume) > div:first-child > div:first-child,
+.conf-group > .setting:has(.volume) > div:first-child:not(:has(*)) {
+  white-space: nowrap;
+}
+.actions-reset {
+  margin-top: 12px;
+}
+.setting-btns {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn.btn-compact {
+  min-height: var(--touch);
+  padding: 0 12px;
+  font-size: 13px;
+}
 .setting-col {
   margin-top: 12px;
   display: flex;

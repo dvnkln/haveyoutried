@@ -158,6 +158,11 @@ export class Sfx {
     return Promise.resolve();
   }
 
+  /** Laufende Audio-Engine für eigene Klangketten (Büro-Hintergrund), sonst null */
+  context(): AudioContext | null {
+    return this.ctx?.state === 'running' ? this.ctx : null;
+  }
+
   /** Zustand der Audio-Engine für die Diagnose */
   state(): string {
     return this.ctx ? this.ctx.state : 'nicht gestartet';

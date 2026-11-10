@@ -4,6 +4,7 @@ import { awayRule, BOSS_REPORT_MIN_MS, bossReport } from './content/report';
 import { createAfk } from './ui/afk';
 import { runBoot } from './ui/boot';
 import { createPower } from './ui/power';
+import { Ambience } from './ui/ambience';
 import { startTutorial } from './ui/tutorial';
 import { startLoop } from './core/loop';
 import { applyOfflineProgress, restShare, type OfflineReport } from './core/offline';
@@ -75,6 +76,8 @@ if (!root) throw new Error('#app fehlt');
 const ctx = { state, log, history, saver, sfx, haptic };
 // Bürolicht und Röhrenmonitor (vor allen anderen Zuhörern, damit Weck-Gesten nicht am Ticket tippen)
 const power = createPower(root, sfx);
+// Büro-Hintergrund: Lüftung, Röhren, Server, ab und zu etwas von nebenan (leiser als alle Spielgeräusche)
+const ambience = new Ambience(sfx, () => state, () => power.lit);
 const app = mountApp(root, ctx, [logTab(), infraTab(), upgradesTab(), careerTab(), systemTab()]);
 startFlavor(ctx, app);
 mountIncidentOverlay(ctx);
@@ -87,6 +90,8 @@ settleAbandoned(state, rates(state));
 // Nur im Test-Build (vite build --mode e2e): ?incident=raid|spam|… startet das Minispiel direkt.
 // Im normalen Build fällt der Block samt Abfrage komplett weg.
 const e2e = import.meta.env.MODE === 'e2e' ? new URLSearchParams(location.search) : null;
+// Test-Build: Geräusche von nebenan gezielt abspielbar (im normalen Build fällt das weg)
+if (import.meta.env.MODE === 'e2e') (window as unknown as { hytAmbience: Ambience }).hytAmbience = ambience;
 const startForcedIncident = () => {
   const forced = e2e?.get('incident');
   if (forced && isIncidentId(forced)) setTimeout(() => startIncident(state, forced), 1_200);

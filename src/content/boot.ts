@@ -34,23 +34,21 @@ export const NEXT_TOOL_HINT = 'Tipp drauf! Nächstes Ticket aufmachen';
 /** Wasserzeichen unten rechts auf dem Hintergrundbild (zufällig pro Start) */
 export const WALLPAPER_MARKS: [string, string][] = [
   ['Betriebssystem nicht aktiviert', 'Seit 2009. Hat noch keiner gemerkt.'],
-  ['Hintergrundbild per Gruppenrichtlinie', 'Änderungen werden nachts um drei zurückgesetzt.'],
-  ['Testversion abgelaufen vor 4.817 Tagen', 'Bitte erwerben Sie eine Lizenz. Oder halt nicht.'],
-  ['Unsere Werte: Kunde. Qualität. Kaffee.', 'Reihenfolge nach Budget.'],
-  ['It’s not DNS. There’s no way it’s DNS.', 'It was DNS.'],
-  ['Bildschirmschoner: aus', 'Laut Immobilienmanagement spart das Strom. Irgendwie.'],
-  ['Neustart erforderlich', 'Seit 214 Tagen. Uptime ist auch eine Leistung.'],
-  ['Gerät wird von Ihrer Organisation verwaltet', 'Die Organisation weiß davon nichts.'],
-  ['Works on my machine', 'Zertifiziert. Die Maschine bleibt hier.'],
-  ['Testumgebung', 'Ist auch Produktion. Seit 2014.'],
-  ['Middle-Out-komprimiert', 'Weissman-Score: 5,2. Gemessen im Wohnzimmer.'],
-  ['Abhängigkeit: ein Projekt aus Nebraska', 'Seit 2003 gepflegt von einer Person. Bitte nicht stören.'],
-  ['Passwort: correct horse battery staple', 'Steht jetzt hier. Sicher ist sicher.'],
-  ['Ausrede des Tages: Sonnenflecken', 'Gilt auch für morgen.'],
-  ['Desktop wird jetzt in der Cloud gespeichert', 'Laut Chef. Er hat es in einem Magazin gelesen.'],
+  ['Gruppenrichtlinie aktiv', 'Wird nachts um drei zurückgesetzt.'],
+  ['Testversion abgelaufen', 'Vor 4.817 Tagen. Läuft trotzdem.'],
+  ['Neustart erforderlich', 'Seit 214 Tagen. Wird verschoben.'],
+  ['Von Ihrer Organisation verwaltet', 'Die Organisation weiß davon nichts.'],
   ['Sync-Konflikt: Desktop (2)', 'Desktop (2) gewinnt. Wie immer.'],
-  ['Lizenzschlüssel: 00000-00000-00000', 'Gefunden auf Seite 3 eines Forums.'],
-  ['Remote-Sitzung aktiv', 'Jemand schaut mit. Vermutlich der Chef. Winken!'],
+  ['Remote-Sitzung aktiv', 'Jemand schaut zu. Bitte nicht gähnen.'],
+  ['Abgesicherter Modus', 'Seit dem letzten Update. Läuft stabil.'],
+  ['Studentenversion', 'Der Student ist 2016 gegangen.'],
+  ['Treiber nicht signiert', 'Hat der Praktikant selbst geschrieben.'],
+  ['Speicherplatz fast voll', 'Bitte Hintergrundbild löschen.'],
+  ['Uhrzeit nicht synchron', 'Laut Systemuhr ist seit 2021 Montag.'],
+  ['Domäne nicht erreichbar', 'Angemeldet mit Passwort von 2019.'],
+  ['Wartungsmodus', 'Nicht berühren. Auch nicht der Admin.'],
+  ['Energiesparplan: Höchstleistung', 'Für die Tabellenkalkulation. Angeblich.'],
+  ['Bildschirmschoner deaktiviert', 'Der Chef soll sehen, dass was läuft.'],
 ];
 
 /** Nach 10 min ohne Eingabe */
@@ -72,7 +70,7 @@ export const LIGHTS_ON_LINES = [
 ];
 export const SCREEN_ON_LINES = [
   'dpms[7]: Bildschirm wieder an. Niemand hat gesehen, wie lange du weg warst. Außer dem Chef.',
-  'dpms[7]: Monitor an. Entmagnetisiert. Bwoing.',
+  'dpms[7]: Monitor an. Die Röhre summt zufrieden.',
   'dpms[7]: Standby beendet. Die Pixel müssen sich erst wieder aufstellen.',
 ];
 /** Beim Start: Licht und Monitor */

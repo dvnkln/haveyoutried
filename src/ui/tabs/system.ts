@@ -80,7 +80,8 @@ export function systemTab(): Tab {
   const hapticBtn = h('button', { class: 'icon-toggle', type: 'button', role: 'switch', 'aria-label': 'Vibration', text: '((•))' });
   const hintBtn = h('button', { class: 'icon-toggle', type: 'button', role: 'switch', 'aria-label': 'Hinweise vom Vorgänger', text: '✎' });
   const soundBtn = h('button', { class: 'icon-toggle', type: 'button', role: 'switch', 'aria-label': 'Sound', text: '♪' });
-  const volume = h('input', { class: 'volume', type: 'range', min: '0', max: '1', step: '0.1', 'aria-label': 'Lautstärke' });
+  const volume = h('input', { class: 'volume', type: 'range', min: '0', max: '1', step: '0.1', 'aria-label': 'Lautstärke Tastatur und Spiel' });
+  const ambVolume = h('input', { class: 'volume', type: 'range', min: '0', max: '1', step: '0.1', 'aria-label': 'Lautstärke Büro-Geräusche' });
   // Switch-Auswahl: ein Switch zur Zeit, Pfeile/Wischen/Punkte wechseln (= einbauen), Drücken = Probe wie am Switch-Tester
   const pic = h('span', { class: 'switch-pic', 'aria-hidden': 'true' });
   const name = h('span', { class: 'switch-name' });
@@ -199,7 +200,8 @@ export function systemTab(): Tab {
     else paintWall(wallPic, ctx.state, c.id);
     wallCard.classList.toggle('locked', !!c.locked);
     setText(wallName, c.locked ? '???' : c.name);
-    setText(wallLock, c.locked ? `Gesperrt. Gibt’s für: ${c.locked}` : c.id === validWall(ctx.state, ctx.state.settings.wallpaper) ? 'Hängt gerade.' : '');
+    const hanging = c.id === validWall(ctx.state, ctx.state.settings.wallpaper);
+    setText(wallLock, c.locked ? `Gesperrt. Gibt’s für: ${c.locked}` : [c.note, hanging ? 'Hängt gerade.' : ''].filter(Boolean).join(' '));
     setText(wallCount, `${i + 1} / ${list.length}`);
     if (dir) {
       wallCard.classList.remove('slide-l', 'slide-r');
@@ -224,6 +226,10 @@ export function systemTab(): Tab {
     wallSig = sig;
     showWall(validWall(s, s.settings.wallpaper));
   };
+
+  /** Bereich der Einstellungen: Kopfzeile (mit Schalter für alles), darunter die Einzelheiten */
+  const group = (title: string, toggle: HTMLElement | null, children: HTMLElement[]) =>
+    h('section', { class: 'conf-group' }, [h('div', { class: 'conf-head' }, [h('span', { class: 'conf-title', text: title }), ...(toggle ? [toggle] : [])]), ...children]);
 
   const button = (label: string, onClick: () => void, cls = 'btn') => {
     const b = h('button', { class: cls, type: 'button', text: label });
@@ -311,6 +317,10 @@ export function systemTab(): Tab {
       wallPrev.addEventListener('click', () => stepWall(-1));
       wallNext.addEventListener('click', () => stepWall(1));
       onSwipe(wallCard, stepWall);
+      ambVolume.value = String(ctx.state.settings.ambienceVolume);
+      ambVolume.addEventListener('input', () => {
+        ctx.state.settings.ambienceVolume = Number(ambVolume.value);
+      });
       volume.value = String(ctx.state.settings.volume);
       volume.addEventListener('input', () => {
         ctx.state.settings.volume = Number(volume.value);
@@ -324,47 +334,47 @@ export function systemTab(): Tab {
         h('dl', { class: 'stats' }, Object.values(stats).flatMap((s) => s.nodes)),
 
         h('div', { class: 'section-title', text: '# /etc/helpdesk.conf' }),
-        h('div', { class: 'setting' }, [
-          h('div', {}, [
-            h('div', { text: 'Sound' }),
-            h('div', { class: 'hint', text: 'iPhone im Lautlos-Modus bleibt stumm.' }),
+        group('Sound', soundBtn, [
+          h('p', { class: 'hint conf-hint', text: 'Schaltet alles auf einmal. iPhone im Lautlos-Modus bleibt stumm.' }),
+          h('div', { class: 'setting' }, [h('div', { text: 'Tastatur & Spiel' }), volume]),
+          h('div', { class: 'setting' }, [
+            h('div', {}, [h('div', { text: 'Büro-Geräusche' }), h('div', { class: 'hint', text: 'Ganz nach links = aus.' })]),
+            ambVolume,
           ]),
-          soundBtn,
-        ]),
-        h('div', { class: 'setting' }, [h('div', { text: 'Lautstärke' }), volume]),
-        h('div', { class: 'setting-col' }, [
-          h('div', { text: 'Tastatur-Switch (Klang beim Tippen)' }),
-          h('div', { class: 'hint', text: 'Switch drücken = Probe hören. Pfeile oder Wischen = anderen einbauen.' }),
-          h('div', { class: 'switch-carousel' }, [prevBtn, card, nextBtn]),
-          h('div', { class: 'switch-dots', role: 'radiogroup', 'aria-label': 'Klick-Sound' }, dots),
-        ]),
-        h('div', { class: 'setting' }, [
-          h('div', {}, [h('div', { text: 'Vibration' }), h('div', { class: 'hint', text: HAPTIC_HINT[hapticSupport()] })]),
-          hapticBtn,
-        ]),
-        h('div', { class: 'setting' }, [
-          h('div', {}, [
-            h('div', { text: 'Hinweise vom Vorgänger' }),
-            h('div', { class: 'hint', text: 'Kurze Post-its, wenn etwas zum ersten Mal wichtig wird.' }),
+          h('div', { class: 'setting-col' }, [
+            h('div', { text: 'Tastatur-Switch (Klang beim Tippen)' }),
+            h('div', { class: 'hint', text: 'Switch drücken = Probe hören. Pfeile oder Wischen = anderen einbauen.' }),
+            h('div', { class: 'switch-carousel' }, [prevBtn, card, nextBtn]),
+            h('div', { class: 'switch-dots', role: 'radiogroup', 'aria-label': 'Klick-Sound' }, dots),
           ]),
-          hintBtn,
         ]),
-        h('div', { class: 'actions' }, [
-          button('Übergabe nochmal lesen', () => {
-            resetTutorial(ctx.state);
-            ctx.log.write('info', 'hr[42]: Übergabe-Post-its wieder aufgehängt. Mit Tesafilm. Wieder schief.');
-            ctx.sfx.tick();
-          }),
-        ]),
-
-        h('div', { class: 'setting-col' }, [
-          h('div', { text: 'Hintergrundbild' }),
-          h('div', { class: 'hint', text: 'Jede Firma hat ihr eigenes. Weitere gibt’s für Achievements. Pfeile oder Wischen = anderes aufhängen.' }),
-          h('div', { class: 'switch-carousel' }, [wallPrev, wallCard, wallNext]),
+        group('Vibration', hapticBtn, [h('p', { class: 'hint conf-hint', text: HAPTIC_HINT[hapticSupport()] })]),
+        group('Optik', null, [
+          h('div', { class: 'setting-col' }, [
+            h('div', { text: 'Hintergrundbild' }),
+            h('div', { class: 'hint', text: 'Jede Firma hat ihr eigenes. Weitere gibt’s für Achievements. Pfeile oder Wischen = anderes aufhängen.' }),
+            h('div', { class: 'switch-carousel' }, [wallPrev, wallCard, wallNext]),
+          ]),
         ]),
 
         h('div', { class: 'section-title', text: '# Spielstand' }),
-        h('div', { class: 'actions' }, [
+        // Hinweise vom Vorgänger: eine Zeile mit Schalter und „nochmal lesen“
+        h('div', { class: 'setting' }, [
+          h('div', {}, [h('div', { text: 'Hinweise vom Vorgänger' }), h('div', { class: 'hint', text: 'Post-its, wenn etwas neu ist.' })]),
+          h('div', { class: 'setting-btns' }, [
+            button(
+              'Nochmal',
+              () => {
+                resetTutorial(ctx.state);
+                ctx.log.write('info', 'hr[42]: Übergabe-Post-its wieder aufgehängt. Mit Tesafilm. Wieder schief.');
+                ctx.sfx.tick();
+              },
+              'btn btn-compact',
+            ),
+            hintBtn,
+          ]),
+        ]),
+        h('div', { class: 'actions actions-reset' }, [
           button('Alles löschen', resetDialog, 'btn btn-danger'),
         ]),
         h('p', {
@@ -391,6 +401,7 @@ export function systemTab(): Tab {
         btn.classList.toggle('off', !on);
       }
       volume.disabled = !s.settings.sound;
+      ambVolume.disabled = !s.settings.sound;
       showSwitch(validSwitch(s.settings.tapSound));
     },
   };

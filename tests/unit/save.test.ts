@@ -100,6 +100,13 @@ describe('Laden: Pager-Event und Lautstärke werden normalisiert', () => {
     expect(load({ settings: { volume: -3 } }).settings.volume).toBe(0);
     expect(load({ settings: { volume: 0.3 } }).settings.volume).toBe(0.3);
   });
+
+  it('Büro-Geräusche: Regler 0..1, alter Schalter „aus“ wird zu 0', () => {
+    expect(load({}).settings.ambienceVolume).toBe(0.4);
+    expect(load({ settings: { ambienceVolume: 7 } }).settings.ambienceVolume).toBe(1);
+    expect(load({ settings: { ambienceVolume: 0.8, ambience: false } }).settings.ambienceVolume).toBe(0);
+    expect('ambience' in load({ settings: { ambience: false } }).settings).toBe(false);
+  });
 });
 
 describe('Saver', () => {

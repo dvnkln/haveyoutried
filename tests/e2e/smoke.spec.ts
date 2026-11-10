@@ -544,3 +544,37 @@ test('Hinweis vom Vorgänger hält die Tastatur an, bis man ihn bestätigt', asy
   await page.locator('.key[data-key="W"]').tap();
   await expect.poll(typedLen).not.toBe(before);
 });
+
+test('Wer im App-Fenster ist, macht keine Pause: danach keine Memes', async ({ page }) => {
+  const save = { version: 1, clicks: 50, lastTick: Date.now(), flags: { 'tut:off': 1 } };
+  await page.addInitScript((json) => localStorage.setItem('hyt.save', json), JSON.stringify(save));
+  await page.clock.install();
+  await page.goto('/');
+  await page.locator('.key[data-key="Q"]').tap();
+  // länger als die Meme-Schwelle (15 s) im Infra-Fenster
+  await page.getByRole('button', { name: /Infra/ }).tap();
+  await page.clock.runFor(17_000);
+  await page.locator('.sheet-close').tap();
+  await page.clock.runFor(1_000);
+  await expect(page.locator('.work')).not.toHaveAttribute('data-kind', 'memes');
+  // ohne Fenster und ohne Tippen kommen sie wie gewohnt
+  await page.clock.runFor(16_000);
+  await expect(page.locator('.work')).toHaveAttribute('data-kind', 'memes');
+});
+
+test('Büro-Geräusche: jedes Geräusch von nebenan spielt ohne Fehler', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.addInitScript(() => localStorage.setItem('hyt.save', JSON.stringify({ version: 1, clicks: 50, lastTick: Date.now(), flags: { 'tut:off': 1 } })));
+  await page.goto('/');
+  // eine Geste gibt den Ton frei
+  await page.locator('.key[data-key="Q"]').tap();
+  const played = await page.evaluate(() => {
+    const amb = (window as unknown as { hytAmbience: { play(kind: string): void } }).hytAmbience;
+    for (const kind of ['typing', 'printer', 'phone', 'chair', 'water', 'coffee']) amb.play(kind);
+    return true;
+  });
+  expect(played).toBe(true);
+  await page.waitForTimeout(500);
+  expect(errors).toEqual([]);
+});

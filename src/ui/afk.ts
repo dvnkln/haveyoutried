@@ -9,6 +9,8 @@ import { gamePaused } from './blocked';
 import { MAIL_AFTER_SCREEN_MS } from './boot';
 import { AFK_HINTS, LIGHTS_OFF_LINES, LIGHTS_ON_LINES, SCREEN_ON_LINES } from '../content/boot';
 
+/** Nach Incident oder Dialog: so lange mindestens, bevor das Licht ausgehen darf */
+const BUSY_GRACE_MS = 60_000;
 /** Erst geht der Monitor in Standby, dann das Licht */
 const LIGHTS_AFTER_SCREEN_MS = 900;
 
@@ -26,6 +28,8 @@ export function createAfk(state: GameState, log: SysLog, power: Power, onWake: (
   let ticketsAtInput = state.ticketsAllTime;
   /** Zeitpunkt, an dem die Seite verdeckt wurde (Display aus, App gewechselt) */
   let hiddenAt = 0;
+  /** im letzten Schritt lief ein Incident oder war ein Dialog offen */
+  let wasBusy = false;
 
   const enter = () => {
     afk = true;
@@ -89,12 +93,16 @@ export function createAfk(state: GameState, log: SysLog, power: Power, onWake: (
       const idle = now - lastInput;
       // mitten im Minispiel oder bei offenem Dialog (Entscheidung, Bericht) bleibt das Licht an;
       // ein wartender Alarm wartet im Dunkeln (stumm) weiter
-      const busy = document.querySelector('.incident.playing') || document.querySelector('dialog[open]');
-      if (!afk && !booting && idle >= CONFIG.afkMs && !document.hidden && !busy) enter();
+      const busy = !!(document.querySelector('.incident.playing') || document.querySelector('dialog[open]'));
+      // gerade einen Incident gelöst oder einen Dialog geschlossen: nicht gleich Licht aus, eine Minute Schonfrist
+      if (wasBusy && !busy && idle > CONFIG.afkMs - BUSY_GRACE_MS) lastInput = now - (CONFIG.afkMs - BUSY_GRACE_MS);
+      wasBusy = busy;
+      if (!afk && !booting && now - lastInput >= CONFIG.afkMs && !document.hidden && !busy) enter();
       // Zettel vom Vorgänger oder Dialog offen: Spielzeit steht (Chef-Aufgabe, Boosts, Ereignisse), damit man in Ruhe liest;
-      // die Infrastruktur arbeitet weiter
+      // die Infrastruktur arbeitet weiter, bei langer Abwesenheit (Dialog offen gelassen) aber nur wie bei Abwesenheit
       if (!afk && !booting && !power.screenOff && gamePaused()) {
-        tick(state, dtSec, now, false);
+        if (idle >= CONFIG.afkMs) afkTick(state, dtSec, now, idle);
+        else tick(state, dtSec, now, false);
         return;
       }
       // Monitor aus: es läuft nur die Infrastruktur, keine Anrufe, Pager oder Incidents im Dunkeln

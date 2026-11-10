@@ -12,6 +12,8 @@ export interface WallChoice {
   name: string;
   /** noch nicht freigeschaltet: Hinweis, wie es dazu kommt */
   locked?: string;
+  /** kleine Zusatzzeile */
+  note?: string;
 }
 
 const firmWall = (companyId: string) => COMPANY_WALLS[companyId] ?? COMPANY_WALLS.mueller!;
@@ -27,7 +29,7 @@ const visited = (s: GameState) => {
 export function wallChoices(s: GameState, achievementName: (id: string) => string): WallChoice[] {
   return [
     // aktuelle Firma nur einmal: als „automatisch“ (wechselt beim Jobwechsel mit), frühere Firmen einzeln
-    { id: AUTO_WALL, name: `${shortName(companyOf(s.prestige.company).name)} (aktuelle Firma)` },
+    { id: AUTO_WALL, name: shortName(companyOf(s.prestige.company).name), note: 'Aktuelle Firma, wechselt mit.' },
     ...visited(s)
       .filter((id) => id !== s.prestige.company)
       .map((id) => ({ id: FIRM + id, name: shortName(companyOf(id).name) })),
