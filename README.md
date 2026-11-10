@@ -36,6 +36,8 @@
 
 ## 🚀 Schnellstart
 
+Voraussetzung: [Node.js](https://nodejs.org) 22.12 oder neuer.
+
 ```bash
 npm install
 npm run dev          # Entwicklungsserver, Adresse steht in der Ausgabe (auch im LAN)
@@ -45,9 +47,14 @@ Weitere Befehle:
 
 ```bash
 npm test             # Unit-Tests (vitest): Spiellogik, Balancing, Inhalte
-npm run test:e2e     # Playwright im 360-px-Hochformat, eigener Test-Build (?incident=…, ?boot)
 npm run build        # Typprüfung und Produktions-Build nach dist/
+npm run preview      # den Build lokal ausprobieren
+
+npx playwright install chromium   # einmalig, für die Browser-Tests
+npm run test:e2e     # Playwright im 360-px-Hochformat, eigener Test-Build (?incident=…, ?boot)
 ```
+
+Optional: `npm run vorschau` baut das Spiel und stellt es dauerhaft per nginx-Container bereit (Docker nötig), standardmäßig auf Port 8081 im ganzen Netzwerk. Einen anderen Port oder eine feste Adresse setzt `VORSCHAU_BIND` (z. B. `9000` oder `192.168.1.20:9000`), auch dauerhaft in einer lokalen Datei `werkzeug/vorschau.env`.
 
 Wo was liegt:
 

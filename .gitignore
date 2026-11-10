@@ -4,3 +4,4 @@ test-results
 playwright-report
 *.log
 dist-e2e
+werkzeug/vorschau.env
