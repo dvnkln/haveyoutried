@@ -15,6 +15,11 @@
   tippst <b>Tickets</b> weg, bis Praktikanten, Skripte und Server die Arbeit machen – und der Pager trotzdem piept.
 </p>
 
+<p align="center">
+  <a href="https://dvnkln.github.io/haveyoutried/"><img src="https://img.shields.io/badge/%E2%96%B6%20jetzt%20spielen-im%20browser-3d2c2e?style=for-the-badge" alt="Jetzt im Browser spielen" /></a>
+</p>
+<p align="center"><sub>Immer der aktuelle Prototyp. Am besten auf dem Handy – dort lässt er sich auch als App installieren.</sub></p>
+
 ## ✨ Features
 
 - ⌨️ **Tickets wegtippen** – jede Taste ist richtig, und im Fenster entsteht eine echte Antwort auf das Anliegen am Telefon: per Mail, im Ticketsystem, im Terminal, im Chat oder per Fernwartung.
@@ -34,9 +39,9 @@
 | :-----------------------------------------------------------------------: | :------------------------------------------------------------------------: | :--------------------------------------------------------------------------: |
 | <img src="docs/bilder/incident.jpg" alt="Netzwerk-Incident als Minispiel" width="220" /> | <img src="docs/bilder/chefmail.jpg" alt="Abwesenheitsbericht vom Chef" width="220" /> | <img src="docs/bilder/hintergrund.jpg" alt="Desktop einer anderen Firma" width="220" /> |
 
-## 🚀 Schnellstart
+## 🛠️ Selbst bauen
 
-Voraussetzung: [Node.js](https://nodejs.org) 22.12 oder neuer.
+Zum Spielen brauchst du nichts davon – nur wenn du am Spiel etwas ändern möchtest. Voraussetzung: [Node.js](https://nodejs.org) 22.12 oder neuer.
 
 ```bash
 npm install
