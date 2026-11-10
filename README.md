@@ -76,7 +76,7 @@ Alles andere – Schreibtisch, Requisiten, Hintergrundbilder, Symbole und sämtl
 
 ## 💾 Vorbilder
 
-Das Spiel ist die Liebeserklärung eines Fans an den IT-Humor und steckt voller Anspielungen darauf:
+Das Spiel steckt voller Anspielungen auf die Klassiker des IT-Humors:
 [The IT Crowd](https://www.channel4.com/programmes/the-it-crowd) – von dort stammt auch der Titel –,
 die [BOFH](https://www.theregister.com/data_centre/bofh/)-Geschichten von Simon Travaglia,
 [xkcd](https://xkcd.com) von Randall Munroe, Dilbert von Scott Adams, Stromberg, Silicon Valley und allerlei Internet-Folklore.
