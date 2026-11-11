@@ -557,6 +557,7 @@ export class Sfx {
    */
   osStart(os: OsId): void {
     if (os === 'win98') return this.start98();
+    if (os === 'win7') return this.start7();
     this.unlockPing();
   }
 
@@ -579,6 +580,21 @@ export class Sfx {
     // aufsteigend, dann ein heller Abschluss; weich einsetzen (hart = Knackser bei jedem Ton)
     [1108.73, 1396.91, 1661.22, 2217.46].forEach((f, i) => this.tone('sine', f, f, t + 0.25 + i * 0.16, 0.04, 0.9, out, 0.035));
     this.tone('sine', 2793.83, 2793.83, t + 0.95, 0.025, 1.3, out, 0.04);
+  }
+
+  /** 7: vier weiche, aufsteigende Töne, die ineinander klingen, darunter eine leise Fläche (Regeln wie bei 98) */
+  private start7(): void {
+    const r = this.ready();
+    if (!r) return;
+    const { out, t } = r;
+    // leise Fläche: Es-Dur ohne Bass, langsam ein und aus
+    for (const f of [311.13, 392, 466.16]) this.tone('sine', f, f, t, 0.016, 1.8, out, 0.4);
+    // vier Töne, je etwas länger und leiser (Es, B, es, g)
+    [622.25, 932.33, 1244.51, 1567.98].forEach((f, i) => {
+      this.tone('sine', f, f, t + 0.08 + i * 0.22, 0.065 - i * 0.008, 0.9 + i * 0.15, out, 0.04);
+      // Oktave darüber, ganz leise: etwas Glanz (nur unter 3 kHz)
+      if (f * 2 < 3000) this.tone('sine', f * 2, f * 2, t + 0.08 + i * 0.22, 0.008, 0.5, out, 0.04);
+    });
   }
 
   /** Neuer Anrufer: deutsches Freizeichen (425 Hz), ganz kurz und leise. */

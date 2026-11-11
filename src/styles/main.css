@@ -10118,3 +10118,241 @@ html[data-os='win98'] #app .work[data-kind='term'] :is(.typed-prompt, .prompt-us
 html[data-os='win98'] #app .work[data-kind='term'] .term-dots {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 13'%3E%3Crect x='1' y='1' width='12' height='8' fill='%23ddd' stroke='%23111'/%3E%3Crect x='3' y='3' width='8' height='4' fill='%23111'/%3E%3Cpath d='M4 12h6M7 9v3' stroke='%23ddd'/%3E%3C/svg%3E");
 }
+
+/* ---------- Betriebssystem Fenster 7: dunkle Glas-Taskleiste mit runder Start-Kugel, helle Glas-Titelleisten ----------
+   Wie bei 98: Farben über --os-*, Formen hier; Höhen bleiben gleich (Arbeitsfenster pixelgleich). */
+html[data-os='win7'] #app {
+  --w7-glass: linear-gradient(180deg, #c9def4 0%, #b3cdeb 45%, #a4c2e6 55%, #b7d1ee 100%);
+  --os-bar: linear-gradient(180deg, rgba(62, 88, 120, 0.96) 0%, rgba(27, 42, 64, 0.97) 50%, rgba(16, 27, 44, 0.98) 100%);
+  --os-bar-v: linear-gradient(90deg, rgba(16, 27, 44, 0.98), rgba(40, 60, 88, 0.96));
+  --os-bar-fg: #fff;
+  --os-shine: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  --os-text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  --os-start: radial-gradient(circle at 50% 35%, #bdf0ff 0%, #4fb2ee 30%, #1a63b5 62%, #0b2c5c 100%);
+  --os-start-down: radial-gradient(circle at 50% 35%, #e2f8ff 0%, #79cdf6 30%, #2a7bcb 62%, #0f3970 100%);
+  --os-start-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.7), 0 0 4px rgba(120, 200, 255, 0.6);
+  --os-start-radius: 50%;
+  --os-start-radius-v: 50%;
+  --os-start-glyph: #1a63b5;
+  --os-tray: transparent;
+  --os-tray-v: transparent;
+  --os-tray-edge: transparent;
+  --os-tray-shine: none;
+  --os-tray-shine-v: none;
+  --os-clock-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  --os-menu: #fdfeff;
+  --os-menu-head: linear-gradient(180deg, rgba(62, 88, 120, 0.97), rgba(16, 27, 44, 0.98));
+  --os-menu-title: 'Alle Programme';
+  --os-menu-font: 600 11.5px / 1.2 var(--font-ui);
+  --os-title: var(--w7-glass);
+  --os-title-fg: #10223a;
+  --os-title-shine: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+  --os-btn: linear-gradient(180deg, #edf3fa 0%, #cfdcec 50%, #b9cbe2 100%);
+  --os-btn-x: linear-gradient(180deg, #eaa596 0%, #d0563f 50%, #b02a17 100%);
+  --os-btn-edge: rgba(28, 52, 86, 0.7);
+  --os-btn-radius: 3px;
+  --os-btn-fg: #2a3b52;
+  --os-btn-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  /* nur Farben: die Statuszeile baut daraus selbst den Fortschritts-Verlauf */
+  --os-status: #e8eef6;
+  --os-status-fill: #c7e8d3;
+  --os-status-sent: #a6dcbc;
+  --os-status-shade: inset 0 1px 0 #fff;
+  --os-login: radial-gradient(ellipse 90% 60% at 50% 30%, #3a9ae6 0%, #1767bd 45%, #0b3f86 75%, #082c63 100%);
+  --os-login-dim: #d6e8ff;
+  --os-login-hint: #d6e8ff;
+}
+/* Start: runde Kugel ohne Beschriftung (kein Logo: ein heller Funke). Der Knopf bleibt so breit wie bei XP:
+   links ragt das Telefon über die Leiste (bis ~56 px), die Kugel muss rechts davon frei antippbar sein */
+html[data-os='win7'] #app .taskbar-start {
+  width: 64px;
+  padding: 0;
+  justify-content: center;
+  border-right: 0;
+  background: none;
+  box-shadow: none;
+}
+html[data-os='win7'] #app .start-label {
+  display: none;
+}
+html[data-os='win7'] #app .start-glyph {
+  width: 19px;
+  height: 19px;
+  padding: 0;
+  border: 1px solid #0a1a30;
+  background:
+    radial-gradient(circle at 50% 50%, #fff 0 12%, rgba(255, 255, 255, 0.45) 22%, transparent 34%),
+    var(--os-start);
+  box-shadow: var(--os-start-shadow);
+  color: transparent;
+}
+html[data-os='win7'] #app .taskbar-start:active .start-glyph,
+html[data-os='win7'] #app .taskbar-start[aria-expanded='true'] .start-glyph {
+  background:
+    radial-gradient(circle at 50% 50%, #fff 0 14%, rgba(255, 255, 255, 0.55) 26%, transparent 38%),
+    var(--os-start-down);
+}
+html[data-os='win7'] #app:is([data-taskbar='left'], [data-taskbar='right']) .taskbar-start {
+  width: auto;
+  border-bottom: 0;
+  background: none;
+}
+/* Infobereich: gehört zur Leiste, nur eine feine Trennlinie */
+html[data-os='win7'] #app .tray-area {
+  border-left: 1px solid rgba(255, 255, 255, 0.18);
+}
+html[data-os='win7'] #app:is([data-taskbar='left'], [data-taskbar='right']) .tray-area {
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+}
+/* Startmenü: weiß mit dunkler Glas-Leiste, runde Ecken */
+html[data-os='win7'] #app .launcher {
+  border-radius: 0 7px 0 0;
+}
+/* Titelleiste: dunkle Schrift mit hellem Schein (wie das Glas), × breit und rot */
+html[data-os='win7'] #app .work-bar {
+  text-shadow: 0 0 6px #fff, 0 0 2px #fff;
+}
+html[data-os='win7'] #app .win-btns {
+  gap: 0;
+}
+html[data-os='win7'] #app .win-btns > span {
+  border-radius: 0;
+  border-right-width: 0;
+}
+html[data-os='win7'] #app .win-btns > span:first-child {
+  border-radius: 3px 0 0 3px;
+}
+html[data-os='win7'] #app .win-btns > .win-x {
+  width: 24px;
+  border-right-width: 1.5px;
+  border-radius: 0 3px 3px 0;
+  color: #fff;
+}
+/* Browser (Netz-Erkunder 8): Glas statt Lila */
+html[data-os='win7'] #app .browser {
+  background: #d6e5f5;
+}
+html[data-os='win7'] #app .br-tabs .br-tab {
+  border-radius: 4px 4px 0 0;
+  background: #c3d6ec;
+}
+html[data-os='win7'] #app .br-tabs .br-tab.on {
+  background: #fff;
+}
+html[data-os='win7'] #app .br-url {
+  border-radius: 2px;
+  background: #fff;
+}
+/* Anmeldung: alles mittig untereinander, großes Bild im Glasrahmen, Kennwort mit Pfeil-Knopf, unten der Name */
+html[data-os='win7'] #app .login-band {
+  height: auto;
+  min-height: 0;
+  background: none;
+}
+html[data-os='win7'] #app .login-band:not(.login-foot) {
+  display: none;
+}
+html[data-os='win7'] #app .login-mid {
+  /* Name und „Willkommen“ richten sich am ganzen Bildschirm aus, nicht an der Mitte */
+  position: static;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+}
+/* Name des Systems unten in der Mitte, wie beim Vorbild */
+html[data-os='win7'] #app .login-brand {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 9px;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  text-align: center;
+}
+html[data-os='win7'] #app .login-brand b {
+  font: 600 13px / 1 var(--font-ui);
+  letter-spacing: 0.04em;
+  opacity: 0.85;
+}
+html[data-os='win7'] #app .login-brand span {
+  display: none;
+}
+html[data-os='win7'] #app .login-user {
+  flex: 0 0 auto;
+  flex-direction: column;
+  padding: 0;
+  text-align: center;
+}
+html[data-os='win7'] #app .login-pic {
+  width: 46px;
+  height: 46px;
+  border: 3px solid rgba(255, 255, 255, 0.85);
+  border-radius: 6px;
+  box-shadow: 0 0 0 1px rgba(10, 40, 90, 0.6), 0 3px 8px rgba(0, 0, 0, 0.35);
+}
+html[data-os='win7'] #app .login-info {
+  align-items: center;
+}
+html[data-os='win7'] #app .login-name {
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+html[data-os='win7'] #app .login-host {
+  display: none;
+}
+html[data-os='win7'] #app .login-pw {
+  position: relative;
+  /* der Pfeil-Knopf hängt rechts außen dran */
+  overflow: visible;
+  width: 118px;
+  padding-right: 20px;
+  border: 1px solid rgba(10, 40, 90, 0.8);
+  border-radius: 2px;
+}
+/* Pfeil-Knopf rechts am Kennwortfeld */
+html[data-os='win7'] #app .login-pw::after {
+  content: '➜';
+  position: absolute;
+  top: -1px;
+  right: -22px;
+  width: 17px;
+  height: 16px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(10, 40, 90, 0.8);
+  border-radius: 3px;
+  background: linear-gradient(180deg, #8fd0ff, #2b7fd0);
+  color: #fff;
+  font-size: 9px;
+  letter-spacing: 0;
+}
+html[data-os='win7'] #app .login-hint {
+  max-width: 190px;
+}
+/* unten rechts nur der rote Ausschalt-Knopf */
+html[data-os='win7'] #app .login-foot {
+  justify-content: flex-end;
+  padding: 0 8px 7px;
+  border-top: 0;
+}
+html[data-os='win7'] #app .login-off {
+  font-size: 0;
+}
+html[data-os='win7'] #app .login-off::before {
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  font-size: 9px;
+}
+/* niedrige Handys: Bild kleiner, weniger Abstand (sonst ist das Bild oben angeschnitten) */
+@media (max-height: 680px) {
+  html[data-os='win7'] #app .login-mid {
+    gap: 6px;
+  }
+  html[data-os='win7'] #app .login-pic {
+    width: 34px;
+    height: 34px;
+  }
+}
+html[data-os='win7'] #app .login-welcome {
+  font: 400 20px / 1 var(--font-ui);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
