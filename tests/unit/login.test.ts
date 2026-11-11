@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { markLoggedIn, needsLogin } from '../../src/core/login';
+import { markLoggedIn, needsLogin, needsOsLogin, requireOsLogin } from '../../src/core/login';
+import { serialize } from '../../src/core/save';
 import { deserialize } from '../../src/core/save';
 import { createInitialState } from '../../src/core/state';
 
@@ -25,5 +26,16 @@ describe('Anmeldebildschirm', () => {
     expect(needsLogin(old)).toBe(false);
     const fresh = deserialize(JSON.stringify({ version: 1, clicks: 0 }), 1)!;
     expect(needsLogin(fresh)).toBe(true);
+  });
+
+  it('Systemwechsel: neue Anmeldung übersteht Neuladen, Anmelden erledigt sie', () => {
+    const s = createInitialState(0);
+    markLoggedIn(s);
+    requireOsLogin(s);
+    const back = deserialize(serialize(s), 0)!;
+    expect(needsOsLogin(back)).toBe(true);
+    expect(needsLogin(back)).toBe(false);
+    markLoggedIn(back);
+    expect(needsOsLogin(back)).toBe(false);
   });
 });

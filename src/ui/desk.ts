@@ -1,7 +1,7 @@
 import { bus } from '../core/bus';
 import { CONFIG } from '../config';
 import { LOGIN, NEXT_TOOL_HINT, TOOL_HINT } from '../content/boot';
-import { markLoggedIn, needsLogin } from '../core/login';
+import { markLoggedIn, needsLogin, needsOsLogin, requireOsLogin } from '../core/login';
 import { createLogin } from './login';
 import { MELODIES, type Melody } from '../content/melodies';
 import { HINT_DELAY_MS } from './power';
@@ -530,6 +530,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
   });
   // anderes System gewählt (Einstellungen zu): Neustart, neu anmelden
   bus.on('osChanged', () => {
+    requireOsLogin(ctx.state);
     closeTool();
     login.show('os');
   });
@@ -754,6 +755,11 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
         markLoggedIn(ctx.state);
         openTool();
       } else if (needsLogin(ctx.state)) login.show(ctx.state.prestige.jobs === 0 ? 'first' : 'job');
+      else if (needsOsLogin(ctx.state)) login.show('os');
+    },
+    /** Optik ist umgesprungen (Neustart): offene Anmeldung neu beschriften */
+    osShown() {
+      if (login.active()) login.relabel();
     },
     /** Anmeldebildschirm (liegt im Monitor über dem Desktop) */
     loginEl: login.el,

@@ -11,8 +11,8 @@ import { clearWall, paintWall, validWall, wallChoices } from '../wallpaper';
 import { ACHIEVEMENTS } from '../../content/achievements';
 import { achievementCount } from '../../core/achievements';
 import { COMPANIES } from '../../content/companies';
-import { SYSTEMS, type OsId } from '../../content/systems';
-import { activeOs, chooseOs, osUnlocked } from '../../core/os';
+import { osOf, SYSTEMS, type OsId } from '../../content/systems';
+import { activeOs, chooseOs, osAvailable } from '../../core/os';
 
 /**
  * Seitlich wischen = blättern (die Maus darf über den Rand hinausziehen).
@@ -39,6 +39,8 @@ function onSwipe(el: HTMLElement, step: (dir: number) => void, hooks: { down?():
 
 const OS_HINT = 'Jede Firma bringt ihr System mit. Einmal benutzt, bleibt es dir.';
 const OS_PENDING = 'Neustart, sobald du die Einstellungen schließt.';
+/** System ohne fertigen Look */
+const OS_LATER = 'Gesperrt. Steht noch im Testlabor. Das Testlabor ist ein Karton im Flur.';
 
 /** Quellcode des Spiels (AGPL) */
 const SOURCE_URL = 'https://github.com/dvnkln/haveyoutried';
@@ -120,6 +122,7 @@ export function systemTab(): Tab {
   const osHint = h('div', { class: 'hint' });
   /** Firmen, bei denen ein gesperrtes System läuft: „Läuft bei: A, B und 3 weiteren.“ */
   const lockedQuip = (id: OsId) => {
+    if (!osOf(id).ready) return OS_LATER;
     const names = COMPANIES.filter((c) => c.os === id).map((c) => c.name.replace(/ \(.*\)$/, ''));
     const more = names.length - 2;
     return `Gesperrt. Läuft bei: ${names.slice(0, 2).join(', ')}${more > 0 ? ` und ${more === 1 ? 'einer' : more} weiteren` : ''}.`;
@@ -392,7 +395,7 @@ export function systemTab(): Tab {
       const pickOs = (btn: HTMLElement, focus = false) => {
         const id = btn.dataset.os as OsId;
         if (focus) btn.focus();
-        if (!osUnlocked(ctx.state, id)) {
+        if (!osAvailable(ctx.state, id)) {
           quipAt(btn, lockedQuip(id));
           return;
         }
@@ -400,7 +403,7 @@ export function systemTab(): Tab {
         chooseOs(ctx.state, id);
         ctx.sfx.tick();
         ctx.haptic('tap');
-        quipAt(btn, SYSTEMS.find((o) => o.id === id)!.quip);
+        quipAt(btn, osOf(id).quip);
       };
       for (const b of osButtons) b.addEventListener('click', () => pickOs(b));
       // Radiogruppe: Pfeiltasten springen zum nächsten freigeschalteten System
@@ -411,7 +414,7 @@ export function systemTab(): Tab {
         const n = SYSTEMS.length;
         let i = SYSTEMS.findIndex((o) => o.id === activeOs(ctx.state));
         do i = (i + dir + n) % n;
-        while (!osUnlocked(ctx.state, SYSTEMS[i]!.id));
+        while (!osAvailable(ctx.state, SYSTEMS[i]!.id));
         pickOs(osButtons[i]!, true);
       });
       // Radiogruppe: Pfeiltasten wechseln
@@ -513,17 +516,17 @@ export function systemTab(): Tab {
         if (b.tabIndex !== (on ? 0 : -1)) b.tabIndex = on ? 0 : -1;
       }
       const os = activeOs(s);
-      for (const b of osButtons) {
-        const id = b.dataset.os as OsId;
-        const open = osUnlocked(s, id);
-        const on = id === os;
-        const label = open ? SYSTEMS.find((o) => o.id === id)!.name : '???';
+      SYSTEMS.forEach((o, i) => {
+        const b = osButtons[i]!;
+        const open = osAvailable(s, o.id);
+        const on = o.id === os;
+        const label = open ? o.name : '???';
         if (b.classList.contains('locked') === open) b.classList.toggle('locked', !open);
         setText(b.lastElementChild as HTMLElement, label);
         if (b.getAttribute('aria-label') !== (open ? label : 'Gesperrt')) b.setAttribute('aria-label', open ? label : 'Gesperrt');
         if (b.getAttribute('aria-checked') !== String(on)) b.setAttribute('aria-checked', String(on));
         if (b.tabIndex !== (on ? 0 : -1)) b.tabIndex = on ? 0 : -1;
-      }
+      });
       // gewählt, aber noch nicht gestartet: das gezeigte System steht an <html> (app.ts)
       setText(osHint, os !== document.documentElement.dataset.os ? OS_PENDING : OS_HINT);
       osHint.classList.toggle('os-pending', os !== document.documentElement.dataset.os);

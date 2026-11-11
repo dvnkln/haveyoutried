@@ -2,6 +2,7 @@ import { LOGIN } from '../content/boot';
 import { companyOf } from '../content/companies';
 import { osOf } from '../content/systems';
 import { activeOs } from '../core/os';
+import { isOsId } from '../content/systems';
 import { markLoggedIn } from '../core/login';
 import type { AppContext } from './app';
 import { h, setText } from './dom';
@@ -19,6 +20,8 @@ export interface Login {
   el: HTMLElement;
   /** Bildschirm zeigen (Kennwortfeld leer); first = allererster Start, job = neue Firma, os = anderes System (je eigener Kennworthinweis) */
   show(reason: LoginReason): void;
+  /** Titel und Text an das gerade gezeigte System anpassen (Neustart: erst wenn das Bild dunkel ist) */
+  relabel(): void;
   /** Anmeldebildschirm steht (auch während „Willkommen“): Anschläge gehen hierher */
   active(): boolean;
   /** ein Anschlag = ein Punkt im Kennwortfeld: 'dot', beim letzten 'done' (spielt selbst einen Ton), sonst null (nichts mehr einzugeben) */
@@ -66,15 +69,22 @@ export function createLogin(ctx: AppContext, onDone: () => void): Login {
     timers = [];
   };
 
+  /** beschriftet nach dem gezeigten System (html[data-os]), nicht dem gewählten: beim Neustart springt die Optik später um */
+  const relabel = () => {
+    const shown = document.documentElement.dataset.os;
+    const os = osOf(isOsId(shown) ? shown : activeOs(ctx.state));
+    setText(brand, os.loginBrand ?? '');
+    brand.hidden = !os.loginBrand;
+    setText(prompt, os.loginPrompt ?? LOGIN.prompt);
+  };
+
   return {
     el,
+    relabel,
     show(reason) {
       clearTimers();
       typed = 0;
-      const os = osOf(activeOs(ctx.state));
-      setText(brand, os.loginBrand ?? '');
-      brand.hidden = !os.loginBrand;
-      setText(prompt, os.loginPrompt ?? LOGIN.prompt);
+      relabel();
       setText(host, companyOf(ctx.state.prestige.company).host);
       setText(hint, HINTS[reason]);
       setText(dots, '');

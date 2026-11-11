@@ -147,10 +147,12 @@ export function startFlavor(ctx: AppContext, app: App): void {
     }
   });
   // alter Spielstand: das System der Firma kam mit dem Update dazu, XP läuft weiter
+  // (Merker erst weg, wenn die Meldung wirklich erschienen ist: eine volle Schlange wirft alte Meldungen raus)
   if (state.flags[OS_NOTICE_FLAG]) {
-    delete state.flags[OS_NOTICE_FLAG];
     const name = osOf(companyOf(state.prestige.company).os).name;
-    app.toast(`Neues Betriebssystem: ${name}`, 'Kam mit dem letzten Update. XP läuft weiter, umstellen unter System → Optik.', 'os');
+    app.toast(`Neues Betriebssystem: ${name}`, 'Kam mit dem letzten Update. XP läuft weiter, umstellen unter System → Optik.', 'os', () => {
+      delete state.flags[OS_NOTICE_FLAG];
+    });
   }
   // Uhrzeit-Achievements nur, wenn kürzlich geklickt wurde (nicht bei offenem Tab über Nacht)
   let lastClickAt = -Infinity;

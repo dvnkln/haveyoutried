@@ -16,9 +16,10 @@ export type ToastKind = 'achievement' | 'boss' | 'boss-done' | 'boss-failed' | '
  * Kurze Meldungen unten im Inhaltsbereich (z. B. Achievements), blockieren nichts.
  * Immer nur eine zur Zeit; weitere stellen sich hinten an, statt sich zu stapeln.
  */
-export function createToaster(): { el: HTMLElement; show(title: string, text: string, kind?: ToastKind): void } {
+export function createToaster(): { el: HTMLElement; show(title: string, text: string, kind?: ToastKind, onShow?: () => void): void } {
   const el = h('div', { class: 'toasts', 'aria-live': 'polite' });
-  const queue: { title: string; text: string; kind: ToastKind }[] = [];
+  /** onShow: läuft erst, wenn die Meldung wirklich erscheint (volle Schlange wirft alte raus) */
+  const queue: { title: string; text: string; kind: ToastKind; onShow?: () => void }[] = [];
   let showing = false;
 
   const next = () => {
@@ -38,6 +39,7 @@ export function createToaster(): { el: HTMLElement; show(title: string, text: st
     const cls = item.kind.startsWith('boss-') ? `toast toast-boss toast-${item.kind}` : `toast toast-${item.kind}`;
     const t = h('div', { class: cls, ...(item.kind === 'error' ? { role: 'alert' } : {}) }, [h('div', { class: 'toast-title', text: item.title }), h('div', { class: 'toast-text', text: item.text })]);
     el.append(t);
+    item.onShow?.();
     setTimeout(() => t.classList.add('out'), VISIBLE_MS - 400);
     setTimeout(() => {
       t.remove();
@@ -47,13 +49,13 @@ export function createToaster(): { el: HTMLElement; show(title: string, text: st
 
   return {
     el,
-    show(title, text, kind = 'achievement') {
+    show(title, text, kind = 'achievement', onShow) {
       // volle Schlange: älteste Meldung fällt weg, Fehler aber nie (kommen nur einmal)
       if (queue.length >= MAX_QUEUED) {
         const i = queue.findIndex((q) => q.kind !== 'error');
         if (i >= 0) queue.splice(i, 1);
       }
-      queue.push({ title, text, kind });
+      queue.push({ title, text, kind, onShow });
       if (!showing) next();
     },
   };

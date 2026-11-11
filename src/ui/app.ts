@@ -57,7 +57,7 @@ export interface App {
   start(open?: boolean): void;
   render(): void;
   popCounter(): void;
-  toast(title: string, text: string, kind?: ToastKind): void;
+  toast(title: string, text: string, kind?: ToastKind, onShow?: () => void): void;
 }
 
 const TRASH_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">
@@ -443,6 +443,8 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
   const applyOs = (os: OsId) => {
     shownOs = os;
     document.documentElement.dataset.os = os;
+    // Anmeldung (falls offen) zeigt Titel und Text des Systems, das man jetzt sieht
+    desk.osShown();
   };
   // „Have you tried turning it off and on again?“ Bild aus, kurz dunkel, wieder an (Kündigen, anderes System)
   const restart = () => {
@@ -511,10 +513,11 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
       setText(rate, `+${formatRate(productionPerSec(s))}/s`);
       if (root.dataset.taskbar !== s.settings.taskbar) root.dataset.taskbar = s.settings.taskbar;
       // Betriebssystem (nur Optik, main.css unter html[data-os=…]); an <html> wie der Büro-Stil.
-      // Andere Wahl im System-Tab: Neustart erst, wenn die Einstellungen zu sind
+      // Andere Wahl im System-Tab: Neustart erst, wenn die Einstellungen zu sind und nichts anderes läuft
+      // (ein Incident schließt die Einstellungen auch: dann erst danach)
       const os = activeOs(s);
       if (shownOs === null) applyOs(os);
-      else if (os !== shownOs && !osSwap && !active) {
+      else if (os !== shownOs && !osSwap && !gameBlocked({ ignoreLogin: true })) {
         restart();
         bus.emit('osChanged', { os });
       }

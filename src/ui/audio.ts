@@ -578,21 +578,25 @@ export class Sfx {
     this.unlockPing();
   }
 
-  /** 98: warme Fläche, die langsam anschwillt, darüber aufsteigende Glöckchen, ganz unten ein weicher Bass */
+  /**
+   * 98: warme Fläche, die langsam anschwillt, darüber aufsteigende Glöckchen, darunter ein weicher Bass.
+   * Bass nicht unter ~130 Hz: Handy-Lautsprecher kratzen sonst (eine Oktave tiefer war fast die Hälfte der Energie).
+   */
   private start98(): void {
     const r = this.ready();
     const out = this.space(0.35);
     if (!r || !out) return;
     const t = r.t;
-    this.tone('sine', 69.3, 69.3, t, 0.07, 2.2, out, 0.35);
-    // Des-Dur, je zwei leicht verstimmte Stimmen: schwebt wie ein Synth-Pad
+    this.tone('sine', 138.59, 138.59, t, 0.02, 2.2, out, 0.35);
+    // Des-Dur, je zwei leicht verstimmte Sinus-Stimmen: schwebt wie ein Synth-Pad.
+    // Nur Sinus: Dreieck brachte Obertöne bis 7 kHz, das schnarrt im Handy-Lautsprecher
     for (const f of [277.18, 349.23, 415.3, 554.37]) {
-      this.tone('triangle', f, f, t + 0.05, 0.022, 2.0, out, 0.45);
+      this.tone('sine', f, f, t + 0.05, 0.022, 2.0, out, 0.45);
       this.tone('sine', f * 1.004, f * 1.004, t + 0.05, 0.022, 2.0, out, 0.5);
     }
-    // aufsteigend, dann ein heller Abschluss
-    [1108.73, 1396.91, 1661.22, 2217.46].forEach((f, i) => this.tone('sine', f, f, t + 0.25 + i * 0.16, 0.045, 0.9, out, 0.01));
-    this.tone('sine', 2793.83, 2793.83, t + 0.95, 0.03, 1.3, out, 0.02);
+    // aufsteigend, dann ein heller Abschluss; weich einsetzen (hart = Knackser bei jedem Ton)
+    [1108.73, 1396.91, 1661.22, 2217.46].forEach((f, i) => this.tone('sine', f, f, t + 0.25 + i * 0.16, 0.04, 0.9, out, 0.035));
+    this.tone('sine', 2793.83, 2793.83, t + 0.95, 0.025, 1.3, out, 0.04);
   }
 
   /** Neuer Anrufer: deutsches Freizeichen (425 Hz), ganz kurz und leise. */

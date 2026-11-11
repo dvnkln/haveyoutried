@@ -9943,7 +9943,6 @@ html[data-os='win98'] #app .launcher::before {
   margin: 0;
   padding: 7px 0;
   border-bottom: 0;
-  border-right: 2px solid var(--ink);
   writing-mode: vertical-rl;
   transform: rotate(180deg);
   border-right: 0;

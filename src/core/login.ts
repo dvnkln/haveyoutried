@@ -6,8 +6,16 @@ const LOGIN_FLAG = 'login';
 /** Flag = für wie viele Jobs schon angemeldet (Job 1 = vor der ersten Kündigung) */
 export const needsLogin = (s: GameState) => (s.flags[LOGIN_FLAG] ?? 0) < s.prestige.jobs + 1;
 
+/** Systemwechsel: Neustart, neu anmelden. Gespeichert, damit Neuladen die Anmeldung nicht überspringt */
+const OS_LOGIN_FLAG = 'login:os';
+export const needsOsLogin = (s: GameState) => !!s.flags[OS_LOGIN_FLAG];
+export function requireOsLogin(s: GameState): void {
+  s.flags[OS_LOGIN_FLAG] = 1;
+}
+
 export function markLoggedIn(s: GameState): void {
   s.flags[LOGIN_FLAG] = s.prestige.jobs + 1;
+  delete s.flags[OS_LOGIN_FLAG];
 }
 
 /** Spielstände von vor dem Anmeldebildschirm: wer schon gespielt hat, gilt im aktuellen Job als angemeldet */

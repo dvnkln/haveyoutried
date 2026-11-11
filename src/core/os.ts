@@ -1,5 +1,5 @@
 import { COMPANIES, companyOf, type Company } from '../content/companies';
-import { isOsId, type OsId } from '../content/systems';
+import { FALLBACK_OS, isOsId, osOf, type OsId } from '../content/systems';
 import { weightedPick } from '../util';
 import type { GameState } from './state';
 
@@ -10,14 +10,18 @@ export const OS_NOTICE_FLAG = 'os:notice';
 export const NEW_OS_SHARE = 0.5;
 
 export const osUnlocked = (s: GameState, id: OsId) => !!s.os.unlocked[id];
+/** freigeschaltet und mit fertigem Look: nur solche Systeme werden gezeigt und angeboten */
+export const osAvailable = (s: GameState, id: OsId) => osUnlocked(s, id) && osOf(id).ready;
 
-/** Was gerade läuft: eigene Wahl für diese Firma, sonst das System der Firma */
+/** Was gerade läuft: eigene Wahl für diese Firma, sonst das System der Firma (ohne fertigen Look: XP) */
 export function activeOs(s: GameState): OsId {
   const own = s.os.pick[s.prestige.company];
-  return own && osUnlocked(s, own) ? own : companyOf(s.prestige.company).os;
+  if (own && osAvailable(s, own)) return own;
+  const id = companyOf(s.prestige.company).os;
+  return osOf(id).ready ? id : FALLBACK_OS;
 }
 
-/** Erster Arbeitstag: System der Firma gibt es ab jetzt für immer. true = war neu */
+/** Erster Arbeitstag: System der Firma gibt es ab jetzt für immer (auch ohne fertigen Look, dann still). true = war neu */
 export function unlockCompanyOs(s: GameState): boolean {
   const id = companyOf(s.prestige.company).os;
   if (osUnlocked(s, id)) return false;
@@ -27,7 +31,7 @@ export function unlockCompanyOs(s: GameState): boolean {
 
 /** Eigene Wahl für die aktuelle Firma (nur freigeschaltete Systeme) */
 export function chooseOs(s: GameState, id: OsId): boolean {
-  if (!osUnlocked(s, id)) return false;
+  if (!osAvailable(s, id)) return false;
   s.os.pick[s.prestige.company] = id;
   return true;
 }
@@ -38,11 +42,13 @@ export function chooseOs(s: GameState, id: OsId): boolean {
  */
 export function nextCompany(s: GameState, rnd: () => number = Math.random): Company {
   const options = COMPANIES.filter((c) => c.id !== s.prestige.company);
-  const fresh = options.filter((c) => !osUnlocked(s, c.os)).length;
+  // nur Systeme mit fertigem Look zählen als „neu“ (die anderen merkt man ja nicht)
+  const isFresh = (os: OsId) => !osUnlocked(s, os) && osOf(os).ready;
+  const fresh = options.filter((c) => isFresh(c.os)).length;
   if (fresh === 0 || fresh === options.length) return weightedPick(options, () => 1, rnd);
   const share = Math.max(NEW_OS_SHARE, fresh / options.length);
   const known = options.length - fresh;
-  return weightedPick(options, (c) => (osUnlocked(s, c.os) ? (1 - share) / known : share / fresh), rnd);
+  return weightedPick(options, (c) => (isFresh(c.os) ? share / fresh : (1 - share) / known), rnd);
 }
 
 /**
@@ -52,7 +58,7 @@ export function nextCompany(s: GameState, rnd: () => number = Math.random): Comp
 export function migrateOs(s: GameState, raw: unknown): void {
   if (!isPlain(raw)) {
     s.os = { unlocked: { xp: true }, pick: { [s.prestige.company]: 'xp' } };
-    if (unlockCompanyOs(s)) s.flags[OS_NOTICE_FLAG] = 1;
+    if (unlockCompanyOs(s) && osOf(companyOf(s.prestige.company).os).ready) s.flags[OS_NOTICE_FLAG] = 1;
     return;
   }
   const unlocked: GameState['os']['unlocked'] = {};

@@ -4,6 +4,7 @@ import { scheduleNext } from './events';
 import { incidentRunning, scheduleNextIncident } from './incidents';
 import { resetBoss } from './boss';
 import { nextCompany, unlockCompanyOs } from './os';
+import { osOf } from '../content/systems';
 import { bumpFlag, type GameState } from './state';
 
 /** Gesamte Berufserfahrung, die Tickets aller Jobs zusammen wert sind. */
@@ -68,7 +69,8 @@ export function quitJob(state: GameState, rnd: () => number = Math.random): numb
   bumpFlag(state, `company:${state.prestige.company}`);
   const next = nextCompany(state, rnd);
   state.prestige.company = next.id;
-  const newOs = unlockCompanyOs(state) ? next.os : null;
+  // Meldung nur für Systeme mit fertigem Look; die anderen sind trotzdem freigeschaltet
+  const newOs = unlockCompanyOs(state) && osOf(next.os).ready ? next.os : null;
 
   state.tickets = 0;
   state.ticketsTotal = 0;
