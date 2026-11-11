@@ -553,10 +553,12 @@ export class Sfx {
 
   /**
    * Startton nach der Anmeldung, je System eigener Charakter (selbst gebaut, keine Originalmelodien).
-   * Systeme ohne eigenen Ton: kurzes Ping wie beim Entsperren.
+   * Tonart, Tonfolge, Länge und Helligkeit sind an Messungen der Originale angelehnt (Spektren, 2026-11-11).
+   * Regeln (Handy-Lautsprecher): nur Sinus, nichts unter ~130 Hz, weiche Einsätze, kein Hall.
    */
   osStart(os: OsId): void {
     if (os === 'win98') return this.start98();
+    if (os === 'xp') return this.startXp();
     if (os === 'win7') return this.start7();
     if (os === 'win10') return this.start10();
     if (os === 'win11') return this.start11();
@@ -566,62 +568,104 @@ export class Sfx {
     this.unlockPing();
   }
 
-  /**
-   * 98: warme Fläche, die langsam anschwillt, darüber aufsteigende Glöckchen, darunter ein weicher Bass.
-   * Bass nicht unter ~130 Hz, nur Sinus, weiche Einsätze: alles andere kratzt im Handy-Lautsprecher.
-   */
+  /** Töne nacheinander: [Start, Frequenz, Spitze, Ausklingen, Einschwingen] */
+  private notes(t: number, out: AudioNode, list: readonly (readonly [number, number, number, number, number?])[]): void {
+    for (const [dt, f, peak, decay, attack] of list) this.tone('sine', f, f, t + dt, peak, decay, out, attack ?? 0.04);
+  }
+
+  /** 98: C-Dur mit großer Septime, schwillt langsam an (~4,5 s), dunkel; spät ein paar helle Tupfer */
   private start98(): void {
     const r = this.ready();
     if (!r) return;
-    const out = r.out;
-    const t = r.t;
-    this.tone('sine', 138.59, 138.59, t, 0.02, 2.2, out, 0.35);
-    // Des-Dur, je zwei leicht verstimmte Sinus-Stimmen: schwebt wie ein Synth-Pad.
-    // Nur Sinus: Dreieck brachte Obertöne bis 7 kHz, das schnarrt im Handy-Lautsprecher
-    for (const f of [277.18, 349.23, 415.3, 554.37]) {
-      this.tone('sine', f, f, t + 0.05, 0.022, 2.0, out, 0.45);
-      this.tone('sine', f * 1.004, f * 1.004, t + 0.05, 0.022, 2.0, out, 0.5);
-    }
-    // aufsteigend, dann ein heller Abschluss; weich einsetzen (hart = Knackser bei jedem Ton)
-    [1108.73, 1396.91, 1661.22, 2217.46].forEach((f, i) => this.tone('sine', f, f, t + 0.25 + i * 0.16, 0.04, 0.9, out, 0.035));
-    this.tone('sine', 2793.83, 2793.83, t + 0.95, 0.025, 1.3, out, 0.04);
+    const { out, t } = r;
+    this.notes(t, out, [
+      // Fläche C–G, dann kommen E, D und H dazu
+      [0, 261.63, 0.03, 3.6, 1.0],
+      [0, 392, 0.022, 3.4, 1.0],
+      [0.7, 329.63, 0.03, 3.4, 0.6],
+      [1.1, 293.66, 0.016, 2.6, 0.6],
+      [1.6, 493.88, 0.024, 2.9, 0.5],
+      // helle Tupfer
+      [1.6, 1567.98, 0.012, 1.0],
+      [3.1, 987.77, 0.02, 1.4],
+      [3.5, 659.25, 0.018, 1.2],
+      [3.9, 587.33, 0.014, 1.1],
+    ]);
   }
 
-  /** 7: vier weiche, aufsteigende Töne, die ineinander klingen, darunter eine leise Fläche (Regeln wie bei 98) */
+  /** XP: As-Dur/Es, helle Töne aufwärts, dann eine ruhige Es-Fläche (~3,7 s) */
+  private startXp(): void {
+    const r = this.ready();
+    if (!r) return;
+    const { out, t } = r;
+    this.notes(t, out, [
+      [0, 415.3, 0.03, 1.2],
+      [0, 622.25, 0.03, 1.2],
+      [0, 1244.51, 0.014, 0.8],
+      [0.35, 932.33, 0.03, 1.0],
+      [0.9, 830.61, 0.026, 1.0],
+      [0.9, 311.13, 0.02, 1.4],
+      [1.5, 932.33, 0.022, 0.9],
+      [1.5, 1244.51, 0.016, 0.9],
+      [1.5, 523.25, 0.016, 0.9],
+      // Schluss-Fläche Es
+      [1.9, 155.56, 0.016, 1.8, 0.3],
+      [1.9, 233.08, 0.02, 1.8, 0.3],
+      [1.9, 311.13, 0.024, 1.8, 0.3],
+      [1.9, 392, 0.014, 1.6, 0.3],
+    ]);
+  }
+
+  /** 7: E-Dur, hell, vier aufsteigende Töne, dann eine weiche Fläche (H–E–A) bis ~3,8 s */
   private start7(): void {
     const r = this.ready();
     if (!r) return;
     const { out, t } = r;
-    // leise Fläche: Es-Dur ohne Bass, langsam ein und aus
-    for (const f of [311.13, 392, 466.16]) this.tone('sine', f, f, t, 0.016, 1.8, out, 0.4);
-    // vier Töne, je etwas länger und leiser (Es, B, es, g)
-    [622.25, 932.33, 1244.51, 1567.98].forEach((f, i) => {
-      this.tone('sine', f, f, t + 0.08 + i * 0.22, 0.065 - i * 0.008, 0.9 + i * 0.15, out, 0.04);
-      // Oktave darüber, ganz leise: etwas Glanz (nur unter 3 kHz)
-      if (f * 2 < 3000) this.tone('sine', f * 2, f * 2, t + 0.08 + i * 0.22, 0.008, 0.5, out, 0.04);
-    });
+    this.notes(t, out, [
+      [0.05, 659.25, 0.045, 1.0],
+      [0.05, 987.77, 0.03, 1.0],
+      [0.45, 830.61, 0.04, 1.0],
+      [0.45, 1318.51, 0.025, 0.9],
+      [0.85, 1479.98, 0.035, 1.0],
+      [0.85, 246.94, 0.016, 2.6, 0.2],
+      // Fläche
+      [1.2, 329.63, 0.02, 2.4, 0.3],
+      [1.2, 440, 0.02, 2.4, 0.3],
+      [1.4, 493.88, 0.018, 2.2, 0.3],
+      [1.6, 659.25, 0.014, 2.0, 0.3],
+    ]);
   }
 
-  /** 10: zurückhaltend wie das Vorbild, zwei weiche Töne eine Quinte aufwärts mit einem leisen Grundton darunter */
+  /** 10: dunkel und weich: erst F (F–C–F), dann schwillt ein G darüber an und klingt aus (~4,5 s) */
   private start10(): void {
     const r = this.ready();
     if (!r) return;
     const { out, t } = r;
-    this.tone('sine', 349.23, 349.23, t, 0.018, 1.1, out, 0.2);
-    this.tone('sine', 698.46, 698.46, t + 0.02, 0.06, 0.7, out, 0.035);
-    this.tone('sine', 1046.5, 1046.5, t + 0.2, 0.055, 1.0, out, 0.035);
-    this.tone('sine', 2093, 2093, t + 0.2, 0.007, 0.45, out, 0.04);
+    this.notes(t, out, [
+      [0, 174.61, 0.025, 2.0, 0.25],
+      [0, 261.63, 0.02, 2.0, 0.25],
+      [0, 349.23, 0.02, 1.8, 0.25],
+      [0, 698.46, 0.012, 1.4, 0.25],
+      // G schwillt an (lauteste Stelle bei ~3 s)
+      [1.5, 196, 0.03, 1.6, 1.5],
+      [1.5, 392, 0.045, 1.6, 1.5],
+      // heller Abschluss, leise
+      [3.4, 783.99, 0.012, 1.0],
+      [3.4, 523.25, 0.012, 1.0],
+    ]);
   }
 
-  /** 11: luftig, drei Töne schnell aufwärts, der letzte bleibt mit einer hellen, leisen Fläche stehen */
+  /** 11: drei Töne in Quinten aufwärts (Fis – Cis – Gis), der letzte am lautesten, ~1,5 s, dunkel */
   private start11(): void {
     const r = this.ready();
     if (!r) return;
     const { out, t } = r;
-    [523.25, 659.25, 783.99].forEach((f, i) => this.tone('sine', f, f, t + i * 0.11, 0.065, i === 2 ? 1.3 : 0.5, out, 0.035));
-    // Fläche aus Quinte darunter und Oktave über dem Grundton, kommt langsam (nicht auf den Melodietönen: die würden sich auslöschen)
-    for (const f of [392, 1046.5]) this.tone('sine', f, f, t + 0.2, 0.014, 1.4, out, 0.35);
-    this.tone('sine', 1567.98, 1567.98, t + 0.24, 0.012, 0.9, out, 0.05);
+    this.notes(t, out, [
+      [0, 185, 0.04, 0.8],
+      [0.35, 277.18, 0.04, 0.8],
+      [0.7, 415.3, 0.065, 1.0],
+      [0.72, 830.61, 0.012, 0.8],
+    ]);
   }
 
   /** Debiam: schlicht wie GNOME, ein einzelner weicher Glockenton mit leiser Quinte darüber */
@@ -634,19 +678,30 @@ export class Sfx {
     this.tone('sine', 440, 440, t, 0.02, 1.0, out, 0.08);
   }
 
-  /** Ubuntü: kleines Klopf-Muster wie von Holz-Trommeln (weiche Sinus-Schläge), darunter ein leiser Grundton */
+  /**
+   * Ubuntü: Anspielung auf die Trommeln von früher: tiefe, weiche Schläge in F (F und C, Ton fällt leicht wie bei einer
+   * Trommel), darüber eine kleine Melodie A – C – G – A (~2,8 s)
+   */
   private startUbuntu(): void {
     const r = this.ready();
     if (!r) return;
     const { out, t } = r;
-    this.tone('sine', 196, 196, t, 0.02, 1.4, out, 0.15);
-    // Rhythmus: ta – ta-ta – taa
-    [
-      [0, 392, 0.07, 0.28],
-      [0.24, 523.25, 0.06, 0.22],
-      [0.36, 587.33, 0.06, 0.22],
-      [0.55, 783.99, 0.065, 0.9],
-    ].forEach(([dt, f, peak, dec]) => this.tone('sine', f!, f!, t + dt!, peak!, dec!, out, 0.03));
+    for (const [dt, f, peak] of [
+      [0, 174.61, 0.07],
+      [0.32, 261.63, 0.05],
+      [0.48, 174.61, 0.055],
+      [0.8, 174.61, 0.07],
+      [1.12, 261.63, 0.05],
+      [1.28, 174.61, 0.055],
+      [1.6, 174.61, 0.06],
+    ] as const) this.tone('sine', f * 1.12, f, t + dt, peak, 0.28, out, 0.015);
+    this.notes(t, out, [
+      [0.8, 440, 0.035, 0.5],
+      [1.12, 523.25, 0.035, 0.5],
+      [1.44, 392, 0.03, 0.5],
+      [1.76, 440, 0.04, 1.1],
+      [1.76, 261.63, 0.016, 1.1, 0.2],
+    ]);
   }
 
   /** MäcOS: ein warmer, voller Dur-Akkord, der lange ausklingt (kein Bass unter 130 Hz) */
