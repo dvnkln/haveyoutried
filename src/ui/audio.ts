@@ -134,7 +134,6 @@ export class Sfx {
   private ctx: AudioContext | null = null;
   private master: GainNode | null = null;
   private noise: AudioBuffer | null = null;
-  private room: ConvolverNode | null = null;
 
   constructor(private settings: () => SoundSettings) {}
 
@@ -168,26 +167,9 @@ export class Sfx {
       const data = noise.getChannelData(0);
       for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
 
-      // kleiner Büroraum als Hall: abklingendes, nach hinten dunkler werdendes Rauschen
-      const irLen = Math.floor(ctx.sampleRate * 0.7);
-      const ir = ctx.createBuffer(2, irLen, ctx.sampleRate);
-      for (let c = 0; c < 2; c++) {
-        const d = ir.getChannelData(c);
-        let lp = 0;
-        for (let i = 0; i < irLen; i++) {
-          const k = i / irLen;
-          lp += (Math.random() * 2 - 1 - lp) * (0.9 - 0.75 * k);
-          d[i] = lp * Math.exp(-i / (ctx.sampleRate * 0.11));
-        }
-      }
-      const room = ctx.createConvolver();
-      room.buffer = ir;
-      room.connect(master);
-
       this.ctx = ctx;
       this.master = master;
       this.noise = noise;
-      this.room = room;
     }
     // iOS kennt zusätzlich „interrupted“ (nach Anruf, Sperrbildschirm, App-Wechsel): auch dann neu anwerfen
     if (this.ctx.state !== 'running' && this.ctx.state !== 'closed') return this.ctx.resume().catch(() => {});
@@ -580,12 +562,11 @@ export class Sfx {
 
   /**
    * 98: warme Fläche, die langsam anschwillt, darüber aufsteigende Glöckchen, darunter ein weicher Bass.
-   * Bass nicht unter ~130 Hz, nur Sinus, weiche Einsätze, kein Hall: alles andere kratzt im Handy-Lautsprecher.
+   * Bass nicht unter ~130 Hz, nur Sinus, weiche Einsätze: alles andere kratzt im Handy-Lautsprecher.
    */
   private start98(): void {
     const r = this.ready();
     if (!r) return;
-    // ohne Raumhall: gehaltene Töne durch den Hall kratzen auf Handy-Lautsprechern (auf dem Pixel getestet, ohne Hall sauber)
     const out = r.out;
     const t = r.t;
     this.tone('sine', 138.59, 138.59, t, 0.02, 2.2, out, 0.35);
@@ -641,20 +622,6 @@ export class Sfx {
   }
 
   // --- Bausteine für die Belohnungsklänge ---
-
-  /** Ausgang mit etwas Raumhall (send = Anteil Hall) */
-  private space(send: number): AudioNode | null {
-    const r = this.ready();
-    if (!r) return null;
-    const g = r.ctx.createGain();
-    g.connect(r.out);
-    if (this.room) {
-      const s = r.ctx.createGain();
-      s.gain.value = send;
-      g.connect(s).connect(this.room);
-    }
-    return g;
-  }
 
   /** Hüllkurve mit Haltephase: einblenden, halten, ausblenden */
   private held(ctx: AudioContext, out: AudioNode, t: number, peak: number, attack: number, hold: number, release: number): GainNode {
@@ -760,7 +727,7 @@ export class Sfx {
   /** Chef-Aufgabe erledigt: zweimal aufs Stempelkissen, ein satter Stempel auf den Tisch, dann die Hotelklingel. */
   bossDone(): void {
     const r = this.ready();
-    const out = this.space(0.18);
+    const out = r?.out;
     if (!r || !out) return;
     // Stempelkissen: weich und gedämpft
     for (const dt of [0, 0.12]) {
@@ -780,7 +747,7 @@ export class Sfx {
   /** Papierkorb leeren: ein kurzes, weiches Papierknüllen. */
   crumple(): void {
     const r = this.ready();
-    const out = this.space(0.08);
+    const out = r?.out;
     // sanft und dumpf: kaum Höhen, die Knackser gehen im weichen Rascheln auf
     const hp = this.filter('highpass', 300, 0.5);
     const lp = this.filter('lowpass', 2400, 0.5);
@@ -794,7 +761,7 @@ export class Sfx {
   /** Espresso: Siebträger schabt in die Brühgruppe und rastet ein, die Pumpe brummt, Kaffee läuft in die Tasse. */
   espresso(): void {
     const r = this.ready();
-    const out = this.space(0.12);
+    const out = r?.out;
     if (!r || !out) return;
     // Eindrehen: Metall schabt an Metall, dann rastet er ein
     this.noiseHeld(r.t, out, { peak: 0.05, attack: 0.03, hold: 0.1, release: 0.04, type: 'bandpass', f0: 2600, f1: 4200, q: 5 });
@@ -825,7 +792,7 @@ export class Sfx {
   /** VIP-Mail erledigt: Patrone klonkt in die Rohrpost, das Rohr saugt sie fauchend weg, weit hinten kommt sie an. */
   vipSent(): void {
     const r = this.ready();
-    const out = this.space(0.15);
+    const out = r?.out;
     if (!r || !out) return;
     // Patrone in die Klappe: hohles Klonk
     this.tone('sine', 280, 250, r.t, 0.35, 0.12, out);
@@ -849,7 +816,7 @@ export class Sfx {
   /** Achievement: Glockenspiel „ta-daa“ mit Glitzern. */
   achievement(): void {
     const r = this.ready();
-    const out = this.space(0.25);
+    const out = r?.out;
     if (!r || !out) return;
     const glock = [[1, 1, 0.9], [2.76, 0.22, 0.35], [5.4, 0.07, 0.12]] as const;
     this.strike(r.t, 1567.98, 0.09, glock, out);
@@ -866,7 +833,7 @@ export class Sfx {
   /** Kauf-Meilenstein: mechanische Registrierkasse, Taste ratscht, „Ching“, Schublade rollt raus, Münzen klimpern. */
   register(): void {
     const r = this.ready();
-    const out = this.space(0.15);
+    const out = r?.out;
     if (!r || !out) return;
     // Taste: Ratsche mit vier schnellen Zähnen
     for (let i = 0; i < 4; i++) {
@@ -911,10 +878,10 @@ export class Sfx {
     return d;
   }
 
-  /** Kündigen: Klinke runter, die Tür knarzt auf, fällt hinter einem ins Schloss, Flurhall. */
+  /** Kündigen: Klinke runter, die Tür knarzt auf, fällt hinter einem ins Schloss. */
   quit(): void {
     const r = this.ready();
-    const out = this.space(0.45);
+    const out = r?.out;
     if (!r || !out) return;
     // Klinke: runter und Falle schnappt zurück
     this.strike(r.t, 2100, 0.06, [[1, 1, 0.04], [2.7, 0.5, 0.025]], out);
