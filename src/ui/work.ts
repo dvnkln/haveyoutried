@@ -36,6 +36,7 @@ import { fill, pick, randInt, shuffle, weightedPick } from '../util';
 import type { AppContext } from './app';
 import { h, setText } from './dom';
 import { companyOf } from '../content/companies';
+import { FALLBACK_OS, isOsId, osOf } from '../content/systems';
 import { nextTicketNo, ticketId } from './history';
 
 /** Ohne Anschlag so lange, dann wird heimlich durch Memes gescrollt */
@@ -209,10 +210,16 @@ const browserTabs = (active: string, title?: string, extra?: { site: string; tit
   return list.map((t) => browserTab(t.site, t.site === active && title ? title : t.title, t.site === active));
 };
 
+/** Knopfleiste der Browser von früher (98: noch keine Tabs); sonst unsichtbar (main.css) */
+const browserTools = () =>
+  h('div', { class: 'br-tools', 'aria-hidden': 'true' }, BROWSER_TOOLS.map((x) => h('span', { text: x })));
+const BROWSER_TOOLS = ['← Zurück', '→', '✕', '↻', '⌂ Startseite'];
+
 /** Browser-Rahmen: Tab-Leiste und Adresszeile (Schloss bzw. „Nicht sicher“) */
 const browser = (url: string, secure: boolean, active: string, title?: string, extra?: { site: string; title: string }) =>
   h('div', { class: 'browser' }, [
     h('div', { class: 'br-tabs' }, [...browserTabs(active, title, extra), h('span', { class: 'br-new', text: '+' })]),
+    browserTools(),
     h('div', { class: 'br-bar' }, [
       h('span', { class: 'br-nav', text: '‹ › ↻' }),
       h('span', { class: `br-url${secure ? '' : ' insecure'}` }, [
@@ -248,8 +255,13 @@ const rdpIcon = (name: string) => {
   return h('span', { class: 'rdp-icon' }, [pic, h('span', { class: 'rdp-iname', text: name })]);
 };
 
-/** erfundener Browsername für Fenstertitel („Seite – Browser“ wie bei XP) */
-const BROWSER = 'Netzsurfer';
+/** System, das gerade zu sehen ist (html[data-os], app.ts): Browser- und Terminalname im Fenstertitel */
+const shownOsDef = () => {
+  const id = document.documentElement.dataset.os;
+  return osOf(isOsId(id) ? id : FALLBACK_OS);
+};
+/** erfundener Browsername für Fenstertitel („Seite – Browser“), je System */
+const browserName = () => shownOsDef().browser;
 /** Ticketsystem (Web-App), steht auch im Browser-Tab */
 const TICKET_APP = BROWSER_TABS[0]!.title;
 /** Menü links im Webinterface eines Geräts */
@@ -287,7 +299,7 @@ const PROGRAMS: Record<Kind, Program> = {
   ticket: {
     weight: 3,
     // Web-App: läuft im Browser
-    title: () => `${TICKET_APP} – ${BROWSER}`,
+    title: () => `${TICKET_APP} – ${browserName()}`,
     head: (t) => [
       browser(`ticketdesk.intern/ticket/${ticketId(t.no).replace('#', '')}`, true, 'ticket'),
       h('div', { class: 'tk-nav' }, [h('span', { class: 'tk-app', text: 'TicketDesk' }), h('span', { class: 'tk-queue', text: `Queue: ${randInt(400, 4_812)} offen` })]),
@@ -316,8 +328,8 @@ const PROGRAMS: Record<Kind, Program> = {
   },
   term: {
     weight: 2,
-    // SSH-Sitzung wie unter Windows üblich: PuTTY
-    title: (t) => `root@${t.host} – PuTTY`,
+    // SSH-Sitzung wie im System üblich (98 Telnet, XP PuTTY …)
+    title: (t) => fill(shownOsDef().terminal, { host: t.host }),
     head: (t) => [h('div', { class: 'work-comment', text: `# ${t.who}: ${t.full}` })],
     lines: (t) => topicPool(t.line.topic, 'cmds'),
     log: (t, x) => `root@${t.host}:~$ ${x}`,
@@ -415,7 +427,7 @@ const PROGRAMS: Record<Kind, Program> = {
   },
   web: {
     weight: 1,
-    title: (t) => `${t.target} – Admin – ${BROWSER}`,
+    title: (t) => `${t.target} – Admin – ${browserName()}`,
     head: (t) => [
       browser(`192.168.1.${10 + (t.no % 200)}/admin`, false, 'web', undefined, { site: 'web', title: `${t.target} – Admin` }),
       // Gerätemenü links wie auf Router-Seiten, ein Punkt ist gerade offen
@@ -441,7 +453,7 @@ const PROGRAMS: Record<Kind, Program> = {
   ai: {
     weight: 1,
     // Web-App: läuft im Browser
-    title: (t) => `${t.app} – ${BROWSER}`,
+    title: (t) => `${t.app} – ${browserName()}`,
     head: (t) => [browser('chatki.example', true, 'ai', t.app), h('div', { class: 'ai-model', text: `Modell: ${AI_MODEL} ▾` }), aiRow(pick(AI_GREETINGS))],
     // ganzer Betreff, wenn er nicht zu lang ist; nach „…?“ kein zusätzlicher Punkt
     lines: (t) =>
@@ -466,7 +478,7 @@ const PROGRAMS: Record<Kind, Program> = {
   },
   search: {
     weight: 2,
-    title: () => `Sucher – Websuche – ${BROWSER}`,
+    title: () => `Sucher – Websuche – ${browserName()}`,
     head: () => [
       browser('www.sucher.example', true, 'search'),
       h('div', { class: 'search-logo' }, [...'Sucher'].map((c, i) => h('span', { class: `sl${i % 4}`, text: c }))),
@@ -607,6 +619,7 @@ export function createWork(
   const memeWindow = h('div', { class: 'meme-window', 'aria-hidden': 'true' }, [
     h('div', { class: 'browser meme-browser' }, [
       h('div', { class: 'br-tabs' }, [...memeTabs, h('span', { class: 'br-new', text: '+' })]),
+      browserTools(),
       h('div', { class: 'br-bar' }, [
         h('span', { class: 'br-nav', text: '‹ › ↻' }),
         h('span', { class: 'br-url' }, [h('span', { class: 'br-lock', text: '🔒︎' }), memeAddr]),
@@ -940,7 +953,7 @@ export function createWork(
     for (const t of memeTabs) t.classList.toggle('on', t.dataset.site === site);
     setText(memeAddr, site === 'forum' ? 'readit.example/r/all/hot' : '404gag.example/hot');
     // Fenstertitel wie bei XP: Seite – Browser
-    if (memes) setText(title, `${BROWSER_TABS.find((x) => x.site === site)!.title} – ${BROWSER}`);
+    if (memes) setText(title, `${BROWSER_TABS.find((x) => x.site === site)!.title} – ${browserName()}`);
   };
   const nextSite = () => {
     // kein ständiger Hell-dunkel-Wechsel für alle, die weniger Bewegung wollen

@@ -5244,6 +5244,11 @@ html.basement {
   text-overflow: ellipsis;
 }
 
+/* Knopfleiste der Browser von früher: nur bei Systemen ohne Tabs (98), sonst aus */
+.br-tools {
+  display: none;
+}
+
 /* Websuche: Logo, runde Suchleiste, Treffer */
 .search-logo {
   padding: 5px 0 1px;
@@ -10062,4 +10067,54 @@ html[data-os='win98'] #app .login.ok .login-mid {
 }
 html[data-os='win98'] #app .login-welcome {
   display: none;
+}
+
+/* Browser in 98: noch keine Tabs, dafür Knopfleiste und „Adresse“ vor dem Feld; alles grau */
+html[data-os='win98'] #app .browser {
+  background: var(--w98-face);
+}
+html[data-os='win98'] #app .br-tabs {
+  display: none;
+}
+html[data-os='win98'] #app .br-tools {
+  display: flex;
+  gap: 1px;
+  padding: 2px 4px;
+  border-bottom: 1px solid #808080;
+  box-shadow: 0 1px 0 #fff;
+  overflow: hidden;
+  white-space: nowrap;
+}
+html[data-os='win98'] #app .br-tools > span {
+  padding: 1px 5px;
+  font: 600 9.5px / 1.3 var(--font-ui);
+  color: #111;
+}
+html[data-os='win98'] #app .br-bar {
+  margin-top: 1px;
+  border-top: 0;
+  background: var(--w98-face);
+}
+html[data-os='win98'] #app .br-bar::before {
+  content: 'Adresse';
+  flex: 0 0 auto;
+  font: 500 9.5px / 1 var(--font-ui);
+  color: #111;
+}
+html[data-os='win98'] #app .br-nav,
+html[data-os='win98'] #app .br-lock {
+  display: none;
+}
+html[data-os='win98'] #app .br-url {
+  border: 0;
+  border-radius: 0;
+  background: #fff;
+  box-shadow: inset 1px 1px 0 #404040, inset 2px 2px 0 #808080, inset -1px -1px 0 #fff;
+}
+/* Telnet: schlicht grau auf schwarz, kein farbiger Prompt; Symbol ein kleiner Monitor statt PuTTY */
+html[data-os='win98'] #app .work[data-kind='term'] :is(.typed-prompt, .prompt-user) {
+  color: inherit;
+}
+html[data-os='win98'] #app .work[data-kind='term'] .term-dots {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 13'%3E%3Crect x='1' y='1' width='12' height='8' fill='%23ddd' stroke='%23111'/%3E%3Crect x='3' y='3' width='8' height='4' fill='%23111'/%3E%3Cpath d='M4 12h6M7 9v3' stroke='%23ddd'/%3E%3C/svg%3E");
 }
