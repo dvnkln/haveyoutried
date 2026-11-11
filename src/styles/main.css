@@ -4060,7 +4060,7 @@ html[data-office='bunt'] {
 }
 
 /* ---------- Büro im Keller: Ziegel statt Tapete, kleines Fenster ---------- */
-/* gilt für jede Firma: setzt nur die Wand-Variablen, so passen Wand, Incident-Hintergrund und Statusleiste zusammen */
+/* gilt für jede Firma: setzt nur die Wand-Variablen, so passen Wand und Incident-Hintergrund zusammen */
 html.basement {
   --wall: #ddd3c4;
   --wall-art: linear-gradient(rgba(61, 44, 46, 0.12) 2px, transparent 2px) 0 0 / 100% 16px,

@@ -22,7 +22,6 @@ import { companyOf } from '../content/companies';
 import { TRASH_LINES } from '../content/props';
 import { POWER_HINT, WALLPAPER_MARKS } from '../content/boot';
 import { paintWall } from './wallpaper';
-import { setThemeColor, themeLight } from './power';
 import { achievementCount } from '../core/achievements';
 import { hhmm, pick } from '../util';
 import { gameBlocked } from './blocked';
@@ -495,15 +494,13 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
     },
     render() {
       const s = ctx.state;
-      // Büro-Stil der Firma: Wand und Schreibtisch; die Statusleiste nimmt die neue Wandfarbe an (bei Licht an)
+      // Büro-Stil der Firma: Wand und Schreibtisch
       const office = companyOf(s.prestige.company).office;
       const officeKey = `${office}|${!!s.upgrades.basement}`;
       if (wallKeyShown !== officeKey) {
         wallKeyShown = officeKey;
         document.documentElement.dataset.office = office;
         setFlag(document.documentElement, 'basement', !!s.upgrades.basement);
-        const wall = themeLight();
-        if (wall && !root.classList.contains('afk')) setThemeColor(wall);
       }
       // nur neu zeichnen, wenn sich Auswahl, Firma oder Freischaltungen geändert haben (läuft jeden Frame)
       const wallSig = `${s.settings.wallpaper}|${s.prestige.company}|${achievementCount(s)}`;
@@ -556,7 +553,7 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
       pager.render();
       props.render();
       desk.render(s);
-      // Keller-Upgrade: Ziegelwand für jede Firma (an <html>, damit auch Incident-Hintergrund und Statusleiste sie kennen)
+      // Keller-Upgrade: Ziegelwand für jede Firma (an <html>, damit auch der Incident-Hintergrund sie kennt)
       setFlag(document.documentElement, 'basement', !!s.upgrades.basement);
       setFlag(monitor, 'frozen', !!s.upgrades.freeze);
       setFlag(monitor, 'pro', !!s.upgrades.monitor2);

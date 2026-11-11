@@ -26,14 +26,9 @@ const SMART_RETRY_MS = 500;
 const SMART_START_MS = 500;
 
 /**
- * Farbe der Statusleiste und des unteren Rands: hell wie die Wand, im Dunkeln wie das abgedunkelte Büro.
- * Hell = Wandfarbe des aktuellen Büro-Stils (je Firma bzw. Keller-Upgrade, main.css). Fehlt sie oder ist sie kein
- * sechsstelliges Hex, bleibt die Leiste, wie sie ist.
+ * Farbe der Statusleiste und des unteren Rands: immer dunkel, wie die Navigationsleiste unten
+ * (die Wand hat oft Tapetenmuster, eine einfarbige Leiste passt dazu nie richtig).
  */
-export const themeLight = (): string | null => {
-  const wall = getComputedStyle(document.documentElement).getPropertyValue('--wall').trim();
-  return HEX.test(wall) ? wall : null;
-};
 const HEX = /^#[0-9a-f]{6}$/i;
 export const THEME_DARK = '#2d2932';
 const meta = () => document.querySelector('meta[name="theme-color"]');
@@ -204,9 +199,6 @@ export function createPower(app: HTMLElement, sfx: Sfx, log: SysLog): Power {
       sfx.tubeOn(power.slow);
       if (power.slow) lock(ms);
       clearTimeout(shadeTimer);
-      // Leiste wird mit dem Flackern hell (am Ende, wenn die Röhren brennen)
-      const wall = themeLight();
-      if (wall) setThemeColor(wall, ms);
       shadeTimer = window.setTimeout(() => shade.remove(), ms + 100);
       sync();
       return new Promise((done) => setTimeout(done, ms));
