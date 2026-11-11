@@ -36,7 +36,8 @@ import { fill, pick, randInt, shuffle, weightedPick } from '../util';
 import type { AppContext } from './app';
 import { h, setText } from './dom';
 import { companyOf } from '../content/companies';
-import { FALLBACK_OS, isOsId, osOf } from '../content/systems';
+import { FALLBACK_OS, osOf } from '../content/systems';
+import { shownOs } from '../core/os';
 import { nextTicketNo, ticketId } from './history';
 
 /** Ohne Anschlag so lange, dann wird heimlich durch Memes gescrollt */
@@ -119,7 +120,7 @@ interface Task {
   device: Device | null;
   /** Gerät, PC oder Ähnliches, je nach Programm */
   target: string;
-  /** Rechnername der Firma (PuTTY-Titel und Log: root@host) */
+  /** Rechnername der Firma (Terminal-Titel je System und Log: root@host) */
   host: string;
   /** Name der Web-App im Browser-Tab (KI-Assistent), einmal gewürfelt; sonst leer */
   app: string;
@@ -255,11 +256,8 @@ const rdpIcon = (name: string) => {
   return h('span', { class: 'rdp-icon' }, [pic, h('span', { class: 'rdp-iname', text: name })]);
 };
 
-/** System, das gerade zu sehen ist (html[data-os], app.ts): Browser- und Terminalname im Fenstertitel */
-const shownOsDef = () => {
-  const id = document.documentElement.dataset.os;
-  return osOf(isOsId(id) ? id : FALLBACK_OS);
-};
+/** System, das gerade zu sehen ist (core/os.ts shownOs; createWork setzt den Spielstand): Browser- und Terminalname im Fenstertitel */
+let shownOsDef = () => osOf(FALLBACK_OS);
 /** erfundener Browsername für Fenstertitel („Seite – Browser“), je System */
 const browserName = () => shownOsDef().browser;
 /** Ticketsystem (Web-App), steht auch im Browser-Tab */
@@ -513,6 +511,7 @@ export function createWork(
   /** gelöst: Serie und Stempel (für Bonus und Effekte am Schreibtisch) */
   onSolved: (streak: number, stamp: HTMLElement, presses: number) => void,
 ) {
+  shownOsDef = () => osOf(shownOs(ctx.state));
   let task: Task = { kind: 'ticket', who: '', subject: '', full: '', no: 0, line: QUEUE_LINE, call: null, device: null, target: '', prio: 'mittel', app: '', server: false, host: '' };
   let reply = '';
   let typedLen = 0;

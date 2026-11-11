@@ -23,6 +23,15 @@ export function activeOs(s: GameState): OsId {
 }
 
 /**
+ * Was gerade zu sehen ist (kann beim Neustart kurz vom gewählten abweichen, app.ts hält state.os.shown aktuell).
+ * Danach richten sich Anmeldung, Startton und Fenstertitel.
+ */
+export function shownOs(s: GameState): OsId {
+  const shown = s.os.shown;
+  return shown && osAvailable(s, shown) ? shown : activeOs(s);
+}
+
+/**
  * Erster Arbeitstag: System der Firma gibt es ab jetzt für immer. Ohne fertigen Look läuft dort XP,
  * also ist dann auch XP freigeschaltet (man benutzt es ja).
  */

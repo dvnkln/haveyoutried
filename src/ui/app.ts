@@ -2,7 +2,7 @@ import type { Saver } from '../core/save';
 import type { GameState } from '../core/state';
 import { bus } from '../core/bus';
 import { bossProgress } from '../core/boss';
-import { activeOs, osAvailable } from '../core/os';
+import { activeOs, shownOs as shownOsOf } from '../core/os';
 import type { OsId } from '../content/systems';
 import { productionPerSec, rates } from '../core/economy';
 import { addTickets } from '../core/state';
@@ -518,10 +518,8 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
       // Andere Wahl im System-Tab: Neustart erst, wenn die Einstellungen zu sind und nichts anderes läuft
       // (ein Incident schließt die Einstellungen auch: dann erst danach)
       const os = activeOs(s);
-      if (shownOs === null) {
-        const last = s.os.shown;
-        applyOs(last && osAvailable(s, last) ? last : os);
-      } else if (os !== shownOs && !osSwap && !gameBlocked({ ignoreLogin: true })) {
+      if (shownOs === null) applyOs(shownOsOf(s));
+      else if (os !== shownOs && !osSwap && !gameBlocked({ ignoreLogin: true })) {
         restart();
         bus.emit('osChanged', { os });
       }

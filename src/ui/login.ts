@@ -1,7 +1,7 @@
 import { LOGIN } from '../content/boot';
 import { companyOf } from '../content/companies';
-import { activeOs } from '../core/os';
-import { isOsId, osOf } from '../content/systems';
+import { shownOs } from '../core/os';
+import { osOf } from '../content/systems';
 import { markLoggedIn } from '../core/login';
 import type { AppContext } from './app';
 import { h, setText } from './dom';
@@ -70,8 +70,7 @@ export function createLogin(ctx: AppContext, onDone: () => void): Login {
 
   /** beschriftet nach dem gezeigten System (html[data-os]), nicht dem gewählten: beim Neustart springt die Optik später um */
   const relabel = () => {
-    const shown = document.documentElement.dataset.os;
-    const os = osOf(isOsId(shown) ? shown : activeOs(ctx.state));
+    const os = osOf(shownOs(ctx.state));
     setText(brand, os.loginBrand ?? '');
     brand.hidden = !os.loginBrand;
     setText(prompt, os.loginPrompt ?? LOGIN.prompt);
@@ -101,7 +100,7 @@ export function createLogin(ctx: AppContext, onDone: () => void): Login {
       const c = companyOf(ctx.state.prestige.company);
       ctx.log.write('ok', `winlogon[1]: support@${c.host} angemeldet. Kennwortqualität: „geht so“.`);
       // Startton des Systems
-      ctx.sfx.osStart(activeOs(ctx.state));
+      ctx.sfx.osStart(shownOs(ctx.state));
       el.classList.add('ok');
       timers.push(
         window.setTimeout(() => {

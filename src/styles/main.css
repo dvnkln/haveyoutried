@@ -10105,6 +10105,13 @@ html[data-os='win98'] #app .br-nav,
 html[data-os='win98'] #app .br-lock {
   display: none;
 }
+/* wird es eng, fällt wie sonst die Tab-Leiste hier die Knopfleiste weg (die Adresszeile bleibt) */
+html[data-os='win98'] #app .work.tight .br-tools {
+  display: none;
+}
+html[data-os='win98'] #app .work.tight .br-bar {
+  margin-top: 0;
+}
 html[data-os='win98'] #app .br-url {
   border: 0;
   border-radius: 0;
@@ -10131,9 +10138,6 @@ html[data-os='win7'] #app {
   --os-start: radial-gradient(circle at 50% 35%, #bdf0ff 0%, #4fb2ee 30%, #1a63b5 62%, #0b2c5c 100%);
   --os-start-down: radial-gradient(circle at 50% 35%, #e2f8ff 0%, #79cdf6 30%, #2a7bcb 62%, #0f3970 100%);
   --os-start-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.7), 0 0 4px rgba(120, 200, 255, 0.6);
-  --os-start-radius: 50%;
-  --os-start-radius-v: 50%;
-  --os-start-glyph: #1a63b5;
   --os-tray: transparent;
   --os-tray-v: transparent;
   --os-tray-edge: transparent;
@@ -10188,9 +10192,7 @@ html[data-os='win7'] #app .start-glyph {
 }
 html[data-os='win7'] #app .taskbar-start:active .start-glyph,
 html[data-os='win7'] #app .taskbar-start[aria-expanded='true'] .start-glyph {
-  background:
-    radial-gradient(circle at 50% 50%, #fff 0 14%, rgba(255, 255, 255, 0.55) 26%, transparent 38%),
-    var(--os-start-down);
+  --os-start: var(--os-start-down);
 }
 html[data-os='win7'] #app:is([data-taskbar='left'], [data-taskbar='right']) .taskbar-start {
   width: auto;
@@ -10202,11 +10204,18 @@ html[data-os='win7'] #app .tray-area {
   border-left: 1px solid rgba(255, 255, 255, 0.18);
 }
 html[data-os='win7'] #app:is([data-taskbar='left'], [data-taskbar='right']) .tray-area {
+  border-left: 0;
   border-top: 1px solid rgba(255, 255, 255, 0.18);
 }
-/* Startmenü: weiß mit dunkler Glas-Leiste, runde Ecken */
-html[data-os='win7'] #app .launcher {
+/* Startmenü: weiß mit dunkler Glas-Leiste; die freie Ecke (weg von der Leiste) ist rund, wie bei XP nur kleiner */
+html[data-os='win7'] #app[data-taskbar='bottom'] .launcher {
   border-radius: 0 7px 0 0;
+}
+html[data-os='win7'] #app:is([data-taskbar='top'], [data-taskbar='left']) .launcher {
+  border-radius: 0 0 7px 0;
+}
+html[data-os='win7'] #app[data-taskbar='right'] .launcher {
+  border-radius: 0 0 0 7px;
 }
 /* Titelleiste: dunkle Schrift mit hellem Schein (wie das Glas), × breit und rot */
 html[data-os='win7'] #app .work-bar {
