@@ -654,3 +654,23 @@ test('Betriebssystem: Wahl im System-Tab, Neustart erst beim Schließen, Anmeldu
   await expect(page.locator('.toast-os')).toHaveCount(0);
   expect(errors).toEqual([]);
 });
+
+test('Betriebssystem: gewählt, Einstellungen noch offen, neu geladen → Neustart mit Anmeldung kommt trotzdem', async ({ page, context }) => {
+  const save = { version: 3, tickets: 50, clicks: 300, lastTick: Date.now(), flags: { 'tut:off': 1, login: 1 }, incidents: { nextAt: 1e15 }, events: { nextAt: 1e15 } };
+  await context.addInitScript((json) => {
+    if (!sessionStorage.getItem('seeded')) {
+      localStorage.setItem('hyt.save', json);
+      sessionStorage.setItem('seeded', '1');
+    }
+  }, JSON.stringify(save));
+  await page.goto('/');
+  const html = page.locator('html');
+  await expect(html).toHaveAttribute('data-os', 'xp');
+  await openApp(page, 'system');
+  await page.locator('.os-pick[data-os="win98"]').tap();
+  await page.reload();
+  // erst XP (wie vor dem Neuladen zu sehen), dann der Neustart mit 98-Anmeldung
+  await expect(html).toHaveAttribute('data-os', 'win98');
+  await expect(page.locator('.login')).toBeVisible();
+  await expect(page.locator('.login-brand b')).toHaveText('Willkommen bei Fenster');
+});

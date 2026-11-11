@@ -21,8 +21,10 @@ describe('Spielstand', () => {
     expect(s.generators.cron.owned).toBe(0);
     expect(s.settings.haptics).toBe(true);
     expect(s.prestige).toEqual({ experience: 0, jobs: 0, company: 'mueller' });
-    // alter Stand bei Müller & Söhne: 98 kommt zu XP dazu, mit Hinweis
-    expect(s.flags).toEqual({ 'os:notice': 1 });
+    expect(s.flags).toEqual({});
+    // alter Stand bei Müller & Söhne: 98 kommt zu XP dazu, XP läuft weiter
+    expect(s.os.unlocked).toEqual({ xp: true, win98: true });
+    expect(s.os.known).toEqual({ xp: true });
   });
 
   it('verwirft kaputte Werte', () => {

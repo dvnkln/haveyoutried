@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { markLoggedIn, needsLogin, needsOsLogin, requireOsLogin } from '../../src/core/login';
-import { serialize } from '../../src/core/save';
-import { deserialize } from '../../src/core/save';
+import { deserialize, serialize } from '../../src/core/save';
 import { createInitialState } from '../../src/core/state';
 
 describe('Anmeldebildschirm', () => {

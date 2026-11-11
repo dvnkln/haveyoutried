@@ -727,8 +727,8 @@ export class Sfx {
   /** Chef-Aufgabe erledigt: zweimal aufs Stempelkissen, ein satter Stempel auf den Tisch, dann die Hotelklingel. */
   bossDone(): void {
     const r = this.ready();
-    const out = r?.out;
-    if (!r || !out) return;
+    if (!r) return;
+    const { out } = r;
     // Stempelkissen: weich und gedämpft
     for (const dt of [0, 0.12]) {
       this.tone('sine', 210, 150, r.t + dt, 0.2, 0.05, out);
@@ -747,12 +747,12 @@ export class Sfx {
   /** Papierkorb leeren: ein kurzes, weiches Papierknüllen. */
   crumple(): void {
     const r = this.ready();
-    const out = r?.out;
     // sanft und dumpf: kaum Höhen, die Knackser gehen im weichen Rascheln auf
     const hp = this.filter('highpass', 300, 0.5);
     const lp = this.filter('lowpass', 2400, 0.5);
     const lp2 = this.filter('lowpass', 2400, 0.5);
-    if (!r || !out || !hp || !lp || !lp2) return;
+    if (!r || !hp || !lp || !lp2) return;
+    const { out } = r;
     // ein kurzer Knüll: schnell zupacken, langsamer loslassen
     const grips = [[0, 0.12], [0.06, 0.3]] as const;
     this.buffer(r.t, this.paper(r.ctx.sampleRate, 0.38, grips, 600, 0.35), out, 0.3, [hp, lp, lp2]);
@@ -761,8 +761,8 @@ export class Sfx {
   /** Espresso: Siebträger schabt in die Brühgruppe und rastet ein, die Pumpe brummt, Kaffee läuft in die Tasse. */
   espresso(): void {
     const r = this.ready();
-    const out = r?.out;
-    if (!r || !out) return;
+    if (!r) return;
+    const { out } = r;
     // Eindrehen: Metall schabt an Metall, dann rastet er ein
     this.noiseHeld(r.t, out, { peak: 0.05, attack: 0.03, hold: 0.1, release: 0.04, type: 'bandpass', f0: 2600, f1: 4200, q: 5 });
     this.strike(r.t + 0.17, 940, 0.07, [[1, 1, 0.08], [2.53, 0.7, 0.06], [4.16, 0.4, 0.04]], out);
@@ -792,8 +792,8 @@ export class Sfx {
   /** VIP-Mail erledigt: Patrone klonkt in die Rohrpost, das Rohr saugt sie fauchend weg, weit hinten kommt sie an. */
   vipSent(): void {
     const r = this.ready();
-    const out = r?.out;
-    if (!r || !out) return;
+    if (!r) return;
+    const { out } = r;
     // Patrone in die Klappe: hohles Klonk
     this.tone('sine', 280, 250, r.t, 0.35, 0.12, out);
     this.tone('sine', 720, 700, r.t, 0.12, 0.08, out);
@@ -816,8 +816,8 @@ export class Sfx {
   /** Achievement: Glockenspiel „ta-daa“ mit Glitzern. */
   achievement(): void {
     const r = this.ready();
-    const out = r?.out;
-    if (!r || !out) return;
+    if (!r) return;
+    const { out } = r;
     const glock = [[1, 1, 0.9], [2.76, 0.22, 0.35], [5.4, 0.07, 0.12]] as const;
     this.strike(r.t, 1567.98, 0.09, glock, out);
     for (const f of [2093, 2637.02, 3135.96]) this.strike(r.t + 0.13, f, 0.075, glock, out);
@@ -833,8 +833,8 @@ export class Sfx {
   /** Kauf-Meilenstein: mechanische Registrierkasse, Taste ratscht, „Ching“, Schublade rollt raus, Münzen klimpern. */
   register(): void {
     const r = this.ready();
-    const out = r?.out;
-    if (!r || !out) return;
+    if (!r) return;
+    const { out } = r;
     // Taste: Ratsche mit vier schnellen Zähnen
     for (let i = 0; i < 4; i++) {
       this.hiss(r.t + i * 0.019, 0.14 * (1 - i * 0.15), 0.009, 'bandpass', this.rnd(2500, 3200), 3, out);
@@ -881,8 +881,8 @@ export class Sfx {
   /** Kündigen: Klinke runter, die Tür knarzt auf, fällt hinter einem ins Schloss. */
   quit(): void {
     const r = this.ready();
-    const out = r?.out;
-    if (!r || !out) return;
+    if (!r) return;
+    const { out } = r;
     // Klinke: runter und Falle schnappt zurück
     this.strike(r.t, 2100, 0.06, [[1, 1, 0.04], [2.7, 0.5, 0.025]], out);
     this.strike(r.t + 0.07, 1800, 0.05, [[1, 1, 0.04], [2.7, 0.5, 0.025]], out);

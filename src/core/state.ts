@@ -59,8 +59,11 @@ export interface GameState {
   incidents: { nextAt: number; lastId: string; active: string; seen: Record<string, number>; best: Record<string, number> };
   // ---
 
-  /** Betriebssysteme (nur Optik): freigeschaltet für immer, eigene Wahl je Firma (core/os.ts) */
-  os: { unlocked: Partial<Record<OsId, true>>; pick: Record<string, OsId> };
+  /**
+   * Betriebssysteme (nur Optik, core/os.ts): freigeschaltet für immer, eigene Wahl je Firma, schon gemeldete,
+   * und was zuletzt zu sehen war (weicht die Wahl ab, startet der Rechner neu, auch nach Neuladen)
+   */
+  os: { unlocked: Partial<Record<OsId, true>>; pick: Record<string, OsId>; known: Partial<Record<OsId, true>>; shown: OsId | null };
   /** Aufgabe vom Chef (kleines Ziel für die nächsten Minuten) */
   boss: BossState;
   stats: { startedAt: number; playTimeMs: number; offlineTickets: number };
@@ -101,7 +104,7 @@ export function createInitialState(now: number): GameState {
     prestige: { experience: 0, jobs: 0, company: 'mueller' },
     flags: {},
     // erste Firma (Müller & Söhne) läuft auf 98
-    os: { unlocked: { win98: true }, pick: {} },
+    os: { unlocked: { win98: true }, pick: {}, known: { win98: true }, shown: null },
     events: { nextAt: 0, active: null, lastId: '', seen: {} },
     buffs: [],
     incidents: { nextAt: 0, lastId: '', active: '', seen: {}, best: {} },

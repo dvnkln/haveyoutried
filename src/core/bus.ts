@@ -14,8 +14,7 @@ export interface GameEvents {
   incidentStart: { id: IncidentId };
   /** batch = wie viele im selben Durchgang freigeschaltet wurden */
   achievement: { id: string; batch: number };
-  /** newOs = System der neuen Firma war noch nicht freigeschaltet */
-  jobQuit: { gained: number; company: string; newOs: OsId | null };
+  jobQuit: { gained: number; company: string };
   /** andere Wahl im System-Tab, Einstellungen zu: Neustart mit dem neuen System */
   osChanged: { os: OsId };
   bossTask: { text: string };

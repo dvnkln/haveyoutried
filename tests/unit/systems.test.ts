@@ -1,8 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { COMPANIES } from '../../src/content/companies';
 import { OS_IDS, SYSTEMS } from '../../src/content/systems';
-import { activeOs, chooseOs, nextCompany, osAvailable, OS_NOTICE_FLAG } from '../../src/core/os';
-import { bus } from '../../src/core/bus';
+import { activeOs, chooseOs, markAnnounced, nextCompany, osAvailable, unannouncedOs } from '../../src/core/os';
 import { quitJob, ticketsForNextPoint } from '../../src/core/prestige';
 import { deserialize, serialize } from '../../src/core/save';
 import { createInitialState } from '../../src/core/state';
@@ -78,16 +77,35 @@ describe('Betriebssysteme', () => {
     expect(activeOs(back)).toBe('mac');
   });
 
-  it('alte Spielstände behalten XP und bekommen das Firmen-System dazu (mit Hinweis)', () => {
+  it('alte Spielstände behalten XP und bekommen das Firmen-System dazu (wird gemeldet)', () => {
     const old = { version: 3, clicks: 500, prestige: { experience: 3, jobs: 2, company: 'konzern' } };
     const s = deserialize(JSON.stringify(old), 0)!;
     expect(s.os.unlocked).toEqual({ xp: true, win11: true });
     expect(activeOs(s)).toBe('xp');
-    expect(s.flags[OS_NOTICE_FLAG]).toBe(1);
-    // Firma mit XP: nichts Neues, kein Hinweis
+    expect(unannouncedOs(s)).toEqual(['win11']);
+    markAnnounced(s, 'win11');
+    expect(unannouncedOs(deserialize(serialize(s), 0)!)).toEqual([]);
+    // Firma mit XP: nichts Neues
     const amt = deserialize(JSON.stringify({ ...old, prestige: { ...old.prestige, company: 'amt' } }), 0)!;
     expect(amt.os.unlocked).toEqual({ xp: true });
-    expect(amt.flags[OS_NOTICE_FLAG]).toBeUndefined();
+    expect(unannouncedOs(amt)).toEqual([]);
+  });
+
+  it('Stände von vor „known“ (bis ac93312): Freigeschaltetes gilt als gemeldet, eine ausstehende Meldung bleibt', () => {
+    const pushed = { version: 3, clicks: 500, prestige: { experience: 0, jobs: 0, company: 'mueller' }, os: { unlocked: { xp: true, win98: true }, pick: { mueller: 'xp' } } };
+    expect(unannouncedOs(deserialize(JSON.stringify(pushed), 0)!)).toEqual([]);
+    const pending = deserialize(JSON.stringify({ ...pushed, flags: { 'os:notice': 1 } }), 0)!;
+    expect(unannouncedOs(pending)).toEqual(['win98']);
+    expect(pending.flags['os:notice']).toBeUndefined();
+  });
+
+  it('gezeigtes System bleibt im Spielstand (Neustart nach Neuladen)', () => {
+    const s = createInitialState(0);
+    s.os.shown = 'win98';
+    expect(deserialize(serialize(s), 0)!.os.shown).toBe('win98');
+    const raw = JSON.parse(serialize(s));
+    raw.os.shown = 'beos';
+    expect(deserialize(JSON.stringify(raw), 0)!.os.shown).toBeNull();
   });
 });
 
@@ -100,23 +118,32 @@ describe('Systeme ohne fertigen Look', () => {
     const s = createInitialState(0);
     s.ticketsAllTime = ticketsForNextPoint(s);
     // letzte Firma in der Liste: SynergyHub.ai (Mac)
-    let newOs: unknown = 'unset';
-    const off = bus.on('jobQuit', (e) => (newOs = e.newOs));
     quitJob(s, () => 0.999);
-    off();
     expect(s.prestige.company).toBe('unicorn');
     expect(s.os.unlocked.mac).toBe(true);
-    expect(newOs).toBeNull();
     expect(activeOs(s)).toBe('xp');
     expect(osAvailable(s, 'mac')).toBe(false);
     expect(chooseOs(s, 'mac')).toBe(false);
+    // dort läuft ersatzweise XP: das ist damit freigeschaltet (wählbar) und wird gemeldet, Mac nicht
+    expect(osAvailable(s, 'xp')).toBe(true);
+    expect(unannouncedOs(s)).toEqual(['xp']);
+  });
+
+  it('wird ein Look später fertig, gilt das schon freigeschaltete System als neu (Meldung)', () => {
+    const s = createInitialState(0);
+    s.prestige.company = 'unicorn';
+    s.os.unlocked.mac = true;
+    expect(unannouncedOs(s)).toEqual([]);
+    (SYSTEMS.find((o) => o.id === 'mac') as { ready: boolean }).ready = true;
+    expect(unannouncedOs(s)).toEqual(['mac']);
+    expect(activeOs(s)).toBe('mac');
   });
 
   it('alter Stand bei einer Firma mit unfertigem System: kein Hinweis', () => {
     const s = deserialize(JSON.stringify({ version: 3, clicks: 5, prestige: { experience: 0, jobs: 1, company: 'konzern' } }), 0)!;
     expect(s.os.unlocked.win11).toBe(true);
     expect(activeOs(s)).toBe('xp');
-    expect(s.flags[OS_NOTICE_FLAG]).toBeUndefined();
+    expect(unannouncedOs(s)).toEqual([]);
   });
 
   it('Bevorzugung zählt nur fertige Systeme', () => {

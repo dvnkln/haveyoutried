@@ -1,8 +1,7 @@
 import { LOGIN } from '../content/boot';
 import { companyOf } from '../content/companies';
-import { osOf } from '../content/systems';
 import { activeOs } from '../core/os';
-import { isOsId } from '../content/systems';
+import { isOsId, osOf } from '../content/systems';
 import { markLoggedIn } from '../core/login';
 import type { AppContext } from './app';
 import { h, setText } from './dom';
