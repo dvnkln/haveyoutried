@@ -3,6 +3,7 @@ import { progressScore } from '../../core/incidents';
 import { NET_DISTRACTORS, NET_SCENARIOS, type NetScenario } from '../../content/incidents';
 import { pick, shuffle } from '../../util';
 import { h, juice, SHAKE, setText } from '../dom';
+import { termBar } from './term';
 import type { GameApi, Minigame } from './types';
 
 const CFG = INCIDENTS.games.network;
@@ -109,7 +110,7 @@ export function networkGame(): Minigame {
         grid.append(el);
       }
 
-      root.append(h('div', { class: 'net' }, [term, reply, grid]));
+      root.append(h('div', { class: 'net' }, [h('div', { class: 'term-win' }, [termBar('admin@admin-pc: ~'), term]), reply, grid]));
     },
     update() {
       /* ereignisgetrieben */

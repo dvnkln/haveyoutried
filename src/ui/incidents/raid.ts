@@ -68,6 +68,11 @@ export class RaidSim {
     return true;
   }
 
+  /** Rebuild-Fortschritt 0..1 einer Platte (für den Balken, folgt der Spielzeit statt der Uhr) */
+  rebuildProgress(i: number): number {
+    return this.disks[i] === 'rebuild' ? 1 - Math.max(0, this.rebuildLeft[i]!) / this.cfg.rebuildMs : 0;
+  }
+
   /** wie /proc/mdstat: U = ok, _ = fehlt/rebuild */
   mdstat(): string {
     return this.disks.map((d) => (d === 'ok' ? 'U' : '_')).join('');
@@ -93,11 +98,13 @@ export function raidGame(): Minigame {
       api = gameApi;
       buttons = sim.disks.map((_, i) => {
         const name = `sd${String.fromCharCode(97 + i)}`;
+        // Einschub wie im echten Disk-Shelf: Griff mit Status-LEDs, Lochblech, Etikett, Fortschritt beim Rebuild
         const b = h('button', { class: 'disk', type: 'button', 'aria-label': `Platte ${name}`, 'data-state': 'ok' }, [
-          h('span', { class: 'disk-led' }),
-          h('span', { class: 'disk-name', text: name }),
-          h('span', { class: 'disk-slot' }),
+          h('span', { class: 'disk-latch', 'aria-hidden': 'true' }, [h('span', { class: 'disk-led' }), h('span', { class: 'disk-fault' })]),
+          h('span', { class: 'disk-face' }, [h('span', { class: 'disk-name', text: name }), h('span', { class: 'disk-slot' })]),
         ]);
+        // Aktivitäts-LED flackert je Platte versetzt (wie echte Zugriffe, nicht im Gleichtakt)
+        b.style.setProperty('--blink-delay', `${(-((i * 0.37) % 1.3)).toFixed(2)}s`);
         b.addEventListener('pointerdown', (e) => {
           e.preventDefault();
           if (sim.replace(i)) {
@@ -118,13 +125,29 @@ export function raidGame(): Minigame {
         });
         return b;
       });
-      root.append(h('div', { class: 'rack' }, buttons));
+      const ear = (side: string) =>
+        h('span', { class: `san-ear san-ear-${side}`, 'aria-hidden': 'true' }, [h('span', { class: 'san-screw' }), h('span', { class: 'san-screw' })]);
+      root.append(
+        h('div', { class: 'san' }, [
+          ear('l'),
+          h('div', { class: 'san-mid' }, [
+            h('div', { class: 'san-head', 'aria-hidden': 'true' }, [
+              h('span', { class: 'san-power' }),
+              h('span', { class: 'san-brand', text: 'SANdkasten' }),
+              h('span', { class: 'san-model', text: 'DS-12 · md0' }),
+            ]),
+            h('div', { class: 'rack' }, buttons),
+          ]),
+          ear('r'),
+        ]),
+      );
     },
     update(dt) {
       sim.update(dt);
       sim.disks.forEach((d, i) => {
         const b = buttons[i];
         if (b && b.dataset.state !== d) b.dataset.state = d;
+        if (b && d === 'rebuild') b.style.setProperty('--rebuild', sim.rebuildProgress(i).toFixed(3));
       });
       // neuer Ausfall: kurzer Warnton
       if (sim.failedCount > lastFailed) api?.sfx.error();

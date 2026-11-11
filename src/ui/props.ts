@@ -5,6 +5,7 @@ import { incidentRunning, isSolved } from '../core/incidents';
 import type { GameState } from '../core/state';
 import { pick } from '../util';
 import type { AppContext } from './app';
+import { SQUEAK_PRESS_S } from './audio';
 import { h, juice, POP, quip, setFlag, setText, SHAKE } from './dom';
 
 const svg = (markup: string, cls: string, tag: 'div' | 'button' = 'div'): HTMLElement => {
@@ -30,10 +31,21 @@ const PLANT = `<svg viewBox="0 0 90 140">
   <rect x="11" y="92" width="68" height="10" rx="3" fill="#f0a77e" ${INK}/>
 </svg>`;
 
+/** nutzbare Breite für den Aufdruck (Becher ist 37 breit, abzüglich Rand und Rundung) */
+const MUG_PRINT_WIDTH = 28;
+let measureCtx: CanvasRenderingContext2D | null | undefined;
+/** Breite eines Textes in Fredoka fett pro 1 px Schriftgröße; ohne Canvas grob geschätzt */
+const textWidthPerPx = (t: string): number => {
+  measureCtx ??= document.createElement('canvas').getContext('2d');
+  if (!measureCtx) return Math.max(3.6, t.length * 0.62);
+  measureCtx.font = '700 100px Fredoka, sans-serif';
+  return measureCtx.measureText(t).width / 100;
+};
+
 /** Becher: schlicht (nur Kaffeemaschine) oder mit Design der zuletzt verbesserten Infrastruktur */
 const mugSvg = (body: string, print: [string, string] | null, ink: string) => {
-  // lange Aufdrucke etwas kleiner, damit sie auf den Becher passen
-  const size = (t: string, max: number) => Math.min(max, 64 / Math.max(6, t.length)).toFixed(1);
+  // Aufdruck so groß wie möglich, aber mit Rand auf der Becherfläche (echte Textbreite statt Zeichenzahl)
+  const size = (t: string, max: number) => Math.min(max, MUG_PRINT_WIDTH / textWidthPerPx(t)).toFixed(2);
   const text = print
     ? `<text x="25.5" y="35" text-anchor="middle" font-family="Fredoka, sans-serif" font-size="${size(print[0], 7.5)}" font-weight="700" fill="var(--ink)">${print[0]}</text>
   <text x="25.5" y="45" text-anchor="middle" font-family="Fredoka, sans-serif" font-size="${size(print[1], 8.5)}" font-weight="700" fill="${ink}">${print[1]}</text>`
@@ -136,7 +148,11 @@ const DUST = `<svg viewBox="0 0 30 18">
 /** Upgrade → Gegenstand, der beim Kauf auftaucht */
 type UpgradeProp = { upgrade: string; el: HTMLElement };
 
+/** so lange pfeift das Zusammendrücken der Gummiente */
+const SQUEAK_PRESS_MS = SQUEAK_PRESS_S * 1_000;
+
 /** Requisiten am Schreibtisch: kleine Gags, Upgrades zum Anfassen, Spielstand im Bild. */
+
 export function createProps(ctx: AppContext) {
   const { state } = ctx;
 
@@ -159,6 +175,8 @@ export function createProps(ctx: AppContext) {
     lastIncident = performance.now();
     juice(incidentSign, SHAKE, 400, true);
   });
+  // durchgestrichene Zahl nach dem Ausblenden ganz weg, sonst schiebt sie die neue Zahl zur Seite
+  signOld.addEventListener('animationend', () => incidentSign.classList.remove('reset'));
 
   // --- Post-its ---
   const notes = [0].map((i) => {
@@ -187,8 +205,37 @@ export function createProps(ctx: AppContext) {
   const duck = svg(DUCK, 'prop duck', 'button');
   duck.setAttribute('type', 'button');
   duck.setAttribute('aria-label', 'Gummiente');
-  duck.addEventListener('click', () => {
-    ctx.sfx.squeak();
+  // Quietschen wie echt: Drücken pfeift, Loslassen saugt die Luft zurück (zweites, kürzeres Quietschen)
+  // ein Finger (Hauptzeiger, linke Taste) drückt; ein schneller zweiter Tipp verwirft das noch ausstehende Zurücksaugen
+  let squeezed = false;
+  let squeezedAt = 0;
+  let releaseTimer = 0;
+  const squeakRelease = (wait: number) => {
+    clearTimeout(releaseTimer);
+    releaseTimer = window.setTimeout(() => ctx.sfx.squeak('release'), wait);
+  };
+  duck.addEventListener('pointerdown', (e) => {
+    if (!e.isPrimary || e.button !== 0) return;
+    clearTimeout(releaseTimer);
+    squeezed = true;
+    squeezedAt = performance.now();
+    ctx.sfx.squeak('press');
+  });
+  // kurz angetippt: das Zurücksaugen erst nach dem Pfeifen, sonst klingen beide übereinander
+  const letGo = (e: PointerEvent) => {
+    if (!squeezed || !e.isPrimary) return;
+    squeezed = false;
+    squeakRelease(Math.max(0, SQUEAK_PRESS_MS - (performance.now() - squeezedAt)));
+  };
+  duck.addEventListener('pointerup', letGo);
+  duck.addEventListener('pointercancel', letGo);
+  duck.addEventListener('pointerleave', letGo);
+  duck.addEventListener('click', (e) => {
+    // Tastatur (Enter/Leertaste): beides hintereinander
+    if (e.detail === 0) {
+      ctx.sfx.squeak('press');
+      squeakRelease(SQUEAK_PRESS_MS);
+    }
     ctx.haptic('tap');
     juice(duck, [{ transform: 'scale(1)' }, { transform: 'scale(1.2, .8)' }, { transform: 'scale(1)' }], 260);
     const line = pick(DUCK_LINES);
@@ -241,6 +288,11 @@ export function createProps(ctx: AppContext) {
     const body = tier === 3 ? 'url(#mug-gold)' : tier === 2 ? d.color : '#fffaf0';
     mug.innerHTML = mugSvg(body, d.prints[tier - 1]!, tier === 1 ? '#d64545' : 'var(--ink)');
   };
+  // Aufdruck erst mit geladener Schrift richtig vermessen: danach einmal neu zeichnen
+  void document.fonts?.ready.then(() => {
+    mugSig = '';
+    drawMug();
+  });
   const mugQuip = () => {
     if (!mugGen) return quip(mug, 'Kaffee. Schwarz. Wie das Monitoring um 3 Uhr.');
     const d = MUG_DESIGNS[mugGen];

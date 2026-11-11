@@ -130,6 +130,9 @@ const DEFAULT_SWITCH: SwitchId = 'blue';
 
 const profile = (id: string): SwitchProfile => SWITCHES[id as SwitchId] ?? SWITCHES[DEFAULT_SWITCH];
 
+/** Länge des Gummienten-Pfeifens beim Zusammendrücken (props.ts wartet so lange mit dem Zurücksaugen) */
+export const SQUEAK_PRESS_S = 0.26;
+
 export class Sfx {
   private ctx: AudioContext | null = null;
   private master: GainNode | null = null;
@@ -284,6 +287,11 @@ export class Sfx {
   private melRest = { id: '', i: 0, pos: 0, at: 0 };
   /** geplante Töne der Melodie: beim Anhalten ausblenden bzw. stumm schalten, statt sie nachklingen oder doppelt laufen zu lassen */
   private melGains: { g: GainNode; start: number; end: number }[] = [];
+
+  /** läuft gerade die Espresso-Melodie (Taste wird gehalten)? */
+  get melodyPlaying(): boolean {
+    return this.mel !== null;
+  }
 
   /** Melodie spielen bzw. Stufe wechseln (jeden Frame aufrufen, solange gehalten wird) */
   melody(m: Melody, level: 1 | 2): void {
@@ -1072,14 +1080,57 @@ export class Sfx {
     this.tone('square', 150, 95, r.t, 0.14, 0.16, lp);
   }
 
-  /** Gummiente: Quietschen, hoch und wieder runter. */
-  squeak(): void {
+  /** Klang der Quietsch-Pfeife (einmal pro AudioContext gebaut) */
+  private squeakWave: PeriodicWave | null = null;
+
+  /**
+   * Gummiente wie echt: Luft pfeift durch die Gummizunge im Boden.
+   * press = zusammendrücken (Ton schießt hoch, hält kurz, flattert, sinkt etwas ab),
+   * release = loslassen (Luft wird zurückgesaugt: kürzer, leiser, tiefer, steigt dabei an).
+   * Nasaler Klang aus Grundton + Obertönen, oben bei 3 kHz begrenzt; weicher Einsatz, kein Bass.
+   */
+  squeak(phase: 'press' | 'release' = 'press'): void {
     const r = this.ready();
-    const lp = this.lowpass(2600);
+    const lp = this.lowpass(3000);
     if (!r || !lp) return;
-    const p = this.rnd(0.9, 1.15);
-    this.tone('triangle', 900 * p, 1500 * p, r.t, 0.12, 0.09, lp, 0.01);
-    this.tone('triangle', 1500 * p, 800 * p, r.t + 0.09, 0.1, 0.14, lp, 0.005);
+    const { ctx, t } = r;
+    const press = phase === 'press';
+    const p = this.rnd(0.94, 1.08);
+    const base = (press ? 1250 : 880) * p;
+    const dur = press ? SQUEAK_PRESS_S : 0.15;
+    const peak = press ? 0.14 : 0.08;
+    this.squeakWave ??= ctx.createPeriodicWave(new Float32Array(5), new Float32Array([0, 1, 0.6, 0.32, 0.14]));
+    const osc = ctx.createOscillator();
+    osc.setPeriodicWave(this.squeakWave);
+    const f = osc.frequency;
+    if (press) {
+      f.setValueAtTime(base * 0.62, t);
+      f.exponentialRampToValueAtTime(base * 1.06, t + 0.035);
+      f.exponentialRampToValueAtTime(base, t + 0.09);
+      f.exponentialRampToValueAtTime(base * 0.9, t + dur);
+    } else {
+      f.setValueAtTime(base * 0.8, t);
+      f.exponentialRampToValueAtTime(base * 1.12, t + dur * 0.7);
+      f.exponentialRampToValueAtTime(base, t + dur);
+    }
+    // die Gummizunge flattert: schnelles, leichtes Zittern der Tonhöhe
+    const lfo = ctx.createOscillator();
+    lfo.frequency.value = press ? 28 : 34;
+    const depth = ctx.createGain();
+    depth.gain.value = base * 0.025;
+    lfo.connect(depth).connect(f);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(peak, t + 0.03);
+    g.gain.setValueAtTime(peak, t + dur - 0.06);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    osc.connect(g).connect(lp);
+    for (const o of [osc, lfo]) {
+      o.start(t);
+      o.stop(t + dur + 0.05);
+    }
+    // Luft, die mitzischt
+    this.hiss(t, press ? 0.022 : 0.016, dur, 'bandpass', 2200, 1.5, lp);
   }
 
   /** Fliegende Espressotasse kommt: Tasse klirrt zweimal auf der Untertasse, dazu Flügelflattern. */

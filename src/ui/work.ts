@@ -822,7 +822,9 @@ export function createWork(
       setText(stampLine, line);
       stampPending = line ? 'big' : 'show';
       invalidate();
-      ctx.sfx.solved(streak);
+      // Espresso gehalten: die Melodie spielt, der Lös-Ton alle 120 ms läge sonst als Tonleiter darunter
+      // (Serien-Sprüche bleiben hörbar, die kommen selten)
+      if (line || !ctx.sfx.melodyPlaying) ctx.sfx.solved(streak);
       ctx.haptic('tap');
     }
     onSolved(streak, stamp, presses);

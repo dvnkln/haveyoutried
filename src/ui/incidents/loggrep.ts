@@ -2,6 +2,7 @@ import { INCIDENTS } from '../../config';
 import { progressScore } from '../../core/incidents';
 import { pick, randInt } from '../../util';
 import { LOG_DECOYS, LOG_TARGETS } from '../../content/incidents';
+import { termBar } from './term';
 import { h, juice, SHAKE } from '../dom';
 import type { GameApi, Minigame } from './types';
 
@@ -174,7 +175,13 @@ export function logGrepGame(): Minigame {
       api = gameApi;
       sim.update(0);
       sync();
-      root.append(h('div', { class: 'grep' }, [h('div', { class: 'grep-cmd', text: '$ tail -f /var/log/app01/app.log' }), list]));
+      root.append(
+        h('div', { class: 'grep term-win' }, [
+          termBar('root@app01: /var/log/app01'),
+          h('div', { class: 'grep-cmd', text: '$ tail -f /var/log/app01/app.log' }),
+          list,
+        ]),
+      );
     },
     update(dt) {
       const missedBefore = sim.missed;

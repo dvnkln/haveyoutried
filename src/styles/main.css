@@ -7237,9 +7237,10 @@ html.basement {
   background: #fffaf0;
   transform: rotate(45deg);
 }
-/* bei offenem App-Fenster keine Sprechblasen vom Tisch darüber (Papierkorb, Ente …) */
+/* bei offenem App-Fenster keine Sprechblasen vom Tisch darüber (Papierkorb, Ente …);
+   nur unsichtbar, nicht display: none – sonst misst quip() die Breite als 0 und die Blase läuft später rechts raus */
 body:has(> #app.sheet-open) > .quip {
-  display: none;
+  visibility: hidden;
 }
 .quip.out {
   opacity: 0;
@@ -11464,4 +11465,517 @@ html[data-os='mac'] #app .login-pw {
   html[data-os='mac'] #app .login-band:not(.login-foot) {
     padding-top: 4%;
   }
+}
+
+/* ---------- Whiteboard: wie mit Marker geschrieben (Handschrift, leicht ausgefranst, alte Wischspuren) ---------- */
+.incident-sign {
+  background:
+    radial-gradient(ellipse 60% 18% at 30% 22%, rgba(120, 140, 160, 0.09), transparent 70%),
+    radial-gradient(ellipse 45% 14% at 72% 70%, rgba(58, 111, 216, 0.06), transparent 70%),
+    linear-gradient(160deg, #ffffff 0%, #f4f7f9 55%, #e9eef2 100%);
+}
+.incident-sign .sign-row {
+  justify-content: center;
+}
+.incident-sign .sign-value,
+.incident-sign .sign-old,
+.incident-sign .sign-label {
+  font-family: 'Patrick Hand', var(--font-ui);
+  font-weight: 400;
+}
+/* Marker: Farbe läuft an den Rändern minimal aus */
+.incident-sign .sign-value {
+  font-size: 30px;
+  line-height: 0.95;
+  letter-spacing: 0.5px;
+  text-shadow:
+    0 0 0.6px #e04848,
+    0.4px 0.3px 0 rgba(224, 72, 72, 0.55);
+  transform: rotate(-4deg) translateX(-1px);
+}
+.incident-sign .sign-old {
+  font-size: 18px;
+}
+.incident-sign .sign-label {
+  margin-top: 1px;
+  font-size: 12.5px;
+  line-height: 1;
+  text-shadow: 0 0 0.5px #3a6fd8;
+  transform: rotate(-2deg);
+}
+@media (max-width: 359px) {
+  .incident-sign .sign-value {
+    font-size: 26px;
+  }
+  .incident-sign .sign-label {
+    font-size: 11px;
+  }
+}
+
+/* ---------- RAID: Disk-Shelf im SAN (Gehäuse mit Rack-Ohren, Einschübe mit Griff, LEDs und Lochblech) ---------- */
+.incident .inc-game-root > .san {
+  /* mittig im freien Platz statt oben angeklebt */
+  margin-block: auto;
+}
+.san {
+  display: flex;
+  align-items: stretch;
+  border: 3px solid var(--ink);
+  border-radius: 10px;
+  background: #4a505d;
+  box-shadow: 0 5px 0 var(--ink);
+  overflow: hidden;
+}
+/* Rack-Ohren links/rechts mit je zwei Schrauben */
+.san-ear {
+  flex: 0 0 13px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: 9px 0;
+  background: linear-gradient(90deg, #5b6271, #474d59);
+}
+.san-ear-l {
+  border-right: 2px solid var(--ink);
+}
+.san-ear-r {
+  border-left: 2px solid var(--ink);
+}
+.san-screw {
+  width: 7px;
+  height: 7px;
+  border: 1.5px solid var(--ink);
+  border-radius: 50%;
+  background: linear-gradient(135deg, transparent 42%, var(--ink) 42% 58%, transparent 58%), #b9bfca;
+}
+.san-mid {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 5px 6px 7px;
+}
+.san-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 2px;
+  color: #e8ebf1;
+  font: 700 11px / 1.2 var(--font-ui);
+}
+.san-power {
+  width: 7px;
+  height: 7px;
+  border: 1.5px solid var(--ink);
+  border-radius: 50%;
+  background: #6fb6ff;
+  box-shadow: 0 0 5px #6fb6ff;
+}
+.san-brand {
+  letter-spacing: 0.04em;
+}
+.san-model {
+  margin-left: auto;
+  color: #aeb5c2;
+  font: 600 10px / 1.2 var(--font);
+}
+/* Schacht: dunkle Öffnung, in der die Einschübe stecken */
+.san .rack {
+  gap: 4px;
+  padding: 4px;
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+  background: #22252c;
+}
+.san .disk {
+  /* etwas größer als früher: freier Platz wird zu Trefferfläche */
+  min-height: clamp(64px, 10vh, 84px);
+  flex-direction: row;
+  align-items: stretch;
+  justify-content: flex-start;
+  padding: 0;
+  border: 2px solid var(--ink);
+  border-radius: 5px;
+  background: #c7ccd6;
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.16);
+  overflow: hidden;
+  animation: none;
+}
+/* Griff/Verriegelung mit Aktivitäts- und Fehler-LED */
+.disk-latch {
+  flex: 0 0 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border-right: 2px solid var(--ink);
+  background: linear-gradient(90deg, #7d9fe0, #6488cf);
+}
+.san .disk-led,
+.disk-fault {
+  width: 7px;
+  height: 7px;
+  border: 1.5px solid var(--ink);
+  border-radius: 50%;
+}
+.san .disk-led {
+  background: #5be38d;
+  box-shadow: none;
+  animation: disk-act 1.3s steps(1, end) infinite;
+  animation-delay: var(--blink-delay, 0s);
+}
+.disk-fault {
+  background: #6d5a3c;
+}
+/* Lochblech vorne, Etikett mit Gerätenamen */
+.disk-face {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 5px 6px 6px;
+  background: radial-gradient(circle at 3px 3px, #9198a6 1.5px, transparent 1.9px) 0 0 / 7px 7px, #c7ccd6;
+}
+.san .disk-name {
+  padding: 0 5px;
+  border: 1.5px solid var(--ink);
+  border-radius: 4px;
+  background: #fffdf6;
+  color: var(--ink);
+  font: 700 12px / 1.35 var(--font);
+}
+/* Rebuild-Fortschritt: raid.ts setzt --rebuild (0..1) aus der Spielzeit */
+.san .disk-slot {
+  position: relative;
+  width: 100%;
+  height: 6px;
+  border: 1.5px solid var(--ink);
+  border-radius: 3px;
+  background: #fff;
+  opacity: 0;
+  overflow: hidden;
+}
+.san .disk-slot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--butter);
+  transform: scaleX(var(--rebuild, 0));
+  transform-origin: left center;
+}
+/* Defekt: Fehler-LED blinkt rot, Einschub rötlich */
+.san .disk[data-state='failed'] {
+  background: #ffc4c8;
+}
+.san .disk[data-state='failed'] .disk-face {
+  background: radial-gradient(circle at 3px 3px, #d98a90 1.5px, transparent 1.9px) 0 0 / 7px 7px, #ffd3d6;
+}
+.san .disk[data-state='failed'] .disk-led {
+  background: #4a4f58;
+  animation: none;
+}
+.san .disk[data-state='failed'] .disk-fault {
+  background: #ff4f4f;
+  box-shadow: 0 0 7px #ff4f4f;
+  animation: disk-fault 0.5s steps(1, end) infinite;
+}
+.san .disk[data-state='failed'] .disk-latch {
+  background: linear-gradient(90deg, #e07d7d, #cf6464);
+}
+/* Rebuild: neue Platte eingeschoben, LED gelb, Balken füllt sich */
+.san .disk[data-state='rebuild'] {
+  background: #fff3c4;
+}
+.san .disk[data-state='rebuild'] .disk-face {
+  background: radial-gradient(circle at 3px 3px, #d8c27e 1.5px, transparent 1.9px) 0 0 / 7px 7px, #fff3c4;
+  animation: disk-in 0.22s cubic-bezier(0.2, 0.8, 0.3, 1.2);
+}
+
+.san .disk[data-state='rebuild'] .disk-led {
+  background: var(--butter);
+  animation: disk-fault 0.24s steps(1, end) infinite;
+}
+.san .disk[data-state='rebuild'] .disk-slot {
+  opacity: 1;
+}
+@keyframes disk-act {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  11% {
+    opacity: 0.35;
+  }
+  15% {
+    opacity: 1;
+  }
+  46% {
+    opacity: 0.35;
+  }
+  49% {
+    opacity: 1;
+  }
+  72% {
+    opacity: 0.4;
+  }
+  75% {
+    opacity: 1;
+  }
+}
+@keyframes disk-fault {
+  50% {
+    opacity: 0.3;
+  }
+}
+@keyframes disk-in {
+  from {
+    transform: translateX(-18px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .san .disk-led,
+  .san .disk[data-state='failed'] .disk-fault,
+  .san .disk[data-state='rebuild'] .disk-led,
+  .san .disk[data-state='rebuild'] .disk-face {
+    animation: none;
+  }
+}
+
+/* ---------- Dienste: Kacheln wie im Monitoring-Dashboard (Statusbalken links, Status als Badge, Meldung in Mono) ---------- */
+.incident .inc-game-root > .services,
+.incident .inc-game-root > .patch {
+  margin-block: auto;
+}
+.incident .svc {
+  position: relative;
+  gap: 3px;
+  padding: 6px 6px 6px 11px;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: inset 0 -3px 0 rgba(61, 44, 46, 0.12);
+}
+.incident .svc::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  border-right: 1.5px solid var(--ink);
+  background: #3cc47c;
+}
+.incident .svc[data-state='crit'] {
+  background: #fff4f4;
+}
+.incident .svc[data-state='crit']::before {
+  background: #ff5b5b;
+}
+.incident .svc[data-state='warn'] {
+  background: #fffaea;
+}
+.incident .svc[data-state='warn']::before {
+  background: #f0b020;
+}
+.incident .svc-state {
+  padding: 0 5px;
+  border: 1.5px solid var(--ink);
+  border-radius: 4px;
+  background: #b8efcf;
+  color: var(--ink);
+  font-size: 9.5px;
+  line-height: 1.4;
+  letter-spacing: 0.03em;
+}
+.incident .svc[data-state='crit'] .svc-state {
+  background: #ff8e8e;
+  color: var(--ink);
+}
+.incident .svc[data-state='warn'] .svc-state {
+  background: #ffd27a;
+  color: var(--ink);
+}
+.incident .svc-msg {
+  color: #4e4446;
+  font: 500 10.5px / 1.25 var(--font);
+}
+.incident .svc-deps {
+  font-size: 10px;
+}
+
+/* ---------- Patchkabel: Patchfeld und Switch als Geräte, Ports mit RJ45-Buchse, bunte Kabel ---------- */
+.patch-col {
+  padding: 6px;
+  border: 3px solid var(--ink);
+  border-radius: 10px;
+  background: #4a505d;
+  box-shadow: 0 4px 0 var(--ink);
+}
+.patch-col:nth-child(2) {
+  background: #2f3440;
+}
+.incident .patch-head {
+  padding: 0 2px 1px;
+  color: #e8ebf1;
+  font: 700 10px / 1.2 var(--font-ui);
+}
+.patch-board {
+  column-gap: 34px;
+}
+.incident .port {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  align-content: center;
+  column-gap: 6px;
+  padding: 4px 6px 4px 8px;
+  border-radius: 6px;
+  transform: none;
+}
+.incident .port-right {
+  grid-template-columns: auto minmax(0, 1fr);
+  padding: 4px 8px 4px 6px;
+}
+.incident .port-right .port-id,
+.incident .port-right .port-label {
+  grid-column: 2;
+}
+.port-id {
+  grid-row: 1;
+}
+.port-label {
+  grid-row: 2;
+}
+/* RJ45-Buchse: dunkle Öffnung mit Rastnase; mit Kabel steckt ein farbiger Stecker drin */
+.port-jack {
+  grid-row: 1 / 3;
+  grid-column: 2;
+  align-self: center;
+  position: relative;
+  width: 20px;
+  height: 17px;
+  border: 2px solid var(--ink);
+  border-radius: 3px;
+  background: #23262d;
+}
+.port-right .port-jack {
+  grid-column: 1;
+}
+.port-jack::before {
+  content: '';
+  position: absolute;
+  left: 5px;
+  right: 5px;
+  bottom: -2px;
+  height: 5px;
+  border: 2px solid var(--ink);
+  border-bottom: 0;
+  background: #fff;
+}
+.port.done .port-jack {
+  background: var(--cable, #5b8def);
+}
+/* Link-LED am Switch-Port */
+.port-right .port-jack::after {
+  content: '';
+  position: absolute;
+  top: -7px;
+  left: 50%;
+  width: 6px;
+  height: 4px;
+  margin-left: -3px;
+  border: 1.5px solid var(--ink);
+  border-radius: 1px;
+  background: #5a5f6a;
+}
+.port-right.done .port-jack::after {
+  background: #5be38d;
+  box-shadow: 0 0 5px #5be38d;
+}
+/* Uplink: SFP-Schacht statt RJ45 */
+.port-jack.sfp {
+  width: 22px;
+  height: 12px;
+  border-radius: 2px;
+}
+.port-jack.sfp::before {
+  display: none;
+}
+.port-jack.sfp::after {
+  background: #f0b020;
+}
+.patch-cable {
+  stroke-width: 5;
+  filter: none;
+}
+.patch-cable-edge {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 8.5;
+  stroke-linecap: round;
+}
+
+/* ---------- Terminals (Log-Grep, Ping): echtes Fenster mit Titelleiste ---------- */
+.term-win {
+  display: flex;
+  flex-direction: column;
+  border: var(--outline) solid var(--ink);
+  border-radius: 10px;
+  background: #2e2a3b;
+  box-shadow: 0 4px 0 var(--ink);
+  overflow: hidden;
+}
+.term-win.grep {
+  gap: 0;
+}
+.term-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 6px 3px 9px;
+  border-bottom: 2px solid var(--ink);
+  background: #d9d4e4;
+  color: var(--ink);
+  font: 600 10.5px / 1.3 var(--font-ui);
+}
+.term-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.term-btns {
+  display: flex;
+  gap: 4px;
+}
+.term-btns > span {
+  width: 9px;
+  height: 9px;
+  border: 1.5px solid var(--ink);
+  border-radius: 2px;
+  background: #f4f1f8;
+}
+.term-btns > span:last-child {
+  background: #ff8e8e;
+}
+.term-win .grep-cmd {
+  padding: 5px 8px 0;
+  color: #8ee6b4;
+  font-size: 11.5px;
+}
+body > .incident .term-win .net-term {
+  /* Titelleiste kostet keine Höhe: Terminal so viel kürzer */
+  height: 131px;
+}
+.term-win .grep-log,
+.term-win .net-term {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }

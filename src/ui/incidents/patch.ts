@@ -59,6 +59,9 @@ export class PatchSim {
   }
 }
 
+/** Patchkabel-Farben (pastellig, passend zum Comic-Look) */
+const CABLE_COLORS = ['#5b8def', '#ffc94d', '#5fd39a', '#ff8e9e', '#b49cff'];
+
 const vlanOf = (dept: string) => PATCH_DEPARTMENTS.find((d) => d.name === dept)?.vlan ?? dept;
 
 export function patchGame(): Minigame {
@@ -75,12 +78,14 @@ export function patchGame(): Minigame {
   let selected: string | null = null;
   let dragging = false;
 
-  /** Mittelpunkt einer Port-Kante relativ zum Board */
+  /** Mitte der RJ45-Buchse relativ zum Board (ohne Buchse: Mitte der Port-Kante) */
   const anchor = (el: HTMLElement, side: 'left' | 'right') => {
     const b = board.getBoundingClientRect();
-    const r = el.getBoundingClientRect();
+    const jack = el.querySelector<HTMLElement>('.port-jack');
+    const r = (jack ?? el).getBoundingClientRect();
     const z = cssZoom(board);
-    return { x: ((side === 'right' ? r.right : r.left) - b.left) / z, y: (r.top + r.height / 2 - b.top) / z };
+    const x = jack ? r.left + r.width / 2 : side === 'right' ? r.right : r.left;
+    return { x: (x - b.left) / z, y: (r.top + r.height / 2 - b.top) / z };
   };
   const curve = (a: { x: number; y: number }, z: { x: number; y: number }) => {
     const dx = Math.max(30, (z.x - a.x) / 2);
@@ -88,15 +93,25 @@ export function patchGame(): Minigame {
   };
 
   const drawCables = () => {
-    svg.querySelectorAll('.patch-cable').forEach((p) => p.remove());
+    svg.querySelectorAll('.patch-cable, .patch-cable-edge').forEach((p) => p.remove());
+    let n = 0;
     for (const [l, r] of sim.connected) {
       const a = leftEls.get(l);
       const z = rightEls.get(r);
       if (!a || !z) continue;
-      const path = document.createElementNS(SVG_NS, 'path');
-      path.setAttribute('class', 'patch-cable');
-      path.setAttribute('d', curve(anchor(a, 'right'), anchor(z, 'left')));
-      svg.append(path);
+      // jedes Kabel eine eigene Farbe, wie im echten Patchschrank; Stecker in der Buchse gleichfarbig
+      const color = CABLE_COLORS[n++ % CABLE_COLORS.length]!;
+      a.style.setProperty('--cable', color);
+      z.style.setProperty('--cable', color);
+      const d = curve(anchor(a, 'right'), anchor(z, 'left'));
+      // dunkle Kontur darunter, farbiges Kabel darüber (.patch-cable zählt genau einmal pro Kabel)
+      for (const cls of ['patch-cable-edge', 'patch-cable']) {
+        const path = document.createElementNS(SVG_NS, 'path');
+        path.setAttribute('class', cls);
+        path.setAttribute('d', d);
+        if (cls === 'patch-cable') path.style.stroke = color;
+        svg.insertBefore(path, temp);
+      }
     }
   };
 
@@ -152,6 +167,7 @@ export function patchGame(): Minigame {
         const el = h('button', { class: 'port port-left', type: 'button' }, [
           h('span', { class: 'port-id', text: `Dose 2.${11 + i}` }),
           h('span', { class: 'port-label', text: dept }),
+          h('span', { class: 'port-jack', 'aria-hidden': 'true' }),
         ]);
         el.addEventListener('pointerdown', (e) => {
           if (sim.connected.has(dept)) return;
@@ -174,6 +190,7 @@ export function patchGame(): Minigame {
         const el = h('button', { class: `port port-right${uplink ? ' uplink' : ''}`, type: 'button', 'data-dept': dept }, [
           h('span', { class: 'port-id', text: uplink ? 'Te1/1/1' : `Gi1/0/${3 + i * 2}` }),
           h('span', { class: 'port-label', text: uplink ? 'UPLINK – NICHT ANFASSEN' : `VLAN ${vlanOf(dept)}` }),
+          h('span', { class: `port-jack${uplink ? ' sfp' : ''}`, 'aria-hidden': 'true' }),
         ]);
         // Antippen nach Auswahl links (Tap-Tap)
         el.addEventListener('click', () => {
