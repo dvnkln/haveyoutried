@@ -5,8 +5,22 @@
  */
 
 import { TAP_SOUND_IDS } from '../core/state';
+import { MELODY_FAST, noteFreq, type Melody, type MelodyStyle } from '../content/melodies';
 
 type AudioCtor = typeof AudioContext;
+/** Mindestabstand zwischen zwei Tastenklicks (s) und wie weit sie sich höchstens aufstauen dürfen */
+const TAP_SPACING = 0.018;
+const TAP_BACKLOG = 0.05;
+/** Espresso-Melodie: so weit wird vorausgeplant (s); nach so langer Pause fängt sie wieder von vorn an (ms) */
+const MELODY_AHEAD = 0.15;
+const MELODY_RESUME_MS = 3_000;
+/** Bass in eine Lage, die auch Handylautsprecher noch wiedergeben (55–110 Hz) */
+const bassRange = (f: number) => {
+  let x = f;
+  while (x >= 110) x /= 2;
+  while (x < 55) x *= 2;
+  return x;
+};
 
 export interface SoundSettings {
   sound: boolean;
@@ -190,10 +204,11 @@ export class Sfx {
   lastPlayed = 0;
 
   /** Kontext, falls Sound an und Audio freigegeben; setzt die Lautstärke. */
-  private ready(): { ctx: AudioContext; out: GainNode; t: number } | null {
+  /** mark = zählt als „Ton gespielt“ (lastPlayed); die Espresso-Melodie zählt nicht, sonst bekämen Knöpfe keinen Klick mehr */
+  private ready(mark = true): { ctx: AudioContext; out: GainNode; t: number } | null {
     const s = this.settings();
     if (!s.sound || !this.ctx || !this.master || this.ctx.state !== 'running') return null;
-    this.lastPlayed = performance.now();
+    if (mark) this.lastPlayed = performance.now();
     this.master.gain.value = s.volume * 0.8;
     return { ctx: this.ctx, out: this.master, t: this.ctx.currentTime + 0.005 };
   }
@@ -230,8 +245,8 @@ export class Sfx {
     osc.stop(t + attack + decay + 0.05);
   }
 
-  private hiss(t: number, peak: number, decay: number, filter: BiquadFilterType, freq: number, q = 1, out?: AudioNode): void {
-    const r = this.ready();
+  private hiss(t: number, peak: number, decay: number, filter: BiquadFilterType, freq: number, q = 1, out?: AudioNode, mark = true): void {
+    const r = this.ready(mark);
     if (!r || !this.noise) return;
     const src = r.ctx.createBufferSource();
     src.buffer = this.noise;
@@ -265,12 +280,172 @@ export class Sfx {
     this.hiss(t, x.gain * level, this.rnd(...x.dur), x.type ?? 'bandpass', this.rnd(...x.freq) * freqScale, x.q);
   }
 
+  // --- Espresso-Melodie: läuft im Takt, solange gehalten wird; ein Daumen = Stufe 1, zwei = Stufe 2 ---
+  // Kein eigener Zeitgeber: desk.render() ruft melody() jeden Frame, hier wird jeweils ein Stück vorausgeplant.
+  // Ohne Frames (Tab im Hintergrund) also auch keine Töne.
+  private mel: { m: Melody; level: 1 | 2; i: number; pos: number; next: number; planned: { t: number; i: number; pos: number }[] } | null = null;
+  /** wo die zuletzt gespielte Melodie stand (und wann sie angehalten wurde): kurz loslassen = dort weiter */
+  private melRest = { id: '', i: 0, pos: 0, at: 0 };
+  /** geplante Töne der Melodie: beim Anhalten ausblenden, statt sie nachklingen oder doppelt laufen zu lassen */
+  private melGains: { g: GainNode; end: number }[] = [];
+
+  /** Melodie spielen bzw. Stufe wechseln (jeden Frame aufrufen, solange gehalten wird) */
+  melody(m: Melody, level: 1 | 2): void {
+    const r = this.ready(false);
+    if (!r) return this.stopMelody();
+    if (this.mel?.m !== m) {
+      this.stopMelody();
+      const rest = this.melRest.id === m.id && performance.now() - this.melRest.at < MELODY_RESUME_MS ? this.melRest : { i: 0, pos: 0 };
+      this.mel = { m, level, i: rest.i, pos: rest.pos, next: r.t + 0.03, planned: [] };
+    }
+    this.mel.level = level;
+    this.melodySchedule(r.ctx);
+  }
+
+  /** Melodie anhalten: geplante Töne kurz ausblenden; nächstes Mal geht es beim ersten nicht gespielten Ton weiter */
+  stopMelody(): void {
+    const st = this.mel;
+    if (!st) return;
+    const now = this.ctx?.currentTime ?? 0;
+    const resume = st.planned.find((x) => x.t >= now) ?? { i: st.i, pos: st.pos };
+    this.melRest = { id: st.m.id, i: resume.i, pos: resume.pos, at: performance.now() };
+    this.mel = null;
+    for (const { g } of this.melGains) {
+      g.gain.cancelScheduledValues(now);
+      g.gain.setValueAtTime(Math.max(0.0001, g.gain.value), now);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + 0.04);
+    }
+    this.melGains = [];
+  }
+
+  private melodySchedule(ctx: AudioContext): void {
+    const st = this.mel!;
+    const { m, level } = st;
+    const now = ctx.currentTime;
+    const sixteenth = 1 / (m.speed * (level === 2 ? MELODY_FAST : 1));
+    // zurück aus dem Hintergrund: nichts nachspielen
+    if (st.next < now) st.next = now + 0.02;
+    st.planned = st.planned.filter((x) => x.t >= now);
+    this.melGains = this.melGains.filter((x) => x.end > now);
+    while (st.next < now + MELODY_AHEAD) {
+      st.planned.push({ t: st.next, i: st.i, pos: st.pos });
+      const [n, l] = m.notes[st.i % m.notes.length]!;
+      const len = l * sixteenth;
+      if (n) {
+        const f = noteFreq(n);
+        this.melVoice(f, st.next, Math.max(0.12, len * 0.95), m.style, level === 2 ? 1 : 0.9);
+        // zwei Daumen: zweite Stimme eine Oktave höher
+        if (level === 2) this.melVoice(f * 2, st.next, Math.max(0.1, len * 0.8), m.style, 0.4);
+      }
+      // Bass auf den Schlägen (zwei Daumen: doppelt so oft), Schlagzeug nur mit zwei Daumen
+      for (let k = 0; k < l; k++) {
+        const p = st.pos + k;
+        const t = st.next + k * sixteenth;
+        const beat = p % 4 === 0;
+        if (beat || (level === 2 && p % 2 === 0)) {
+          const root = m.bass ? m.bass[Math.floor(p / 16) % m.bass.length]! : n;
+          if (root) this.melBass(bassRange(noteFreq(root)), t, sixteenth * (level === 2 ? 1.8 : 3.5));
+        }
+        if (level === 2) {
+          if (beat) this.melKick(t);
+          this.hiss(t, p % 2 ? 0.05 : 0.09, 0.05, 'highpass', 7000, 1, undefined, false);
+        } else if (m.style !== 'classic' && p % 2 === 1) this.hiss(t, 0.04, 0.05, 'highpass', 7000, 1, undefined, false);
+      }
+      st.pos += l;
+      st.next += len;
+      st.i++;
+    }
+  }
+
+  /** Hüllkurve für Melodie-Töne (merkt sich den Ton fürs Ausblenden beim Anhalten) */
+  private melGain(t: number, peak: number, len: number): GainNode {
+    const g = this.ctx!.createGain();
+    g.connect(this.master!);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(peak, t + 0.005);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+    this.melGains.push({ g, end: t + len });
+    return g;
+  }
+
+  private melVoice(f: number, t: number, len: number, style: MelodyStyle, level: number): void {
+    const ctx = this.ctx!;
+    const g = this.melGain(t, 0.2 * level, len);
+    const osc = (type: OscillatorType, mul = 1, detune = 0) => {
+      const o = ctx.createOscillator();
+      o.type = type;
+      o.frequency.value = f * mul;
+      o.detune.value = detune;
+      o.start(t);
+      o.stop(t + len + 0.02);
+      return o;
+    };
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.connect(g);
+    if (style === 'classic') {
+      // Marimba-artig: Dreieck und leiser Oberton
+      lp.frequency.value = 6000;
+      osc('triangle').connect(lp);
+      const o2 = ctx.createGain();
+      o2.gain.value = 0.25;
+      osc('sine', 4).connect(o2).connect(lp);
+    } else if (style === 'chip') {
+      lp.frequency.value = 5000;
+      const o = ctx.createGain();
+      o.gain.value = 0.6;
+      osc('square').connect(o).connect(lp);
+    } else if (style === 'synth') {
+      lp.frequency.setValueAtTime(3200, t);
+      lp.frequency.exponentialRampToValueAtTime(900, t + len);
+      osc('sawtooth', 1, -8).connect(lp);
+      osc('sawtooth', 1, 8).connect(lp);
+    } else {
+      // Acid: Sägezahn durch resonanten Filter, der zuschnappt
+      lp.Q.value = 14;
+      lp.frequency.setValueAtTime(600 + Math.random() * 2600, t);
+      lp.frequency.exponentialRampToValueAtTime(180, t + len * 0.9);
+      osc('sawtooth').connect(lp);
+    }
+  }
+
+  private melBass(f: number, t: number, len: number): void {
+    const ctx = this.ctx!;
+    const g = this.melGain(t, 0.28, len);
+    const o = ctx.createOscillator();
+    o.type = 'triangle';
+    o.frequency.value = f;
+    o.connect(g);
+    o.start(t);
+    o.stop(t + len + 0.02);
+  }
+
+  private melKick(t: number): void {
+    const ctx = this.ctx!;
+    const g = this.melGain(t, 0.45, 0.25);
+    const o = ctx.createOscillator();
+    o.frequency.setValueAtTime(150, t);
+    o.frequency.exponentialRampToValueAtTime(40, t + 0.2);
+    o.connect(g);
+    o.start(t);
+    o.stop(t + 0.3);
+  }
+
+  /** Startzeit des letzten Tastenklicks (Audio-Zeit) */
+  private lastTapAt = 0;
+
   /** Taste drücken (ein Anschlag am Ticket). */
   tap(id = this.settings().tapSound): void {
     const r = this.ready();
     if (!r) return;
     const p = profile(id);
-    const t = r.t + this.rnd(0, 0.004);
+    // Android rechnet Audio in Blöcken: zwei schnelle Anschläge im selben Block würden exakt gleichzeitig starten
+    // und wie einer klingen. Darum mindestens TAP_SPACING auseinander, aber nie mehr als TAP_BACKLOG im Rückstand
+    // (sonst hinkt der Klang bei Dauerfeuer immer weiter hinterher; dann lieber einen weglassen).
+    const at = Math.max(r.t, this.lastTapAt + TAP_SPACING);
+    if (at - r.t > TAP_BACKLOG) return;
+    this.lastTapAt = at;
+    const t = at + this.rnd(0, 0.004);
     const level = this.rnd(0.8, 1.1);
     // ab und zu eine „größere“ Taste: tiefer, mit Stabilisator-Klappern
     const big = Math.random() < 0.1;

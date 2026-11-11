@@ -1,4 +1,5 @@
 import { CONFIG } from '../config';
+import { migrateLogin } from './login';
 import { BUY_AMOUNTS, TAP_SOUND_IDS, TASKBAR_POSITIONS, createInitialState, SAVE_VERSION, type BuyAmount, type GameState } from './state';
 
 export const SAVE_KEY = 'hyt.save';
@@ -107,6 +108,7 @@ export function deserialize(json: string, now: number): GameState | null {
   // Büro-Geräusche: eigener Regler 0..1 (0 = aus); früher gab es kurz einen Schalter – „aus“ heißt jetzt Regler auf 0
   state.settings.ambienceVolume = Math.min(1, Math.max(0, state.settings.ambienceVolume));
   if (isPlain(data.settings) && data.settings.ambience === false) state.settings.ambienceVolume = 0;
+  migrateLogin(state);
   return state;
 }
 

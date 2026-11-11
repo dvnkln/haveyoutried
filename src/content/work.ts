@@ -134,6 +134,17 @@ export const MEMES: { top: string; bottom: string; face: string }[] = [
 
 /** Meme-Plattformen (Parodien): helle Forum-Variante und dunkle Bilderseite */
 export const MEME_SUBS = ['r/sysadmin', 'r/ProgrammerHumor', 'r/talesfromtechsupport', 'r/homelab', 'r/ichbinkeinroboter', 'r/iiiiiiitttttttttttt', 'r/devops', 'r/linuxmemes'];
+/** Beitragstitel über den Memes (wie auf den Vorbildern: fett über dem Bild) */
+export const MEME_TITLES = [
+  'Jedes. Einzelne. Mal.',
+  'Kennt ihr das auch?',
+  'Mein Arbeitstag in einem Bild',
+  '[OC] Hat mich drei Tage gekostet',
+  'Wahre Geschichte, leider',
+  'Montag, 8:01 Uhr',
+  'Die Kollegen fanden es nicht lustig',
+  'Hab ich heute live erlebt',
+];
 export const MEME_USERS = ['u/bofh_42', 'u/pfy_intern', 'u/dns_was_it', 'u/ticketqueue', 'u/printer_hater', 'u/root_not_root', 'u/hat_es_aus_gemacht', 'u/yaml_weint', 'u/schatten_it'];
 
 /**
@@ -333,5 +344,5 @@ export const AI_REPLIES: string[] = [
 export const AI_FOOTERS: string[] = [
   'KI kann Fehler machen. Prüfe wichtige Infos. (Macht keiner.)',
   'Antworten werden zur Verbesserung des Modells verwendet. Und für Werbung.',
-  'Modell: Schnell & Selbstbewusst · Kontext: 3 Sätze',
+  'Kontext: 3 Sätze. Danach weiß es nicht mehr, worum es ging.',
 ];

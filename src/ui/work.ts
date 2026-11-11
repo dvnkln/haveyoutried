@@ -13,6 +13,7 @@ import {
   MEME_ENTER_LINES,
   MEME_LEAVE_LINES,
   MEME_SUBS,
+  MEME_TITLES,
   MEME_USERS,
   MEMES,
   RDP_ERRORS,
@@ -34,6 +35,7 @@ import { DEVICE_SETTINGS, TALK_NOTES, TOPICS, topicPool, type Device } from '../
 import { fill, pick, randInt, shuffle, weightedPick } from '../util';
 import type { AppContext } from './app';
 import { h, setText } from './dom';
+import { companyOf } from '../content/companies';
 import { nextTicketNo, ticketId } from './history';
 
 /** Ohne Anschlag so lange, dann wird heimlich durch Memes gescrollt */
@@ -116,6 +118,12 @@ interface Task {
   device: Device | null;
   /** Gerät, PC oder Ähnliches, je nach Programm */
   target: string;
+  /** Rechnername der Firma (PuTTY-Titel und Log: root@host) */
+  host: string;
+  /** Name der Web-App im Browser-Tab (KI-Assistent), einmal gewürfelt; sonst leer */
+  app: string;
+  /** Fernwartung auf einen Server (statt auf den PC des Anrufers) */
+  server: boolean;
   /** Priorität: im Ticketsystem und im Verlauf dieselbe */
   prio: string;
 }
@@ -180,13 +188,31 @@ const clock = () => {
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 };
 
+/** Ein Browser für alle Web-Werkzeuge (und die Memes): immer dieselben Tabs offen, der des aktuellen Werkzeugs ist aktiv */
+const BROWSER_TABS: { site: string; title: string }[] = [
+  { site: 'ticket', title: 'TicketDesk 3.1 (Legacy)' },
+  { site: 'ai', title: 'ChatKI' },
+  { site: 'search', title: 'Sucher – Websuche' },
+  { site: 'forum', title: 'r/all – readit' },
+  { site: 'gag', title: '404GAG – Hot' },
+];
+const browserTab = (site: string, title: string, on: boolean) =>
+  h('span', { class: `br-tab${on ? ' on' : ''}`, 'data-site': site }, [
+    h('span', { class: 'br-fav' }),
+    h('span', { class: 'br-tab-title', text: title }),
+    h('span', { class: 'br-x', text: '×' }),
+  ]);
+/** Tab-Leiste: active = Werkzeug; title ersetzt dessen Standardtitel; extra = zusätzlicher Tab (Geräteseite), steht vor den Memes */
+const browserTabs = (active: string, title?: string, extra?: { site: string; title: string }) => {
+  const list = [...BROWSER_TABS];
+  if (extra) list.splice(3, 0, extra);
+  return list.map((t) => browserTab(t.site, t.site === active && title ? title : t.title, t.site === active));
+};
+
 /** Browser-Rahmen: Tab-Leiste und Adresszeile (Schloss bzw. „Nicht sicher“) */
-const browser = (url: string, tab: string, secure: boolean) =>
+const browser = (url: string, secure: boolean, active: string, title?: string, extra?: { site: string; title: string }) =>
   h('div', { class: 'browser' }, [
-    h('div', { class: 'br-tabs' }, [
-      h('span', { class: 'br-tab' }, [h('span', { class: 'br-tab-title', text: tab }), h('span', { class: 'br-x', text: '×' })]),
-      h('span', { class: 'br-new', text: '+' }),
-    ]),
+    h('div', { class: 'br-tabs' }, [...browserTabs(active, title, extra), h('span', { class: 'br-new', text: '+' })]),
     h('div', { class: 'br-bar' }, [
       h('span', { class: 'br-nav', text: '‹ › ↻' }),
       h('span', { class: `br-url${secure ? '' : ' insecure'}` }, [
@@ -222,6 +248,19 @@ const rdpIcon = (name: string) => {
   return h('span', { class: 'rdp-icon' }, [pic, h('span', { class: 'rdp-iname', text: name })]);
 };
 
+/** erfundener Browsername für Fenstertitel („Seite – Browser“ wie bei XP) */
+const BROWSER = 'Netzsurfer';
+/** Ticketsystem (Web-App), steht auch im Browser-Tab */
+const TICKET_APP = BROWSER_TABS[0]!.title;
+/** Menü links im Webinterface eines Geräts */
+const WEB_MENU = ['Status', 'Netzwerk', 'WLAN', 'Sicherheit', 'System'];
+/** Modellwahl oben im KI-Assistenten */
+const AI_MODEL = 'Schnell & Selbstbewusst';
+/** Server für Fernwartung bei Server-Tickets */
+const SERVERS = ['SRV-FILE-02', 'SRV-DC-01', 'SRV-PRINT-01', 'SRV-MAIL-01', 'srv-legacy01'];
+/** Desktop-Symbole auf einem Server (statt Excel und Passwörter.txt) */
+const RDP_SERVER_ICONS = ['Serververwaltung.lnk', 'Ereignisanzeige.lnk', 'Backup (alt)', 'Neuer Ordner (3)'];
+
 const avatar = (who: string, cls = '') => h('span', { class: `av ${cls}`.trim(), text: initials(who) || '?' });
 
 const row = (label: string, value: string, cls = '') =>
@@ -231,9 +270,13 @@ const PROGRAMS: Record<Kind, Program> = {
   mail: {
     weight: 3,
     title: () => pick(MAIL_TITLES),
+    // Verfassen wie in Outlook: großer „Senden“-Knopf vorn, darunter An/Cc/Betreff
     head: (t) => [
-      h('div', { class: 'mail-tools' }, ['↩ Antworten', '↪ Weiterleiten', '🗑︎ Löschen'].map((x) => h('span', { class: 'mail-tool', text: x }))),
-      h('div', { class: 'mail-fields' }, [row('An:', t.who), row('Betreff:', `Re: ${t.full}`)]),
+      h('div', { class: 'mail-tools' }, [
+        h('span', { class: 'mail-tool mail-send', text: '✉︎ Senden' }),
+        ...['📎︎ Anhängen', '! Wichtig'].map((x) => h('span', { class: 'mail-tool', text: x })),
+      ]),
+      h('div', { class: 'mail-fields' }, [row('An:', t.who), row('Cc:', '', 'mail-cc'), row('Betreff:', `Re: ${t.full}`)]),
     ],
     lines: (t) => [t.line.answer],
     extra: () => [h('div', { class: 'mail-sig', text: pick(MAIL_SIGS) })],
@@ -243,8 +286,10 @@ const PROGRAMS: Record<Kind, Program> = {
   },
   ticket: {
     weight: 3,
-    title: () => 'Ticketsystem 3.1 (Legacy)',
+    // Web-App: läuft im Browser
+    title: () => `${TICKET_APP} – ${BROWSER}`,
     head: (t) => [
+      browser(`ticketdesk.intern/ticket/${ticketId(t.no).replace('#', '')}`, true, 'ticket'),
       h('div', { class: 'tk-nav' }, [h('span', { class: 'tk-app', text: 'TicketDesk' }), h('span', { class: 'tk-queue', text: `Queue: ${randInt(400, 4_812)} offen` })]),
       h('div', { class: 'tk-card' }, [
         h('div', { class: 'tk-chips' }, [
@@ -271,16 +316,19 @@ const PROGRAMS: Record<Kind, Program> = {
   },
   term: {
     weight: 2,
-    title: () => 'Terminal — bash',
+    // SSH-Sitzung wie unter Windows üblich: PuTTY
+    title: (t) => `root@${t.host} – PuTTY`,
     head: (t) => [h('div', { class: 'work-comment', text: `# ${t.who}: ${t.full}` })],
     lines: (t) => topicPool(t.line.topic, 'cmds'),
-    log: (_t, x) => `you@helpdesk:~$ ${x}`,
+    log: (t, x) => `root@${t.host}:~$ ${x}`,
     ready: (_t, _head, extra) => extra.append(h('div', { class: 'term-out opt', text: pick(TERM_OUT) }), h('div', { class: 'term-out term-next opt', text: (document.querySelector('.typed-prompt')?.textContent ?? '$ ').trimEnd() })),
   },
   chat: {
     weight: 2,
     title: () => 'Firmen-Chat',
     head: (t) => [
+      // Kopfleiste der Chat-App mit Reitern (wie bei bekannten Firmen-Messengern)
+      h('div', { class: 'chat-app' }, ['Aktivität', 'Chat', 'Teams', 'Anrufe'].map((x) => h('span', { class: `chat-app-tab${x === 'Chat' ? ' on' : ''}`, text: x }))),
       h('div', { class: 'chat-top' }, [
         avatar(t.who),
         h('span', { class: 'chat-name' }, [t.who, h('span', { class: 'chat-status', text: pick(CHAT_STATES) })]),
@@ -300,7 +348,7 @@ const PROGRAMS: Record<Kind, Program> = {
   },
   call: {
     weight: 1,
-    title: (t) => `Videocall — ${t.who} (3 Teilnehmer, 2 stumm)`,
+    title: (t) => `Videocall – ${t.who} (3 Teilnehmer, 2 stumm)`,
     // Meeting-App: dunkle Bühne, wer spricht, hat den Ring; man selbst klein in der Ecke; unten die Knöpfe
     head: (t) => [
       h('div', { class: 'call-stage' }, [
@@ -334,11 +382,12 @@ const PROGRAMS: Record<Kind, Program> = {
   },
   rdp: {
     weight: 1,
-    title: (t) => `Remotedesktopverbindung — ${t.target}`,
+    title: (t) => `Remotedesktopverbindung – ${t.target}`,
+    // Ziel ist ein Server: Desktop im klassischen Server-Look (grau, kantig); sonst ein normaler PC
     head: (t) => [
       h('div', { class: 'rdp-conn' }, [h('span', { class: 'rdp-pin', text: '📌︎' }), h('span', { text: `${t.target} (sehr langsam)` }), h('span', { class: 'rdp-win', text: '–  ▢  ×' })]),
-      h('div', { class: 'rdp-desk' }, [
-        h('div', { class: 'rdp-icons' }, ['Papierkorb', ...shuffle(RDP_ICONS).slice(0, 2)].map(rdpIcon)),
+      h('div', { class: `rdp-desk${t.server ? ' rdp-server' : ''}` }, [
+        h('div', { class: 'rdp-icons' }, ['Papierkorb', ...shuffle(t.server ? RDP_SERVER_ICONS : RDP_ICONS).slice(0, 2)].map(rdpIcon)),
         h('div', { class: 'rdp-dialog' }, [
           h('div', { class: 'rdp-dtitle' }, [h('span', { text: 'Fehler' }), h('span', { text: '×' })]),
           h('div', { class: 'rdp-dbody' }, [
@@ -350,9 +399,9 @@ const PROGRAMS: Record<Kind, Program> = {
       ]),
     ],
     label: 'Öffnen:',
-    extra: () => [
-      h('div', { class: 'rdp-taskbar' }, [
-        h('span', { class: 'rdp-start', text: 'Start' }),
+    extra: (t) => [
+      h('div', { class: `rdp-taskbar${t.server ? ' rdp-server' : ''}` }, [
+        h('span', { class: 'rdp-start', text: t.server ? 'Start' : 'start' }),
         h('span', { class: 'rdp-task', text: 'Ausführen' }),
         h('span', { class: 'rdp-task rdp-task-dim', text: 'Excel (alt) – Keine Rückmeldung' }),
         h('span', { class: 'rdp-tray', 'aria-hidden': 'true', text: '🔈︎ ⇅' }),
@@ -366,9 +415,11 @@ const PROGRAMS: Record<Kind, Program> = {
   },
   web: {
     weight: 1,
-    title: () => 'Browser',
+    title: (t) => `${t.target} – Admin – ${BROWSER}`,
     head: (t) => [
-      browser(`192.168.1.${10 + (t.no % 200)}/admin`, `${t.target} – Admin`, false),
+      browser(`192.168.1.${10 + (t.no % 200)}/admin`, false, 'web', undefined, { site: 'web', title: `${t.target} – Admin` }),
+      // Gerätemenü links wie auf Router-Seiten, ein Punkt ist gerade offen
+      h('nav', { class: 'web-nav' }, WEB_MENU.map((x, i) => h('span', { class: `web-nav-item${i === t.no % WEB_MENU.length ? ' on' : ''}`, text: x }))),
       h('div', { class: 'web-page' }, [
         h('div', { class: 'web-brand', text: `⚙ ${t.target} · Administration` }),
         h('div', { class: 'web-login', text: 'Angemeldet als: admin (Passwort: admin)' }),
@@ -389,8 +440,9 @@ const PROGRAMS: Record<Kind, Program> = {
   // KI-Assistent: Problem stumpf in einen Prompt kippen, die KI antwortet sehr selbstbewusst
   ai: {
     weight: 1,
-    title: () => pick(AI_TITLES),
-    head: () => [aiRow(pick(AI_GREETINGS))],
+    // Web-App: läuft im Browser
+    title: (t) => `${t.app} – ${BROWSER}`,
+    head: (t) => [browser('chatki.example', true, 'ai', t.app), h('div', { class: 'ai-model', text: `Modell: ${AI_MODEL} ▾` }), aiRow(pick(AI_GREETINGS))],
     // ganzer Betreff, wenn er nicht zu lang ist; nach „…?“ kein zusätzlicher Punkt
     lines: (t) =>
       AI_PROMPTS.map((p) => fill(p, { subject: t.full.length <= 80 ? t.full : t.subject, who: t.who }).replace(/([.!?…])“\./g, '$1“')),
@@ -414,9 +466,9 @@ const PROGRAMS: Record<Kind, Program> = {
   },
   search: {
     weight: 2,
-    title: () => 'Browser',
+    title: () => `Sucher – Websuche – ${BROWSER}`,
     head: () => [
-      browser('www.sucher.example', 'Sucher – Websuche', true),
+      browser('www.sucher.example', true, 'search'),
       h('div', { class: 'search-logo' }, [...'Sucher'].map((c, i) => h('span', { class: `sl${i % 4}`, text: c }))),
     ],
     extra: () => [
@@ -449,7 +501,7 @@ export function createWork(
   /** gelöst: Serie und Stempel (für Bonus und Effekte am Schreibtisch) */
   onSolved: (streak: number, stamp: HTMLElement, presses: number) => void,
 ) {
-  let task: Task = { kind: 'ticket', who: '', subject: '', full: '', no: 0, line: QUEUE_LINE, call: null, device: null, target: '', prio: 'mittel' };
+  let task: Task = { kind: 'ticket', who: '', subject: '', full: '', no: 0, line: QUEUE_LINE, call: null, device: null, target: '', prio: 'mittel', app: '', server: false, host: '' };
   let reply = '';
   let typedLen = 0;
   /** Arbeit am aktuellen Ticket und Anschläge dafür */
@@ -524,11 +576,34 @@ export function createWork(
   // Memes: Browser mit Tabs, wechselt zwischen Forum (hell) und Bilderseite (dunkel); Parodien, keine echten Logos
   const forumFeed = h('div', { class: 'meme-feed meme-feed-forum' });
   const gagFeed = h('div', { class: 'meme-feed meme-feed-gag' });
-  const memeTab = (site: string, text: string) =>
-    h('span', { class: 'br-tab', 'data-site': site }, [h('span', { class: 'br-fav' }), h('span', { class: 'br-tab-title', text }), h('span', { class: 'br-x', text: '×' })]);
-  const memeTabs = [memeTab('forum', 'r/all – readit'), memeTab('gag', '404GAG – Hot'), memeTab('alibi', 'Ticketsystem 3.1 (Legacy)')];
+  // derselbe Browser wie bei den Web-Werkzeugen: alle Tabs offen, readit oder 404GAG aktiv
+  const memeTabs = browserTabs('forum');
   const memeAddr = h('span', { class: 'br-addr' });
-  const memePage = h('div', { class: 'meme-page' }, [forumFeed, gagFeed]);
+  // Kopfleiste der Seite: readit hell mit rundem Logo, Suche und Anmelden; 404GAG schwarz mit Reitern
+  const memeSiteHead = h('div', { class: 'meme-site' }, [
+    h('div', { class: 'ms-forum' }, [h('span', { class: 'ms-logo', text: '◕' }), h('b', { text: 'readit' }), h('span', { class: 'ms-search', text: '⌕ Suchen' }), h('span', { class: 'ms-login', text: 'Anmelden' })]),
+    h('div', { class: 'ms-gag' }, [h('span', { class: 'ms-logo', text: '404' }), h('span', { class: 'ms-search', text: '⌕ Suchen' }), h('span', { class: 'ms-login', text: 'Anmelden' })]),
+  ]);
+  // Desktop-Ansicht: links Navigation, in der Mitte der schmalere Feed, rechts (wenn Platz) Infokasten
+  const sideItems = (items: string[], on: number) => items.map((x, i) => h('span', { class: `side-item${i === on ? ' on' : ''}`, text: x }));
+  const memeSideLeft = h('div', { class: 'meme-side meme-side-left' }, [
+    h('div', { class: 'side-forum' }, [
+      ...sideItems(['⌂︎ Start', '↗︎ Beliebt', '◎︎ Alle'], 2),
+      h('span', { class: 'side-head', text: 'Communitys' }),
+      ...sideItems(['r/sysadmin', 'r/homelab', 'r/devops'], -1),
+    ]),
+    h('div', { class: 'side-gag' }, [
+      ...sideItems(['🔥︎ Hot', '📈︎ Trending', '✨︎ Fresh', '🏆︎ Top'], 0),
+      h('span', { class: 'side-head', text: 'Rubriken' }),
+      ...sideItems(['Arbeit', 'Technik', 'Montag'], -1),
+    ]),
+  ]);
+  const memeSideRight = h('div', { class: 'meme-side meme-side-right' }, [
+    h('div', { class: 'side-forum' }, [h('b', { text: 'r/all' }), h('span', { text: 'Die beliebtesten Beiträge aus allen Communitys.' }), h('span', { class: 'side-btn', text: 'Beitreten' })]),
+    h('div', { class: 'side-gag' }, [h('b', { text: 'Beliebte Tags' }), h('span', { text: '#montag #drucker #dns #kaffee' })]),
+  ]);
+  const memeScroll = h('div', { class: 'meme-scroll' }, [forumFeed, gagFeed]);
+  const memePage = h('div', { class: 'meme-page' }, [memeSideLeft, memeScroll, memeSideRight]);
   const memeWindow = h('div', { class: 'meme-window', 'aria-hidden': 'true' }, [
     h('div', { class: 'browser meme-browser' }, [
       h('div', { class: 'br-tabs' }, [...memeTabs, h('span', { class: 'br-new', text: '+' })]),
@@ -537,6 +612,7 @@ export function createWork(
         h('span', { class: 'br-url' }, [h('span', { class: 'br-lock', text: '🔒︎' }), memeAddr]),
       ]),
     ]),
+    memeSiteHead,
     memePage,
   ]);
   let siteTimer = 0;
@@ -551,7 +627,12 @@ export function createWork(
   const stampLine = h('span', { class: 'ss-line' });
   stamp.append(stampText, stampStreak, stampLine);
   const el = h('div', { class: 'work' }, [
-    h('div', { class: 'work-bar' }, [h('span', { class: 'term-dots', 'aria-hidden': 'true' }), title]),
+    // Titelleiste wie bei XP: Programmsymbol (Farbe je Programm), Titel, rechts _ □ × (nur Deko)
+    h('div', { class: 'work-bar' }, [
+      h('span', { class: 'term-dots', 'aria-hidden': 'true' }),
+      title,
+      h('span', { class: 'win-btns', 'aria-hidden': 'true' }, [h('span', { text: '–' }), h('span', { text: '□' }), h('span', { class: 'win-x', text: '×' })]),
+    ]),
     head,
     body,
     extra,
@@ -618,6 +699,8 @@ export function createWork(
 
   /** Nächste Aufgabe: anderes Programm; erst der aktuelle Anrufer, dann Tickets aus der Warteschlange */
   const newTask = () => {
+    // neues Ticket (z. B. erstes nach dem Login): Memes sind vorbei; gezeichnet wird unten einmal fürs neue Ticket
+    if (memes) endMemes();
     clearTimeout(sentTimer);
     sentTimer = 0;
     const call = currentCall();
@@ -633,6 +716,7 @@ export function createWork(
     const choices = kinds.length > 1 ? kinds.filter((k) => k !== task.kind) : kinds;
     const kind = weightedPick(choices, (k) => PROGRAMS[k].weight);
     const device = kind === 'web' ? pick(devicesFor(line)) : null;
+    const server = kind === 'rdp' && line.topic === 'server';
     task = {
       kind,
       who,
@@ -642,8 +726,12 @@ export function createWork(
       line,
       call: q ? null : call,
       device,
-      target: device ?? pcOf(who),
+      // Server-Tickets mit Fernwartung: auf einen Server, sonst auf den PC des Anrufers
+      target: device ?? (server ? pick(SERVERS) : pcOf(who)),
       prio: BOSSES.includes(who) && Math.random() < 0.7 ? 'CHEF' : pick(TICKET_PRIOS),
+      app: kind === 'ai' ? pick(AI_TITLES) : '',
+      host: companyOf(ctx.state.prestige.company).host,
+      server,
     };
     const prog = PROGRAMS[kind];
     reply = pick(prog.lines(task));
@@ -661,8 +749,10 @@ export function createWork(
     const prog = PROGRAMS[task.kind];
     body.scrollTop = 0;
     body.scrollLeft = 0;
-    if (!memes) el.dataset.kind = task.kind;
-    setText(title, taskTitle);
+    if (!memes) {
+      el.dataset.kind = task.kind;
+      setText(title, taskTitle);
+    }
     head.replaceChildren(...prog.head(task));
     extra.replaceChildren(...(prog.extra?.(task) ?? []));
     setText(label, prog.label ?? '');
@@ -801,20 +891,35 @@ export function createWork(
     const k = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1).replace('.', ',')} Tsd.` : String(n));
     // Forum: hell, Unterforen, Abstimmpfeile; Bilderseite: dunkel
     const card = (m: (typeof MEMES)[number], i: number, forum: boolean) => {
-      return h('div', { class: `meme ${forum ? 'meme-forum' : 'meme-gag'}` }, [
-        h('div', { class: 'meme-head' }, [
-          h('span', { class: 'meme-src', text: forum ? pick(MEME_SUBS) : '404GAG' }),
-          h('span', { class: 'meme-meta', text: forum ? ` · ${pick(MEME_USERS)} · ${randInt(1, 23)} Std.` : ` · Hot · ${randInt(1, 59)} Min.` }),
-        ]),
-        h('div', { class: `meme-img meme-bg-${i % 4}` }, [
-          h('span', { class: 'meme-top', text: m.top }),
-          h('span', { class: 'meme-face', 'aria-hidden': 'true', text: m.face }),
-          h('span', { class: 'meme-bottom', text: m.bottom }),
-        ]),
+      const img = h('div', { class: `meme-img meme-bg-${i % 4}` }, [
+        h('span', { class: 'meme-top', text: m.top }),
+        h('span', { class: 'meme-face', 'aria-hidden': 'true', text: m.face }),
+        h('span', { class: 'meme-bottom', text: m.bottom }),
+      ]);
+      const votes = k(randInt(120, 48_000));
+      const comments = k(randInt(12, 2_400));
+      const title = h('div', { class: 'meme-title', text: pick(MEME_TITLES) });
+      // Forum: Unterforum, Titel, Bild, darunter runde Knöpfe (▲ Zahl ▼ · Kommentare · Teilen)
+      if (forum)
+        return h('div', { class: 'meme meme-forum' }, [
+          h('div', { class: 'meme-head' }, [h('span', { class: 'meme-src', text: pick(MEME_SUBS) }), h('span', { class: 'meme-meta', text: ` · ${randInt(1, 23)} Std. · ${pick(MEME_USERS)}` })]),
+          title,
+          img,
+          h('div', { class: 'meme-foot' }, [
+            h('span', { class: 'meme-pill' }, [h('b', { class: 'up', text: '▲' }), ` ${votes} `, h('b', { class: 'down', text: '▼' })]),
+            h('span', { class: 'meme-pill', text: `💬︎ ${comments}` }),
+            h('span', { class: 'meme-pill', text: '↗︎ Teilen' }),
+          ]),
+        ]);
+      // Bilderseite: Rubrik, großer Titel, Bild, darunter runde Knöpfe
+      return h('div', { class: 'meme meme-gag' }, [
+        h('div', { class: 'meme-head' }, [h('span', { class: 'meme-src', text: 'Hot' }), h('span', { class: 'meme-meta', text: ` · ${randInt(1, 59)} Min.` })]),
+        title,
+        img,
         h('div', { class: 'meme-foot' }, [
-          h('span', { class: 'meme-votes' }, [h('b', { class: 'up', text: '▲' }), ` ${k(randInt(120, 48_000))} `, h('b', { class: 'down', text: '▼' })]),
-          h('span', { text: `${k(randInt(12, 2_400))} Kommentare` }),
-          ...(forum ? [h('span', { text: 'Teilen' })] : []),
+          h('span', { class: 'meme-pill' }, [h('b', { class: 'up', text: '▲' }), ` ${votes} `, h('b', { class: 'down', text: '▼' })]),
+          h('span', { class: 'meme-pill', text: `💬︎ ${comments}` }),
+          h('span', { class: 'meme-pill', text: '↗︎' }),
         ]),
       ]);
     };
@@ -830,10 +935,12 @@ export function createWork(
   const showSite = (site: 'forum' | 'gag') => {
     memeWindow.dataset.site = site;
     // neue Seite lädt von oben, erst mal lesen
-    memePage.scrollTop = 0;
+    memeScroll.scrollTop = 0;
     if (memes) startScrolling();
     for (const t of memeTabs) t.classList.toggle('on', t.dataset.site === site);
     setText(memeAddr, site === 'forum' ? 'readit.example/r/all/hot' : '404gag.example/hot');
+    // Fenstertitel wie bei XP: Seite – Browser
+    if (memes) setText(title, `${BROWSER_TABS.find((x) => x.site === site)!.title} – ${BROWSER}`);
   };
   const nextSite = () => {
     // kein ständiger Hell-dunkel-Wechsel für alle, die weniger Bewegung wollen
@@ -860,8 +967,8 @@ export function createWork(
       const half = cards.length / 2;
       const loop = half >= 1 ? cards[half]!.offsetTop - cards[0]!.offsetTop : 0;
       // zweite Hälfte = Kopie der ersten: unbemerkt zurückspringen
-      if (loop > 0 && memePage.scrollTop >= loop) memePage.scrollTop -= loop;
-      const from = memePage.scrollTop;
+      if (loop > 0 && memeScroll.scrollTop >= loop) memeScroll.scrollTop -= loop;
+      const from = memeScroll.scrollTop;
       const next = cards.find((c) => c.offsetTop > from + 12);
       let target = next ? next.offsetTop - 8 : from + 200;
       if (from > 80 && Math.random() < 0.12) target = from - randInt(40, 90); // nochmal gucken
@@ -870,7 +977,7 @@ export function createWork(
       // Lesezeit danach: mal schnell weiter, mal länger hängen bleiben
       const pause = reducedMotion() ? 8_000 : Math.random() < 0.2 ? randInt(7_000, 11_000) : randInt(3_000, 6_000);
       if (reducedMotion()) {
-        memePage.scrollTop = to;
+        memeScroll.scrollTop = to;
         return read(pause);
       }
       const dur = Math.min(1_100, 380 + Math.abs(to - from) * 1.6);
@@ -878,7 +985,7 @@ export function createWork(
       const frame = (now: number) => {
         if (!memes) return;
         const t = Math.min(1, (now - start) / dur);
-        memePage.scrollTop = from + (to - from) * (1 - (1 - t) ** 3);
+        memeScroll.scrollTop = from + (to - from) * (1 - (1 - t) ** 3);
         if (t < 1) scrollRaf = requestAnimationFrame(frame);
         else read(pause);
       };
@@ -897,18 +1004,21 @@ export function createWork(
     el.dataset.kind = 'memes';
     showSite(Math.random() < 0.5 ? 'forum' : 'gag');
     nextSite();
-    setText(title, 'Browser');
     ctx.log.write('info', pick(MEME_ENTER_LINES));
   };
-  const leaveMemes = () => {
+  /** Memes beenden, ohne neu zu zeichnen */
+  const endMemes = () => {
     memes = false;
     clearTimeout(siteTimer);
     stopScrolling();
+    ctx.log.write('info', pick(MEME_LEAVE_LINES));
+  };
+  const leaveMemes = () => {
+    endMemes();
     el.dataset.kind = task.kind;
     setText(title, taskTitle);
     fitPending = true;
     invalidate();
-    ctx.log.write('info', pick(MEME_LEAVE_LINES));
   };
 
   // Drehen, Fenstergröße, nachgeladene Schrift: Platz neu ausmessen (nur bei echter Größenänderung, sonst Schleife)

@@ -222,7 +222,8 @@ button {
   z-index: 1;
   min-height: 0;
   display: flex;
-  padding: 26px 14px 16px;
+  /* + dgap seitlich: Desktop hat keinen Innenrand mehr, der Monitor wird dafür schmaler (Arbeitsfenster bleibt gleich breit) */
+  padding: 26px calc(14px + var(--dgap)) 16px;
   /* unten beginnt der Schreibtisch */
   background: linear-gradient(to bottom, transparent calc(100% - 22px), var(--wood) calc(100% - 22px));
 }
@@ -235,7 +236,8 @@ button {
   flex-direction: column;
   padding: 14px 14px 0;
   border: 3px solid var(--ink);
-  border-radius: 12px 12px 8px 8px;
+  /* Röhrenmonitor: kantiges Gehäuse */
+  border-radius: 6px 6px 4px 4px;
   background: linear-gradient(180deg, #faf1df, var(--shell) 30%, var(--shell-2));
   /* Kante oben und Tiefe unten: wirkt wie ein Kasten */
   box-shadow: inset 0 3px 0 #fffaf0, inset 0 -7px 0 var(--shell-3), inset 4px 0 0 #fbf4e6, inset -4px 0 0 var(--shell-3),
@@ -261,8 +263,8 @@ button {
   display: flex;
   flex-direction: column;
   border: 3px solid var(--ink);
-  /* leicht gewölbtes Glas */
-  border-radius: 10px / 14px;
+  /* leicht gewölbtes Glas, aber kantig wie bei einer Röhre */
+  border-radius: 5px / 7px;
   background: #bfe6dc;
   overflow: hidden;
   box-shadow: 0 0 0 5px var(--shell-3), 0 0 0 7px var(--ink);
@@ -405,16 +407,14 @@ button {
 /* ---------- Desktop im Bildschirm ---------- */
 /* Arbeitsfenster, Statuszeile und Taskleiste im Raster; wo die Leiste sitzt, entscheidet #app[data-taskbar] */
 .desktop {
-  --dp: 8px;
   position: relative;
   flex: 1;
   min-height: 0;
+  /* Fenster maximiert: Arbeitsfenster, Statuszeile und Taskleiste ohne Abstand */
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr) auto auto;
   grid-template-areas: 'work' 'last' 'bar';
-  gap: var(--dp);
-  padding: var(--dp);
   /* Tapete: Pastell mit Rautenmuster */
   background: linear-gradient(45deg, rgba(255, 255, 255, 0.16) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.16) 75%) 0 0 / 22px 22px,
     linear-gradient(45deg, rgba(255, 255, 255, 0.16) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.16) 75%) 11px 11px / 22px 22px,
@@ -919,25 +919,38 @@ button {
 /* ---------- Taskleiste: bündig am Bildschirmrand wie bei Windows XP (blau, grüner Start, Infobereich mit Uhr) ----------
    Sie begrenzt den Desktop: Hintergrundbild und Fenster beginnen erst daneben. */
 #app {
+  /* XP-Blau für Taskleiste und Fenster-Titelleisten */
+  --xp-blue: linear-gradient(180deg, #4d9bff 0%, #2f74e6 14%, #2560d8 55%, #1f54c4 88%, #1a46a8 100%);
   --tb: 23px;
-  /* Abstand im Desktop (.desktop --dp) */
+  /* Tippfläche der Taskleiste reicht so weit nach innen (über die Statuszeile, die man nicht antippen kann) */
+  --tb-hit: 8px;
+  /* so viel Abstand hatte der Desktop früher um Fenster und Statuszeile (8 px, niedrige Handys 6 px);
+     den gibt es nicht mehr, der Wert bestimmt jetzt, wie viel schmaler und flacher der Monitor dafür wird */
   --dgap: 8px;
   /* früher stand oben eine Reihe App-Kacheln: so hoch war sie (Kachel + Name) */
   --old-icons: 54px;
   /* der gesparte Platz macht den Monitor flacher, das Arbeitsfenster bleibt gleich groß */
-  --mon-trim: calc(var(--old-icons) - var(--tb) + var(--dgap));
+  /* Monitor flacher um alles, was das Arbeitsfenster heute nicht mehr braucht:
+     alte App-Reihe minus Taskleiste, dazu die früheren Abstände im Desktop (4 × dgap) und 4 px, weil die
+     Statuszeile niedriger ist (14 statt 20 px, früher lag sie 2 px über dem Fenster). Ziel: Arbeitsfenster exakt so groß wie vorher; prüfen mit
+     .local/tb/measure.mjs, wenn sich an Fenster, Statuszeile oder Taskleiste etwas ändert. */
+  --mon-trim: calc(var(--old-icons) - var(--tb) + 4 * var(--dgap) + 4px);
   /* davon rutscht die Wand oben ein Stück herunter, der Rest bleibt über dem Monitor */
   --wall-drop: 20px;
 }
 #app[data-taskbar='left'],
 #app[data-taskbar='right'] {
-  --mon-trim: calc(var(--old-icons) + var(--dgap));
+  --mon-trim: calc(var(--old-icons) + 4 * var(--dgap) + 4px);
 }
 .monitor {
   margin-top: calc(var(--mon-trim) - var(--wall-drop));
 }
 .desktop > .work {
   grid-area: work;
+  /* maximiert: eckig, ohne Rand zum Bildschirm, nur unten eine Linie zur Statuszeile */
+  border-width: 0 0 2px;
+  border-radius: 0;
+  box-shadow: none;
 }
 .desktop > .last-closed {
   grid-area: last;
@@ -970,21 +983,17 @@ button {
   right: var(--tb);
 }
 .taskbar {
-  --xp-blue: linear-gradient(180deg, #4d9bff 0%, #2f74e6 14%, #2560d8 55%, #1f54c4 88%, #1a46a8 100%);
   --xp-tray: linear-gradient(180deg, #2ab3f7 0%, #149ae6 18%, #0f8bdb 70%, #0b74c4 100%);
   grid-area: bar;
   display: flex;
   align-items: stretch;
   height: var(--tb);
-  /* bis an den Rand: über den Innenabstand des Desktops hinaus */
-  margin: 0 calc(-1 * var(--dp)) calc(-1 * var(--dp));
   border-top: 2px solid var(--ink);
   background: var(--xp-blue);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
   color: #fff;
 }
 #app[data-taskbar='top'] .taskbar {
-  margin: calc(-1 * var(--dp)) calc(-1 * var(--dp)) 0;
   border-top: 0;
   border-bottom: 2px solid var(--ink);
 }
@@ -1003,16 +1012,16 @@ button {
 .tray-app::after {
   content: '';
   position: absolute;
-  inset: calc(-1 * var(--dp)) -3px -3px;
+  inset: calc(-1 * var(--tb-hit)) -3px -3px;
 }
 .taskbar-start::after {
-  inset: calc(-1 * var(--dp)) 0 0;
+  inset: calc(-1 * var(--tb-hit)) 0 0;
 }
 #app[data-taskbar='top'] .taskbar-start::after {
-  inset: 0 0 calc(-1 * var(--dp));
+  inset: 0 0 calc(-1 * var(--tb-hit));
 }
 #app[data-taskbar='top'] .tray-app::after {
-  inset: -3px -3px calc(-1 * var(--dp));
+  inset: -3px -3px calc(-1 * var(--tb-hit));
 }
 /* Start: grüner Knopf, rechts rund, schräge weiße Schrift */
 .taskbar-start {
@@ -1100,11 +1109,9 @@ button {
   background: linear-gradient(90deg, #1f54c4 0%, #2560d8 40%, #2f74e6 85%, #4d9bff 100%);
 }
 #app[data-taskbar='left'] .taskbar {
-  margin: calc(-1 * var(--dp)) 0 calc(-1 * var(--dp)) calc(-1 * var(--dp));
   border-right: 2px solid var(--ink);
 }
 #app[data-taskbar='right'] .taskbar {
-  margin: calc(-1 * var(--dp)) calc(-1 * var(--dp)) calc(-1 * var(--dp)) 0;
   border-left: 2px solid var(--ink);
 }
 #app[data-taskbar='left'] .start-label,
@@ -1137,17 +1144,18 @@ button {
   flex-direction: column;
   gap: 7px;
 }
+/* seitlich nur wenig: daneben beginnt gleich das Arbeitsfenster */
 #app[data-taskbar='left'] .tray-app::after {
-  inset: -4px calc(-1 * var(--dp)) -4px -3px;
+  inset: -4px -4px -4px -3px;
 }
 #app[data-taskbar='right'] .tray-app::after {
-  inset: -4px -3px -4px calc(-1 * var(--dp));
+  inset: -4px -3px -4px -4px;
 }
 #app[data-taskbar='left'] .taskbar-start::after {
-  inset: 0 calc(-1 * var(--dp)) 0 0;
+  inset: 0 -4px 0 0;
 }
 #app[data-taskbar='right'] .taskbar-start::after {
-  inset: 0 0 0 calc(-1 * var(--dp));
+  inset: 0 0 0 -4px;
 }
 #app[data-taskbar='left'] .taskbar-clock,
 #app[data-taskbar='right'] .taskbar-clock {
@@ -1232,6 +1240,36 @@ button {
 .launcher .app-label {
   background: none;
 }
+/* niedrige Handys: Bildschirm ist klein, Launcher kompakter (sonst müsste er scrollen) */
+@media (max-height: 680px) {
+  .launcher {
+    padding: 3px 4px;
+  }
+  .launcher::before {
+    margin: -3px -4px 3px;
+    padding: 2px 8px;
+    font-size: 11px;
+  }
+  .launcher .app-icon {
+    padding: 1px 0;
+  }
+  .launcher .app-tile {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    font-size: 15px;
+  }
+  .launcher .app-tile svg {
+    width: 16px;
+    height: 16px;
+  }
+  .launcher-grid {
+    gap: 0 2px;
+  }
+  .launcher .app-icon .nav-badge {
+    right: calc(50% - 21px);
+  }
+}
 
 /* kräftiger Punkt: „jetzt lohnt es sich wirklich“ – größer, mit Ausrufezeichen, hüpft beim Erscheinen zweimal (kein Dauerpulsieren) */
 .badge-strong .nav-badge {
@@ -1300,28 +1338,52 @@ button {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   height: 22px;
-  padding: 0 8px;
+  padding: 0 4px 0 6px;
   border-bottom: var(--outline) solid var(--ink);
-  background: var(--paper);
+  /* XP-Titelleiste: blau mit Glanz, weiße Schrift */
+  background: var(--xp-blue);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
   font-size: 11px;
-  font-weight: 600;
-  color: var(--ink-soft);
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.35);
 }
-.work[data-kind='mail'] .work-bar {
-  background: #d6e6ff;
+.work[data-kind='mail'] {
+  --kind: #d6e6ff;
 }
-.work[data-kind='ticket'] .work-bar {
-  background: #fff0c2;
+.work[data-kind='ticket'] {
+  --kind: #fff0c2;
 }
 .term-dots {
-  width: 32px;
-  height: 9px;
+  width: 13px;
+  height: 13px;
   flex: 0 0 auto;
-  background: radial-gradient(circle, #ff8e8e 3.5px, transparent 4.5px) 0 50% / 11px 9px no-repeat,
-    radial-gradient(circle, #ffd166 3.5px, transparent 4.5px) 11px 50% / 11px 9px no-repeat,
-    radial-gradient(circle, #8ee6b4 3.5px, transparent 4.5px) 22px 50% / 11px 9px no-repeat;
+  border: 1.5px solid var(--ink);
+  border-radius: 3px;
+  background: var(--kind, var(--paper));
+  box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.45);
+}
+/* _ □ × rechts in der Titelleiste (nur Deko) */
+.win-btns {
+  margin-left: auto;
+  display: flex;
+  gap: 2px;
+}
+.win-btns > span {
+  width: 15px;
+  height: 15px;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid #fff;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #5aa2ff, #2a63d6);
+  color: #fff;
+  font: 700 10px / 1 var(--font-ui);
+}
+.win-btns > .win-x {
+  background: linear-gradient(180deg, #f08a6f, #d4472c);
 }
 .work-title {
   min-width: 0;
@@ -3574,7 +3636,8 @@ button {
 .beacon {
   z-index: 2;
   left: 50%;
-  top: 1px;
+  /* sitzt auf dem Monitor: der rutscht um seinen oberen Abstand (mon-trim − wall-drop) nach unten */
+  top: calc(1px + var(--mon-trim) - var(--wall-drop));
   width: 28px;
   height: 28px;
 }
@@ -4740,19 +4803,17 @@ html.basement {
 .work-label:empty {
   display: none;
 }
-.work[data-kind='chat'] .work-bar {
-  background: #ffe1e1;
+.work[data-kind='chat'] {
+  --kind: #ffe1e1;
 }
-.work[data-kind='call'] .work-bar {
-  border-bottom-color: #14121a;
-  background: #2f2c3a;
-  color: #d9d3e6;
+.work[data-kind='call'] {
+  --kind: #2f2c3a;
 }
-.work[data-kind='rdp'] .work-bar {
-  background: #cfe0ff;
+.work[data-kind='rdp'] {
+  --kind: #cfe0ff;
 }
-.work[data-kind='web'] .work-bar {
-  background: #d9f5e6;
+.work[data-kind='web'] {
+  --kind: #d9f5e6;
 }
 
 /* Videocall: Meeting-App im Dunkelmodus */
@@ -5427,8 +5488,8 @@ html.basement {
 .work[data-kind='memes'] > :not(.work-bar):not(.meme-window) {
   display: none;
 }
-.work[data-kind='memes'] .work-bar {
-  background: #f3e1ff;
+.work[data-kind='memes'] {
+  --kind: #f3e1ff;
 }
 .work[data-kind='memes'] .meme-window {
   display: flex;
@@ -5438,25 +5499,29 @@ html.basement {
   overflow: hidden;
 }
 /* Browser mit mehreren Tabs: aktiver Tab weiß, die anderen gedämpft */
-.meme-browser .br-tabs {
+/* ein Browser, viele Tabs: der aktive hell und breit, die anderen gedämpft und schmal */
+.br-tabs {
   overflow: hidden;
 }
-.meme-browser .br-tab {
+.br-tabs .br-tab {
   flex: 0 1 auto;
   min-width: 0;
   max-width: 42%;
+  gap: 4px;
+  padding: 2px 6px;
   background: #ddd5ea;
   font-weight: 500;
   color: var(--ink-soft);
 }
-.meme-browser .br-tab.on {
+.br-tabs .br-tab:not(.on) .br-x {
+  display: none;
+}
+.br-tabs .br-tab.on {
   flex-shrink: 0;
+  max-width: 48%;
   background: #fff;
   font-weight: 600;
   color: var(--ink);
-}
-.meme-browser .br-tab[data-site='alibi'] {
-  flex-shrink: 2;
 }
 .br-fav {
   flex: 0 0 auto;
@@ -5469,16 +5534,35 @@ html.basement {
   border-radius: 2px;
   background: #1b1b1f;
 }
-.br-tab[data-site='alibi'] .br-fav {
+.br-tab[data-site='ticket'] .br-fav {
   border-radius: 2px;
-  background: #7a8bd6;
+  background: #3f8f86;
+}
+.br-tab[data-site='ai'] .br-fav {
+  background: #7a5bc0;
+}
+.br-tab[data-site='search'] .br-fav {
+  background: conic-gradient(#4285f4 0 25%, #ea4335 0 50%, #fbbc05 0 75%, #34a853 0);
+}
+.br-tab[data-site='web'] .br-fav {
+  border-radius: 2px;
+  background: #3a3f4b;
 }
 .meme-page {
   position: relative;
   flex: 1;
   min-height: 0;
+  display: flex;
   overflow: hidden;
   background: #dae0e6;
+  container-type: inline-size;
+}
+/* Feed in der Mitte, scrollt; Seitenleisten stehen */
+.meme-scroll {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
 }
 .meme-window[data-site='gag'] .meme-page {
   background: #0f0f12;
@@ -5531,12 +5615,6 @@ html.basement {
   color: #000;
   font-weight: 800;
   letter-spacing: 0.5px;
-}
-.meme-gag .up {
-  color: #52c47a;
-}
-.meme-gag .down {
-  color: #9a9aa5;
 }
 .meme-head,
 .meme-foot {
@@ -6795,13 +6873,14 @@ html.basement {
 /* ---------- Zuletzt geschlossen: eine feste Zeile unter dem Arbeitsfenster ---------- */
 .desktop > .last-closed {
   flex: 0 0 auto;
-  height: 20px;
-  margin-top: -2px;
+  height: 14px;
   padding: 0 9px;
-  border: 2px solid var(--ink);
-  border-radius: 10px;
-  background: rgba(255, 250, 240, 0.92);
-  font: 500 11px / 16px var(--font-ui);
+  /* XP-Statusleiste: hell, Text in einem leicht vertieften Feld */
+  border: 0;
+  border-radius: 0;
+  box-shadow: inset 1px 1px 0 rgba(61, 44, 46, 0.25), inset -1px -1px 0 #fff;
+  background: #efe9d8;
+  font: 500 10px / 14px var(--font-ui);
   color: var(--ink);
   white-space: nowrap;
   overflow: hidden;
@@ -7218,7 +7297,7 @@ body:has(> #app.sheet-open) > .quip {
   position: fixed;
   z-index: 50;
   pointer-events: none;
-  border-radius: 12px 12px 8px 8px;
+  border-radius: 6px 6px 4px 4px;
   box-shadow: 0 0 34px 6px rgba(255, 91, 91, 0.28);
   transition: opacity 0.3s;
 }
@@ -7291,7 +7370,7 @@ body > .incident.playing {
 
 /* Statuszeile: Ticketnummer + Betreff, Füllstand = Fortschritt der Antwort (Text bleibt lesbar) */
 .desktop > .last-closed {
-  background: linear-gradient(90deg, #bfeed6 calc(var(--p, 0) * 100%), rgba(255, 250, 240, 0.94) 0);
+  background: linear-gradient(90deg, #bfeed6 calc(var(--p, 0) * 100%), #efe9d8 0);
   font-weight: 600;
 }
 .work.sent + .last-closed {
@@ -7309,11 +7388,13 @@ body > .incident.playing {
   position: absolute;
   right: 2px;
   top: 1px;
-  padding: 0 6px;
-  border-radius: 6px;
+  padding: 0 5px;
+  /* eigenes vertieftes Feld rechts, wie bei XP */
+  border-radius: 2px;
+  box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.3);
   background: #23915c;
   color: #fff;
-  font: 700 11px / 14px var(--font-ui);
+  font: 700 10px / 12px var(--font-ui);
 }
 
 /* ---------- Ticketverlauf: jede Karte ein Ticket ---------- */
@@ -8286,9 +8367,6 @@ body > .incident.playing {
   .monitor {
     padding: 10px 11px 0;
   }
-  .desktop {
-    --dp: 6px;
-  }
   #app {
     --old-icons: 49px;
     --dgap: 6px;
@@ -8506,8 +8584,8 @@ button.mug {
 }
 
 /* ---------- KI-Assistent: Bot-Blase oben, Prompt-Feld unten ---------- */
-.work[data-kind='ai'] .work-bar {
-  background: #e9e0ff;
+.work[data-kind='ai'] {
+  --kind: #e9e0ff;
 }
 .work[data-kind='ai'] .work-head {
   padding: 0;
@@ -9014,4 +9092,565 @@ body:has(.tut-note:not([hidden])) .tap-hint {
   .deskbar:has(> .plant.owned) > .pager-device {
     margin-right: 8px;
   }
+}
+
+/* ---------- Anmeldebildschirm (erster Start, jeder Jobwechsel): XP-Willkommen im Comic-Stil ---------- */
+.login {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #5a86e0, #3d6fd6 60%, #3565cc);
+  color: #fff;
+  font-family: var(--font-ui);
+  transition: opacity 0.35s;
+}
+.login.out {
+  opacity: 0;
+}
+/* dunkle Bänder oben und unten, unten mit orangem Streifen */
+.login-band {
+  flex: 0 0 auto;
+  height: 12%;
+  min-height: 10px;
+  background: #0c2f8f;
+}
+.login-foot {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  border-top: 2px solid #f5a43b;
+}
+.login-off {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 600;
+  opacity: 0.9;
+}
+.login-off::before {
+  content: '⏻';
+  width: 15px;
+  height: 15px;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid #fff;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #f08a6f, #d4472c);
+  font-size: 9px;
+}
+.login-mid {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6%;
+  padding: 0 7%;
+}
+.login-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: 5px;
+  /* XP: feine helle Trennlinie */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+}
+.login-brand b {
+  font: italic 800 17px / 1 var(--font-ui);
+  letter-spacing: 0.02em;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.3);
+}
+.login-brand span {
+  font-size: 10.5px;
+  opacity: 0.9;
+}
+.login-user {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.login-pic {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: 2px solid #fff;
+  border-radius: 7px;
+  background: linear-gradient(180deg, #ffd166, #f4a261);
+  color: var(--ink);
+  font: 700 10px / 1 var(--font-ui);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.25);
+}
+.login-info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.login-name {
+  font-size: 13px;
+  line-height: 1.1;
+}
+.login-host {
+  font-size: 9.5px;
+  color: #cfe0ff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.login-pw {
+  width: 120px;
+  max-width: 100%;
+  height: 16px;
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  padding: 0 5px;
+  border: 1.5px solid var(--ink);
+  border-radius: 3px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 8px;
+  letter-spacing: 1px;
+  overflow: hidden;
+}
+.login.ok .login-pw {
+  background: #bfeed6;
+}
+.login-hint {
+  font-size: 9px;
+  color: #dbe7ff;
+  line-height: 1.2;
+}
+/* nach dem Kennwort: nur noch „Willkommen“ */
+.login-welcome {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font: italic 800 22px / 1 var(--font-ui);
+  text-shadow: 1px 2px 0 rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  transition: opacity 0.25s;
+  pointer-events: none;
+}
+.login.ok .login-welcome {
+  opacity: 1;
+}
+.login.ok .login-brand,
+.login.ok .login-user {
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .login,
+  .login-welcome {
+    transition: none;
+  }
+}
+
+/* Kopfleiste der Meme-Seite: readit hell (rundes Logo, Suche, Anmelden), 404GAG schwarz mit Reitern */
+.meme-site > div {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  padding: 0 7px;
+  font-size: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.meme-window[data-site='forum'] .ms-forum,
+.meme-window[data-site='gag'] .ms-gag {
+  display: flex;
+}
+.ms-forum {
+  border-bottom: 1px solid #d7d0e0;
+  background: #fff;
+  color: #1c1c1c;
+}
+.ms-forum .ms-logo {
+  width: 15px;
+  height: 15px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #ff5a1f;
+  color: #fff;
+  font-size: 10px;
+}
+.ms-forum b {
+  font-size: 11px;
+}
+.ms-search {
+  flex: 1;
+  min-width: 0;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #f0f2f4;
+  color: #878a8c;
+}
+.ms-login {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #0079d3;
+  color: #fff;
+  font-weight: 700;
+}
+.ms-gag {
+  background: #000;
+  color: #cfcfd6;
+}
+.ms-gag .ms-logo {
+  padding: 0 4px;
+  border-radius: 3px;
+  background: #fff;
+  color: #000;
+  font-weight: 800;
+}
+.ms-tab {
+  font-weight: 600;
+}
+.ms-tab.on {
+  color: #fff;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ---------- Werkzeuge mit bekannten Vorbildern ---------- */
+
+/* Mail wie beim Verfassen in Outlook: großer „Senden“-Knopf vorn */
+.mail-tool.mail-send {
+  padding: 0 9px;
+  border-color: #1d4f9c;
+  background: linear-gradient(180deg, #5aa2ff, #2a63d6);
+  color: #fff;
+  font-weight: 700;
+}
+.work.tight .mail-cc {
+  display: none;
+}
+
+/* Terminal als PuTTY: schwarz, graue Schrift, grüner Prompt; Symbol: zwei Rechner mit Blitz */
+.work[data-kind='term'] {
+  --t-bg: #0c0c0c;
+  --t-fg: #c8c8c8;
+  --t-dim: #8a8a8a;
+  --kind: #c8c8c8;
+}
+.work[data-kind='term'] .typed-prompt {
+  color: #3ce06b;
+}
+.work[data-kind='term'] .term-dots {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: no-repeat center / contain
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='1' y='2' width='7' height='5' fill='%23cfe0ff' stroke='%23222' stroke-width='1'/%3E%3Crect x='8' y='9' width='7' height='5' fill='%23cfe0ff' stroke='%23222' stroke-width='1'/%3E%3Cpath d='M9 2 6.5 8h3L7 14' fill='none' stroke='%23ffd166' stroke-width='1.6' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+/* Firmen-Chat: lila Kopfleiste mit Reitern wie bei bekannten Firmen-Messengern */
+.chat-app {
+  display: flex;
+  gap: 2px;
+  padding: 0 4px;
+  background: #5b5fc7;
+  color: #e6e7ff;
+  font-size: 9.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.chat-app-tab {
+  padding: 2px 6px;
+}
+.chat-app-tab.on {
+  color: #fff;
+  box-shadow: inset 0 -2px 0 #fff;
+}
+.work.tight .chat-app {
+  display: none;
+}
+
+/* Webinterface wie eine Router-Seite: Menü links, Inhalt rechts */
+.work[data-kind='web'] {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  /* letzte Zeile füllt den Rest (wie vorher unter den Knöpfen), Eingabe und Knöpfe bleiben so hoch wie ihr Inhalt */
+  grid-template-rows: auto auto auto auto auto minmax(0, 1fr);
+  grid-template-areas: 'bar bar' 'browser browser' 'nav page' 'nav body' 'nav extra' 'nav .';
+}
+.work[data-kind='web'] > .work-bar {
+  grid-area: bar;
+}
+.work[data-kind='web'] > .work-head {
+  display: contents;
+}
+.work[data-kind='web'] .browser {
+  grid-area: browser;
+}
+.work[data-kind='web'] .web-nav {
+  grid-area: nav;
+}
+.work[data-kind='web'] .web-page {
+  grid-area: page;
+}
+.work[data-kind='web'] > .work-body {
+  grid-area: body;
+}
+.work[data-kind='web'] > .work-extra {
+  grid-area: extra;
+}
+.web-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 62px;
+  padding: 4px 0;
+  border-right: 1.5px solid var(--ink);
+  background: #3a3f4b;
+  font-size: 9.5px;
+  font-weight: 600;
+}
+.web-nav-item {
+  padding: 2px 8px;
+  color: #c9cbd3;
+}
+.web-nav-item.on {
+  background: #5cc77f;
+  color: var(--ink);
+}
+
+/* KI-Assistent: Modellwahl oben, rundes Eingabefeld mit Senden-Pfeil */
+.ai-model {
+  align-self: flex-start;
+  margin: 5px 9px 0;
+  padding: 1px 8px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 9.5px;
+  font-weight: 700;
+}
+.work.tighter .ai-model {
+  display: none;
+}
+.work[data-kind='ai'] .work-head {
+  display: flex;
+  flex-direction: column;
+}
+.work[data-kind='ai'] .work-body {
+  position: relative;
+  padding-right: 32px;
+  border-radius: 18px;
+}
+.work[data-kind='ai'] .work-body::after {
+  content: '↑';
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #2b2b2b;
+  color: #fff;
+  font: 700 13px / 1 var(--font-ui);
+}
+
+/* Fernwartung auf einen PC: XP-Taskleiste im Kleinen */
+.rdp-taskbar {
+  background: var(--xp-blue);
+  color: #fff;
+}
+.rdp-start {
+  border-radius: 0 9px 9px 0;
+  margin-left: -5px;
+  padding: 0 9px 0 7px;
+  background: linear-gradient(180deg, #7fdc86, #36a043);
+  color: #fff;
+  font-style: italic;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.35);
+}
+/* Fernwartung auf einen Server: klassischer Server-Look (grau, kantig, dunkelblaue Titel) */
+.work[data-kind='rdp']:has(.rdp-server) {
+  background: #3a6ea5;
+}
+.work[data-kind='rdp']:has(.rdp-server) .work-body {
+  border-radius: 0;
+  background: #d4d0c8;
+}
+.work[data-kind='rdp']:has(.rdp-server) .work-body::before {
+  background: linear-gradient(90deg, #0a246a, #a6caf0);
+  color: #fff;
+}
+.rdp-server .rdp-dialog {
+  border-radius: 0;
+  background: #d4d0c8;
+  box-shadow: inset -1px -1px 0 #404040, inset 1px 1px 0 #fff;
+}
+.rdp-server .rdp-dtitle {
+  background: linear-gradient(90deg, #0a246a, #a6caf0);
+  color: #fff;
+}
+.rdp-server .rdp-ok {
+  border-radius: 0;
+  background: #d4d0c8;
+  box-shadow: inset -1px -1px 0 #404040, inset 1px 1px 0 #fff;
+}
+.rdp-taskbar.rdp-server {
+  background: #d4d0c8;
+  color: #000;
+  box-shadow: inset 0 1px 0 #fff;
+}
+.rdp-taskbar.rdp-server .rdp-start {
+  margin-left: 0;
+  border: 1px solid #404040;
+  border-radius: 0;
+  background: #d4d0c8;
+  color: #000;
+  font-style: normal;
+  text-shadow: none;
+  box-shadow: inset 1px 1px 0 #fff;
+}
+.rdp-taskbar.rdp-server .rdp-task {
+  border-radius: 0;
+  background: #c4c0b8;
+  box-shadow: inset 1px 1px 0 #808080;
+}
+
+/* Web-Apps im Browser (Ticketsystem, KI, Suche, Webinterface): wird es eng, fällt die Tab-Leiste weg, die Adresszeile bleibt */
+.work.tight .browser .br-tabs {
+  display: none;
+}
+.work.tight .browser .br-bar {
+  border-top: 0;
+  margin-top: 0;
+}
+
+/* Seitenleisten der Meme-Seiten (Desktop-Ansicht): links Navigation, rechts Infokasten */
+.meme-side {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  padding: 6px 0;
+  font-size: 9px;
+  overflow: hidden;
+}
+.meme-side > div {
+  display: none;
+  flex-direction: column;
+  gap: 1px;
+}
+.meme-window[data-site='forum'] .side-forum,
+.meme-window[data-site='gag'] .side-gag {
+  display: flex;
+}
+.meme-side-left {
+  width: 70px;
+  border-right: 1px solid #ccd3da;
+  background: #fff;
+  color: #1c1c1c;
+}
+.meme-side-right {
+  width: 84px;
+  margin: 8px 7px 8px 0;
+  padding: 6px;
+  border: 1px solid #ccd3da;
+  border-radius: 6px;
+  background: #fff;
+  color: #1c1c1c;
+  align-self: flex-start;
+}
+.meme-side-right > div {
+  gap: 4px;
+  line-height: 1.3;
+}
+.side-item {
+  padding: 2px 7px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.side-item.on {
+  background: #e9ebed;
+  font-weight: 700;
+}
+.side-head {
+  margin: 6px 7px 2px;
+  font-size: 7.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+.side-btn {
+  align-self: flex-start;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #0079d3;
+  color: #fff;
+  font-weight: 700;
+}
+/* 404GAG: dunkel */
+.meme-window[data-site='gag'] .meme-side-left {
+  border-right-color: #26262c;
+  background: #000;
+  color: #cfcfd6;
+}
+.meme-window[data-site='gag'] .side-item.on {
+  background: #1f1f25;
+  color: #fff;
+}
+.meme-window[data-site='gag'] .meme-side-right {
+  border-color: #26262c;
+  background: #1b1b1f;
+  color: #cfcfd6;
+}
+/* schmaler Feed nur, wenn Platz ist: rechte Leiste erst ab einer gewissen Breite */
+@container (max-width: 360px) {
+  .meme-side-right {
+    display: none;
+  }
+}
+@container (max-width: 250px) {
+  .meme-side-left {
+    display: none;
+  }
+}
+
+/* Beitrag: fetter Titel über dem Bild, darunter runde Knöpfe (beide Seiten) */
+.meme-title {
+  padding: 0 7px 4px;
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+.meme-gag .meme-title {
+  font-size: 12.5px;
+}
+.meme-foot {
+  gap: 5px;
+  opacity: 1;
+}
+.meme-pill {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #eceef0;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.meme-gag .meme-pill {
+  border: 1px solid #3a3a42;
+  background: #26262c;
+}
+.meme-forum .meme-img {
+  margin: 0 7px;
+  border-radius: 6px;
 }

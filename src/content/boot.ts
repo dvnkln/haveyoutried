@@ -26,6 +26,22 @@ export const BOOT_DARK_HINT = 'Bewegungsmelder (Baujahr 1998). Einmal winken: ir
 /** Blase am Netzschalter des Monitors, wenn jemand ihn sucht */
 export const POWER_HINT = 'Monitor aus? Hier ist der Knopf.';
 
+/** Anmeldebildschirm nach dem Einschalten (erster Start, jeder Jobwechsel) */
+export const LOGIN = {
+  /** so viele Anschläge hat das Kennwort */
+  length: 8,
+  prompt: 'Zum Beginnen Kennwort eintippen',
+  user: 'Support',
+  /** erster Start: Rückbezug auf den Zettel vom Vorgänger */
+  hintFirst: 'Kennworthinweis: siehe Unterseite der Tastatur',
+  /** nach einem Jobwechsel */
+  hintNew: 'Kennworthinweis: steht im Willkommenspaket. Das Paket ist leer.',
+  off: 'Monitor ausschalten',
+  welcome: 'Willkommen',
+  /** Banner über der Tastatur */
+  keyHint: 'Tipp drauf! Kennwort eingeben',
+};
+
 /** Banner über der Tastatur, solange auf dem Desktop noch kein Werkzeug offen ist */
 export const TOOL_HINT = 'Tipp drauf! Erstes Ticket aufmachen';
 /** nach Alt+F4 */

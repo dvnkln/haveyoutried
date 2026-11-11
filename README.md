@@ -22,7 +22,7 @@
 
 ## ✨ Features
 
-- ⌨️ **Tickets wegtippen** – jede Taste ist richtig, und im Fenster entsteht eine echte Antwort auf das Anliegen am Telefon: per Mail, im Ticketsystem, im Terminal, im Chat oder per Fernwartung.
+- ⌨️ **Tickets wegtippen** – jede Taste ist richtig, und im Fenster entsteht eine echte Antwort auf das Anliegen am Telefon: per Mail, im Ticketsystem, per SSH, im Chat, im Videocall, im Browser oder per Fernwartung.
 - 🏗️ **Infrastruktur aufbauen** – Praktikanten, Bash-Skripte, Cronjobs, Ansible, Kubernetes und KI-Agents schließen Tickets auch dann, wenn du gerade nicht spielst.
 - 🚨 **Incidents als Minispiele** – RAID retten, Spam sortieren, Dienste neu starten, Logs durchsuchen, Netzwerk prüfen, Patchkabel stecken.
 - 🏢 **Karriere** – kündigen, Berufserfahrung mitnehmen und neu anfangen: 26 Firmen mit eigenen Eigenheiten, dazu Achievements.

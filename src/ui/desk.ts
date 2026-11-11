@@ -1,6 +1,9 @@
 import { bus } from '../core/bus';
 import { CONFIG } from '../config';
-import { NEXT_TOOL_HINT, TOOL_HINT } from '../content/boot';
+import { LOGIN, NEXT_TOOL_HINT, TOOL_HINT } from '../content/boot';
+import { markLoggedIn, needsLogin } from '../core/login';
+import { createLogin } from './login';
+import { MELODIES, type Melody } from '../content/melodies';
 import { HINT_DELAY_MS } from './power';
 import { availableCallers, CALLBACK_LINES, situationalCalls, type Call, type Line } from '../content/callers';
 import { topicPool } from '../content/topics';
@@ -125,6 +128,9 @@ function pausableTimeout(ms: number, el: Element, done: () => void, early?: () =
  * Der Schreibtisch unter dem Monitor: Anrufer, Tastatur (jede Taste tippt die Support-Antwort weiter,
  * fertig = gelöst), Dringend-Tickets als Post-its und die Eingabezeile.
  */
+/** Espresso-Melodie läuft beim Daumenwechsel weiter: erst nach so langer Pause ohne Taste anhalten */
+const MELODY_GRACE_MS = 150;
+
 export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, screen: () => HTMLElement) {
   let call: Call | null = null;
   let callerLeft = randInt(CONFIG.callerTicketsMin, CONFIG.callerTicketsMax);
@@ -325,8 +331,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
     if (quirkMods(ctx.state).urgent === 0) return scheduleUrgent();
     // nicht zusammen mit einer Meldung, der Kaffeetasse oder einem Hinweis: kurz danach nochmal versuchen
     if (attentionBusy()) return scheduleUrgent(5_000);
-    const visible =
-      !gameBlocked({ hidden: true });
+    const visible = !gameBlocked({ hidden: true });
     if (!visible || urgentEl) return scheduleUrgent(10_000);
 
     const vip = pick(VIP_TICKETS);
@@ -410,11 +415,14 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
   };
 
   // --- Fliegende Kaffeetasse: erwischt = Doppelter Espresso (Taste halten tippt von selbst) ---
+  /** Melodie der aktuellen Tasse (nach Neuladen mitten im Espresso: beim ersten Halten gewürfelt) */
+  let espressoMelody: Melody | null = null;
+  /** zuletzt gehalten (performance.now): für die Pause beim Daumenwechsel */
+  let lastMelodyAt = 0;
   const scheduleCup = () => setTimeout(spawnCup, randInt(CONFIG.espresso.minMs, CONFIG.espresso.maxMs));
   const spawnCup = () => {
     const r = root();
-    const calm =
-      !gameBlocked({ hidden: true });
+    const calm = !gameBlocked({ hidden: true });
     // nur für Leute, die gerade tippen (sonst fliegt sie ungesehen vorbei), und nicht doppelt
     const active = performance.now() - lastHit < 10_000;
     if (!ctx.state.upgrades.coffee || !calm || !active || espressoActive(ctx.state) || attentionBusy()) {
@@ -434,6 +442,8 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
       if (caught) return;
       caught = true;
       startEspresso(ctx.state);
+      // je Tasse eine Melodie, die beim Halten läuft
+      espressoMelody = pick(MELODIES);
       const p = fx.rel(cup);
       fx.floater(p.x + p.w / 2, p.y, 'Espresso!', true);
       powerupBanner('☕︎ Doppelter Espresso', `${Math.round(CONFIG.espresso.durationMs / 1_000)} Sekunden: Taste halten, es tippt von selbst. Zwei Daumen: doppelt.`);
@@ -508,8 +518,28 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
     lastBusy = performance.now();
     work.el.parentElement?.classList.add('no-tool');
   };
+  // Anmeldebildschirm: erster Start und jeder Jobwechsel; danach Desktop, nächster Anschlag öffnet das Werkzeug
+  const login = createLogin(ctx, () => {
+    lastBusy = performance.now();
+  });
+  bus.on('jobQuit', () => {
+    if (!needsLogin(ctx.state)) return;
+    // sofort (die Neustart-Animation des Monitors läuft darüber), damit kein Anschlag vorher ein Werkzeug öffnet
+    closeTool();
+    login.show(false);
+  });
 
   const hit = (keyEl: HTMLElement, auto = false) => {
+    // Anmeldung: jeder Anschlag ein Punkt im Kennwortfeld (zählt nicht als Anschlag)
+    if (login.active()) {
+      // blind (Monitor aus) zählt nicht; nach dem letzten Zeichen („Willkommen“) auch kein Klick mehr
+      if (auto || keyEl.closest('#app')?.classList.contains('screen-off')) return;
+      lastHit = performance.now();
+      // iOS nach Anruf/Sperrbildschirm: Audio wecken, sonst bleibt die Anmeldung stumm
+      void ctx.sfx.unlock();
+      if (login.type()) ctx.sfx.tick();
+      return;
+    }
     // erster Anschlag auf dem leeren Desktop öffnet das Werkzeug, getippt wird ab dem nächsten
     if (!toolOpen) {
       if (ready && !auto) {
@@ -523,8 +553,15 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
     solvedNow = false;
     const progress = pressKey(ctx.state);
 
-    // Eingabezeile: jede Taste (auch Enter) tippt weiter, Alt+F4 verwirft das Ticket; gezeichnet wird einmal am Ende
     const now = performance.now();
+    // Klick zuerst, vor dem Neuzeichnen des Fensters: sonst kommt er bei schnellem Tippen auf langsamen Handys spürbar später.
+    // Espresso tippt schneller, als man Tastenklicks einzeln hört: Ton höchstens alle CONFIG.espresso.soundGapMs
+    if (!auto || now - lastAutoSound >= CONFIG.espresso.soundGapMs) {
+      ctx.sfx.tap();
+      if (auto) lastAutoSound = now;
+    }
+
+    // Eingabezeile: jede Taste (auch Enter) tippt weiter, Alt+F4 verwirft das Ticket; gezeichnet wird einmal am Ende
     work.batch(() => {
       if (def === 'F4') {
         closeTool(); // Fenster zu, Ticket weg
@@ -544,12 +581,6 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
       fx.scrap(k.x + k.w / 2, k.y + 6);
     }
     lastHit = now;
-
-    // Espresso tippt schneller, als man Tastenklicks einzeln hört: Ton höchstens alle CONFIG.espresso.soundGapMs
-    if (!auto || now - lastAutoSound >= CONFIG.espresso.soundGapMs) {
-      ctx.sfx.tap();
-      if (auto) lastAutoSound = now;
-    }
     if (!solvedNow && !auto) ctx.haptic('tap');
     // Ruhiger Start: erst ein bisschen tippen, dann klingelt zum ersten Mal das Telefon
     if (!started) {
@@ -683,7 +714,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
   window.addEventListener('keydown', (e) => {
     if (e.repeat || shortcut(e) || e.defaultPrevented) return;
     // offenes App-Fenster verdeckt die Tastatur: dann zählt auch die echte nicht
-    if (typing(e) || gameBlocked()) return;
+    if (typing(e) || gameBlocked({ ignoreLogin: true })) return;
     if (heldByHint()) return;
     const el = keyFor(e);
     if (!el) return;
@@ -712,8 +743,14 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
     start(open: boolean) {
       ready = true;
       lastBusy = performance.now();
-      if (open) openTool();
+      if (open) {
+        // ohne Anmeldung gestartet (Testumgebung): dann gilt sie als erledigt
+        markLoggedIn(ctx.state);
+        openTool();
+      } else if (needsLogin(ctx.state)) login.show(ctx.state.prestige.jobs === 0);
     },
+    /** Anmeldebildschirm (liegt im Monitor über dem Desktop) */
+    loginEl: login.el,
     /** Upgrades an der Tastatur sichtbar machen */
     render(s: GameState) {
       setFlag(keyboardWrap, 'mech', !!s.upgrades.keyboard);
@@ -724,17 +761,18 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
       // für Neulinge auch nach längerer Pause; bei aus-Monitor nie (dann zeigt power.ts auf den Knopf)
       // Incident, Dialog (Pager, Bericht), App-Fenster oder Hinweis: man arbeitet ja gerade, nur nicht an der Tastatur.
       // So lange zählt die Zeit ohne Anschlag nicht (sonst kommen danach sofort Memes und die Serie reißt)
-      if (gameBlocked() || hintShowing()) lastBusy = performance.now();
+      if (gameBlocked({ ignoreLogin: true }) || hintShowing()) lastBusy = performance.now();
       const idle = performance.now() - Math.max(lastHit, lastBusy);
       const app = keyboardWrap.parentElement;
       const on = !app?.classList.contains('screen-off');
       const awaitTool = on && ready && !toolOpen;
       const invite =
         on && ready && (awaitTool ? idle > HINT_DELAY_MS : s.clicks < HINT_UNTIL_CLICKS && idle > (s.clicks < 3 ? HINT_DELAY_MS : HINT_IDLE_MS));
-      setText(hint, awaitTool ? (opened ? NEXT_TOOL_HINT : TOOL_HINT) : TAP_HINT);
+      setText(hint, login.active() ? LOGIN.keyHint : awaitTool ? (opened ? NEXT_TOOL_HINT : TOOL_HINT) : TAP_HINT);
       if (hint.hidden === invite) hint.hidden = !invite;
       setFlag(keyboardWrap, 'inviting', invite);
-      if (started) work.idle(idle);
+      // während der Anmeldung keine Memes (sonst öffnet danach das erste Ticket mit Memes)
+      if (started && !login.active()) work.idle(idle);
       // Espresso: solange eine Taste gehalten wird, tippt es von selbst (Takt aus CONFIG.espresso.rate)
       const espresso = espressoActive(s);
       const now = performance.now();
@@ -743,6 +781,10 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
       // gleiche Sperren wie beim Tippen mit der echten Tastatur
       if (holding.length && !gameBlocked() && !hintShowing()) {
         const thumbs = Math.min(2, holding.reduce((n, k) => n + (held.get(k) ?? 1), 0));
+        // Melodie im Takt: ein Daumen mit Bass, zwei Daumen schneller mit zweiter Stimme und Schlagzeug
+        espressoMelody ??= pick(MELODIES);
+        ctx.sfx.melody(espressoMelody, thumbs >= 2 ? 2 : 1);
+        lastMelodyAt = now;
         autoAcc += Math.min(0.25, (now - autoLast) / 1_000) * CONFIG.espresso.rate * thumbs;
         // alle Anschläge dieses Bilds zählen, gezeichnet wird einmal
         if (autoAcc >= 1)
@@ -762,6 +804,8 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
         espressoHint.hidden = true;
       } else {
         autoAcc = 0;
+        // kurz loslassen (Daumen wechseln) hält die Melodie nicht an, erst eine echte Pause
+        if (now - lastMelodyAt > MELODY_GRACE_MS) ctx.sfx.stopMelody();
         if (!espresso) espressoHint.hidden = true;
       }
       autoLast = now;

@@ -161,6 +161,7 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
   // bis zum ersten Anschlag ist kein Werkzeug offen: nur Hintergrundbild und Apps
   screen.append(
     h('div', { class: 'desktop no-tool' }, [wallpaper, desk.work, desk.lastClosed, taskbar, launcher]),
+    desk.loginEl,
     h('div', { class: 'scanlines', 'aria-hidden': 'true' }),
   );
 

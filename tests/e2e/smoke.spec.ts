@@ -370,6 +370,10 @@ test('Karriere: kündigen, neue Firma, Achievement-Toast', async ({ page, contex
   await expect(modal.locator('.job-new')).not.toContainText('Müller & Söhne');
   await shot(page, 'career-quit');
   await page.getByRole('button', { name: 'Na dann.' }).tap();
+  // neuer Job, neuer Account: Anmeldung mit dem Host der neuen Firma
+  await expect(page.locator('.login')).toBeVisible();
+  await expect(page.locator('.login-host')).not.toHaveText('mueller-spedition');
+  await expect(page.locator('.login-host')).toHaveText((await page.locator('.prompt-user').textContent())!.replace('root@', ''));
 
   await expect(page.locator('.prompt-user')).not.toHaveText('root@mueller-spedition');
   await expect(page.locator('.counter-value')).toHaveText('0');
@@ -491,9 +495,16 @@ test('Erster Start: Splash, Zettel, winken = Licht, Knopf = Monitor', async ({ p
   await page.locator('.key[data-key="Q"]').tap();
   await expect(page.locator('#app')).toHaveClass(/screen-off/);
   await expect(page.locator('.power-hint')).toBeVisible();
-  // Knopf am Monitor: an; erst nur Hintergrundbild und Apps
+  // Knopf am Monitor: an; erst die Anmeldung (jede Taste ein Kennwort-Punkt, zählt nicht als Anschlag)
   await page.locator('.mon-power').tap();
   await expect(page.locator('#app')).not.toHaveClass(/screen-off/);
+  const login = page.locator('.login');
+  await expect(login).toBeVisible();
+  await expect(page.locator('.login-host')).toHaveText('mueller-spedition');
+  for (let i = 0; i < 8; i++) await page.locator('.key[data-key="Q"]').tap();
+  await expect(login).toContainText('Willkommen');
+  await expect(login).toBeHidden();
+  // dann nur Hintergrundbild und Taskleiste
   await expect(page.locator('.wp-mark')).toBeVisible();
   await expect(page.locator('.taskbar-start')).toBeVisible();
   await expect(page.locator('.work')).toBeHidden();
