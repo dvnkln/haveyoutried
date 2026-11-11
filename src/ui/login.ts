@@ -15,8 +15,8 @@ export interface Login {
   show(first: boolean): void;
   /** Anmeldebildschirm steht (auch während „Willkommen“): Anschläge gehen hierher */
   active(): boolean;
-  /** ein Anschlag = ein Punkt im Kennwortfeld; false = nichts mehr einzugeben („Willkommen“ läuft) */
-  type(): boolean;
+  /** ein Anschlag = ein Punkt im Kennwortfeld: 'dot', beim letzten 'done' (spielt selbst einen Ton), sonst null (nichts mehr einzugeben) */
+  type(): 'dot' | 'done' | null;
 }
 
 /**
@@ -61,10 +61,10 @@ export function createLogin(ctx: AppContext, onDone: () => void): Login {
     },
     active: () => !el.hidden,
     type() {
-      if (el.hidden || typed >= LOGIN.length) return false;
+      if (el.hidden || typed >= LOGIN.length) return null;
       typed++;
       setText(dots, '●'.repeat(typed));
-      if (typed < LOGIN.length) return true;
+      if (typed < LOGIN.length) return 'dot';
       // angemeldet: „Willkommen“, dann zum Desktop
       markLoggedIn(ctx.state);
       const c = companyOf(ctx.state.prestige.company);
@@ -82,7 +82,7 @@ export function createLogin(ctx: AppContext, onDone: () => void): Login {
           );
         }, WELCOME_MS),
       );
-      return true;
+      return 'done';
     },
   };
 }

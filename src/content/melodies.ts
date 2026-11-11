@@ -101,7 +101,7 @@ export const MELODIES: Melody[] = [
     style: 'synth',
     speed: 8,
     notes: even('E3 E3 E4 E3 E3 D4 E3 E3 B3 E3 E3 G3 E3 E3 A3 B3 E3 E3 E4 E3 E3 D4 E3 E3 G4 F#4 E4 D4 B3 A3 G3 B3'),
-    bass: ['E1', 'E1'],
+    bass: ['E1'],
   },
 ];
 

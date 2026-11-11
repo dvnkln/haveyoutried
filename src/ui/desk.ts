@@ -537,7 +537,8 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
       lastHit = performance.now();
       // iOS nach Anruf/Sperrbildschirm: Audio wecken, sonst bleibt die Anmeldung stumm
       void ctx.sfx.unlock();
-      if (login.type()) ctx.sfx.tick();
+      // letztes Zeichen hat seinen eigenen Ton („Willkommen“): dann kein Klick dazu
+      if (login.type() === 'dot') ctx.sfx.tick();
       return;
     }
     // erster Anschlag auf dem leeren Desktop öffnet das Werkzeug, getippt wird ab dem nächsten
@@ -782,9 +783,12 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
       if (holding.length && !gameBlocked() && !hintShowing()) {
         const thumbs = Math.min(2, holding.reduce((n, k) => n + (held.get(k) ?? 1), 0));
         // Melodie im Takt: ein Daumen mit Bass, zwei Daumen schneller mit zweiter Stimme und Schlagzeug
-        espressoMelody ??= pick(MELODIES);
-        ctx.sfx.melody(espressoMelody, thumbs >= 2 ? 2 : 1);
-        lastMelodyAt = now;
+        // nur, wenn wirklich getippt wird (nach Alt+F4 ist das Werkzeug zu, dann schweigt sie)
+        if (toolOpen) {
+          espressoMelody ??= pick(MELODIES);
+          ctx.sfx.melody(espressoMelody, thumbs >= 2 ? 2 : 1);
+          lastMelodyAt = now;
+        } else ctx.sfx.stopMelody();
         autoAcc += Math.min(0.25, (now - autoLast) / 1_000) * CONFIG.espresso.rate * thumbs;
         // alle Anschläge dieses Bilds zählen, gezeichnet wird einmal
         if (autoAcc >= 1)
