@@ -148,7 +148,9 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
   const clockM = h('span');
   const clockEl = h('span', { class: 'taskbar-clock', 'aria-hidden': 'true' }, [clockH, h('span', { class: 'clock-sep', text: ':' }), clockM]);
   // Infobereich rechts (wie bei XP): Tray-Apps und Uhr auf eigenem Feld
-  const taskbar = h('div', { class: 'taskbar' }, [startBtn, h('div', { class: 'tray-area' }, [tray, clockEl])]);
+  // Suchfeld neben Start: nur Deko, sichtbar nur bei Systemen, die eins haben (Fenster 10, main.css)
+  const search = h('span', { class: 'taskbar-search', 'aria-hidden': 'true', text: 'Zur Suche hier eingeben' });
+  const taskbar = h('div', { class: 'taskbar' }, [startBtn, search, h('div', { class: 'tray-area' }, [tray, clockEl])]);
   const icons = h('nav', { class: 'launcher-grid', 'aria-label': 'Programme' });
   const launcher = h('div', { class: 'launcher', id: 'launcher', hidden: '' }, [icons]);
   const screen = h('div', { class: 'screen' });

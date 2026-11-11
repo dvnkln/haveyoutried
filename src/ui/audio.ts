@@ -558,6 +558,8 @@ export class Sfx {
   osStart(os: OsId): void {
     if (os === 'win98') return this.start98();
     if (os === 'win7') return this.start7();
+    if (os === 'win10') return this.start10();
+    if (os === 'win11') return this.start11();
     this.unlockPing();
   }
 
@@ -595,6 +597,28 @@ export class Sfx {
       // Oktave darüber, ganz leise: etwas Glanz (nur unter 3 kHz)
       if (f * 2 < 3000) this.tone('sine', f * 2, f * 2, t + 0.08 + i * 0.22, 0.008, 0.5, out, 0.04);
     });
+  }
+
+  /** 10: zurückhaltend wie das Vorbild, zwei weiche Töne eine Quinte aufwärts mit einem leisen Grundton darunter */
+  private start10(): void {
+    const r = this.ready();
+    if (!r) return;
+    const { out, t } = r;
+    this.tone('sine', 349.23, 349.23, t, 0.018, 1.1, out, 0.2);
+    this.tone('sine', 698.46, 698.46, t + 0.02, 0.06, 0.7, out, 0.035);
+    this.tone('sine', 1046.5, 1046.5, t + 0.2, 0.055, 1.0, out, 0.035);
+    this.tone('sine', 2093, 2093, t + 0.2, 0.007, 0.45, out, 0.04);
+  }
+
+  /** 11: luftig, drei Töne schnell aufwärts, der letzte bleibt mit einer hellen, leisen Fläche stehen */
+  private start11(): void {
+    const r = this.ready();
+    if (!r) return;
+    const { out, t } = r;
+    [523.25, 659.25, 783.99].forEach((f, i) => this.tone('sine', f, f, t + i * 0.11, 0.065, i === 2 ? 1.3 : 0.5, out, 0.035));
+    // Fläche aus Quinte und Oktave über dem Grundton, kommt langsam
+    for (const f of [783.99, 1046.5]) this.tone('sine', f, f, t + 0.2, 0.014, 1.4, out, 0.35);
+    this.tone('sine', 1567.98, 1567.98, t + 0.24, 0.012, 0.9, out, 0.05);
   }
 
   /** Neuer Anrufer: deutsches Freizeichen (425 Hz), ganz kurz und leise. */
