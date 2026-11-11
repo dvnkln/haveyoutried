@@ -1,10 +1,10 @@
 import { PRESTIGE } from '../../config';
 import { ACHIEVEMENTS } from '../../content/achievements';
 import { companyOf, FAREWELLS } from '../../content/companies';
-import { describeQuirk } from '../../core/quirks';
-import { achievementCount, achievementMultiplier } from '../../core/achievements';
+import { describeQuirk, quirkEffects } from '../../core/quirks';
+import { achievementCount, achievementMultiplier, ACH_SEEN_FLAG, isUnread, markAllRead, markRead } from '../../core/achievements';
 import { incidentRunning } from '../../core/incidents';
-import { canQuit, experienceBonus, prestigeGain, prestigeMultiplier, quitJob, ticketsForNextPoint } from '../../core/prestige';
+import { canQuit, experienceBonus, prestigeGain, prestigeMultiplier, quitJob, quitWorth, ticketsForNextPoint } from '../../core/prestige';
 import { pick } from '../../util';
 import type { AppContext, Tab } from '../app';
 import { h, setDisabled, setText } from '../dom';
@@ -13,16 +13,14 @@ import { showModal } from '../modal';
 
 const pct = (x: number) => `${Math.round(x * 100)} %`;
 
-type AchFilter = 'new' | 'done' | 'open';
-const FILTER_LABEL: Record<AchFilter, string> = { new: 'Neu', done: 'Geschafft', open: 'Offen' };
-/** Zeitpunkt, bis zu dem Achievements angeschaut wurden (im Spielstand, damit „neu“ ein Neuladen übersteht) */
-const SEEN_FLAG = 'ach:seen';
+type AchFilter = 'done' | 'open';
+const FILTER_LABEL: Record<AchFilter, string> = { done: 'Geschafft', open: 'Offen' };
+/** so lange muss ein neues Achievement sichtbar sein, bis es als gelesen gilt */
+const READ_AFTER_MS = 1_000;
 
 /** Prestige („Kündigen“) und Achievements. */
 export function careerTab(): Tab {
   let ctx: AppContext;
-  /** Achievements, die seit diesem Zeitpunkt dazukamen, gelten in dieser Ansicht als „neu“ */
-  let viewSince = 0;
   let filter: AchFilter = 'open';
 
   const company = h('dd');
@@ -38,7 +36,7 @@ export function careerTab(): Tab {
   const achSummary = h('div', { class: 'ach-summary' });
   const achFill = h('span', { class: 'ach-progress-fill' });
   const achProgress = h('div', { class: 'ach-progress', 'aria-hidden': 'true' }, [achFill]);
-  const chips = (['new', 'done', 'open'] as const).map((f) => {
+  const chips = (['done', 'open'] as const).map((f) => {
     const count = h('span', { class: 'chip-count' });
     const el = h('button', { class: `ach-chip chip-${f}`, type: 'button', 'aria-pressed': 'false' }, [FILTER_LABEL[f], count]);
     el.addEventListener('click', () => {
@@ -49,6 +47,55 @@ export function careerTab(): Tab {
     return { f, el, count };
   });
   const achFilter = h('div', { class: 'ach-filter', role: 'group', 'aria-label': 'Achievements filtern' }, chips.map((c) => c.el));
+  const newCount = h('span', { class: 'ach-newcount' });
+  const readAll = h('button', { class: 'btn btn-compact ach-readall', type: 'button', text: 'Alle gelesen' });
+  const achNews = h('div', { class: 'ach-news', hidden: '' }, [newCount, readAll]);
+  readAll.addEventListener('click', () => {
+    markAllRead(ctx.state);
+    ctx.sfx.tick();
+    for (const li of achList.querySelectorAll('.ach.new')) li.classList.add('read');
+    updateNews();
+  });
+  const readNow = (li: HTMLElement) => {
+    readTimers.delete(li);
+    watcher?.unobserve(li);
+    // Fenster inzwischen zu: nicht als gelesen zählen
+    if (!li.isConnected || !li.getClientRects().length) return;
+    const id = li.dataset.ach;
+    if (!id || !isUnread(ctx.state, id)) return;
+    markRead(ctx.state, id);
+    li.classList.add('read');
+    updateNews();
+  };
+  /** neue Achievements: ~1 s im Blick = gelesen (Hervorhebung blendet aus, Reihenfolge bleibt bis zum nächsten Öffnen) */
+  const readTimers = new Map<Element, number>();
+  const watcher =
+    typeof IntersectionObserver === 'function'
+      ? new IntersectionObserver(
+          (entries) => {
+            for (const e of entries) {
+              const li = e.target as HTMLElement;
+              if (e.isIntersecting) {
+                if (readTimers.has(li)) continue;
+                readTimers.set(
+                  li,
+                  window.setTimeout(() => readNow(li), READ_AFTER_MS),
+                );
+              } else {
+                clearTimeout(readTimers.get(li));
+                readTimers.delete(li);
+              }
+            }
+          },
+          { threshold: 0.6 },
+        )
+      : null;
+  /** Zeile „2 neu · Alle gelesen“ und Zähler am Chip */
+  const updateNews = () => {
+    const unread = ACHIEVEMENTS.filter((a) => isUnread(ctx.state, a.id)).length;
+    achNews.hidden = unread === 0;
+    setText(newCount, unread === 1 ? '1 neues Achievement' : `${unread} neue Achievements`);
+  };
   const achEmpty = h('p', { class: 'hint ach-empty', hidden: '' });
   const achList = h('ul', { class: 'achievements' });
   let achShown = -1;
@@ -73,26 +120,44 @@ export function careerTab(): Tab {
           label: 'Kündigen. Ernsthaft.',
           danger: true,
           onClick: () => {
-            if (!quitJob(ctx.state)) return;
+            // alter Job: Name merken, bevor die Kündigung die Firma wechselt
+            const oldName = companyOf(ctx.state.prestige.company).name;
+            const gained = quitJob(ctx.state);
+            if (!gained) return;
             ctx.saver.saveNow(); // sonst macht Schließen vor dem Autosave die Kündigung rückgängig
             ctx.sfx.quit();
             ctx.haptic('milestone');
             const c = companyOf(ctx.state.prestige.company);
             if (c.quirk) ctx.log.write('warn', `hr[42]: Neue Firma, neue Sitten: „${c.quirk.title}“ (${describeQuirk(c.quirk.mods)}).`);
+            // zwei getrennte Teile: was vom alten Job bleibt, was im neuen anders ist
             showModal({
-              title: `Erster Arbeitstag: ${c.name}`,
+              title: 'Jobwechsel',
               body: [
-                pick(FAREWELLS),
-                c.welcome,
-                ...(c.quirk
-                  ? [
-                      h('p', { class: 'quirk-line' }, [
-                        h('strong', { text: `Hier üblich: ${c.quirk.title}. ` }),
-                        c.quirk.flavor,
-                        h('span', { class: 'quirk-mods', text: describeQuirk(c.quirk.mods) }),
-                      ]),
-                    ]
-                  : []),
+                h('section', { class: 'job-block job-old' }, [
+                  h('div', { class: 'job-head' }, [h('span', { class: 'job-kicker', text: 'Tschüss' }), h('b', { text: oldName })]),
+                  h('p', { text: pick(FAREWELLS) }),
+                  h('p', { class: 'job-result' }, [
+                    'Mitgenommen: ',
+                    h('strong', { class: 'hl', text: `+${gained} Berufserfahrung` }),
+                    ` · jetzt +${pct(prestigeMultiplier(ctx.state) - 1)} auf alles`,
+                  ]),
+                ]),
+                h('div', { class: 'job-arrow', 'aria-hidden': 'true', text: '↓' }),
+                h('section', { class: 'job-block job-new' }, [
+                  h('div', { class: 'job-head' }, [h('span', { class: 'job-kicker', text: 'Erster Tag' }), h('b', { text: c.name })]),
+                  h('p', { text: c.welcome }),
+                  c.quirk
+                    ? h('div', { class: 'quirk-line' }, [
+                        h('strong', { text: `Hier üblich: ${c.quirk.title}` }),
+                        h('p', { text: c.quirk.flavor }),
+                        h(
+                          'span',
+                          { class: 'quirk-pills' },
+                          quirkEffects(c.quirk.mods).map((e) => h('span', { class: `quirk-pill ${e.tone}`, text: e.text })),
+                        ),
+                      ])
+                    : h('p', { class: 'hint', text: 'Keine Eigenheiten. Sagt jedenfalls das Onboarding-Wiki. Letzte Änderung: vor drei Admins.' }),
+                ]),
               ],
               actions: [{ label: 'Na dann.', primary: true }],
             });
@@ -107,30 +172,31 @@ export function careerTab(): Tab {
   const rebuildAchievements = () => {
     const s = ctx.state;
     const n = achievementCount(s);
-    const isNew = (id: string) => (s.achievements[id] ?? 0) > viewSince;
-    const counts = { new: 0, done: n, open: ACHIEVEMENTS.length - n };
-    for (const a of ACHIEVEMENTS) if (isNew(a.id)) counts.new++;
-    if (filter === 'new' && counts.new === 0) filter = 'open';
+    const counts = { done: n, open: ACHIEVEMENTS.length - n };
 
     setText(achSummary, `${n} von ${ACHIEVEMENTS.length} geschafft · +${pct(achievementMultiplier(s) - 1)} auf alles`);
     achFill.style.width = `${(n / ACHIEVEMENTS.length) * 100}%`;
     for (const c of chips) {
       setText(c.count, String(counts[c.f]));
-      c.el.hidden = c.f === 'new' && counts.new === 0;
       c.el.classList.toggle('active', c.f === filter);
       c.el.setAttribute('aria-pressed', String(c.f === filter));
     }
     achEmpty.hidden = counts[filter] > 0;
     setText(achEmpty, filter === 'open' ? 'Alles geschafft. Zeit für Urlaub. (Abgelehnt.)' : 'Noch nichts. Weiter tippen.');
 
+    for (const t of readTimers.values()) clearTimeout(t);
+    readTimers.clear();
+    watcher?.disconnect();
+    // neue zuerst (unter „Geschafft“), sonst Reihenfolge wie in der Liste
+    const order = [...ACHIEVEMENTS].sort((a, b) => Number(isUnread(s, b.id)) - Number(isUnread(s, a.id)));
     achList.replaceChildren(
-      ...ACHIEVEMENTS.map((a) => {
+      ...order.map((a) => {
         const at = s.achievements[a.id];
         const done = !!at;
-        const fresh = isNew(a.id);
+        const fresh = isUnread(s, a.id);
         const secret = a.hidden && !done;
-        const show = filter === 'new' ? fresh : filter === 'done' ? done : !done;
-        return h('li', { class: `ach${done ? ' done' : ''}${secret ? ' secret' : ''}${fresh ? ' new' : ''}`, hidden: show ? undefined : '' }, [
+        const show = filter === 'done' ? done : !done;
+        const li = h('li', { class: `ach${done ? ' done' : ''}${secret ? ' secret' : ''}${fresh ? ' new' : ''}`, 'data-ach': a.id, hidden: show ? undefined : '' }, [
           h('span', { class: 'ach-mark', 'aria-hidden': 'true', text: done ? '★' : secret ? '?' : '○' }),
           // Status für Screenreader (das Symbol ist nur Deko)
           h('span', { class: 'sr-only', text: done ? (fresh ? 'Neu geschafft:' : 'Geschafft:') : secret ? 'Geheim, offen:' : 'Offen:' }),
@@ -141,8 +207,15 @@ export function careerTab(): Tab {
           ]),
           fresh ? h('span', { class: 'ach-new', text: 'NEU' }) : '',
         ]);
+        if (fresh && show) {
+          // ohne IntersectionObserver (alte WebViews): gilt nach kurzer Zeit im offenen Fenster als gelesen
+          if (watcher) watcher.observe(li);
+          else readTimers.set(li, window.setTimeout(() => readNow(li), READ_AFTER_MS));
+        }
+        return li;
       }),
     );
+    updateNews();
   };
 
   return {
@@ -152,8 +225,7 @@ export function careerTab(): Tab {
     mount(c) {
       ctx = c;
       // Ältere Spielstände: alles bisher Freigeschaltete gilt als gesehen
-      c.state.flags[SEEN_FLAG] ??= Date.now();
-      viewSince = c.state.flags[SEEN_FLAG];
+      c.state.flags[ACH_SEEN_FLAG] ??= Date.now();
       quitBtn.addEventListener('click', confirmQuit);
       return h('div', { class: 'system career' }, [
         h('div', { class: 'section-title', text: '# Lebenslauf' }),
@@ -177,6 +249,7 @@ export function careerTab(): Tab {
         achSummary,
         achProgress,
         achFilter,
+        achNews,
         achEmpty,
         achList,
       ]);
@@ -209,16 +282,14 @@ export function careerTab(): Tab {
       }
     },
     onShow() {
-      // „Neu“ = seit dem letzten Besuch; ab jetzt gilt alles als gesehen
+      // gibt es neue, zeigt die Liste „Geschafft“ mit den neuen oben
       const s = ctx.state;
-      viewSince = s.flags[SEEN_FLAG] ?? 0;
-      s.flags[SEEN_FLAG] = Date.now();
-      filter = Object.values(s.achievements).some((t) => t > viewSince) ? 'new' : 'open';
+      filter = ACHIEVEMENTS.some((a) => isUnread(s, a.id)) ? 'done' : 'open';
       achShown = -1;
     },
+    /** Punkt nur fürs Kündigen (Achievements melden sich selbst per Meldung) */
     badge() {
-      const seen = ctx.state.flags[SEEN_FLAG] ?? 0;
-      return Object.values(ctx.state.achievements).some((t) => t > seen);
+      return quitWorth(ctx.state);
     },
   };
 }

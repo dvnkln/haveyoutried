@@ -9,7 +9,7 @@ export const POSTITS: string[] = [
   'Have you tried…?',
   'sudo make me a sandwich',
   'Urlaub beantragen (seit 2019)',
-  'Bin im Serverraum. Kein Netz.',
+  'Serverraum = Funkloch. Gut.',
   'Freitag: kein Deploy',
   'Drucker = Feind',
   'ID-10-T-Fehler?',
@@ -39,9 +39,9 @@ export const POSTITS: string[] = [
   'Ausrede Nr. 17 nicht nochmal',
   'TODO: Doku (2014)',
   'Wer das liest, ist zu nah.',
-  'Kekse von Mutti. NICHT nehmen!',
-  'Zentrale ruft an? Bin nicht da.',
-  'Mein Kaffee. Nicht deiner.',
+  'Kekse von Mutti: verstecken!',
+  'Zentrale? Ich bin nicht da.',
+  'Tasse beschriften. Wieder.',
 ];
 
 /** Rubber-Duck-Debugging: Log-Zeilen beim Antippen der Ente. */
@@ -91,13 +91,15 @@ export const BOSSES = ['Chef', 'Geschäftsführung', 'Vorstand', 'Vorstandsassis
 export const MOUSE_LINES: string[] = [
   'mouse[3]: Rechtsklick. Kontextmenü: leer. Wie das Wiki.',
   'mouse[3]: Doppelklick erkannt. Zwei Tickets geöffnet. Beide: Drucker.',
-  'mouse[3]: Kugelmaus. Die Kugel fehlt seit 2008.',
   'mouse[3]: Mausrad klemmt. Scrollt nur noch nach unten. Wie die Stimmung.',
   'mouse[3]: Klick. Nichts passiert. Fühlt sich trotzdem produktiv an.',
   'mouse[3]: Dreifachklick. Ganzer Absatz markiert. Aus Versehen gelöscht. Strg+Z.',
   'mouse[3]: Mauszeiger springt. Grund: Krümel. Von wem: unklar.',
-  'mouse[3]: Akku 3 %. Seit 2 Jahren. Hält ewig.',
 ];
+
+/** nur die alte Maus (vor dem Upgrade „Ergonomische Maus“) bzw. nur die neue Funkmaus */
+export const MOUSE_OLD_LINES: string[] = ['mouse[3]: Kugelmaus. Die Kugel fehlt seit 2008.'];
+export const MOUSE_NEW_LINES: string[] = ['mouse[3]: Akku 3 %. Seit 2 Jahren. Hält ewig.'];
 
 /** Papierkorb auf dem Desktop: Antippen gibt einen Spruch im Log. */
 export const TRASH_LINES: string[] = [
@@ -190,7 +192,8 @@ export const MUG_DESIGNS: Record<MugGen, { title: string; color: string; prints:
   },
 };
 
-/** Abreißkalender an der Wand: Antippen reißt das Blatt ab, der nächste Tag kommt */
+/** Abreißkalender an der Wand (Spruch des Tages): Antippen reißt das Blatt ab, der nächste Tag kommt.
+ *  Nur allgemeine IT-Sprüche; was der Chef sagt, steht in boss.ts (sonst klingt es, als wärst du der Chef). */
 export const CALENDAR_LINES: string[] = [
   'Teamwork: Einer macht’s, alle in CC.',
   'sudo Kaffee',
@@ -207,18 +210,12 @@ export const CALENDAR_LINES: string[] = [
   'Gestern lief es noch.',
   'Ab heute Doku. Ab morgen.',
   'YAML: Leerzeichen sind Gefühle.',
-  'Es gibt 10 Arten von Menschen.',
   'Heute ist Patchday. Irgendwo.',
   'Nur Mut. Und ein Rollback-Plan.',
   'Strg+S ist Selbstfürsorge.',
   'Die Zukunft ist da. Ungepatcht.',
   '„Sofort“ heißt „vorgestern“.',
   'Morgen ist auch noch ein Ticket.',
-  'Ich bin Chef, kein Unmensch.',
-  'Ein guter Chef delegiert. Alles.',
-  'Fehler macht jeder. Ich nicht.',
-  'Lob ist wie Gehalt: selten.',
-  'Kritik? Bitte per Fax.',
   'Wer suchet, der greppt.',
   'Morgenstund hat Ticket im Mund.',
   'Wo gehobelt wird, fallen Server.',

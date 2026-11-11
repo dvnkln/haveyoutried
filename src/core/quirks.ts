@@ -23,14 +23,30 @@ const LABELS: Record<keyof QuirkMods, string> = {
   urgent: 'VIP-Mails',
 };
 
+export interface QuirkEffect {
+  text: string;
+  /** gut oder schlecht für den Spieler; Pager/Incidents/VIP sind beides */
+  tone: 'good' | 'bad' | 'mixed';
+}
+
+/** Mehr davon ist gut (Produktion, Tempo, Wert) bzw. weniger ist gut (Preise) */
+const UP_IS_GOOD: Partial<Record<keyof QuirkMods, boolean>> = { prod: true, tempo: true, reward: true, costs: false };
+
+/** Wirkung einzeln, z. B. [„Infrastruktur +30 %“ (gut), „Tippen −20 %“ (schlecht)] */
+export function quirkEffects(mods: QuirkMods): QuirkEffect[] {
+  return (Object.entries(mods) as [keyof QuirkMods, number][]).map(([k, v]) => {
+    const up = UP_IS_GOOD[k];
+    const tone = up === undefined || v === 1 ? 'mixed' : v > 1 === up ? 'good' : 'bad';
+    if (v === 0) return { text: `${k === 'incidents' || k === 'urgent' ? 'keine' : 'kein'} ${LABELS[k]}`, tone };
+    if ((k === 'events' || k === 'incidents' || k === 'urgent') && v >= 2) return { text: `${LABELS[k]} ×${v}`, tone };
+    const pct = Math.round((v - 1) * 100);
+    return { text: `${LABELS[k]} ${pct > 0 ? '+' : '−'}${Math.abs(pct)} %`, tone };
+  });
+}
+
 /** Wirkung in Worten, z. B. „Infrastruktur +30 % · Tippen −20 %“ */
 export function describeQuirk(mods: QuirkMods): string {
-  return (Object.entries(mods) as [keyof QuirkMods, number][])
-    .map(([k, v]) => {
-      if (v === 0) return `${k === 'incidents' || k === 'urgent' ? 'keine' : 'kein'} ${LABELS[k]}`;
-      if ((k === 'events' || k === 'incidents' || k === 'urgent') && v >= 2) return `${LABELS[k]} ×${v}`;
-      const pct = Math.round((v - 1) * 100);
-      return `${LABELS[k]} ${pct > 0 ? '+' : '−'}${Math.abs(pct)} %`;
-    })
+  return quirkEffects(mods)
+    .map((e) => e.text)
     .join(' · ');
 }

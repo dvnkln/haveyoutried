@@ -6,6 +6,11 @@ const SHOTS = process.env.SHOTS_DIR;
 const shot = async (page: import('@playwright/test').Page, name: string) => {
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/${name}.png` });
 };
+/** App über Start → Launcher öffnen */
+const openApp = async (page: import('@playwright/test').Page, id: string) => {
+  await page.locator('.taskbar-start').tap();
+  await page.locator(`.launcher .app-${id}`).tap();
+};
 const tickets = async (page: import('@playwright/test').Page) =>
   Number((await page.locator('.counter-value').textContent())?.replace(/[^\d.]/g, ''));
 
@@ -47,7 +52,7 @@ test('Kern-Loop: tippen, kaufen, produzieren, speichern', async ({ page, context
   await expect(page.locator('.history .hist-solution')).not.toBeEmpty();
   await shot(page, '1-queue');
 
-  await page.getByRole('button', { name: /Infra/ }).tap();
+  await openApp(page, 'infra');
   const buy = page.locator('button.buy[data-gen="intern"]');
   await expect(buy).toBeEnabled();
   await buy.tap();
@@ -61,13 +66,13 @@ test('Kern-Loop: tippen, kaufen, produzieren, speichern', async ({ page, context
   // App-Fenster schließen, dann die nächste App vom Desktop öffnen
   await page.locator('.sheet-close').tap();
   await expect(page.locator('.sheet')).toBeHidden();
-  await page.getByRole('button', { name: /System/ }).tap();
+  await openApp(page, 'system');
   await expect(page.locator('#panel-system .stats')).toContainText('Von Hand gelöst');
   await shot(page, '3-system');
 
   // Reload: Stand bleibt (pagehide-Save)
   await page.reload();
-  await page.getByRole('button', { name: /Infra/ }).tap();
+  await openApp(page, 'infra');
   await expect(page.locator('.gen[data-gen="intern"] .gen-owned')).toHaveText('×1');
   expect(errors).toEqual([]);
 });
@@ -107,7 +112,9 @@ test('Upgrades: Badge, Kauf, Wirkung; Sound-Schalter', async ({ page, context })
   }, JSON.stringify(save));
 
   await page.goto('/');
-  const tab = page.getByRole('button', { name: /Upgrades/ });
+  // was zu kaufen: Upgrades steht im Tray der Taskleiste, mit Punkt
+  const tab = page.locator('.tray-app.app-upgrades');
+  await expect(tab).toBeVisible();
   await expect(tab).toHaveClass(/has-badge/);
   // Upgrades stehen sichtbar auf dem Schreibtisch: vor dem Kauf kein Kaffeebecher
   await expect(page.locator('.mug')).toBeHidden();
@@ -123,7 +130,7 @@ test('Upgrades: Badge, Kauf, Wirkung; Sound-Schalter', async ({ page, context })
   for (let i = 0; i < 13; i++) await page.locator('.close-btn').tap();
   await expect(page.locator('.solved-stamp')).toHaveClass(/show/);
 
-  await page.getByRole('button', { name: /System/ }).tap();
+  await openApp(page, 'system');
   const sound = page.getByRole('switch', { name: 'Sound' });
   await sound.tap();
   await expect(sound).toHaveAttribute('aria-checked', 'false');
@@ -139,11 +146,10 @@ test('Layout bleibt bildschirmbreit, auch bei langen Texten', async ({ page }) =
     document.querySelector('.last-closed')!.textContent = '#INC-004769 → ' + 'Bekanntes Problem, Fix kommt im nächsten Release '.repeat(3);
     document.querySelector('.counter-value')!.textContent = '999.99e123';
     document.querySelector('.caller-who')!.textContent = 'X'.repeat(80);
-    const navs = [...document.querySelectorAll('.app-icon')];
     return {
       vw: document.documentElement.clientWidth,
       sw: document.documentElement.scrollWidth,
-      lastTabRight: navs[navs.length - 1]!.getBoundingClientRect().right,
+      lastTabRight: document.querySelector('.taskbar')!.getBoundingClientRect().right,
     };
   });
   expect(r.sw).toBe(r.vw);
@@ -345,14 +351,24 @@ test('Karriere: kündigen, neue Firma, Achievement-Toast', async ({ page, contex
 
   await page.goto('/');
   await expect(page.locator('.prompt-user')).toHaveText('root@mueller-spedition');
-  await page.getByRole('button', { name: /Karriere/ }).tap();
+  // 0 → 10 Punkte Erfahrung: lohnt sich richtig, kräftiger Punkt im Tray
+  const career = page.locator('.tray-app.app-career');
+  await expect(career).toHaveClass(/badge-strong/);
+  await career.tap();
   await expect(page.locator('.career')).toContainText('+10');
   await shot(page, 'career-1');
   await page.getByRole('button', { name: 'Kündigen', exact: true }).tap();
   const confirm = page.getByRole('button', { name: 'Kündigen. Ernsthaft.' });
   await expect(confirm).toBeEnabled();
   await confirm.tap();
-  await expect(page.locator('dialog.modal')).toContainText('Erster Arbeitstag');
+  // Meldung in zwei Teilen: alter Job (Abschied, Erfahrung), neuer Job (Begrüßung, Eigenheit)
+  const modal = page.locator('dialog.modal');
+  await expect(modal).toContainText('Jobwechsel');
+  await expect(modal.locator('.job-old')).toContainText('Müller & Söhne');
+  await expect(modal.locator('.job-old')).toContainText('+10 Berufserfahrung');
+  await expect(modal.locator('.job-new')).toContainText('Erster Tag');
+  await expect(modal.locator('.job-new')).not.toContainText('Müller & Söhne');
+  await shot(page, 'career-quit');
   await page.getByRole('button', { name: 'Na dann.' }).tap();
 
   await expect(page.locator('.prompt-user')).not.toHaveText('root@mueller-spedition');
@@ -441,7 +457,7 @@ test('Ticketverlauf lässt sich scrollen, Antwort steht vor dem letzten Anschlag
     if ((await page.locator('.history .hist').count()) > before && restBefore === '') fullBeforeSolve++;
   }
   expect(fullBeforeSolve).toBeGreaterThan(5);
-  await page.locator('.app-icon.app-log').click();
+  await openApp(page, 'log');
   const body = page.locator('.sheet-body');
   await expect.poll(() => body.evaluate((e) => e.scrollHeight > e.clientHeight * 2)).toBe(true);
   await body.evaluate((e) => (e.scrollTop = e.scrollHeight));
@@ -479,7 +495,7 @@ test('Erster Start: Splash, Zettel, winken = Licht, Knopf = Monitor', async ({ p
   await page.locator('.mon-power').tap();
   await expect(page.locator('#app')).not.toHaveClass(/screen-off/);
   await expect(page.locator('.wp-mark')).toBeVisible();
-  await expect(page.locator('.app-infra')).toBeVisible();
+  await expect(page.locator('.taskbar-start')).toBeVisible();
   await expect(page.locator('.work')).toBeHidden();
   // nächster Anschlag öffnet das Werkzeug, getippt wird danach
   await page.locator('.key[data-key="Q"]').tap();
@@ -552,7 +568,7 @@ test('Wer im App-Fenster ist, macht keine Pause: danach keine Memes', async ({ p
   await page.goto('/');
   await page.locator('.key[data-key="Q"]').tap();
   // länger als die Meme-Schwelle (15 s) im Infra-Fenster
-  await page.getByRole('button', { name: /Infra/ }).tap();
+  await openApp(page, 'infra');
   await page.clock.runFor(17_000);
   await page.locator('.sheet-close').tap();
   await page.clock.runFor(1_000);

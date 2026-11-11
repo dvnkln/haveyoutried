@@ -8,11 +8,13 @@ export const BOSS_TASKS: Record<BossKind, string[]> = {
     'Schließen Sie {n} Tickets. Ich habe dem Vorstand eine Zahl genannt.',
     '{n} Tickets bis zur Mittagspause. Meiner, nicht Ihrer.',
     'Machen Sie {n} Tickets zu. Hauptsache zu.',
+    'Machen Sie {n} Tickets zu. Ein guter Chef delegiert. Alles. Ich bin ein sehr guter Chef.',
   ],
   calls: [
     'Nehmen Sie {n} Anrufe an. Telefonieren ist wie Mannschaftssport: Wer zögert, sitzt auf der Bank.',
     'Gehen Sie an die nächsten {n} Anrufe ran. Mit Lächeln. Man hört das.',
     '{n} Anrufer glücklich machen. Oder zumindest zum Auflegen bringen.',
+    'Nehmen Sie {n} Anrufe an. Beschwerden über mich bitte nicht am Telefon. Kritik nur per Fax.',
   ],
   clicks: [
     '{n} Anschläge. Ich höre durch die Wand, ob hier gearbeitet wird.',
@@ -42,6 +44,7 @@ export const BOSS_DONE: string[] = [
   'Der Chef sagt: „Ein Chef muss sein wie ein Router: Er leitet weiter.“ Deinen Erfolg leitet er an den Vorstand weiter. Als seinen.',
   'Der Chef hat es nicht gemerkt. Die Buchhaltung schon. Bonus!',
   'Der Chef sagt: „Sehen Sie? Das hab ich Ihnen beigebracht.“',
+  'Der Chef sagt: „Lob ist wie Gehalt: Man sollte es nicht zu oft auszahlen.“ Den Bonus gibt es trotzdem.',
 ];
 
 export const BOSS_FAILED: string[] = [
@@ -50,4 +53,6 @@ export const BOSS_FAILED: string[] = [
   'Frist verpasst. Der Chef hat es zum Glück schon wieder vergessen.',
   'Nicht geschafft. Der Chef nennt dem Vorstand eine andere Zahl. „Ehrlichkeit ist wie ein Passwort: Man gibt sie nicht jedem.“',
   'Zu spät. Der Chef ist schon im nächsten Meeting über das Meeting.',
+  'Frist verpasst. Der Chef sagt: „Ich bin Chef, kein Unmensch.“ Dann trägt er es in deine Akte ein.',
+  'Nicht geschafft. Der Chef sagt: „Fehler macht jeder. Ich nicht.“ Bleibt also nur einer übrig.',
 ];

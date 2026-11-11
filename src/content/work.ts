@@ -99,6 +99,7 @@ export const MEMES: { top: string; bottom: string; face: string }[] = [
   { top: 'Git-Konflikt', bottom: 'Ordner sichern, Repo löschen, neu klonen. So machen Profis das.', face: '(・_・;)' },
   { top: 'Praktikant kennt Strg+Z noch nicht', bottom: 'Heute ist er einer der glücklichen 10.000.', face: '(◕‿◕)' },
   { top: 'Datum in der Excel-Liste: 03/04/05', bottom: 'Es gibt nur ein richtiges Format: 2005-04-03.', face: '(￣ヘ￣)' },
+  { top: 'Es gibt 10 Arten von Menschen:', bottom: 'Die, die Binär verstehen, und die anderen.', face: '(⌐■_■)' },
   { top: 'Zwei schwierige Dinge in der IT:', bottom: 'Cache-Invalidierung, Namen vergeben und Off-by-one-Fehler.', face: '(；一_一)' },
   { top: 'Permission denied.', bottom: 'sudo !!', face: '(⌐■_■)' },
   { top: 'Problem? Ich nehme einfach eine Regex.', bottom: 'Jetzt habe ich zwei Probleme.', face: '(╥_╥)' },
@@ -174,7 +175,7 @@ export const DONE_LINES: Record<'mail' | 'ticket' | 'term' | 'chat' | 'call' | '
     'Läuft wieder. Nicht anfassen. Auch nicht angucken.',
     'Fertig. Output: 400 Zeilen. Gelesen: die letzte.',
     'Exit 0. Ich nehme das als Kompliment.',
-    'Läuft wieder. Auch ein Server hat schlechte Tage. Meistens deine.',
+    'Läuft wieder. Auch ein Server hat schlechte Tage. Meistens meine.',
     'Fertig. Aus Fehlern lernt man. Ich hab heute schon viel gelernt.',
   ],
   chat: [
@@ -190,10 +191,10 @@ export const DONE_LINES: Record<'mail' | 'ticket' | 'term' | 'chat' | 'call' | '
   call: [
     '{who}: Call beendet. 45 Minuten, davon 40 „Hört ihr mich?“',
     '{who}: Call beendet. Hätte eine Mail sein können.',
-    '{who}: Call beendet. Du warst die ganze Zeit stumm.',
+    '{who}: Call beendet. Ich war die ganze Zeit stumm. Hat keiner gemerkt.',
     '{who}: Call beendet. Follow-up-Termin: noch ein Call.',
     '{who}: Call beendet. Die Katze war das Highlight.',
-    '{who} hat den Call verlassen. Mitten in deinem Satz.',
+    '{who} hat den Call verlassen. Mitten in meinem Satz.',
     '{who}: Call beendet. Alle haben „Tschüss“ gesagt und sind geblieben.',
     '{who}: Call beendet. Aufgezeichnet. Wird nie jemand ansehen.',
   ],
@@ -230,10 +231,10 @@ export const DONE_LINES: Record<'mail' | 'ticket' | 'term' | 'chat' | 'call' | '
     '{who}: Lösung gefunden. Stack Overflow, akzeptierte Antwort: falsch.',
     'Gegoogelt. Ergebnis: „Hast du es neu gestartet?“',
     '{who}: Antwort gefunden. Auf Seite 3. Niemand geht auf Seite 3.',
-    'Gesucht. Fund: dein eigenes Ticket von 2021.',
+    'Gesucht. Fund: mein eigenes Ticket von 2021.',
     '{who}: Lösung: GitHub-Issue, „closed as won’t fix“.',
     '{who}: Lösung gefunden. In einem Video, Minute 13:50.',
-    '{who}: Antwort gefunden. Von dir. Aus 2019. Du erinnerst dich nicht.',
+    '{who}: Antwort gefunden. Von mir. Aus 2019. Ich erinnere mich nicht.',
   ],
 };
 

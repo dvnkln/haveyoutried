@@ -23,6 +23,7 @@ import { paintWall } from './wallpaper';
 import { setThemeColor, themeLight } from './power';
 import { achievementCount } from '../core/achievements';
 import { pick } from '../util';
+import { gameBlocked } from './blocked';
 
 export interface AppContext {
   state: GameState;
@@ -42,8 +43,8 @@ export interface Tab {
   mount(ctx: AppContext): HTMLElement;
   render(): void;
   onShow?(): void;
-  /** Punkt am Icon, z. B. „hier gibt es was zu kaufen“ */
-  badge?(): boolean;
+  /** Punkt an der App, z. B. „hier gibt es was zu kaufen“: 0 = nichts, 1 = Punkt, 2 = kräftiger Punkt („jetzt wirklich“) */
+  badge?(): 0 | 1 | 2;
 }
 
 export interface App {
@@ -131,7 +132,20 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
 
   // --- Monitor mit Desktop ---
   const promptUser = h('span', { class: 'prompt-user' });
-  const icons = h('nav', { class: 'desk-icons', 'aria-label': 'Programme' });
+  // Taskleiste: Start öffnet den Launcher mit allen Apps; im Tray stehen nur Apps, bei denen gerade was zu tun ist
+  const startBtn = h('button', { class: 'taskbar-start', type: 'button', 'aria-haspopup': 'true', 'aria-expanded': 'false', 'aria-controls': 'launcher' }, [
+    h('span', { class: 'start-glyph', 'aria-hidden': 'true', text: '▶' }),
+    h('span', { class: 'start-label', text: 'start' }),
+  ]);
+  const tray = h('div', { class: 'tray' });
+  // Uhr in zwei Teilen: an einer senkrechten Leiste stehen Stunden und Minuten untereinander
+  const clockH = h('span');
+  const clockM = h('span');
+  const clockEl = h('span', { class: 'taskbar-clock', 'aria-hidden': 'true' }, [clockH, h('span', { class: 'clock-sep', text: ':' }), clockM]);
+  // Infobereich rechts (wie bei XP): Tray-Apps und Uhr auf eigenem Feld
+  const taskbar = h('div', { class: 'taskbar' }, [startBtn, h('div', { class: 'tray-area' }, [tray, clockEl])]);
+  const icons = h('nav', { class: 'launcher-grid', 'aria-label': 'Programme' });
+  const launcher = h('div', { class: 'launcher', id: 'launcher', hidden: '' }, [icons]);
   const screen = h('div', { class: 'screen' });
   const desk = createDesk(ctx, fx, () => root, () => screen);
   desk.promptSlot.replaceChildren(promptUser, ':~$ ');
@@ -145,7 +159,10 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
   /** zuletzt gezeigter Büro-Stil (Firma + Keller-Upgrade) */
   let wallKeyShown = '';
   // bis zum ersten Anschlag ist kein Werkzeug offen: nur Hintergrundbild und Apps
-  screen.append(h('div', { class: 'desktop no-tool' }, [wallpaper, icons, desk.work, desk.lastClosed]), h('div', { class: 'scanlines', 'aria-hidden': 'true' }));
+  screen.append(
+    h('div', { class: 'desktop no-tool' }, [wallpaper, desk.work, desk.lastClosed, taskbar, launcher]),
+    h('div', { class: 'scanlines', 'aria-hidden': 'true' }),
+  );
 
   const led = h('span', { class: 'led', 'aria-hidden': 'true' });
   // Monitor-Upgrade: neues Modell statt zweitem Bildschirm
@@ -197,6 +214,13 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
 
   const toaster = createToaster();
 
+  /** Mini-Kachel im Tray: nur sichtbar, solange die App einen Punkt hat */
+  const trayItem = (cls: string, label: string, tile: HTMLElement) => {
+    const el = h('button', { class: cls, type: 'button', 'aria-label': label, hidden: '' }, [tile, h('span', { class: 'nav-badge', 'aria-hidden': 'true' })]);
+    tray.append(el);
+    return el;
+  };
+
   const mounted = tabs.map((tab) => {
     const panel = h('section', { class: `panel panel-${tab.id}`, id: `panel-${tab.id}`, hidden: '' });
     panel.append(tab.mount(ctx));
@@ -207,7 +231,8 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
       h('span', { class: 'nav-badge', 'aria-hidden': 'true' }),
     ]);
     icons.append(btn);
-    return { tab, panel, btn };
+    const trayBtn = trayItem(`tray-app app-${tab.id}`, tab.label, h('span', { class: `app-tile tile-${tab.id}`, 'aria-hidden': 'true', text: glyph(tab.icon) }));
+    return { tab, panel, btn, trayBtn };
   });
   // Papierkorb: reiner Gag
   const trash = h('button', { class: 'app-icon app-trash', type: 'button' }, [
@@ -215,17 +240,22 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
     h('span', { class: 'app-label', text: 'Papierkorb' }),
     h('span', { class: 'nav-badge', 'aria-hidden': 'true' }),
   ]);
+  // voll: auch im Tray, vor System (wie im Launcher)
+  const trashTray = trayItem('tray-app app-trash', 'Papierkorb', svgTile(TRASH_SVG));
   // Papierkorb füllt sich mit erledigten Tickets; voll geleert gibt es Altpapier-Pfand
   let trashCount = 0;
   bus.on('click', () => trashCount++);
-  trash.addEventListener('click', () => {
-    juice(trash, POP, 240);
+  const emptyTrash = (tapped: HTMLElement) => {
+    closeLauncher();
+    // aus dem (jetzt zugeklappten) Launcher: Blase und Zahl an der Tray-Kachel bzw. am Start-Knopf zeigen
+    const from = tapped === trash ? (trashTray.hidden ? startBtn : trashTray) : tapped;
+    juice(from, POP, 240);
     const fill = Math.min(1, trashCount / TRASH_FULL);
     if (fill < 1) {
       ctx.sfx.tick();
       const msg = `${Math.round(fill * 100)} % voll. Erst leeren, wenn er überquillt. So steht es in der Hausordnung.`;
       ctx.log.write('info', `trash[99]: ${msg}`);
-      quip(trash, msg);
+      quip(from, msg);
       return;
     }
     const r = rates(ctx.state);
@@ -234,18 +264,67 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
     trashCount = 0;
     const line = pick(TRASH_LINES);
     ctx.log.write('info', line);
-    quip(trash, `${line} Altpapier-Pfand: +${formatNumber(bonus)} Tickets.`);
+    quip(from, `${line} Altpapier-Pfand: +${formatNumber(bonus)} Tickets.`);
     ctx.log.write('ok', `trash[99]: Altpapier-Pfand eingelöst: +${formatNumber(bonus)} Tickets.`);
-    const p = fx.rel(trash);
+    const p = fx.rel(from);
     fx.floater(p.x + p.w / 2, p.y + p.h / 2, `+${formatNumber(bonus)}`, true);
     ctx.sfx.crumple();
     ctx.haptic('milestone');
     juice(tickets, POP, 320);
-  });
+  };
+  trash.addEventListener('click', () => emptyTrash(trash));
+  trashTray.addEventListener('click', () => emptyTrash(trashTray));
   // System ganz nach rechts (wie die Einstellungen am Ende der Leiste), Papierkorb davor
   icons.insertBefore(trash, mounted.find((m) => m.tab.id === 'system')?.btn ?? null);
+  tray.insertBefore(trashTray, mounted.find((m) => m.tab.id === 'system')?.trayBtn ?? null);
+
+  // --- Launcher: geht im Bildschirm auf, schließt bei App-Wahl, Tipp daneben, Esc, Zurück oder Start ---
+  let launcherOpen = false;
+  /** eigener history.back() beim Schließen: das folgende popstate nicht noch einmal auswerten */
+  let ownBack = false;
+  const showLauncher = () => {
+    launcherOpen = true;
+    launcher.hidden = false;
+    startBtn.setAttribute('aria-expanded', 'true');
+    root.classList.add('launcher-open');
+    history.pushState({ launcher: 1 }, '');
+  };
+  const hideLauncher = () => {
+    if (!launcherOpen) return;
+    launcherOpen = false;
+    launcher.hidden = true;
+    startBtn.setAttribute('aria-expanded', 'false');
+    root.classList.remove('launcher-open');
+  };
+  /** sofort zu (damit nichts mehr hineintippt), Verlaufseintrag hinterher abbauen */
+  const closeLauncher = () => {
+    if (!launcherOpen) return;
+    hideLauncher();
+    if (history.state?.launcher) {
+      ownBack = true;
+      history.back();
+    }
+  };
+  startBtn.addEventListener('click', () => {
+    ctx.haptic('tap');
+    ctx.sfx.tick();
+    if (launcherOpen) closeLauncher();
+    else showLauncher();
+  });
+  // Tipp außerhalb schließt; der Tipp selbst geht trotzdem durch (z. B. auf die Tastatur)
+  document.addEventListener(
+    'pointerdown',
+    (e) => {
+      const t = e.target as Element;
+      // Tray-Kacheln öffnen selbst (und übernehmen dabei den Verlaufseintrag des Launchers)
+      if (launcherOpen && !launcher.contains(t) && !startBtn.contains(t) && !t.closest?.('.tray-app')) closeLauncher();
+    },
+    { capture: true },
+  );
 
   let active: (typeof mounted)[number] | null = null;
+  /** von hier wurde das Fenster geöffnet: danach kommt der Fokus dorthin zurück */
+  let opener: HTMLElement | null = null;
   const showSheet = (m: (typeof mounted)[number]) => {
     for (const x of mounted) x.panel.hidden = x !== m;
     active = m;
@@ -266,7 +345,9 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
     sheet.hidden = true;
     root.classList.remove('sheet-open');
     for (const el of background) el.inert = false;
-    active.btn.focus({ preventScroll: true });
+    // Launcher-Knopf ist nach dem Schließen unsichtbar: dann zum Start-Knopf
+    const back = opener && opener.isConnected && opener.getClientRects().length ? opener : startBtn;
+    back.focus({ preventScroll: true });
     active = null;
   };
   // Android-Zurück schließt das Fenster: beim Öffnen einen Verlaufseintrag anlegen
@@ -275,22 +356,39 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
     else hideSheet();
   };
   // Nach Neuladen kann noch ein alter Fenster-Eintrag im Verlauf stehen: neutralisieren
-  if (history.state?.sheet) history.replaceState(null, '');
-  window.addEventListener('popstate', hideSheet);
+  if (history.state?.sheet || history.state?.launcher) history.replaceState(null, '');
+  window.addEventListener('popstate', () => {
+    if (ownBack) {
+      ownBack = false;
+      return;
+    }
+    hideLauncher();
+    hideSheet();
+  });
+  const openApp = (m: (typeof mounted)[number], from: HTMLElement) => {
+    opener = from;
+    ctx.haptic('tap');
+    ctx.sfx.tick();
+    // aus dem Launcher: dessen Verlaufseintrag wird zum Fenster-Eintrag (ein Zurück schließt das Fenster)
+    if (launcherOpen && history.state?.launcher) history.replaceState({ sheet: m.tab.id }, '');
+    else if (!active) history.pushState({ sheet: m.tab.id }, '');
+    hideLauncher();
+    showSheet(m);
+  };
   for (const m of mounted) {
-    m.btn.addEventListener('click', () => {
-      ctx.haptic('tap');
-      ctx.sfx.tick();
-      if (!active) history.pushState({ sheet: m.tab.id }, '');
-      showSheet(m);
-    });
+    m.btn.addEventListener('click', () => openApp(m, m.btn));
+    m.trayBtn.addEventListener('click', () => openApp(m, m.trayBtn));
   }
   sheetClose.addEventListener('click', closeSheet);
   // Esc schließt das Fenster, bevor die Panik-Taste es abfängt
   window.addEventListener(
     'keydown',
     (e) => {
-      if (e.key === 'Escape' && active && !document.querySelector('dialog[open]')) {
+      if (e.key !== 'Escape' || document.querySelector('dialog[open]')) return;
+      if (launcherOpen) {
+        e.preventDefault();
+        closeLauncher();
+      } else if (active) {
         e.preventDefault();
         closeSheet();
       }
@@ -334,6 +432,7 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
   });
   bus.on('jobQuit', () => {
     // „Have you tried turning it off and on again?“
+    closeLauncher();
     if (active) closeSheet();
     screen.classList.remove('crt-restart');
     void screen.offsetWidth;
@@ -343,6 +442,16 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
   screen.addEventListener('animationend', (e) => {
     if (e.animationName === 'crt-restart') screen.classList.remove('crt-restart');
   });
+
+  /** Punkte: an der App im Launcher und als Kachel im Tray (Start bleibt ohne: der Tray zeigt schon alles) */
+  const mark = (btn: HTMLElement, trayBtn: HTMLElement, level: number) => {
+    for (const el of [btn, trayBtn]) {
+      setFlag(el, 'has-badge', level > 0);
+      setFlag(el, 'badge-strong', level > 1);
+    }
+    if (trayBtn.hidden !== (level === 0)) trayBtn.hidden = level === 0;
+  };
+  let clockMinute = -1;
 
   return {
     start(open = false) {
@@ -376,10 +485,22 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
       const host = companyOf(s.prestige.company).host;
       setText(promptUser, `root@${host}`);
       setText(rate, `+${formatRate(productionPerSec(s))}/s`);
-      for (const m of mounted) setFlag(m.btn, 'has-badge', m.tab.badge?.() ?? false);
+      if (root.dataset.taskbar !== s.settings.taskbar) root.dataset.taskbar = s.settings.taskbar;
+      // Uhr nur, wenn eine neue Minute angefangen hat (render läuft jeden Frame)
+      const minute = Math.floor(Date.now() / 60_000);
+      if (minute !== clockMinute) {
+        clockMinute = minute;
+        const now = new Date();
+        setText(clockH, String(now.getHours()).padStart(2, '0'));
+        setText(clockM, String(now.getMinutes()).padStart(2, '0'));
+      }
+      // Incident, Dialog, Monitor oder Licht aus: Launcher zu
+      if (launcherOpen && gameBlocked()) closeLauncher();
+      for (const m of mounted) mark(m.btn, m.trayBtn, m.tab.badge?.() ?? 0);
       const fill = Math.min(1, trashCount / TRASH_FULL);
       trash.style.setProperty('--fill', fill.toFixed(2));
-      setFlag(trash, 'has-badge', fill >= 1);
+      trashTray.style.setProperty('--fill', fill.toFixed(2));
+      mark(trash, trashTray, fill >= 1 ? 1 : 0);
       pager.render();
       props.render();
       desk.render(s);

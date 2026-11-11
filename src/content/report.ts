@@ -21,7 +21,7 @@ export const REPORT_SIGNATURES = [
   '— Der Chef (gesendet von meinem iPhone)',
   '— Der Chef. PS: Mein Drucker geht wieder nicht.',
   '— Der Chef (diese Mail wurde von einer KI zusammengefasst)',
-  '— Ihr Abteilungsleiter. Mehr Kumpel als Chef. Aber Chef.',
+  '— Der Chef. Mehr Kumpel als Chef. Aber Chef.',
   '— Der Chef. Im Urlaub. Trotzdem erreichbar. Leider auch für Sie.',
 ];
 

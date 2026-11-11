@@ -8,14 +8,22 @@ import type { GameState } from '../core/state';
 
 export interface Hint {
   id: string;
-  /** worauf gezeigt wird */
-  target: string;
+  /** worauf gezeigt wird; bei einer Liste das erste, was zu sehen ist (Vorrang von vorn nach hinten) */
+  target: string | string[];
+  /** Ziele, die nur der Weg sind (z. B. Start öffnet den Launcher): antippen bestätigt nicht, das Post-it wandert weiter */
+  via?: string[];
   text: string;
   /** wann der Hinweis dran ist */
   when: (s: GameState) => boolean;
   /** kann nie mehr dran sein (Sache längst bekannt): gilt still als gelesen */
   expired: (s: GameState) => boolean;
 }
+
+/**
+ * App in der Taskleiste: direkt im Tray, sonst im offenen Launcher, sonst der Start-Knopf
+ * (der ist nur Zwischenschritt: antippen öffnet den Launcher, das Post-it springt dann auf die App).
+ */
+const appTarget = (id: string) => ({ target: [`.tray-app.app-${id}`, `.launcher .app-${id}`, '.taskbar-start'], via: ['.taskbar-start'] });
 
 const noInfra = (s: GameState) => Object.values(s.generators).every((g) => g.owned === 0);
 const seenEvent = (s: GameState) => Object.keys(s.flags).some((k) => k.startsWith('ev:'));
@@ -37,14 +45,14 @@ export const HINTS: Hint[] = [
   },
   {
     id: 'infra',
-    target: '.app-infra',
+    ...appTarget('infra'),
     text: 'Genug Tickets für einen Praktikanten. Unter „Infra“ stellst du ihn ein. Der arbeitet auch, wenn du Kaffee holst.',
     when: (s) => s.prestige.jobs === 0 && noInfra(s) && s.tickets >= priceFor(s, 'intern', 1).cost,
     expired: (s) => s.prestige.jobs > 0 || !noInfra(s),
   },
   {
     id: 'upgrades',
-    target: '.app-upgrades',
+    ...appTarget('upgrades'),
     text: '„Upgrades“: Dinge, die die Firma nie bezahlen würde. Hier zahlst du selbst. Macht dich schneller. Die Kaffeemaschine zuerst, glaub mir.',
     when: (s) => s.prestige.jobs === 0 && Object.keys(s.upgrades).length === 0 && availableUpgrades(s).some((u) => u.cost <= s.tickets),
     expired: (s) => s.prestige.jobs > 0 || Object.keys(s.upgrades).length > 0,
@@ -86,7 +94,7 @@ export const HINTS: Hint[] = [
   },
   {
     id: 'career',
-    target: '.app-career',
+    ...appTarget('career'),
     text: 'Kündigen ist hier keine Niederlage, sondern Karriere. Du nimmst Erfahrung mit, der nächste Job läuft schneller. Steht unter „Karriere“.',
     when: (s) => s.prestige.jobs === 0 && prestigeGain(s) >= 1,
     expired: (s) => s.prestige.jobs > 0,
@@ -94,5 +102,5 @@ export const HINTS: Hint[] = [
 ];
 
 /** Überschriften der Post-its vom Vorgänger */
-export const HINT_HEADS = ['Notiz vom Vorgänger:', 'Übergabe, Seite 1 von 1:', 'Von K. (glaube ich):', 'PS vom Vorgänger:'];
+export const HINT_HEADS = ['Notiz vom Vorgänger:', 'Übergabe, Seite 1 von 1:', 'Übergabe, Nachtrag:', 'PS vom Vorgänger:'];
 export const HINT_OK = ['Alles klar', 'Verstanden', 'Danke, K.', 'Notiert'];

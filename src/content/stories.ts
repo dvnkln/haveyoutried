@@ -51,7 +51,7 @@ export const STORIES: Story[] = [
       ep('(◔_◔)', 'Herr K. (seit 1987 dabei)', q('allgemein', 'Ich gehe bald in Rente. Nur zur Info: Das Passwort für den Großrechner kenne nur ich.', 'Wissen nur in einem Kopf', 'Gut, dass Sie es sagen! Wir machen einen Termin. Sie erzählen, ich schreibe mit. Diesmal gibt es Doku.')),
       ep('(◔_◔)', 'Herr K. (seit 1987 dabei)', q('allgemein', 'Für die Übergabe: meine Doku. 40 Seiten. Handschriftlich. Auf Durchschlagpapier.', 'Doku auf Durchschlagpapier', 'Großartig. Ehrlich. Ich scanne das ein. Seite 12 ist leider nur ein Kaffeefleck. Was stand da?')),
       ep('(◔_◔)', 'Herr K. (letzter Tag)', f('server', 'Zum Abschied hab ich den Großrechner ausgeschaltet. Der hat ja eh nie was gemacht.', 'Großrechner zum Abschied ausgeschaltet', 'Er läuft wieder. Er hat übrigens doch etwas gemacht: die Gehälter. Danke für alles, Herr K. Wirklich.', [])),
-      ep('(◔_◔)', 'Herr K. (in Rente)', q('allgemein', 'Ich bin jetzt in Rente und langweile mich. Läuft der Großrechner noch?', 'Rentner mit Langeweile', 'Er läuft. Er vermisst Sie, glaube ich. Ich auch ein bisschen. Kommen Sie zur Weihnachtsfeier?')),
+      ep('(◔_◔)', 'Herr K. (in Rente)', q('allgemein', 'Ich bin jetzt in Rente und langweile mich. Läuft der Großrechner noch? Und der Server unterm Tisch? Der Zettel dran ist übrigens von mir.', 'Rentner mit Langeweile', 'Er läuft. Er vermisst Sie, glaube ich. Ich auch ein bisschen. Kommen Sie zur Weihnachtsfeier?')),
     ],
   },
   {

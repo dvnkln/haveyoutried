@@ -97,7 +97,7 @@ export function upgradesTab(): Tab {
       for (const b of buttons) setDisabled(b.el, b.cost > s.tickets);
     },
     badge() {
-      return availableUpgrades(ctx.state).some((u) => u.cost <= ctx.state.tickets);
+      return availableUpgrades(ctx.state).some((u) => u.cost <= ctx.state.tickets) ? 1 : 0;
     },
   };
 }

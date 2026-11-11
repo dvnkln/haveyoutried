@@ -137,7 +137,7 @@ export function infraTab(): Tab {
     /** Punkt am Icon: mindestens ein freigeschalteter Generator ist in der gewählten Menge bezahlbar (bei „max“: mindestens einer) */
     badge() {
       const s = ctx.state;
-      return GENERATORS.some((g) => isUnlocked(s, g.id) && priceFor(s, g.id, s.settings.buyAmount).cost <= s.tickets);
+      return GENERATORS.some((g) => isUnlocked(s, g.id) && priceFor(s, g.id, s.settings.buyAmount).cost <= s.tickets) ? 1 : 0;
     },
   };
 }

@@ -1,9 +1,9 @@
 import { CONFIG } from '../../config';
 import type { AppContext, Tab } from '../app';
-import { h, setText } from '../dom';
+import { h, quip as quipAt, setText } from '../dom';
 import { formatDuration, formatNumber } from '../format';
 import { SWITCHES } from '../audio';
-import { TAP_SOUND_IDS } from '../../core/state';
+import { DEFAULT_VOLUME, TAP_SOUND_IDS, TASKBAR_POSITIONS, type TaskbarPos } from '../../core/state';
 import { hapticSupport } from '../haptics';
 import { showModal } from '../modal';
 import { resetTutorial, setTutorialOff, tutorialOff } from '../tutorial';
@@ -85,6 +85,24 @@ export function systemTab(): Tab {
   const soundBtn = h('button', { class: 'icon-toggle', type: 'button', role: 'switch', 'aria-label': 'Sound', text: '♪' });
   const volume = h('input', { class: 'volume', type: 'range', min: '0', max: '1', step: '0.1', 'aria-label': 'Lautstärke Tastatur und Spiel' });
   const ambVolume = h('input', { class: 'volume', type: 'range', min: '0', max: '1', step: '0.1', 'aria-label': 'Lautstärke Büro-Geräusche' });
+  // ↺ neben dem Regler: nur sichtbar, wenn er vom Standard abweicht
+  const volReset = h('button', { class: 'vol-reset', type: 'button', 'aria-label': 'Lautstärke Tastatur und Spiel zurücksetzen', text: '↺' });
+  const ambReset = h('button', { class: 'vol-reset', type: 'button', 'aria-label': 'Lautstärke Büro-Geräusche zurücksetzen', text: '↺' });
+  // Taskleiste: vier kleine Monitor-Skizzen, die Leiste ist eingezeichnet
+  const TASKBAR_LABEL: Record<TaskbarPos, string> = { bottom: 'unten', top: 'oben', left: 'links', right: 'rechts' };
+  const TASKBAR_QUIP: Record<TaskbarPos, string> = {
+    bottom: 'Unten. Wo der Start-Knopf seit 1995 wohnt.',
+    top: 'Oben. Fühlt sich teurer an, kostet aber nichts.',
+    left: 'Links. Für Leute, die auch ihre Shell selbst kompilieren.',
+    right: 'Rechts. Mutig. Das hat noch kein Betriebssystem überlebt.',
+  };
+  const tbButtons = TASKBAR_POSITIONS.map((pos) =>
+    h('button', { class: `tb-pick tb-${pos}`, type: 'button', role: 'radio', 'aria-checked': 'false', 'aria-label': `Taskleiste ${TASKBAR_LABEL[pos]}`, 'data-pos': pos }, [
+      h('span', { class: 'tb-mini', 'aria-hidden': 'true' }, [h('span', { class: 'tb-mini-bar' })]),
+      h('span', { class: 'tb-pick-label', text: TASKBAR_LABEL[pos] }),
+    ]),
+  );
+  const tbPicker = h('div', { class: 'tb-picker', role: 'radiogroup', 'aria-label': 'Position der Taskleiste' }, tbButtons);
   // Switch-Auswahl: ein Switch zur Zeit, Pfeile/Wischen/Punkte wechseln (= einbauen), Drücken = Probe wie am Switch-Tester
   const pic = h('span', { class: 'switch-pic', 'aria-hidden': 'true' });
   const name = h('span', { class: 'switch-name' });
@@ -328,8 +346,35 @@ export function systemTab(): Tab {
       volume.addEventListener('input', () => {
         ctx.state.settings.volume = Number(volume.value);
       });
-      volume.addEventListener('change', () => {
-        void ctx.sfx.unlock().then(() => ctx.sfx.buy());
+      const probe = () => void ctx.sfx.unlock().then(() => ctx.sfx.buy());
+      volume.addEventListener('change', probe);
+      volReset.addEventListener('click', () => {
+        ctx.state.settings.volume = DEFAULT_VOLUME.volume;
+        volume.value = String(DEFAULT_VOLUME.volume);
+        probe();
+      });
+      ambReset.addEventListener('click', () => {
+        ctx.state.settings.ambienceVolume = DEFAULT_VOLUME.ambienceVolume;
+        ambVolume.value = String(DEFAULT_VOLUME.ambienceVolume);
+        ctx.sfx.tick();
+      });
+      const pickTaskbar = (pos: TaskbarPos, focus = false) => {
+        const btn = tbButtons[TASKBAR_POSITIONS.indexOf(pos)]!;
+        if (focus) btn.focus();
+        if (ctx.state.settings.taskbar === pos) return;
+        ctx.state.settings.taskbar = pos;
+        ctx.sfx.tick();
+        ctx.haptic('tap');
+        quipAt(btn, TASKBAR_QUIP[pos]);
+      };
+      for (const b of tbButtons) b.addEventListener('click', () => pickTaskbar(b.dataset.pos as TaskbarPos));
+      // Radiogruppe: Pfeiltasten wechseln
+      tbPicker.addEventListener('keydown', (e) => {
+        const dir = e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : 0;
+        if (!dir) return;
+        e.preventDefault();
+        const i = TASKBAR_POSITIONS.indexOf(ctx.state.settings.taskbar);
+        pickTaskbar(TASKBAR_POSITIONS[(i + dir + TASKBAR_POSITIONS.length) % TASKBAR_POSITIONS.length]!, true);
       });
 
       return h('div', { class: 'system' }, [
@@ -339,9 +384,10 @@ export function systemTab(): Tab {
         h('div', { class: 'section-title', text: '# /etc/helpdesk.conf' }),
         group('Sound', soundBtn, [
           h('p', { class: 'hint conf-hint', text: 'Schaltet alles auf einmal. iPhone im Lautlos-Modus bleibt stumm.' }),
-          h('div', { class: 'setting' }, [h('div', { text: 'Tastatur & Spiel' }), volume]),
+          h('div', { class: 'setting' }, [h('div', { text: 'Tastatur & Spiel' }), volReset, volume]),
           h('div', { class: 'setting' }, [
             h('div', {}, [h('div', { text: 'Büro-Geräusche' }), h('div', { class: 'hint', text: 'Ganz nach links = aus.' })]),
+            ambReset,
             ambVolume,
           ]),
           h('div', { class: 'setting-col' }, [
@@ -358,6 +404,7 @@ export function systemTab(): Tab {
             h('div', { class: 'hint', text: 'Jede Firma hat ihr eigenes. Weitere gibt’s für Achievements. Pfeile oder Wischen = anderes aufhängen.' }),
             h('div', { class: 'switch-carousel' }, [wallPrev, wallCard, wallNext]),
           ]),
+          h('div', { class: 'setting-col' }, [h('div', { text: 'Taskleiste' }), tbPicker]),
         ]),
 
         h('div', { class: 'section-title', text: '# Spielstand' }),
@@ -410,6 +457,14 @@ export function systemTab(): Tab {
       }
       volume.disabled = !s.settings.sound;
       ambVolume.disabled = !s.settings.sound;
+      volReset.hidden = !s.settings.sound || s.settings.volume === DEFAULT_VOLUME.volume;
+      ambReset.hidden = !s.settings.sound || s.settings.ambienceVolume === DEFAULT_VOLUME.ambienceVolume;
+      for (const b of tbButtons) {
+        // Radiogruppe: nur die gewählte Position ist per Tab erreichbar
+        const on = b.dataset.pos === s.settings.taskbar;
+        if (b.getAttribute('aria-checked') !== String(on)) b.setAttribute('aria-checked', String(on));
+        if (b.tabIndex !== (on ? 0 : -1)) b.tabIndex = on ? 0 : -1;
+      }
       showSwitch(validSwitch(s.settings.tapSound));
     },
   };

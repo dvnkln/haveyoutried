@@ -1,5 +1,5 @@
 import { CONFIG } from '../config';
-import { BUY_AMOUNTS, TAP_SOUND_IDS, createInitialState, SAVE_VERSION, type BuyAmount, type GameState } from './state';
+import { BUY_AMOUNTS, TAP_SOUND_IDS, TASKBAR_POSITIONS, createInitialState, SAVE_VERSION, type BuyAmount, type GameState } from './state';
 
 export const SAVE_KEY = 'hyt.save';
 
@@ -103,6 +103,7 @@ export function deserialize(json: string, now: number): GameState | null {
   // alte Klang-IDs (mx, pop, …) auf den Standard-Switch abbilden
   if (!(TAP_SOUND_IDS as readonly string[]).includes(state.settings.tapSound)) state.settings.tapSound = 'blue';
   if (typeof state.settings.wallpaper !== 'string') state.settings.wallpaper = 'auto';
+  if (!(TASKBAR_POSITIONS as readonly string[]).includes(state.settings.taskbar)) state.settings.taskbar = 'bottom';
   // Büro-Geräusche: eigener Regler 0..1 (0 = aus); früher gab es kurz einen Schalter – „aus“ heißt jetzt Regler auf 0
   state.settings.ambienceVolume = Math.min(1, Math.max(0, state.settings.ambienceVolume));
   if (isPlain(data.settings) && data.settings.ambience === false) state.settings.ambienceVolume = 0;

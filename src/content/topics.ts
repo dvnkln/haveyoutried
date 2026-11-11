@@ -199,7 +199,7 @@ export const TALK_NOTES: string[] = [
   'Eskalation an den Chef vermieden. Durch Kekse.',
   '{who} fragte noch, ob ich „mal eben“ den privaten Laptop anschauen kann.',
   'Aufwand: 2 Minuten Antwort, 25 Minuten Small Talk.',
-  '{who} hat sich bedankt. Schriftlich. Ich bin gerührt.',
+  '{who} hat sich bedankt. Mit Kuchen. Die Kollegen fragen, was ich falsch mache.',
   'Dritte Anfrage dieser Art diese Woche. Gleicher Mensch.',
   'Bitte nicht wiedereröffnen. Bitte. Bitte.',
   '{who} hat „Das sagen Sie jedes Mal“ gesagt. Stimmt.',

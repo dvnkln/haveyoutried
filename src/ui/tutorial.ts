@@ -6,6 +6,17 @@ import { h } from './dom';
 
 /** so oft wird geschaut, ob ein Hinweis dran ist */
 const CHECK_MS = 700;
+/** nach einem Zwischenschritt so lange jeden Frame nach dem eigentlichen Ziel suchen */
+const VIA_SEARCH_MS = 1_500;
+
+/** erstes sichtbares Ziel eines Hinweises (Liste = Vorrang von vorn nach hinten) */
+export function findTarget(target: string | string[], visible: (el: HTMLElement) => boolean): HTMLElement | null {
+  for (const sel of Array.isArray(target) ? target : [target]) {
+    const el = document.querySelector<HTMLElement>(sel);
+    if (el && visible(el)) return el;
+  }
+  return null;
+}
 /** Abstand der Hervorhebung um die Stelle */
 const PAD = 6;
 
@@ -116,13 +127,25 @@ export function startTutorial(state: GameState): void {
     'pointerdown',
     (e) => {
       if (!active || e.target === ok) return;
-      if (active.el.contains(e.target as Node)) hide(true);
+      if (!active.el.contains(e.target as Node)) return;
+      // Zwischenschritt (z. B. Start): nur der Weg zum Ziel; danach suchen, bis es zu sehen ist (z. B. im offenen Launcher)
+      const via = active.hint.via ?? [];
+      if (via.some((sel) => active!.el.matches(sel))) {
+        hide(false);
+        const until = performance.now() + VIA_SEARCH_MS;
+        const look = () => {
+          check(true);
+          if (!active && performance.now() < until) requestAnimationFrame(look);
+        };
+        requestAnimationFrame(look);
+      } else hide(true);
     },
     { capture: true },
   );
   window.addEventListener('resize', place);
 
-  setInterval(() => {
+  /** skipVia: Zwischenschritte überspringen (gerade eben angetippt, das Ziel geht gleich auf) */
+  const check = (skipVia = false) => {
     if (tutorialOff(state)) return hide(false);
     if (active) {
       // Stelle weg (Zettel abgefallen, Pager erledigt) oder Spiel blockiert: nur ausblenden, kommt wieder
@@ -139,10 +162,12 @@ export function startTutorial(state: GameState): void {
         continue;
       }
       if (!replay && !hint.when(state)) continue;
-      const el = document.querySelector<HTMLElement>(hint.target);
+      const targets = (Array.isArray(hint.target) ? hint.target : [hint.target]).filter((t) => !skipVia || !hint.via?.includes(t));
+      const el = findTarget(targets, visible);
       // Vorrang vor Meldungen (die warten in ihrer Schlange, z. B. das Achievement zum ersten Ticket);
       // VIP-Mail und Kaffeetasse dürfen, sie sind ja oft das Thema
-      if (el && visible(el)) return show(hint, el);
+      if (el) return show(hint, el);
     }
-  }, CHECK_MS);
+  };
+  setInterval(() => check(), CHECK_MS);
 }

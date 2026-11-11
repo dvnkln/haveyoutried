@@ -202,6 +202,8 @@ export const PRESTIGE = {
   exponent: 1 / 3,
   /** Bonus je Punkt Berufserfahrung auf Produktion und Tipptempo */
   bonusPerPoint: 0.05,
+  /** Kündigen „lohnt sich richtig“ (kräftiger Punkt an Karriere), wenn der Bonusfaktor danach mindestens so viel größer ist */
+  worthIt: 1.25,
 };
 
 /**

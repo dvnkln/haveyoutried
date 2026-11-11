@@ -1,5 +1,5 @@
 import { CONFIG, GENERATORS } from '../config';
-import { CALENDAR_LINES, DUCK_LINES, INCIDENT_SIGN, MOUSE_LINES, MUG_DESIGNS, POSTITS, type MugGen } from '../content/props';
+import { CALENDAR_LINES, DUCK_LINES, INCIDENT_SIGN, MOUSE_LINES, MOUSE_NEW_LINES, MOUSE_OLD_LINES, MUG_DESIGNS, POSTITS, type MugGen } from '../content/props';
 import { bus } from '../core/bus';
 import { incidentRunning, isSolved } from '../core/incidents';
 import type { GameState } from '../core/state';
@@ -212,7 +212,8 @@ export function createProps(ctx: AppContext) {
     const now = performance.now();
     if (now - lastMouseLine > 30_000) {
       lastMouseLine = now;
-      const line = pick(MOUSE_LINES);
+      // Kugel nur bei der alten Maus, Akku nur bei der ergonomischen (Funk-)Maus
+      const line = pick([...MOUSE_LINES, ...(ctx.state.upgrades.mouse ? MOUSE_NEW_LINES : MOUSE_OLD_LINES)]);
       ctx.log.write('info', line);
       quip(mouse, line);
     }
@@ -278,7 +279,7 @@ export function createProps(ctx: AppContext) {
       h('span', { class: 'cal-text', text: CALENDAR_LINES[calLine % CALENDAR_LINES.length]! }),
     ]);
   };
-  const calendar = h('button', { class: 'tear-cal', type: 'button', 'aria-label': 'Abreißkalender: nächstes Blatt' }, [calPage()]);
+  const calendar = h('button', { class: 'tear-cal', type: 'button', 'aria-label': 'Abreißkalender, Spruch des Tages: nächstes Blatt' }, [calPage()]);
   /** auto = Blatt fällt von selbst (Incident überstanden, Chef-Aufgabe erledigt): so ein Tag fühlt sich wie zwei an */
   const tear = (auto = false) => {
     // das oberste noch hängende Blatt ist das, was man sieht (fallende Blätter sind schon „torn“)

@@ -62,10 +62,25 @@ export interface GameState {
   boss: BossState;
   stats: { startedAt: number; playTimeMs: number; offlineTickets: number };
   /** wallpaper: 'auto' = Bild der aktuellen Firma, sonst ID aus ui/wallpaper.ts */
-  settings: { haptics: boolean; sound: boolean; volume: number; tapSound: string; buyAmount: BuyAmount; wallpaper: string; ambienceVolume: number };
+  settings: {
+    haptics: boolean;
+    sound: boolean;
+    volume: number;
+    tapSound: string;
+    buyAmount: BuyAmount;
+    wallpaper: string;
+    ambienceVolume: number;
+    /** wo die Taskleiste im Monitor sitzt */
+    taskbar: TaskbarPos;
+  };
   /** Wall-Clock des letzten Ticks, Basis für Offline-Progress */
   lastTick: number;
 }
+
+export const TASKBAR_POSITIONS = ['bottom', 'top', 'left', 'right'] as const;
+export type TaskbarPos = (typeof TASKBAR_POSITIONS)[number];
+/** Standard-Lautstärken (auch für „zurücksetzen“ in den Einstellungen) */
+export const DEFAULT_VOLUME = { volume: 0.7, ambienceVolume: 0.4 } as const;
 
 export function createInitialState(now: number): GameState {
   const generators = {} as Record<GeneratorId, GeneratorState>;
@@ -87,7 +102,16 @@ export function createInitialState(now: number): GameState {
     incidents: { nextAt: 0, lastId: '', active: '', seen: {}, best: {} },
     boss: emptyBoss(),
     stats: { startedAt: now, playTimeMs: 0, offlineTickets: 0 },
-    settings: { haptics: true, sound: true, volume: 0.7, tapSound: 'blue', buyAmount: 1, wallpaper: 'auto', ambienceVolume: 0.4 },
+    settings: {
+      haptics: true,
+      sound: true,
+      volume: DEFAULT_VOLUME.volume,
+      tapSound: 'blue',
+      buyAmount: 1,
+      wallpaper: 'auto',
+      ambienceVolume: DEFAULT_VOLUME.ambienceVolume,
+      taskbar: 'bottom',
+    },
     lastTick: now,
   };
 }

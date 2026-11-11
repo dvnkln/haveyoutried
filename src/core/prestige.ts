@@ -47,6 +47,16 @@ export function canQuit(state: GameState): boolean {
   return prestigeGain(state) >= 1 && !incidentRunning();
 }
 
+/** Punkt an „Karriere“: 0 = Kündigen geht noch nicht, 1 = geht, 2 = lohnt sich richtig (Bonus wächst spürbar) */
+export function quitWorth(state: GameState): 0 | 1 | 2 {
+  // wie canQuit, aber den Gewinn nur einmal rechnen (läuft jeden Frame)
+  const gain = prestigeGain(state);
+  if (gain < 1 || incidentRunning()) return 0;
+  const now = 1 + experienceBonus(state.prestige.experience);
+  const after = 1 + experienceBonus(state.prestige.experience + gain);
+  return after / now >= PRESTIGE.worthIt ? 2 : 1;
+}
+
 /**
  * Kündigen: Erfahrung gutschreiben, Job-Fortschritt zurücksetzen, neue Firma.
  * Mutiert den Zustand an Ort und Stelle (alle UI-Teile halten dieselbe Referenz).
