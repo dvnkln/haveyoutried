@@ -757,6 +757,8 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
       } else if (needsLogin(ctx.state)) login.show(ctx.state.prestige.jobs === 0 ? 'first' : 'job');
       else if (needsOsLogin(ctx.state)) login.show('os');
     },
+    /** neue Minute: Uhr auf dem Anmeldebildschirm */
+    clockTick: () => login.tick(),
     /** Optik ist umgesprungen (Neustart): offene Anmeldung neu beschriften */
     osShown() {
       if (login.active()) login.relabel();

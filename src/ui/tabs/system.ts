@@ -1,4 +1,5 @@
 import { CONFIG } from '../../config';
+import { fill } from '../../util';
 import type { AppContext, Tab } from '../app';
 import { h, quip as quipAt, setText } from '../dom';
 import { formatDuration, formatNumber } from '../format';
@@ -40,7 +41,7 @@ function onSwipe(el: HTMLElement, step: (dir: number) => void, hooks: { down?():
 /** Hinweis über der Taskleisten-Wahl je Aufbau des gezeigten Systems (leer = keiner) */
 const TASKBAR_HINT: Record<OsLayout, string> = {
   taskbar: '',
-  gnome: 'Debiam hat seine Leiste fest oben. Darüber wird nicht diskutiert.',
+  gnome: '{name} hat seine Leiste fest oben. Darüber wird nicht diskutiert.',
   dock: 'Die Leiste oben bleibt oben, verschieben kannst du das Dock.',
 };
 const OS_HINT = 'Jede Firma bringt ihr System mit. Einmal benutzt, bleibt es dir.';
@@ -518,15 +519,17 @@ export function systemTab(): Tab {
       volReset.hidden = !s.settings.sound || s.settings.volume === DEFAULT_VOLUME.volume;
       ambReset.hidden = !s.settings.sound || s.settings.ambienceVolume === DEFAULT_VOLUME.ambienceVolume;
       // Leiste je System: Debiam legt sie fest (oben), bei Dock-Systemen verschiebt die Wahl nur das Dock
-      const layout = osOf(shownOs(s)).layout;
-      setText(tbHint, TASKBAR_HINT[layout]);
+      const shownDef = osOf(shownOs(s));
+      const layout = shownDef.layout;
+      setText(tbHint, fill(TASKBAR_HINT[layout], { name: shownDef.name }));
       tbHint.hidden = !TASKBAR_HINT[layout];
       for (const b of tbButtons) {
         // Radiogruppe: nur die gewählte Position ist per Tab erreichbar
-        const on = b.dataset.pos === s.settings.taskbar;
+        // fest oben (Debiam): „oben“ ist gewählt, egal was gespeichert ist
+        const fixed = layout === 'gnome';
+        const on = b.dataset.pos === (fixed ? 'top' : s.settings.taskbar);
         if (b.getAttribute('aria-checked') !== String(on)) b.setAttribute('aria-checked', String(on));
         if (b.tabIndex !== (on ? 0 : -1)) b.tabIndex = on ? 0 : -1;
-        const fixed = layout === 'gnome';
         if ((b as HTMLButtonElement).disabled !== fixed) (b as HTMLButtonElement).disabled = fixed;
       }
       const os = activeOs(s);

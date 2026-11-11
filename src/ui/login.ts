@@ -5,6 +5,7 @@ import { osOf } from '../content/systems';
 import { markLoggedIn } from '../core/login';
 import type { AppContext } from './app';
 import { h, setText } from './dom';
+import { hhmm } from '../util';
 
 /** Willkommen-Bildschirm wie bei XP: so lange „Willkommen“ steht, bevor der Desktop kommt */
 const WELCOME_MS = 1_100;
@@ -19,6 +20,8 @@ export interface Login {
   el: HTMLElement;
   /** Bildschirm zeigen (Kennwortfeld leer); first = allererster Start, job = neue Firma, os = anderes System (je eigener Kennworthinweis) */
   show(reason: LoginReason): void;
+  /** Uhr auf dem Anmeldebildschirm weiterstellen (app.ts, jede neue Minute) */
+  tick(): void;
   /** Titel und Text an das gerade gezeigte System anpassen (Neustart: erst wenn das Bild dunkel ist) */
   relabel(): void;
   /** Anmeldebildschirm steht (auch während „Willkommen“): Anschläge gehen hierher */
@@ -81,12 +84,12 @@ export function createLogin(ctx: AppContext, onDone: () => void): Login {
   return {
     el,
     relabel,
+    tick: () => setText(clock, hhmm()),
     show(reason) {
       clearTimers();
       typed = 0;
       relabel();
-      const now = new Date();
-      setText(clock, `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);
+      setText(clock, hhmm());
       setText(host, companyOf(ctx.state.prestige.company).host);
       setText(hint, HINTS[reason]);
       setText(dots, '');

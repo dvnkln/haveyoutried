@@ -1,3 +1,4 @@
+import { hhmm } from '../util';
 import { CONFIG, EVENT_EFFECTS } from '../config';
 import { BUFF_LABELS } from '../content/events';
 import { rates } from '../core/economy';
@@ -120,8 +121,7 @@ export function createPager(ctx: AppContext): { el: HTMLElement; device: HTMLEle
       device.setAttribute('aria-label', show ? `Pager: ${eventDef(a!.id)?.title ?? ''}` : 'Pager');
       if (!a || !show) {
         setLevel(0);
-        const d = new Date();
-        setText(lcdTitle, `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`);
+        setText(lcdTitle, hhmm());
         setText(lcdCount, '');
         return;
       }

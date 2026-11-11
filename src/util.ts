@@ -1,3 +1,6 @@
+/** Uhrzeit „HH:MM“ (Uhren in Taskleiste, Anmeldung, Chat, Pager …) */
+export const hhmm = (d: Date = new Date()): string => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+
 export function pick<T>(items: readonly T[], rnd: () => number = Math.random): T {
   const item = items[Math.floor(rnd() * items.length)];
   if (item === undefined) throw new Error('pick() on empty list');

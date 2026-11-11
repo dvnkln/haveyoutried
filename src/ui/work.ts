@@ -32,7 +32,7 @@ import {
   AI_TITLES,
 } from '../content/work';
 import { DEVICE_SETTINGS, TALK_NOTES, TOPICS, topicPool, type Device } from '../content/topics';
-import { fill, pick, randInt, shuffle, weightedPick } from '../util';
+import { fill, hhmm, pick, randInt, shuffle, weightedPick } from '../util';
 import type { AppContext } from './app';
 import { h, setText } from './dom';
 import { companyOf } from '../content/companies';
@@ -185,10 +185,6 @@ const swap = (target: Element | null | undefined, node: HTMLElement) => {
 /** typische Ausgabe nach einem Befehl im Terminal */
 const TERM_OUT = ['OK', '[  OK  ]', 'done.', 'exit 0', '3 warnings (ignoriert)', '1 Datei geändert.', 'Job erledigt.'];
 
-const clock = () => {
-  const d = new Date();
-  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-};
 
 /** Ein Browser für alle Web-Werkzeuge (und die Memes): immer dieselben Tabs offen, der des aktuellen Werkzeugs ist aktiv */
 const BROWSER_TABS: { site: string; title: string }[] = [
@@ -345,7 +341,7 @@ const PROGRAMS: Record<Kind, Program> = {
       ]),
       h('div', { class: 'chat-msg' }, [
         avatar(t.who, 'small'),
-        h('span', { class: 'chat-bubble' }, [t.full, h('span', { class: 'chat-time', text: clock() })]),
+        h('span', { class: 'chat-bubble' }, [t.full, h('span', { class: 'chat-time', text: hhmm() })]),
       ]),
     ],
     lines: (t) => withPrefix(CHAT_LINES, t.line.answer, 0.2),
@@ -415,7 +411,7 @@ const PROGRAMS: Record<Kind, Program> = {
         h('span', { class: 'rdp-task', text: 'Ausführen' }),
         h('span', { class: 'rdp-task rdp-task-dim', text: 'Excel (alt) – Keine Rückmeldung' }),
         h('span', { class: 'rdp-tray', 'aria-hidden': 'true', text: '🔈︎ ⇅' }),
-        h('span', { class: 'rdp-clock', text: clock() }),
+        h('span', { class: 'rdp-clock', text: hhmm() }),
       ]),
     ],
     lines: (t) => topicPool(t.line.topic, 'rdp'),

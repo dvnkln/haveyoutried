@@ -1,3 +1,4 @@
+import { hhmm } from '../util';
 import { CONFIG } from '../config';
 import { randInt } from '../util';
 import { h } from './dom';
@@ -46,7 +47,6 @@ let lastAlarm = randInt(100, 900);
 /** Pager und Incidents sind keine Tickets aus der Warteschlange: eigene Nummernreihe */
 export const nextAlarmId = () => `#ALARM-${String(++lastAlarm).padStart(4, '0')}`;
 
-const clock = (d = new Date()) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 
 const field = (label: string, value: string, cls = '') =>
   h('div', { class: `tk-field ${cls}`.trim() }, [h('span', { class: 'tk-label', text: label }), h('span', { class: 'tk-value', text: value })]);
@@ -69,7 +69,7 @@ export class TicketHistory {
         h('span', { class: 'hist-id', text: t.id }),
         ...(t.vip ? [h('span', { class: 'hist-badge vip', text: 'VIP' })] : []),
         h('span', { class: 'hist-badge', text: t.status }),
-        h('span', { class: 'hist-time', text: clock() }),
+        h('span', { class: 'hist-time', text: hhmm() }),
       ]),
       h('div', { class: 'hist-subject', text: t.subject }),
       h('div', { class: 'hist-meta' }, [

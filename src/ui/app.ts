@@ -24,7 +24,7 @@ import { POWER_HINT, WALLPAPER_MARKS } from '../content/boot';
 import { paintWall } from './wallpaper';
 import { setThemeColor, themeLight } from './power';
 import { achievementCount } from '../core/achievements';
-import { pick } from '../util';
+import { hhmm, pick } from '../util';
 import { gameBlocked } from './blocked';
 
 /** Neustart (crt-restart, 1,4 s): bei diesem Zeitpunkt ist das Bild ganz dunkel */
@@ -451,6 +451,8 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
     // im Spielstand: nach Neuladen mit offener Wahl läuft der Neustart (mit Anmeldung) trotzdem
     ctx.state.os.shown = os;
     document.documentElement.dataset.os = os;
+    // Aufbau der Leisten (taskbar | gnome | dock): main.css richtet die gemeinsamen Regeln danach aus
+    document.documentElement.dataset.layout = osOf(os).layout;
     // Anmeldung (falls offen) zeigt Titel und Text des Systems, das man jetzt sieht
     desk.osShown();
   };
@@ -520,8 +522,6 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
       setText(promptUser, `root@${host}`);
       setText(rate, `+${formatRate(productionPerSec(s))}/s`);
       // Leiste fest oben bei Systemen, die nur eine Leiste oben kennen (Debiam); sonst die Einstellung
-      const barPos = shownOs && osOf(shownOs).layout === 'gnome' ? 'top' : s.settings.taskbar;
-      if (root.dataset.taskbar !== barPos) root.dataset.taskbar = barPos;
       // Betriebssystem (nur Optik, main.css unter html[data-os=…]); an <html> wie der Büro-Stil.
       // Andere Wahl im System-Tab: Neustart erst, wenn die Einstellungen zu sind und nichts anderes läuft
       // (ein Incident schließt die Einstellungen auch: dann erst danach)
@@ -531,14 +531,20 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
         restart();
         bus.emit('osChanged', { os });
       }
+      // Leiste: fest oben bei Systemen, die nur eine Leiste oben kennen (Debiam), sonst die Einstellung.
+      // Nach dem System, damit schon das erste Bild stimmt
+      const barPos = shownOs && osOf(shownOs).layout === 'gnome' ? 'top' : s.settings.taskbar;
+      if (root.dataset.taskbar !== barPos) root.dataset.taskbar = barPos;
       // Uhr nur, wenn eine neue Minute angefangen hat (render läuft jeden Frame)
       const minute = Math.floor(Date.now() / 60_000);
       if (minute !== clockMinute) {
         clockMinute = minute;
         const now = new Date();
-        setText(clockH, String(now.getHours()).padStart(2, '0'));
-        setText(clockM, String(now.getMinutes()).padStart(2, '0'));
-        setText(topClock, `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);
+        const [hh, mm] = hhmm(now).split(':');
+        setText(clockH, hh!);
+        setText(clockM, mm!);
+        setText(topClock, hhmm(now));
+        desk.clockTick();
       }
       // Incident, Dialog, Monitor oder Licht aus: Launcher zu
       if (launcherOpen && gameBlocked()) closeLauncher();
