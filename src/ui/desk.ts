@@ -2,7 +2,7 @@ import { bus } from '../core/bus';
 import { CONFIG } from '../config';
 import { NEXT_TOOL_HINT, TOOL_HINT } from '../content/boot';
 import { HINT_DELAY_MS } from './power';
-import { CALLBACK_LINES, CALLERS, situationalCalls, type Call, type Line } from '../content/callers';
+import { availableCallers, CALLBACK_LINES, situationalCalls, type Call, type Line } from '../content/callers';
 import { topicPool } from '../content/topics';
 import { URGENT_LABELS, URGENT_TEXT } from '../content/events';
 import { VIP_TICKETS } from '../content/work';
@@ -280,8 +280,10 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
     const situational = situationalCalls(ctx.state, new Date()).filter((c) => !recent.includes(c.text));
     if (situational.length > 0 && Math.random() < CONFIG.callerSituationalChance) return pick(situational);
 
-    let caller = pick(CALLERS);
-    while (CALLERS.length > 1 && caller.who === call?.who) caller = pick(CALLERS);
+    // nur Anrufer, die es in dieser Firma (gerade) gibt
+    const callers = availableCallers(ctx.state);
+    let caller = pick(callers);
+    while (callers.length > 1 && caller.who === call?.who) caller = pick(callers);
     return { face: caller.face, who: caller.who, ...fresh(caller.lines) };
   };
 

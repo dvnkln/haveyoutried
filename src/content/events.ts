@@ -1,5 +1,6 @@
 import { CONFIG, type EventEffectId } from '../config';
 import type { GameState } from '../core/state';
+import { atCompany } from './gates';
 import type { LogTemplate } from './syslog';
 
 export interface Outcome {
@@ -206,9 +207,9 @@ export const EVENTS: GameEventDef[] = [
   {
     id: 'coffee',
     title: 'Kaffeemaschine kaputt',
-    text: 'Die Kaffeemaschine im 3. OG zeigt seit 2017 „Entkalken“. Jetzt geht sie gar nicht mehr. Das ganze Büro schaut dich an.',
+    text: 'Die Kaffeemaschine im 3. OG zeigt „Fehler 47“. Das Handbuch kennt nur Fehler 1 bis 12. Das ganze Büro schaut dich an.',
     options: [
-      { label: 'Reparieren', outcomes: [o('rush', 'Entkalkt. Erste Tasse. Das Büro feiert dich. Die Tickets fliegen.')] },
+      { label: 'Reparieren', outcomes: [o('rush', 'Fehler 47 war der Wassertank. Leer. Erste Tasse. Das Büro feiert dich. Die Tickets fliegen.')] },
       {
         label: '„Nicht unser Bereich“',
         outcomes: [
@@ -322,17 +323,19 @@ export const EVENTS: GameEventDef[] = [
   },
   {
     id: 'bobby',
-    title: 'Anruf von der Schule',
-    text: 'Die Schulsoftware hat alle Schüler gelöscht. Der neue Schüler heißt laut Anmeldung Robert\'); DROP TABLE Schueler;--',
+    title: 'Anruf aus der Verwaltung',
+    text: 'Die Anmeldesoftware hat alle Anmeldungen gelöscht. Die neueste heißt laut Formular Robert\'); DROP TABLE Anmeldungen;--',
+    // nur wo Leute angemeldet werden (Kita, Uni)
+    when: atCompany('kita', 'uni'),
     options: [
       {
         label: 'Backup einspielen und Eingaben bereinigen',
-        outcomes: [o('win', 'Backup zurück, Eingaben werden jetzt escaped. Hoffentlich lernt die Schule daraus.')],
+        outcomes: [o('win', 'Backup zurück, Eingaben werden jetzt escaped. Hoffentlich lernt die Verwaltung daraus.')],
       },
       { label: 'Den Namen verbieten', outcomes: [o('tip', 'Klammern und Semikolons sind in Namen jetzt verboten. Familie O\'Brien ist empört.')] },
       { label: 'Den kleinen Bobby zum Admin machen', outcomes: [o('flow', 'Der Junge hat Talent. Er findet in einer Stunde 14 weitere Lücken.')] },
     ],
-    ignore: o('loss', 'Am nächsten Tag heißt eine neue Schülerin \' OR 1=1;--. Alle Zeugnisse: 1,0.'),
+    ignore: o('loss', 'Am nächsten Tag heißt eine neue Anmeldung \' OR 1=1;--. Seitdem sind alle Plätze vergeben. An sie.'),
   },
   {
     id: 'nebraska',
@@ -611,11 +614,11 @@ export const EVENTS: GameEventDef[] = [
       { label: 'Mit Herz reagieren', outcomes: [o('tip', 'Dein Herz ist das einzige. Der CEO erwähnt dich lobend im nächsten Newsletter. Weihnachtsgeld gibt es trotzdem keins.')] },
       {
         label: 'Antworten-an-alle verhindern',
-        outcomes: [o('win', 'Du sperrst „Allen antworten“ für den Verteiler. Damit verhinderst du 412 Antworten und einen Betriebsratsbeschluss. Held.')],
+        outcomes: [o('win', 'Du sperrst „Allen antworten“ für den Verteiler. Die Empörung bleibt im Flurfunk, wo sie hingehört. Held.')],
       },
       { label: 'Fragen, ob die Familie Gehaltsgespräche führt', outcomes: [o('lossSmall', 'Der CEO lädt dich zu einem „Familiengespräch“ ein. 45 Minuten. Mit Folien.')] },
     ],
-    ignore: o('fire', 'Niemand hat reagiert. Dann haben alle reagiert. An alle. Der Mailserver ist in Trauer.'),
+    ignore: o('loss', 'Niemand hat reagiert. Der Betriebsrat schon: mit einer Gegen-Mail an alle. Einziger Satz: „Familien zahlen Taschengeld.“ Die Stimmung kippt.'),
   },
   {
     id: 'cablepics',
@@ -712,7 +715,7 @@ export const EVENTS: GameEventDef[] = [
   {
     id: 'kamerateam',
     title: 'Kamerateam im Büro',
-    text: 'Ein Fernsehteam dreht eine Doku über „das echte Büroleben“. Der Abteilungsleiter trägt plötzlich Krawatte und duzt alle. Die Kamera steht direkt neben deinem Schreibtisch.',
+    text: 'Ein Fernsehteam dreht eine Doku über „das echte Büroleben“. Der Chef trägt plötzlich Krawatte und duzt alle. Die Kamera steht direkt neben deinem Schreibtisch.',
     options: [
       {
         label: 'Direkt in die Kamera gucken',
@@ -729,9 +732,9 @@ export const EVENTS: GameEventDef[] = [
   {
     id: 'standort',
     title: 'Gerücht: Standort zu',
-    text: 'Auf dem Flur heißt es: Die Zentrale legt Standorte zusammen. Der Abteilungsleiter versichert allen, dass nichts passiert. Er hat dabei sehr rote Ohren.',
+    text: 'Auf dem Flur heißt es: Die Zentrale legt Standorte zusammen. Der Chef versichert allen, dass nichts passiert. Er hat dabei sehr rote Ohren.',
     options: [
-      { label: 'Das Netz sauber dokumentieren', outcomes: [o('win', 'Du dokumentierst alles. Die Zentrale ist beeindruckt und lässt den Standort, wo er ist. Der Abteilungsleiter erzählt, er habe das verhandelt.')] },
+      { label: 'Das Netz sauber dokumentieren', outcomes: [o('win', 'Du dokumentierst alles. Die Zentrale ist beeindruckt und lässt den Standort, wo er ist. Der Chef erzählt, er habe das verhandelt.')] },
       { label: 'Den Chef beruhigen', outcomes: [o('lossSmall', 'Der Chef hält dir einen Vortrag über Loyalität, Teamgeist und seinen alten Sportverein. 40 Minuten. Am Ende umarmt er dich.')] },
       { label: 'In den Papierkorb gucken', outcomes: [o('tip', 'Drei Bewerbungen im Papierkorb. Eine davon vom Chef. Du sagst nichts. Er weiß, dass du es weißt. Du hast eine Woche Ruhe.')] },
     ],
@@ -740,7 +743,7 @@ export const EVENTS: GameEventDef[] = [
   {
     id: 'betriebsfeier',
     title: 'Betriebsfeier',
-    text: 'Der Abteilungsleiter organisiert die Feier selbst. Programmpunkt eins: seine Rede. Punkt zwei: Karaoke, er fängt an. Du sollst Beamer und Mikrofon machen.',
+    text: 'Der Chef organisiert die Feier selbst. Programmpunkt eins: seine Rede. Punkt zwei: Karaoke, er fängt an. Du sollst Beamer und Mikrofon machen.',
     weight: (_s, d) => (d.getMonth() === 11 ? 3 : 1),
     options: [
       { label: 'Technik aufbauen', outcomes: [o('win', 'Beamer läuft, Mikro läuft. Der Chef singt drei Lieder. Die Abteilung dankt dir still für den Lautstärkeregler, den nur du bedienen kannst.')] },
@@ -829,7 +832,7 @@ export const EVENTS: GameEventDef[] = [
   {
     id: 'jahresgespraech',
     title: 'Mitarbeitergespräch',
-    text: 'Der Abteilungsleiter lädt zum Jahresgespräch. Laut Einladung: „Feedback in beide Richtungen“. Er hat 50 Minuten für sich eingeplant und 10 für dich.',
+    text: 'Der Chef lädt zum Jahresgespräch. Laut Einladung: „Feedback in beide Richtungen“. Er hat 50 Minuten für sich eingeplant und 10 für dich.',
     options: [
       { label: 'Zuhören und nicken', outcomes: [o('tip', 'Du nickst 50 Minuten. Er sagt, du seist „ein guter Zuhörer, das ist selten in der IT“. Das war dein Feedback.')] },
       {
@@ -846,7 +849,7 @@ export const EVENTS: GameEventDef[] = [
   {
     id: 'dienstwagen',
     title: 'WLAN im Dienstwagen',
-    text: 'Der Abteilungsleiter aus dem 2. OG prahlt mit WLAN im Dienstwagen. Deiner hat seit gestern auch welches: ein altes Diensthandy im Handschuhfach. Jetzt will er wissen, wessen schneller ist. Vor dem Mittagessen.',
+    text: 'Der Chef vom 2. OG prahlt mit WLAN im Dienstwagen. Deiner hat seit gestern auch welches: ein altes Diensthandy im Handschuhfach. Jetzt will er wissen, wessen schneller ist. Vor dem Mittagessen.',
     options: [
       { label: 'Netzname umbenennen', outcomes: [o('rush', 'Das Netz heißt jetzt „Chef_5G_Ultra“. Gleiche Geschwindigkeit, gefühlt doppelt. Er fährt eine Stunde im Kreis. Ruhe im Büro.')] },
       { label: 'Erklären, dass es dasselbe Netz ist', outcomes: [o('lossSmall', 'Du erklärst Mobilfunk. Er hört nur „dasselbe“ und ist gekränkt. Den Rest des Tages kommen Fragen per Mail. Mit drei Ausrufezeichen.')] },

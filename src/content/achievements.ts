@@ -90,7 +90,8 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   a('fridayFail', 'Welches Wochenende?', 'Freitag 16:55 durchgewunken. Es lief nicht.', evHappened('friday', 'Durchwinken', 'fireBig'), true),
   a('replyall', 'Reply-All-Sturm', 'Eine Warnung an alle geschickt. Alle haben geantwortet.', evHappened('phishing', 'Rundmail: „Nicht klicken!“', 'fire'), true),
   a('unplug', 'Du hast ihn ausgesteckt.', 'Den Server unterm Tisch ausgesteckt. Die Lohnabrechnung erinnert sich.', evHappened('beep', 'Ausstecken', 'fireBig'), true),
-  a('bobby', 'Little Bobby Tables', 'Die Schuldatenbank gerettet und Eingaben bereinigt.', evHappened('bobby', 'Backup einspielen und Eingaben bereinigen', 'win')),
+  // geheim: das Ereignis gibt es nur in Kita und Uni
+  a('bobby', 'Little Bobby Tables', 'Die Anmeldedatenbank gerettet und Eingaben bereinigt.', evHappened('bobby', 'Backup einspielen und Eingaben bereinigen', 'win'), true),
   a('internetbox', 'Das ist das Internet.', 'Dem Chef einen schwarzen Kasten mit Lämpchen geliehen. Der Vorstand war begeistert.', evHappened('internet', 'Schwarzen Kasten mit Lämpchen geben', 'jackpot')),
   a('nebraska', 'Die Person in Nebraska', 'Die Bibliothek geforkt, auf der alles steht. Jetzt bist du es.', evHappened('nebraska', 'Forken und selbst pflegen', 'overtime')),
   a('firemail', 'Ich schick dazu eine Mail', 'Bei Rauch im Serverraum der Feuerwehr gemailt.', evHappened('fire', 'Mail an die Feuerwehr schreiben', 'fire'), true),

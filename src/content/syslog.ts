@@ -52,11 +52,11 @@ export const BOFH_EXCUSES = [
 /** Hintergrundrauschen im Syslog. {pid} wird zufällig ersetzt. */
 export const AMBIENT: LogTemplate[] = [
   // Stromberg
-  t('info', 'kuehlschrank[4]: Joghurt „Abteilungsleiter – NICHT ESSEN“ seit 14 Tagen drin. Status: lebt.'),
+  t('info', 'kuehlschrank[4]: Joghurt „Chef – NICHT ESSEN“ seit 14 Tagen drin. Status: lebt.'),
   t('warn', 'hr[12]: Beschwerde eingegangen. Betreff: „Witz in der Teamrunde“. Absender: alle.'),
-  t('info', 'calendar[{pid}]: Abteilungsleiter hat seinen Geburtstag eingetragen. Erinnerung an alle. Drei Wochen vorher.'),
-  t('info', 'postfix[25]: Rundmail „Liebe Mitarbeiter“ vom Abteilungsleiter. 4 Seiten, 1 Kalenderspruch, 0 Inhalt.'),
-  t('warn', 'hr[12]: Abteilungsleiter 2. OG befördert. Unserer hat seitdem Migräne.'),
+  t('info', 'calendar[{pid}]: Chef hat seinen Geburtstag eingetragen. Erinnerung an alle. Drei Wochen vorher.'),
+  t('info', 'postfix[25]: Rundmail „Liebe Mitarbeiter“ vom Chef. 4 Seiten, 1 Kalenderspruch, 0 Inhalt.'),
+  t('warn', 'hr[12]: Chef vom 2. OG befördert. Unserer hat seitdem Migräne.'),
   // Klassiker
   t('info', 'teams[{pid}]: user is typing… (for 14 minutes now)'),
   t('warn', 'named[53]: SERVFAIL resolving intranet.local'),

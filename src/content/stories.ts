@@ -1,5 +1,6 @@
 import type { GameState } from '../core/state';
 import { q, f, type Call, type Line } from './callers';
+import { HERRK_COMPANY, atCompany, storyAtKey, storyKey } from './gates';
 
 // Geschichten am Telefon: dieselben Leute rufen in Abständen wieder an, die Sache geht weiter.
 // Fortschritt pro Firma (neue Firma, neue Geschichten). Jede Folge ist ein normales Anliegen mit
@@ -47,6 +48,8 @@ export const STORIES: Story[] = [
   },
   {
     id: 'herrk',
+    // Herr K. gibt es nur bei der Spedition (erste Firma)
+    when: atCompany(HERRK_COMPANY),
     episodes: [
       ep('(◔_◔)', 'Herr K. (seit 1987 dabei)', q('allgemein', 'Ich gehe bald in Rente. Nur zur Info: Das Passwort für den Großrechner kenne nur ich.', 'Wissen nur in einem Kopf', 'Gut, dass Sie es sagen! Wir machen einen Termin. Sie erzählen, ich schreibe mit. Diesmal gibt es Doku.')),
       ep('(◔_◔)', 'Herr K. (seit 1987 dabei)', q('allgemein', 'Für die Übergabe: meine Doku. 40 Seiten. Handschriftlich. Auf Durchschlagpapier.', 'Doku auf Durchschlagpapier', 'Großartig. Ehrlich. Ich scanne das ein. Seite 12 ist leider nur ein Kaffeefleck. Was stand da?')),
@@ -75,16 +78,16 @@ export const STORIES: Story[] = [
   {
     id: 'doku',
     episodes: [
-      ep('(¬‿¬)', 'Abteilungsleiter', q('wunsch', 'Montag kommt ein Kamerateam. Können Sie das Büro moderner aussehen lassen? Mehr Bildschirme, mehr Blinken.', 'Büro soll für die Kamera gut aussehen', 'Ich lasse die Tür zum Serverraum offen. Da blinkt alles sehr professionell. Mehr Blinken ist nicht drin.')),
-      ep('(・o・)', 'Kamerateam', f('netz', 'Wir sind vom Fernsehen. Ihr WLAN-Passwort, bitte? Für den Upload.', 'Gäste-WLAN fürs Kamerateam', 'Sie sind im Gäste-WLAN, ins Firmennetz kommen Sie nicht. Der Abteilungsleiter wollte auch rein. Er ist jetzt auch im Gäste-WLAN.', [])),
-      ep('(¬‿¬)', 'Abteilungsleiter', q('wunsch', 'Können Sie die Aufnahme von gestern löschen? Ich hab was über die Zentrale gesagt. Und über das Catering. Und nochmal über die Zentrale.', 'Peinliche Aufnahme', 'Das Material gehört dem Sender, nicht uns. Löschen kann ich nichts. Ich kann Ihnen aber die Nummer der Rechtsabteilung raussuchen.')),
-      ep('(¬‿¬)', 'Abteilungsleiter', q('allgemein', 'Die Doku läuft heute Abend! Können wir sie in der Kantine auf dem großen Bildschirm zeigen?', 'Doku-Abend in der Kantine', 'Der Bildschirm ist eingerichtet. Ich habe vorher reingeschaut. Vielleicht bleiben Sie morgen im Homeoffice.')),
+      ep('(¬‿¬)', 'Chef', q('wunsch', 'Montag kommt ein Kamerateam. Können Sie das Büro moderner aussehen lassen? Mehr Bildschirme, mehr Blinken.', 'Büro soll für die Kamera gut aussehen', 'Ich lasse die Tür zum Serverraum offen. Da blinkt alles sehr professionell. Mehr Blinken ist nicht drin.')),
+      ep('(・o・)', 'Kamerateam', f('netz', 'Wir sind vom Fernsehen. Ihr WLAN-Passwort, bitte? Für den Upload.', 'Gäste-WLAN fürs Kamerateam', 'Sie sind im Gäste-WLAN, ins Firmennetz kommen Sie nicht. Der Chef wollte auch rein. Er ist jetzt auch im Gäste-WLAN.', [])),
+      ep('(¬‿¬)', 'Chef', q('wunsch', 'Können Sie die Aufnahme von gestern löschen? Ich hab was über die Zentrale gesagt. Und über das Catering. Und nochmal über die Zentrale.', 'Peinliche Aufnahme', 'Das Material gehört dem Sender, nicht uns. Löschen kann ich nichts. Ich kann Ihnen aber die Nummer der Rechtsabteilung raussuchen.')),
+      ep('(¬‿¬)', 'Chef', q('allgemein', 'Die Doku läuft heute Abend! Können wir sie in der Kantine auf dem großen Bildschirm zeigen?', 'Doku-Abend in der Kantine', 'Der Bildschirm ist eingerichtet. Ich habe vorher reingeschaut. Vielleicht bleiben Sie morgen im Homeoffice.')),
     ],
   },
 ];
 
-const stepKey = (s: GameState, id: string) => `story:${s.prestige.company}:${id}`;
-const atKey = (s: GameState, id: string) => `storyAt:${s.prestige.company}:${id}`;
+const stepKey = (s: GameState, id: string) => storyKey(s.prestige.company, id);
+const atKey = (s: GameState, id: string) => storyAtKey(s.prestige.company, id);
 
 /** Nächste fällige Folge einer Geschichte (oder null) */
 export function dueStoryCall(state: GameState, now: number): { id: string; call: Call } | null {

@@ -105,3 +105,4 @@ describe('Texte', () => {
     expect(quirkEffects({ incidents: 2 })[0]).toEqual({ text: 'Incidents ×2', tone: 'mixed' });
   });
 });
+

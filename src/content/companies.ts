@@ -114,7 +114,7 @@ export const COMPANIES: Company[] = [
     office: 'konzern',
     name: 'Versicherung, Abteilung Schadensregulierung M–Z',
     host: 'vers-schaden-mz',
-    welcome: 'Dein Abteilungsleiter erklärt das Büro mit Vergleichen aus dem Wasserball. Du verstehst keinen davon.',
+    welcome: 'Dein Chef erklärt das Büro mit Vergleichen aus dem Wasserball. Du verstehst keinen davon.',
     quirk: { title: 'Wasserball-Vergleiche', flavor: 'Motivierend. Man tippt schneller, versteht aber weniger.', mods: { tempo: 1.1, reward: 0.91 } },
   },
   {

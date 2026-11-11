@@ -280,7 +280,7 @@ export const MAIL_TITLES: string[] = ['Posteingang (4.812 ungelesen)', 'Posteing
 export const MAIL_SIGS: string[] = [
   '-- Mit freundlichen Grüßen, Ihre IT (Durchwahl -666)',
   '-- Gesendet aus dem Keller',
-  '-- Bitte denken Sie an die Umwelt, bevor Sie diese Mail ausdrucken. Herr K., Sie sind gemeint.',
+  '-- Bitte denken Sie an die Umwelt, bevor Sie diese Mail ausdrucken. Ja, Sie.',
   '-- Ihre IT. Haben Sie es schon aus- und wieder eingeschaltet?',
 ];
 /** Status im Ticketsystem, bevor man antwortet */

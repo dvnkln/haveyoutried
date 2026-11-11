@@ -1,7 +1,7 @@
 import { CONFIG, SOLVE } from '../config';
 import { espressoActive } from '../core/actions';
 import { ticketWork } from '../core/economy';
-import { CALLERS, QUEUE_LINE, type Call, type Line } from '../content/callers';
+import { availableCallers, QUEUE_LINE, type Call, type Line } from '../content/callers';
 import {
   BOSSES,
   STREAK_LINES,
@@ -499,7 +499,7 @@ export function createWork(
   };
   /** Ticket aus der Warteschlange: jemand anderes als der aktuelle Anrufer, nichts gerade Bearbeitetes */
   const queued = (current: Call) => {
-    const others = CALLERS.filter((c) => !current.who.startsWith(c.who));
+    const others = availableCallers(ctx.state).filter((c) => !current.who.startsWith(c.who));
     const taken = (l: Line) => recent.includes(l.text) || l.text === current.text || l.text === current.about;
     let c = pick(others);
     let line = pick(c.lines);

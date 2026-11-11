@@ -58,7 +58,7 @@ export const REPORT_ITEMS: ReportItem[] = [
   },
   {
     when: (s) => s.generators.bash.owned > 0,
-    text: () => 'Im Ordner der Buchhaltung liegt ein „fix_all.sh“. Darf man das doppelklicken? (Ich hab schon.)',
+    text: () => 'Auf dem Server liegen Dateien, die auf „.sh“ enden. Sind das Viren? Ich hab sie vorsichtshalber nicht gelöscht. Nur umbenannt.',
   },
   {
     when: (s) => s.generators.cron.owned > 0,
@@ -66,11 +66,11 @@ export const REPORT_ITEMS: ReportItem[] = [
   },
   {
     when: (s) => s.generators.ansible.owned > 0,
-    text: () => 'Mein Laptop hat heute Nacht ein Update bekommen und heißt jetzt „webserver-prod-07“. Normal?',
+    text: () => 'Ich wollte etwas in der Firewall ändern. Eine Stunde später war es von selbst zurückgeändert. Wer ist dieses Ansible, und warum ist es stärker als ich?',
   },
   {
     when: (s) => s.generators.k8s.owned > 0,
-    text: () => 'Das Wiki war die ganze Zeit hochverfügbar. Gelesen hat es trotzdem niemand. Kann man das abbestellen?',
+    text: () => 'Die Server haben sich nachts immer wieder selbst neu gestartet. Laut Log heißt das „Self-Healing“. Klingt nach Wellness. Zahlen wir dafür?',
   },
   {
     when: (s) => s.generators.agent.owned > 0,
@@ -78,7 +78,7 @@ export const REPORT_ITEMS: ReportItem[] = [
   },
   {
     when: (s) => s.generators.undertable.owned > 0,
-    text: () => 'Unter einem Tisch im 2. OG brummt es. Die Reinigungskraft will wissen, ob sie den Stecker ziehen darf. Ich habe „nein“ gesagt. Richtig?',
+    text: () => 'Die Reinigungskraft sagt, unter einem Tisch im 2. OG ist es warm wie in einer Sauna. Sie macht dort jetzt Pause. Ist das ein Problem?',
   },
 ];
 

@@ -111,7 +111,7 @@ export const TRASH_LINES: string[] = [
   'trash[99]: Inhalt: ein Ordner „Nicht löschen“. Ironie erkannt.',
   'trash[99]: Wiederherstellen? Nein. Das hat einen Grund.',
   'trash[99]: 1 Element: „Kündigung_Entwurf.docx“. Nur ein Entwurf.',
-  'trash[99]: „Witze_Teamrunde_v3.docx“ vom Abteilungsleiter. Zu Recht hier.',
+  'trash[99]: „Witze_Teamrunde_v3.docx“ vom Chef. Zu Recht hier.',
 ];
 
 /**
