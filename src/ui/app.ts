@@ -2,6 +2,7 @@ import type { Saver } from '../core/save';
 import type { GameState } from '../core/state';
 import { bus } from '../core/bus';
 import { bossProgress } from '../core/boss';
+import { activeOs } from '../core/os';
 import { productionPerSec, rates } from '../core/economy';
 import { addTickets } from '../core/state';
 import type { Sfx } from './audio';
@@ -487,6 +488,9 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
       setText(promptUser, `root@${host}`);
       setText(rate, `+${formatRate(productionPerSec(s))}/s`);
       if (root.dataset.taskbar !== s.settings.taskbar) root.dataset.taskbar = s.settings.taskbar;
+      // Betriebssystem (nur Optik, main.css unter html[data-os=…]); an <html> wie der Büro-Stil
+      const os = activeOs(s);
+      if (document.documentElement.dataset.os !== os) document.documentElement.dataset.os = os;
       // Uhr nur, wenn eine neue Minute angefangen hat (render läuft jeden Frame)
       const minute = Math.floor(Date.now() / 60_000);
       if (minute !== clockMinute) {

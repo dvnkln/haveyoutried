@@ -1,5 +1,6 @@
 import { CONFIG } from '../config';
 import { migrateLogin } from './login';
+import { migrateOs } from './os';
 import { BUY_AMOUNTS, TAP_SOUND_IDS, TASKBAR_POSITIONS, createInitialState, SAVE_VERSION, type BuyAmount, type GameState } from './state';
 
 export const SAVE_KEY = 'hyt.save';
@@ -109,6 +110,8 @@ export function deserialize(json: string, now: number): GameState | null {
   state.settings.ambienceVolume = Math.min(1, Math.max(0, state.settings.ambienceVolume));
   if (isPlain(data.settings) && data.settings.ambience === false) state.settings.ambienceVolume = 0;
   migrateLogin(state);
+  // eigene Prüfung: der Merge oben behält nur Schlüssel, die schon im Standard stehen (win98)
+  migrateOs(state, data.os);
   return state;
 }
 

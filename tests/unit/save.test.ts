@@ -21,7 +21,8 @@ describe('Spielstand', () => {
     expect(s.generators.cron.owned).toBe(0);
     expect(s.settings.haptics).toBe(true);
     expect(s.prestige).toEqual({ experience: 0, jobs: 0, company: 'mueller' });
-    expect(s.flags).toEqual({});
+    // alter Stand bei Müller & Söhne: 98 kommt zu XP dazu, mit Hinweis
+    expect(s.flags).toEqual({ 'os:notice': 1 });
   });
 
   it('verwirft kaputte Werte', () => {

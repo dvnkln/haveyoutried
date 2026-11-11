@@ -1,5 +1,6 @@
 import { emptyBoss, type BossState } from './boss';
 import { GENERATORS, type GeneratorId } from '../config';
+import type { OsId } from '../content/systems';
 
 export const SAVE_VERSION = 3;
 
@@ -58,6 +59,8 @@ export interface GameState {
   incidents: { nextAt: number; lastId: string; active: string; seen: Record<string, number>; best: Record<string, number> };
   // ---
 
+  /** Betriebssysteme (nur Optik): freigeschaltet für immer, eigene Wahl je Firma (core/os.ts) */
+  os: { unlocked: Partial<Record<OsId, true>>; pick: Record<string, OsId> };
   /** Aufgabe vom Chef (kleines Ziel für die nächsten Minuten) */
   boss: BossState;
   stats: { startedAt: number; playTimeMs: number; offlineTickets: number };
@@ -97,6 +100,8 @@ export function createInitialState(now: number): GameState {
     achievements: {},
     prestige: { experience: 0, jobs: 0, company: 'mueller' },
     flags: {},
+    // erste Firma (Müller & Söhne) läuft auf 98
+    os: { unlocked: { win98: true }, pick: {} },
     events: { nextAt: 0, active: null, lastId: '', seen: {} },
     buffs: [],
     incidents: { nextAt: 0, lastId: '', active: '', seen: {}, best: {} },

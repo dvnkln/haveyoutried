@@ -1,10 +1,9 @@
 import { GENERATORS, PRESTIGE } from '../config';
-import { COMPANIES } from '../content/companies';
-import { pick } from '../util';
 import { bus } from './bus';
 import { scheduleNext } from './events';
 import { incidentRunning, scheduleNextIncident } from './incidents';
 import { resetBoss } from './boss';
+import { nextCompany, unlockCompanyOs } from './os';
 import { bumpFlag, type GameState } from './state';
 
 /** Gesamte Berufserfahrung, die Tickets aller Jobs zusammen wert sind. */
@@ -67,10 +66,8 @@ export function quitJob(state: GameState, rnd: () => number = Math.random): numb
   state.prestige.experience += gained;
   state.prestige.jobs += 1;
   bumpFlag(state, `company:${state.prestige.company}`);
-  state.prestige.company = pick(
-    COMPANIES.filter((c) => c.id !== state.prestige.company),
-    rnd,
-  ).id;
+  state.prestige.company = nextCompany(state, rnd).id;
+  unlockCompanyOs(state);
 
   state.tickets = 0;
   state.ticketsTotal = 0;
