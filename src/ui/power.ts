@@ -26,11 +26,11 @@ const SMART_RETRY_MS = 500;
 const SMART_START_MS = 500;
 
 /**
- * Farbe der Statusleiste und des unteren Rands: immer dunkel, wie die Navigationsleiste unten
+ * Farbe der Statusleiste: immer dunkel, gleich wie die Navigationsleiste unten (theme_color im Manifest)
  * (die Wand hat oft Tapetenmuster, eine einfarbige Leiste passt dazu nie richtig).
  */
 const HEX = /^#[0-9a-f]{6}$/i;
-export const THEME_DARK = '#2d2932';
+export const THEME_DARK = '#120f18';
 const meta = () => document.querySelector('meta[name="theme-color"]');
 const rgb = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
 let fadeFrame = 0;
