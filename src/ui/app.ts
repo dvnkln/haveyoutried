@@ -3,6 +3,7 @@ import type { GameState } from '../core/state';
 import { bus } from '../core/bus';
 import { bossProgress } from '../core/boss';
 import { activeOs } from '../core/os';
+import type { OsId } from '../content/systems';
 import { productionPerSec, rates } from '../core/economy';
 import { addTickets } from '../core/state';
 import type { Sfx } from './audio';
@@ -25,6 +26,9 @@ import { setThemeColor, themeLight } from './power';
 import { achievementCount } from '../core/achievements';
 import { pick } from '../util';
 import { gameBlocked } from './blocked';
+
+/** Neustart (crt-restart, 1,4 s): bei diesem Zeitpunkt ist das Bild ganz dunkel */
+const OS_SWAP_MS = 500;
 
 export interface AppContext {
   state: GameState;
@@ -432,13 +436,31 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
     lastConfetti = now;
     confettiAt(12);
   });
-  bus.on('jobQuit', () => {
-    // „Have you tried turning it off and on again?“
+  /** gezeigtes System; weicht die Wahl davon ab, startet der Rechner neu, sobald kein Fenster mehr offen ist */
+  let shownOs: OsId | null = null;
+  /** Neustart läuft: die Optik springt erst um, wenn das Bild dunkel ist */
+  let osSwap = 0;
+  const applyOs = (os: OsId) => {
+    shownOs = os;
+    document.documentElement.dataset.os = os;
+  };
+  // „Have you tried turning it off and on again?“ Bild aus, kurz dunkel, wieder an (Kündigen, anderes System)
+  const restart = () => {
     closeLauncher();
-    if (active) closeSheet();
+    // Sprechblasen aus den Einstellungen gehören zum alten Bild
+    for (const q of document.querySelectorAll('.quip')) q.remove();
     screen.classList.remove('crt-restart');
     void screen.offsetWidth;
     screen.classList.add('crt-restart');
+    clearTimeout(osSwap);
+    osSwap = window.setTimeout(() => {
+      osSwap = 0;
+      applyOs(activeOs(ctx.state));
+    }, OS_SWAP_MS);
+  };
+  bus.on('jobQuit', () => {
+    if (active) closeSheet();
+    restart();
     setTimeout(() => confettiAt(20), 900);
   });
   screen.addEventListener('animationend', (e) => {
@@ -488,9 +510,14 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
       setText(promptUser, `root@${host}`);
       setText(rate, `+${formatRate(productionPerSec(s))}/s`);
       if (root.dataset.taskbar !== s.settings.taskbar) root.dataset.taskbar = s.settings.taskbar;
-      // Betriebssystem (nur Optik, main.css unter html[data-os=…]); an <html> wie der Büro-Stil
+      // Betriebssystem (nur Optik, main.css unter html[data-os=…]); an <html> wie der Büro-Stil.
+      // Andere Wahl im System-Tab: Neustart erst, wenn die Einstellungen zu sind
       const os = activeOs(s);
-      if (document.documentElement.dataset.os !== os) document.documentElement.dataset.os = os;
+      if (shownOs === null) applyOs(os);
+      else if (os !== shownOs && !osSwap && !active) {
+        restart();
+        bus.emit('osChanged', { os });
+      }
       // Uhr nur, wenn eine neue Minute angefangen hat (render läuft jeden Frame)
       const minute = Math.floor(Date.now() / 60_000);
       if (minute !== clockMinute) {

@@ -16,6 +16,8 @@ import { isSolved } from '../core/incidents';
 import { ACHIEVEMENTS } from '../content/achievements';
 import { checkAchievements } from '../core/achievements';
 import { companyOf } from '../content/companies';
+import { osOf } from '../content/systems';
+import { OS_NOTICE_FLAG } from '../core/os';
 import { ACHIEVEMENTS_CFG } from '../config';
 import { bus } from '../core/bus';
 import { BOSS_DONE, BOSS_FAILED } from '../content/boss';
@@ -134,11 +136,22 @@ export function startFlavor(ctx: AppContext, app: App): void {
     haptic('milestone');
     bulk.length = 0;
   });
-  bus.on('jobQuit', ({ gained, company }) => {
+  bus.on('jobQuit', ({ gained, company, newOs }) => {
     const c = companyOf(company);
     log.write('warn', `hr[201]: Kündigung eingegangen. Resturlaub: 0 Tage. Berufserfahrung +${gained}.`);
     log.write('info', `login[1]: welcome to ${c.host}. ${c.welcome}`);
+    if (newOs) {
+      const name = osOf(newOs).name;
+      log.write('ok', `setup[1]: ${name} eingerichtet. Treiber: 3 von 11 gefunden, der Rest heißt „Standard-VGA“.`);
+      app.toast(`Neues Betriebssystem: ${name}`, 'Die neue Firma hat es schon drauf. Bleibt dir für immer, umstellen unter System → Optik.', 'os');
+    }
   });
+  // alter Spielstand: das System der Firma kam mit dem Update dazu, XP läuft weiter
+  if (state.flags[OS_NOTICE_FLAG]) {
+    delete state.flags[OS_NOTICE_FLAG];
+    const name = osOf(companyOf(state.prestige.company).os).name;
+    app.toast(`Neues Betriebssystem: ${name}`, 'Kam mit dem letzten Update. XP läuft weiter, umstellen unter System → Optik.', 'os');
+  }
   // Uhrzeit-Achievements nur, wenn kürzlich geklickt wurde (nicht bei offenem Tab über Nacht)
   let lastClickAt = -Infinity;
   bus.on('click', () => {

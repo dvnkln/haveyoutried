@@ -4,6 +4,7 @@
  * jeder Anschlag leicht anders, Drücken und Loslassen getrennt.
  */
 
+import type { OsId } from '../content/systems';
 import { TAP_SOUND_IDS } from '../core/state';
 import { MELODY_FAST, noteFreq, type Melody, type MelodyStyle } from '../content/melodies';
 
@@ -566,6 +567,32 @@ export class Sfx {
     if (!r) return;
     this.tone('sine', 1567.98, 1567.98, r.t, 0.14, 0.18);
     this.tone('sine', 2093, 2093, r.t + 0.12, 0.12, 0.3);
+  }
+
+  /**
+   * Startton nach der Anmeldung, je System eigener Charakter (selbst gebaut, keine Originalmelodien).
+   * Systeme ohne eigenen Ton: kurzes Ping wie beim Entsperren.
+   */
+  osStart(os: OsId): void {
+    if (os === 'win98') return this.start98();
+    this.unlockPing();
+  }
+
+  /** 98: warme Fläche, die langsam anschwillt, darüber aufsteigende Glöckchen, ganz unten ein weicher Bass */
+  private start98(): void {
+    const r = this.ready();
+    const out = this.space(0.35);
+    if (!r || !out) return;
+    const t = r.t;
+    this.tone('sine', 69.3, 69.3, t, 0.07, 2.2, out, 0.35);
+    // Des-Dur, je zwei leicht verstimmte Stimmen: schwebt wie ein Synth-Pad
+    for (const f of [277.18, 349.23, 415.3, 554.37]) {
+      this.tone('triangle', f, f, t + 0.05, 0.022, 2.0, out, 0.45);
+      this.tone('sine', f * 1.004, f * 1.004, t + 0.05, 0.022, 2.0, out, 0.5);
+    }
+    // aufsteigend, dann ein heller Abschluss
+    [1108.73, 1396.91, 1661.22, 2217.46].forEach((f, i) => this.tone('sine', f, f, t + 0.25 + i * 0.16, 0.045, 0.9, out, 0.01));
+    this.tone('sine', 2793.83, 2793.83, t + 0.95, 0.03, 1.3, out, 0.02);
   }
 
   /** Neuer Anrufer: deutsches Freizeichen (425 Hz), ganz kurz und leise. */

@@ -1,5 +1,6 @@
 import type { GeneratorId, IncidentId } from '../config';
 import type { EffectResult, Resolution } from './events';
+import type { OsId } from '../content/systems';
 
 /** Alle Ereignisse, die die Logik nach außen meldet (UI, Log, später Achievements). */
 export interface GameEvents {
@@ -13,7 +14,10 @@ export interface GameEvents {
   incidentStart: { id: IncidentId };
   /** batch = wie viele im selben Durchgang freigeschaltet wurden */
   achievement: { id: string; batch: number };
-  jobQuit: { gained: number; company: string };
+  /** newOs = System der neuen Firma war noch nicht freigeschaltet */
+  jobQuit: { gained: number; company: string; newOs: OsId | null };
+  /** andere Wahl im System-Tab, Einstellungen zu: Neustart mit dem neuen System */
+  osChanged: { os: OsId };
   bossTask: { text: string };
   bossDone: { text: string; reward: number };
   bossFailed: { text: string };

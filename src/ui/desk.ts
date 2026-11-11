@@ -526,7 +526,12 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
     if (!needsLogin(ctx.state)) return;
     // sofort (die Neustart-Animation des Monitors läuft darüber), damit kein Anschlag vorher ein Werkzeug öffnet
     closeTool();
-    login.show(false);
+    login.show('job');
+  });
+  // anderes System gewählt (Einstellungen zu): Neustart, neu anmelden
+  bus.on('osChanged', () => {
+    closeTool();
+    login.show('os');
   });
 
   const hit = (keyEl: HTMLElement, auto = false) => {
@@ -748,7 +753,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
         // ohne Anmeldung gestartet (Testumgebung): dann gilt sie als erledigt
         markLoggedIn(ctx.state);
         openTool();
-      } else if (needsLogin(ctx.state)) login.show(ctx.state.prestige.jobs === 0);
+      } else if (needsLogin(ctx.state)) login.show(ctx.state.prestige.jobs === 0 ? 'first' : 'job');
     },
     /** Anmeldebildschirm (liegt im Monitor über dem Desktop) */
     loginEl: login.el,

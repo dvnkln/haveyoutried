@@ -36,8 +36,15 @@ export const LOGIN = {
   hintFirst: 'Kennworthinweis: siehe Unterseite der Tastatur',
   /** nach einem Jobwechsel */
   hintNew: 'Kennworthinweis: steht im Willkommenspaket. Das Paket ist leer.',
+  /** nach dem Wechsel des Betriebssystems */
+  hintOs: 'Kennworthinweis: dasselbe wie vorhin. Das neue System glaubt dir das nicht.',
   off: 'Monitor ausschalten',
   welcome: 'Willkommen',
+  /** Anmeldedialog (98): Feldnamen und Knöpfe */
+  labelUser: 'Benutzername:',
+  labelPw: 'Kennwort:',
+  ok: 'OK',
+  cancel: 'Abbrechen',
   /** Banner über der Tastatur */
   keyHint: 'Tipp drauf! Kennwort eingeben',
 };

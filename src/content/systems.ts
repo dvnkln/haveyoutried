@@ -8,18 +8,24 @@ export interface OsDef {
   id: OsId;
   /** Name in der Auswahl und auf dem Anmeldebildschirm (Parodie, kein echter Name) */
   name: string;
+  /** Spruch beim Auswählen im System-Tab */
+  quip: string;
+  /** Name/Titel auf dem Anmeldebildschirm, wo das Vorbild Logo oder Titel zeigt (98: Dialogtitel); null = keiner */
+  loginBrand: string | null;
+  /** eigener Satz unter dem Titel (sonst LOGIN.prompt) */
+  loginPrompt?: string;
 }
 
 /** Reihenfolge = Auswahl im System-Tab */
 export const SYSTEMS: readonly OsDef[] = [
-  { id: 'win98', name: 'Fenster 98' },
-  { id: 'xp', name: 'Fenster XP' },
-  { id: 'win7', name: 'Fenster 7' },
-  { id: 'win10', name: 'Fenster 10' },
-  { id: 'win11', name: 'Fenster 11' },
-  { id: 'debian', name: 'Debiam' },
-  { id: 'ubuntu', name: 'Ubuntü' },
-  { id: 'mac', name: 'MäcOS' },
+  { id: 'win98', name: 'Fenster 98', quip: 'Plug & Pray. Treiber von der Heft-CD.', loginBrand: 'Willkommen bei Fenster', loginPrompt: 'Geben Sie Benutzernamen und Kennwort ein, um sich bei Fenster anzumelden.' },
+  { id: 'xp', name: 'Fenster XP', quip: 'Grüne Wiese, blauer Himmel, Service Pack 2.', loginBrand: 'Fenster XP' },
+  { id: 'win7', name: 'Fenster 7', quip: 'Der, den alle behalten wollten. Bis 2020. Und danach auch.', loginBrand: 'Fenster 7' },
+  { id: 'win10', name: 'Fenster 10', quip: 'Das letzte Fenster, das es je geben wird. Versprochen.', loginBrand: null },
+  { id: 'win11', name: 'Fenster 11', quip: 'Start in der Mitte. Vorher will es dein TPM-Modul sehen.', loginBrand: null },
+  { id: 'debian', name: 'Debiam', quip: 'Die Pakete sind älter als dein Praktikant. Dafür startet es immer.', loginBrand: 'Debiam' },
+  { id: 'ubuntu', name: 'Ubuntü', quip: 'Linux für Menschen. Die Menschen fragen trotzdem dich.', loginBrand: 'Ubuntü' },
+  { id: 'mac', name: 'MäcOS', quip: 'Funktioniert einfach. Außer der Adapter fehlt.', loginBrand: null },
 ];
 
 export const OS_IDS: readonly OsId[] = SYSTEMS.map((o) => o.id);

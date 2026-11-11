@@ -66,8 +66,9 @@ export function quitJob(state: GameState, rnd: () => number = Math.random): numb
   state.prestige.experience += gained;
   state.prestige.jobs += 1;
   bumpFlag(state, `company:${state.prestige.company}`);
-  state.prestige.company = nextCompany(state, rnd).id;
-  unlockCompanyOs(state);
+  const next = nextCompany(state, rnd);
+  state.prestige.company = next.id;
+  const newOs = unlockCompanyOs(state) ? next.os : null;
 
   state.tickets = 0;
   state.ticketsTotal = 0;
@@ -83,6 +84,6 @@ export function quitJob(state: GameState, rnd: () => number = Math.random): numb
   state.incidents.active = '';
 
   bumpFlag(state, `company:${state.prestige.company}`);
-  bus.emit('jobQuit', { gained, company: state.prestige.company });
+  bus.emit('jobQuit', { gained, company: state.prestige.company, newOs });
   return gained;
 }

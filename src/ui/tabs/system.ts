@@ -10,6 +10,9 @@ import { resetTutorial, setTutorialOff, tutorialOff } from '../tutorial';
 import { clearWall, paintWall, validWall, wallChoices } from '../wallpaper';
 import { ACHIEVEMENTS } from '../../content/achievements';
 import { achievementCount } from '../../core/achievements';
+import { COMPANIES } from '../../content/companies';
+import { SYSTEMS, type OsId } from '../../content/systems';
+import { activeOs, chooseOs, osUnlocked } from '../../core/os';
 
 /**
  * Seitlich wischen = blättern (die Maus darf über den Rand hinausziehen).
@@ -33,6 +36,9 @@ function onSwipe(el: HTMLElement, step: (dir: number) => void, hooks: { down?():
   el.addEventListener('pointerup', up);
   el.addEventListener('pointercancel', up);
 }
+
+const OS_HINT = 'Jede Firma bringt ihr System mit. Einmal benutzt, bleibt es dir.';
+const OS_PENDING = 'Neustart, sobald du die Einstellungen schließt.';
 
 /** Quellcode des Spiels (AGPL) */
 const SOURCE_URL = 'https://github.com/dvnkln/haveyoutried';
@@ -103,6 +109,21 @@ export function systemTab(): Tab {
     ]),
   );
   const tbPicker = h('div', { class: 'tb-picker', role: 'radiogroup', 'aria-label': 'Position der Taskleiste' }, tbButtons);
+  // Betriebssystem: Skizze je System, gesperrte als „???“; die Wahl gilt ab dem Schließen der Einstellungen (Neustart, app.ts)
+  const osButtons = SYSTEMS.map((o) =>
+    h('button', { class: 'os-pick', type: 'button', role: 'radio', 'aria-checked': 'false', 'data-os': o.id }, [
+      h('span', { class: 'os-mini', 'aria-hidden': 'true' }, [h('span', { class: 'os-mini-bar' }), h('span', { class: 'os-mini-dock' })]),
+      h('span', { class: 'os-pick-label' }),
+    ]),
+  );
+  const osPicker = h('div', { class: 'os-picker', role: 'radiogroup', 'aria-label': 'Betriebssystem' }, osButtons);
+  const osHint = h('div', { class: 'hint' });
+  /** Firmen, bei denen ein gesperrtes System läuft: „Läuft bei: A, B und 3 weiteren.“ */
+  const lockedQuip = (id: OsId) => {
+    const names = COMPANIES.filter((c) => c.os === id).map((c) => c.name.replace(/ \(.*\)$/, ''));
+    const more = names.length - 2;
+    return `Gesperrt. Läuft bei: ${names.slice(0, 2).join(', ')}${more > 0 ? ` und ${more === 1 ? 'einer' : more} weiteren` : ''}.`;
+  };
   // Switch-Auswahl: ein Switch zur Zeit, Pfeile/Wischen/Punkte wechseln (= einbauen), Drücken = Probe wie am Switch-Tester
   const pic = h('span', { class: 'switch-pic', 'aria-hidden': 'true' });
   const name = h('span', { class: 'switch-name' });
@@ -368,6 +389,31 @@ export function systemTab(): Tab {
         quipAt(btn, TASKBAR_QUIP[pos]);
       };
       for (const b of tbButtons) b.addEventListener('click', () => pickTaskbar(b.dataset.pos as TaskbarPos));
+      const pickOs = (btn: HTMLElement, focus = false) => {
+        const id = btn.dataset.os as OsId;
+        if (focus) btn.focus();
+        if (!osUnlocked(ctx.state, id)) {
+          quipAt(btn, lockedQuip(id));
+          return;
+        }
+        if (activeOs(ctx.state) === id) return;
+        chooseOs(ctx.state, id);
+        ctx.sfx.tick();
+        ctx.haptic('tap');
+        quipAt(btn, SYSTEMS.find((o) => o.id === id)!.quip);
+      };
+      for (const b of osButtons) b.addEventListener('click', () => pickOs(b));
+      // Radiogruppe: Pfeiltasten springen zum nächsten freigeschalteten System
+      osPicker.addEventListener('keydown', (e) => {
+        const dir = e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : 0;
+        if (!dir) return;
+        e.preventDefault();
+        const n = SYSTEMS.length;
+        let i = SYSTEMS.findIndex((o) => o.id === activeOs(ctx.state));
+        do i = (i + dir + n) % n;
+        while (!osUnlocked(ctx.state, SYSTEMS[i]!.id));
+        pickOs(osButtons[i]!, true);
+      });
       // Radiogruppe: Pfeiltasten wechseln
       tbPicker.addEventListener('keydown', (e) => {
         const dir = e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : 0;
@@ -404,6 +450,7 @@ export function systemTab(): Tab {
             h('div', { class: 'hint', text: 'Jede Firma hat ihr eigenes. Weitere gibt’s für Achievements. Pfeile oder Wischen = anderes aufhängen.' }),
             h('div', { class: 'switch-carousel' }, [wallPrev, wallCard, wallNext]),
           ]),
+          h('div', { class: 'setting-col' }, [h('div', { text: 'Betriebssystem' }), osHint, osPicker]),
           h('div', { class: 'setting-col' }, [h('div', { text: 'Taskleiste' }), tbPicker]),
         ]),
 
@@ -465,6 +512,21 @@ export function systemTab(): Tab {
         if (b.getAttribute('aria-checked') !== String(on)) b.setAttribute('aria-checked', String(on));
         if (b.tabIndex !== (on ? 0 : -1)) b.tabIndex = on ? 0 : -1;
       }
+      const os = activeOs(s);
+      for (const b of osButtons) {
+        const id = b.dataset.os as OsId;
+        const open = osUnlocked(s, id);
+        const on = id === os;
+        const label = open ? SYSTEMS.find((o) => o.id === id)!.name : '???';
+        if (b.classList.contains('locked') === open) b.classList.toggle('locked', !open);
+        setText(b.lastElementChild as HTMLElement, label);
+        if (b.getAttribute('aria-label') !== (open ? label : 'Gesperrt')) b.setAttribute('aria-label', open ? label : 'Gesperrt');
+        if (b.getAttribute('aria-checked') !== String(on)) b.setAttribute('aria-checked', String(on));
+        if (b.tabIndex !== (on ? 0 : -1)) b.tabIndex = on ? 0 : -1;
+      }
+      // gewählt, aber noch nicht gestartet: das gezeigte System steht an <html> (app.ts)
+      setText(osHint, os !== document.documentElement.dataset.os ? OS_PENDING : OS_HINT);
+      osHint.classList.toggle('os-pending', os !== document.documentElement.dataset.os);
       showSwitch(validSwitch(s.settings.tapSound));
     },
   };

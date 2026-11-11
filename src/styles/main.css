@@ -947,10 +947,13 @@ button {
   --os-menu-font: italic 700 12px / 1.2 var(--font-ui);
   --os-title: var(--os-bar);
   --os-title-fg: #fff;
+  --os-title-shine: var(--os-shine);
   --os-btn: linear-gradient(180deg, #5aa2ff, #2a63d6);
   --os-btn-x: linear-gradient(180deg, #f08a6f, #d4472c);
   --os-btn-edge: #fff;
   --os-btn-radius: 3px;
+  --os-btn-fg: #fff;
+  --os-btn-shadow: none;
   --os-status: #efe9d8;
   --os-status-fill: #bfeed6;
   --os-status-sent: #9be3c1;
@@ -1382,7 +1385,7 @@ button {
   border-bottom: var(--outline) solid var(--ink);
   /* Titelleiste des Systems (XP: blau mit Glanz, weiße Schrift) */
   background: var(--os-title);
-  box-shadow: var(--os-shine);
+  box-shadow: var(--os-title-shine);
   font-size: 11px;
   font-weight: 700;
   color: var(--os-title-fg);
@@ -1417,7 +1420,8 @@ button {
   border: 1.5px solid var(--os-btn-edge);
   border-radius: var(--os-btn-radius);
   background: var(--os-btn);
-  color: #fff;
+  box-shadow: var(--os-btn-shadow);
+  color: var(--os-btn-fg);
   font: 700 10px / 1 var(--font-ui);
 }
 .win-btns > .win-x {
@@ -2509,6 +2513,136 @@ button {
   right: 2px;
 }
 
+/* Betriebssystem-Auswahl: Mini-Bildschirm je System (Hintergrund + Leiste), gesperrte grau mit „???“ */
+.os-picker {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 6px;
+}
+.os-pick {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 2px 5px;
+  border: var(--outline) solid var(--ink);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--ink);
+  font: 600 10.5px / 1.1 var(--font-ui);
+  box-shadow: inset 0 -3px 0 var(--key-edge);
+}
+.os-pick[aria-checked='true'] {
+  background: var(--butter);
+  box-shadow: inset 0 -3px 0 #e8c46a;
+}
+.os-pick-label {
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.os-mini {
+  --m-wall: #bfe6dc;
+  --m-bar: var(--ink);
+  position: relative;
+  width: 36px;
+  height: 25px;
+  overflow: hidden;
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  background: var(--m-wall);
+}
+.os-mini-bar,
+.os-mini-dock {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 5px;
+  background: var(--m-bar);
+}
+.os-mini-dock {
+  display: none;
+}
+.os-pick[data-os='win98'] .os-mini {
+  --m-wall: #008080;
+  --m-bar: #c0c0c0;
+}
+.os-pick[data-os='xp'] .os-mini {
+  --m-wall: linear-gradient(180deg, #5fa8f0 55%, #5cb85c 0);
+  --m-bar: #2560d8;
+}
+.os-pick[data-os='win7'] .os-mini {
+  --m-wall: linear-gradient(160deg, #1b6fc1, #59b4e8);
+  --m-bar: rgba(20, 35, 55, 0.85);
+}
+.os-pick[data-os='win10'] .os-mini {
+  --m-wall: linear-gradient(160deg, #0a3f8a, #1b7ad6);
+  --m-bar: #202020;
+}
+.os-pick[data-os='win11'] .os-mini {
+  --m-wall: radial-gradient(circle at 50% 70%, #6aa8f5, #cfe3fb 70%);
+  --m-bar: #eef2f7;
+}
+.os-pick[data-os='debian'] .os-mini {
+  --m-wall: linear-gradient(160deg, #1d2440, #3b4a7a);
+  --m-bar: #111;
+}
+.os-pick[data-os='ubuntu'] .os-mini {
+  --m-wall: linear-gradient(160deg, #6e1d52, #e95420);
+  --m-bar: #1d1d1d;
+}
+.os-pick[data-os='mac'] .os-mini {
+  --m-wall: linear-gradient(160deg, #5b7cfa, #c86dd7);
+  --m-bar: rgba(245, 245, 245, 0.9);
+}
+/* Linux und Mac: Leiste oben; Ubuntu mit Dock links, Mac mit Dock unten */
+.os-pick:is([data-os='debian'], [data-os='ubuntu'], [data-os='mac']) .os-mini-bar {
+  top: 0;
+  bottom: auto;
+  height: 3px;
+}
+.os-pick[data-os='ubuntu'] .os-mini-dock {
+  display: block;
+  top: 3px;
+  right: auto;
+  width: 5px;
+  height: auto;
+  background: #2c2c2c;
+}
+.os-pick[data-os='mac'] .os-mini-dock {
+  display: block;
+  left: 9px;
+  right: 9px;
+  bottom: 2px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.6);
+}
+.os-pick.locked {
+  background: #f1eee6;
+  color: var(--ink-soft);
+}
+.os-pick.locked .os-mini {
+  filter: grayscale(1) brightness(0.75);
+}
+.os-pick.locked .os-mini::after {
+  content: '🔒';
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  filter: grayscale(1);
+}
+.hint.os-pending {
+  color: #c4573a;
+  font-weight: 600;
+}
+
 /* Bereiche der Einstellungen (Sound, Vibration, Optik): dezent abgesetzte Karten */
 .conf-group {
   margin: 10px 0 14px;
@@ -3517,6 +3651,10 @@ button {
 .toast-boss-failed .toast-title::before {
   content: '✗ ';
   color: #d64545;
+}
+/* neues Betriebssystem: Diskette statt Stern */
+.toast-os .toast-title::before {
+  content: '💾 ';
 }
 /* Fehler: rot umrandet, Warnzeichen */
 .toast-error {
@@ -9184,18 +9322,25 @@ body:has(.tut-note:not([hidden])) .tap-hint {
   flex: 1;
   min-height: 0;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 6%;
-  padding: 0 7%;
+  align-items: center;
+  padding: 0 4%;
 }
+/* XP: links Logo-Name und Anleitung (rechtsbündig), senkrechte helle Linie, rechts der Benutzer */
 .login-brand {
+  flex: 0 0 40%;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding-bottom: 5px;
-  /* XP: feine helle Trennlinie */
-  border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+  align-items: flex-end;
+  gap: 4px;
+  padding: 10px 10px 10px 0;
+  border-right: 1px solid rgba(255, 255, 255, 0.5);
+  text-align: right;
+}
+.login-user {
+  flex: 1;
+  min-width: 0;
+  padding-left: 10px;
 }
 .login-brand b {
   font: italic 800 17px / 1 var(--font-ui);
@@ -9209,7 +9354,7 @@ body:has(.tut-note:not([hidden])) .tap-hint {
 .login-user {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 8px;
 }
 .login-pic {
   flex: 0 0 auto;
@@ -9223,6 +9368,10 @@ body:has(.tut-note:not([hidden])) .tap-hint {
   color: var(--ink);
   font: 700 10px / 1 var(--font-ui);
   box-shadow: 0 2px 0 rgba(0, 0, 0, 0.25);
+}
+.login-label,
+.login-btns {
+  display: none;
 }
 .login-info {
   min-width: 0;
@@ -9691,4 +9840,227 @@ body:has(.tut-note:not([hidden])) .tap-hint {
 .meme-forum .meme-img {
   margin: 0 7px;
   border-radius: 6px;
+}
+
+/* ---------- Betriebssystem Fenster 98: grau, kantig, erhabene Knöpfe, Titelleiste Marine → Blau ----------
+   Farben über die --os-*-Variablen (Standard XP, oben bei der Taskleiste), Formen hier. Höhe von Leiste,
+   Titel- und Statusleiste bleibt gleich: das Arbeitsfenster darf sich nicht verschieben. */
+html[data-os='win98'] #app {
+  --w98-face: #c0c0c0;
+  --w98-up: inset -1px -1px 0 #404040, inset 1px 1px 0 #fff, inset -2px -2px 0 #808080, inset 2px 2px 0 #dfdfdf;
+  --w98-down: inset 1px 1px 0 #404040, inset -1px -1px 0 #fff, inset 2px 2px 0 #808080, inset -2px -2px 0 #dfdfdf;
+  --w98-field: inset 1px 1px 0 #808080, inset -1px -1px 0 #fff;
+  --w98-navy: linear-gradient(90deg, #000080, #1084d0);
+  --os-bar: var(--w98-face);
+  --os-bar-v: var(--w98-face);
+  --os-bar-fg: #111;
+  --os-shine: inset 0 1px 0 #fff;
+  --os-text-shadow: none;
+  --os-start: var(--w98-face);
+  --os-start-down: #b8b8b8;
+  --os-start-shadow: var(--w98-up);
+  --os-start-radius: 0;
+  --os-start-radius-v: 0;
+  --os-start-font: 700 12px / 1 var(--font-ui);
+  --os-tray: var(--w98-face);
+  --os-tray-v: var(--w98-face);
+  --os-tray-edge: transparent;
+  --os-tray-shine: var(--w98-field);
+  --os-tray-shine-v: var(--w98-field);
+  --os-clock-shadow: none;
+  --os-menu: var(--w98-face);
+  --os-menu-head: linear-gradient(0deg, #000080, #1084d0);
+  --os-menu-title: 'Fenster 98';
+  --os-menu-font: 800 13px / 1 var(--font-ui);
+  --os-title: var(--w98-navy);
+  --os-title-shine: none;
+  --os-btn: var(--w98-face);
+  --os-btn-x: var(--w98-face);
+  --os-btn-edge: transparent;
+  --os-btn-radius: 0;
+  --os-btn-fg: #111;
+  --os-btn-shadow: var(--w98-up);
+  --os-status: var(--w98-face);
+  --os-status-fill: #9ed3cf;
+  --os-status-sent: #7fc8a9;
+  --os-status-shade: var(--w98-field);
+  --os-login: #008080;
+  --os-login-dim: #444;
+  --os-login-hint: #333;
+}
+/* Start: erhabener grauer Knopf mit Abstand zum Rand, gedrückt eingedellt */
+html[data-os='win98'] #app .taskbar-start {
+  margin: 2px 3px;
+  padding: 0 6px 0 4px;
+  border-right: 0;
+  gap: 4px;
+}
+html[data-os='win98'] #app .taskbar-start:active,
+html[data-os='win98'] #app .taskbar-start[aria-expanded='true'] {
+  box-shadow: var(--w98-down);
+}
+html[data-os='win98'] #app .start-label {
+  text-transform: capitalize;
+}
+/* kein Logo: ein kleiner Röhrenmonitor als Symbol */
+html[data-os='win98'] #app .start-glyph {
+  width: 14px;
+  height: 13px;
+  border-radius: 0;
+  color: transparent;
+  background: no-repeat center / contain
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 13'%3E%3Crect x='1' y='1' width='12' height='8' fill='%23ddd' stroke='%23111'/%3E%3Crect x='3' y='3' width='8' height='4' fill='%23008080'/%3E%3Cpath d='M4 12h6M7 9v3' stroke='%23111'/%3E%3C/svg%3E");
+}
+html[data-os='win98'] #app:is([data-taskbar='left'], [data-taskbar='right']) .taskbar-start {
+  height: 26px;
+  margin: 2px;
+  padding: 0;
+  border-bottom: 0;
+}
+/* Infobereich: vertieftes Feld */
+html[data-os='win98'] #app .tray-area {
+  margin: 2px 2px 2px auto;
+  padding: 0 5px;
+  border-left: 0;
+}
+html[data-os='win98'] #app:is([data-taskbar='left'], [data-taskbar='right']) .tray-area {
+  margin: auto 2px 2px;
+  padding: 5px 0 4px;
+  border-top: 0;
+}
+/* Startmenü: grau, senkrechtes Band mit dem Namen des Systems */
+html[data-os='win98'] #app .launcher {
+  padding-left: 27px;
+  border-radius: 0;
+  box-shadow: var(--w98-up), 3px -2px 0 rgba(61, 44, 46, 0.3);
+}
+html[data-os='win98'] #app .launcher::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 21px;
+  margin: 0;
+  padding: 7px 0;
+  border-bottom: 0;
+  border-right: 2px solid var(--ink);
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  border-right: 0;
+  border-left: 2px solid var(--ink);
+  color: #fff;
+  letter-spacing: 0.03em;
+}
+/* Titelleiste: Knöpfe grau und erhaben, × nicht rot */
+html[data-os='win98'] #app .work-bar {
+  text-shadow: none;
+}
+/* Anmeldung wie der Dialog „Willkommen bei …“: türkiser Bildschirm, graues Fenster mit blauer Titelleiste,
+   links ein Schlüssel, rechts Benutzername und Kennwort als Felder, darunter OK und Abbrechen */
+html[data-os='win98'] #app .login-band {
+  display: none;
+}
+html[data-os='win98'] #app .login-mid {
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: stretch;
+  margin: auto 5%;
+  padding: 0 8px 8px;
+  gap: 7px;
+  border: 2px solid var(--ink);
+  background: var(--w98-face);
+  box-shadow: var(--w98-up), 3px 3px 0 rgba(0, 0, 0, 0.35);
+  color: #111;
+}
+html[data-os='win98'] #app .login-brand {
+  display: contents;
+}
+html[data-os='win98'] #app .login-brand > * {
+  text-align: left;
+}
+html[data-os='win98'] #app .login-brand b {
+  margin: 0 -8px;
+  padding: 3px 6px;
+  background: var(--w98-navy);
+  color: #fff;
+  font: 700 11.5px / 1.2 var(--font-ui);
+  letter-spacing: 0;
+  text-shadow: none;
+}
+html[data-os='win98'] #app .login-brand span {
+  padding-left: 40px;
+  font-size: 10px;
+  line-height: 1.25;
+  opacity: 1;
+}
+html[data-os='win98'] #app .login-user {
+  align-items: flex-start;
+  padding-left: 0;
+}
+/* Schlüssel statt Benutzerbild (steht neben dem Erklärtext, wie beim Vorbild) */
+html[data-os='win98'] #app .login-pic {
+  position: absolute;
+  margin-top: -38px;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  color: transparent;
+  background: no-repeat center / contain
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='10' cy='12' r='7' fill='%23f2c94c' stroke='%23111' stroke-width='2'/%3E%3Ccircle cx='9' cy='11' r='2.2' fill='%23c0c0c0' stroke='%23111' stroke-width='1.5'/%3E%3Cpath d='M16 15 28 27M22 21l3-3M25 24l2-2' stroke='%23111' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M16 15 28 27' stroke='%23f2c94c' stroke-width='1.2' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+html[data-os='win98'] #app .login-info {
+  flex: 1;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 4px 6px;
+}
+html[data-os='win98'] #app .login-label {
+  display: block;
+  font-size: 10px;
+}
+html[data-os='win98'] #app .login-host {
+  display: none;
+}
+html[data-os='win98'] #app :is(.login-name, .login-pw) {
+  width: auto;
+  height: 16px;
+  margin: 0;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 0;
+  background: #fff;
+  box-shadow: inset 1px 1px 0 #404040, inset 2px 2px 0 #808080, inset -1px -1px 0 #fff;
+  font: 500 10px / 16px var(--font-ui);
+  color: #111;
+}
+html[data-os='win98'] #app .login-hint {
+  grid-column: 1 / -1;
+}
+html[data-os='win98'] #app .login-btns {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+html[data-os='win98'] #app .login-btns > span {
+  min-width: 52px;
+  padding: 3px 6px;
+  background: var(--w98-face);
+  box-shadow: var(--w98-up);
+  font: 600 10px / 1 var(--font-ui);
+  text-align: center;
+}
+/* OK ist der Standardknopf: dunkler Rahmen */
+html[data-os='win98'] #app .login-btns > span:first-child {
+  outline: 1px solid #111;
+}
+/* nach dem Kennwort: kein „Willkommen“, der Dialog verschwindet, kurz nur Türkis, dann der Desktop */
+html[data-os='win98'] #app .login.ok .login-mid {
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+html[data-os='win98'] #app .login-welcome {
+  display: none;
 }

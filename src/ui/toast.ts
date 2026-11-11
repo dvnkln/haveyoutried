@@ -10,7 +10,7 @@ const MAX_QUEUED = 4;
  * Art der Meldung, bestimmt Farbe und Zeichen vor dem Titel:
  * Achievement (★, Glanz), Chef (gelber Zettel: neue Aufgabe ☑︎, erledigt ✔︎, verpasst ✗), Fehler (⚠).
  */
-export type ToastKind = 'achievement' | 'boss' | 'boss-done' | 'boss-failed' | 'error';
+export type ToastKind = 'achievement' | 'boss' | 'boss-done' | 'boss-failed' | 'error' | 'os';
 
 /**
  * Kurze Meldungen unten im Inhaltsbereich (z. B. Achievements), blockieren nichts.

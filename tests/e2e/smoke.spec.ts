@@ -616,3 +616,41 @@ test('Smart-Office: beim Start gehen Licht und Monitor von selbst an', async ({ 
   await expect(page.locator('#app')).not.toHaveClass(/screen-off/, { timeout: 3_000 });
   await expect(page.locator('.brand')).toContainText('smart');
 });
+
+test('Betriebssystem: Wahl im System-Tab, Neustart erst beim Schließen, Anmeldung, bleibt nach Neuladen', async ({ page, context }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  // alter Spielstand (vor den Systemen): XP läuft, 98 kommt bei Müller & Söhne dazu
+  const save = { version: 3, tickets: 50, clicks: 300, lastTick: Date.now(), flags: { 'tut:off': 1, login: 1 }, incidents: { nextAt: 1e15 }, events: { nextAt: 1e15 } };
+  await context.addInitScript((json) => {
+    if (!sessionStorage.getItem('seeded')) {
+      localStorage.setItem('hyt.save', json);
+      sessionStorage.setItem('seeded', '1');
+    }
+  }, JSON.stringify(save));
+  await page.goto('/');
+  const html = page.locator('html');
+  await expect(html).toHaveAttribute('data-os', 'xp');
+  await expect(page.locator('.toast-os')).toContainText('Fenster 98');
+
+  await openApp(page, 'system');
+  await expect(page.locator('.os-pick[data-os="mac"]')).toHaveClass(/locked/);
+  await page.locator('.os-pick[data-os="win98"]').tap();
+  await expect(page.locator('.os-pick[data-os="win98"]')).toHaveAttribute('aria-checked', 'true');
+  // noch offen: kein Neustart
+  await page.waitForTimeout(800);
+  await expect(html).toHaveAttribute('data-os', 'xp');
+
+  await page.locator('.sheet-close').tap();
+  await expect(html).toHaveAttribute('data-os', 'win98');
+  await expect(page.locator('.login')).toBeVisible();
+  await expect(page.locator('.login-brand b')).toHaveText('Willkommen bei Fenster');
+  for (let i = 0; i < 8; i++) await page.locator('.key[data-key="Q"]').tap();
+  await expect(page.locator('.login')).toBeHidden();
+
+  await page.reload();
+  await expect(html).toHaveAttribute('data-os', 'win98');
+  await expect(page.locator('.login')).toBeHidden();
+  await expect(page.locator('.toast-os')).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
