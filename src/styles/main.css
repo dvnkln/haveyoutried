@@ -976,13 +976,15 @@ button {
      alte App-Reihe minus Taskleiste, dazu die früheren Abstände im Desktop (4 × dgap) und 4 px, weil die
      Statuszeile niedriger ist (14 statt 20 px, früher lag sie 2 px über dem Fenster). Ziel: Arbeitsfenster exakt so groß wie vorher; prüfen mit
      .local/tb/measure.mjs, wenn sich an Fenster, Statuszeile oder Taskleiste etwas ändert. */
-  --mon-trim: calc(var(--old-icons) - var(--tb) + 4 * var(--dgap) + 4px);
+  /* Leiste oben zusätzlich zum Dock (Systeme mit Dock); sonst 0 */
+  --topbar: 0px;
+  --mon-trim: calc(var(--old-icons) - var(--tb) - var(--topbar) + 4 * var(--dgap) + 4px);
   /* davon rutscht die Wand oben ein Stück herunter, der Rest bleibt über dem Monitor */
   --wall-drop: 20px;
 }
 #app[data-taskbar='left'],
 #app[data-taskbar='right'] {
-  --mon-trim: calc(var(--old-icons) + 4 * var(--dgap) + 4px);
+  --mon-trim: calc(var(--old-icons) + 4 * var(--dgap) + 4px - var(--topbar));
 }
 .monitor {
   margin-top: calc(var(--mon-trim) - var(--wall-drop));
@@ -1097,6 +1099,14 @@ button {
 /* Suchfeld neben Start: gibt es nur bei manchen Systemen */
 .taskbar-search {
   display: none;
+}
+/* Leiste oben (Systeme mit Dock): sonst aus */
+.topbar {
+  display: none;
+}
+/* Debiam legt die Leiste fest: Positions-Wahl ausgegraut */
+.tb-pick:disabled {
+  opacity: 0.45;
 }
 /* Infobereich: hellblaues Feld rechts mit Tray-Apps und Uhr */
 .tray-area {
@@ -9379,7 +9389,8 @@ body:has(.tut-note:not([hidden])) .tap-hint {
   box-shadow: 0 2px 0 rgba(0, 0, 0, 0.25);
 }
 .login-label,
-.login-btns {
+.login-btns,
+.login-clock {
   display: none;
 }
 .login-info {
@@ -10755,4 +10766,803 @@ html[data-os='win11'] #app .login-off::before {
 }
 html[data-os='win11'] #app .login-welcome {
   font-weight: 500;
+}
+
+/* ---------- Betriebssystem Debiam (GNOME-Look): eine schwarze Leiste fest oben, „Aktivitäten“, Uhr in der Mitte ----------
+   Leiste immer oben (app.ts setzt data-taskbar='top'). Farben über --os-*, Formen hier. */
+html[data-os='debian'] #app {
+  --os-bar: #0b0b0c;
+  --os-bar-v: #0b0b0c;
+  --os-bar-fg: #f6f5f4;
+  --os-shine: none;
+  --os-text-shadow: none;
+  --os-start: transparent;
+  --os-start-down: #3a3a3c;
+  --os-start-shadow: none;
+  --os-start-radius: 9px;
+  --os-start-radius-v: 9px;
+  --os-start-font: 600 10.5px / 1 var(--font-ui);
+  --os-tray: transparent;
+  --os-tray-v: transparent;
+  --os-tray-edge: transparent;
+  --os-tray-shine: none;
+  --os-tray-shine-v: none;
+  --os-clock-shadow: none;
+  --os-menu: rgba(36, 36, 38, 0.97);
+  --os-menu-head: transparent;
+  --os-menu-title: 'Anwendungen';
+  --os-menu-font: 600 11px / 1.2 var(--font-ui);
+  --os-title: #ebebeb;
+  --os-title-fg: #2e3436;
+  --os-title-shine: inset 0 -1px 0 #d6d6d6;
+  --os-btn: transparent;
+  --os-btn-x: #d9d9d9;
+  --os-btn-edge: transparent;
+  --os-btn-radius: 50%;
+  --os-btn-fg: #2e3436;
+  --os-btn-shadow: none;
+  --os-status: #f6f5f4;
+  --os-status-fill: #cde9d8;
+  --os-status-sent: #a8dcbd;
+  --os-status-shade: inset 0 1px 0 #dedddb;
+  --os-login: linear-gradient(160deg, #0f2a33 0%, #124a52 45%, #1d6b5f 75%, #0c2d33 100%);
+  --os-login-dim: #d7e6e4;
+  --os-login-hint: #d7e6e4;
+}
+/* „Aktivitäten“ statt Start: nur Text, abgerundet beim Drücken; Uhr genau in der Mitte der Leiste */
+html[data-os='debian'] #app .taskbar {
+  position: relative;
+  border-bottom-color: var(--ink);
+}
+html[data-os='debian'] #app .taskbar-start {
+  margin: 3px 4px;
+  padding: 0 9px;
+  border-right: 0;
+}
+html[data-os='debian'] #app .start-glyph {
+  display: none;
+}
+html[data-os='debian'] #app .start-label {
+  font-size: 0;
+}
+html[data-os='debian'] #app .start-label::after {
+  content: 'Aktivitäten';
+  font-size: 10.5px;
+}
+html[data-os='debian'] #app .taskbar-clock {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  align-items: center;
+  transform: translateX(-50%);
+  font-weight: 600;
+}
+html[data-os='debian'] #app .tray-area {
+  border-left: 0;
+}
+/* Startmenü (Übersicht): dunkel, rund, helle Schrift */
+html[data-os='debian'] #app .launcher {
+  margin: 4px;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+}
+html[data-os='debian'] #app .launcher::before {
+  border-bottom: 0;
+  color: #f6f5f4;
+  text-align: center;
+}
+html[data-os='debian'] #app .launcher .app-label {
+  color: #f6f5f4;
+}
+/* Kopfleiste: hell, Titel in der Mitte, runde graue Knöpfe */
+html[data-os='debian'] #app .work-bar {
+  font-weight: 700;
+}
+html[data-os='debian'] #app .work-title {
+  flex: 1;
+  text-align: center;
+}
+html[data-os='debian'] #app .win-btns {
+  gap: 5px;
+}
+html[data-os='debian'] #app .win-btns > span {
+  width: 15px;
+  font-weight: 600;
+  font-size: 8.5px;
+}
+/* Browser „Eiswiesel“: helle Tab-Leiste, aktiver Tab hebt sich als weiße Karte ab */
+html[data-os='debian'] #app .browser {
+  background: #f0f0f4;
+}
+html[data-os='debian'] #app .br-tabs .br-tab {
+  border-radius: 5px 5px 0 0;
+  background: transparent;
+  border-color: transparent;
+}
+html[data-os='debian'] #app .br-tabs .br-tab.on {
+  border-color: var(--ink);
+  background: #fff;
+}
+html[data-os='debian'] #app .br-bar {
+  background: #fff;
+}
+html[data-os='debian'] #app .br-url {
+  border-width: 1px;
+  border-radius: 4px;
+  background: #f0f0f4;
+}
+/* xterm: weiß, schwarze Schrift, Prompt fett schwarz */
+html[data-os='debian'] #app .work[data-kind='term'] {
+  --t-bg: #fff;
+  --t-fg: #111;
+  --t-dim: #666;
+}
+html[data-os='debian'] #app .work[data-kind='term'] :is(.typed-prompt, .prompt-user) {
+  color: #111;
+  font-weight: 700;
+}
+html[data-os='debian'] #app .work[data-kind='term'] :is(.work-head, .work-body, .last-closed) {
+  border-color: #c8c8c8;
+}
+html[data-os='debian'] #app .work[data-kind='term'] .term-dots {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='1' y='2' width='14' height='12' fill='%23fff' stroke='%23333'/%3E%3Cpath d='M5 5l6 6M11 5l-6 6' stroke='%23333' stroke-width='1.6'/%3E%3C/svg%3E");
+}
+/* Anmeldung: oben schwarze Leiste mit Uhr, mittig rundes Bild und Kennwort, unten der Name */
+html[data-os='debian'] #app .login-band:not(.login-foot) {
+  height: 14px;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  background: #0b0b0c;
+}
+html[data-os='debian'] #app .login-clock {
+  display: block;
+  font: 600 9px / 1 var(--font-ui);
+}
+html[data-os='debian'] #app .login-mid {
+  position: static;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+}
+html[data-os='debian'] #app .login-brand {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 9px;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  text-align: center;
+}
+html[data-os='debian'] #app .login-brand b {
+  font: 600 13px / 1 var(--font-ui);
+  letter-spacing: 0.04em;
+  opacity: 0.8;
+}
+html[data-os='debian'] #app .login-brand span {
+  display: none;
+}
+html[data-os='debian'] #app .login-user {
+  flex: 0 0 auto;
+  flex-direction: column;
+  padding: 0;
+  text-align: center;
+}
+html[data-os='debian'] #app .login-pic {
+  width: 48px;
+  height: 48px;
+  border: 0;
+  border-radius: 50%;
+  background: #d7e6e4;
+  box-shadow: none;
+}
+html[data-os='debian'] #app .login-info {
+  align-items: center;
+  gap: 5px;
+}
+html[data-os='debian'] #app .login-name {
+  font: 600 13px / 1 var(--font-ui);
+}
+html[data-os='debian'] #app .login-host {
+  display: none;
+}
+html[data-os='debian'] #app .login-pw {
+  width: 130px;
+  height: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+html[data-os='debian'] #app .login.ok .login-pw {
+  background: #bfeed6;
+  color: var(--ink);
+}
+html[data-os='debian'] #app .login-hint {
+  max-width: 200px;
+  text-align: center;
+}
+html[data-os='debian'] #app .login-foot {
+  justify-content: flex-end;
+  padding: 0 8px 7px;
+  border-top: 0;
+  background: none;
+}
+html[data-os='debian'] #app .login-off {
+  font-size: 0;
+}
+html[data-os='debian'] #app .login-off::before {
+  border: 0;
+  background: none;
+  font-size: 12px;
+}
+html[data-os='debian'] #app .login-welcome {
+  font: 500 18px / 1 var(--font-ui);
+  text-shadow: none;
+}
+@media (max-height: 680px) {
+  html[data-os='debian'] #app .login-mid {
+    gap: 6px;
+  }
+  /* kein Platz für den Namen unten: weg, wie wenn das Logo nicht reinpasst */
+  html[data-os='debian'] #app .login-brand {
+    display: none;
+  }
+  html[data-os='debian'] #app .login-pic {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+/* ---------- Systeme mit Dock (Ubuntü, MäcOS): dünne Leiste oben mit Uhr, Dock an der gewählten Position ----------
+   Beide Leisten zusammen so hoch wie eine Taskleiste (10 + 13 px), damit das Arbeitsfenster gleich bleibt.
+   Steht das Dock seitlich, bleibt es normal breit; die Leiste oben kostet dann Höhe, der Monitor wird dafür
+   um --topbar höher (--mon-trim). Tippflächen im Dock sind deutlich größer als die Symbole. */
+html:is([data-os='ubuntu'], [data-os='mac']) #app {
+  --topbar: 10px;
+  --tb: 13px;
+  --os-shine: none;
+  --os-text-shadow: none;
+  --os-start: transparent;
+  --os-start-down: rgba(255, 255, 255, 0.2);
+  --os-start-shadow: none;
+  --os-tray: transparent;
+  --os-tray-v: transparent;
+  --os-tray-edge: transparent;
+  --os-tray-shine: none;
+  --os-tray-shine-v: none;
+  --os-status-fill: #cde9d8;
+  --os-status-sent: #a8dcbd;
+}
+html:is([data-os='ubuntu'], [data-os='mac']) #app:is([data-taskbar='left'], [data-taskbar='right']) {
+  --tb: 23px;
+}
+html:is([data-os='ubuntu'], [data-os='mac']) #app .desktop {
+  padding-top: var(--topbar);
+}
+html:is([data-os='ubuntu'], [data-os='mac']) #app .topbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--topbar);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 6px;
+  font: 600 7.5px / 1 var(--font-ui);
+  white-space: nowrap;
+  overflow: hidden;
+}
+html:is([data-os='ubuntu'], [data-os='mac']) #app .desktop > .wallpaper {
+  top: var(--topbar);
+}
+html:is([data-os='ubuntu'], [data-os='mac']) #app[data-taskbar='top'] .desktop > .wallpaper {
+  top: calc(var(--topbar) + var(--tb));
+}
+html:is([data-os='ubuntu'], [data-os='mac']) #app[data-taskbar='top'] .launcher {
+  top: calc(var(--topbar) + var(--tb));
+}
+html:is([data-os='ubuntu'], [data-os='mac']) #app:is([data-taskbar='left'], [data-taskbar='right']) .launcher {
+  top: var(--topbar);
+  max-height: calc(100% - var(--topbar));
+}
+/* Uhr steht oben, nicht im Dock */
+html:is([data-os='ubuntu'], [data-os='mac']) #app .taskbar-clock {
+  display: none;
+}
+/* Dock waagrecht: kleine Symbole, große Tippflächen (nach innen wie die Taskleiste, dazu zur Seite) */
+html:is([data-os='ubuntu'], [data-os='mac']) #app:is([data-taskbar='bottom'], [data-taskbar='top']) .tray-app .app-tile {
+  width: 13px;
+  height: 11px;
+  border-width: 1px;
+  border-radius: 3px;
+  font-size: 8px;
+  box-shadow: none;
+}
+html:is([data-os='ubuntu'], [data-os='mac']) #app:is([data-taskbar='bottom'], [data-taskbar='top']) .tray-app .app-tile svg {
+  width: 8px;
+  height: 8px;
+}
+html:is([data-os='ubuntu'], [data-os='mac']) #app:is([data-taskbar='bottom'], [data-taskbar='top']) .tray-app .nav-badge {
+  top: -3px;
+  right: -4px;
+  transform: scale(0.75);
+}
+html:is([data-os='ubuntu'], [data-os='mac']) #app[data-taskbar='bottom'] .tray-app::after {
+  inset: calc(-1 * var(--tb-hit) - 4px) -5px -4px;
+}
+html:is([data-os='ubuntu'], [data-os='mac']) #app[data-taskbar='top'] .tray-app::after {
+  inset: -4px -5px calc(-1 * var(--tb-hit) - 4px);
+}
+html:is([data-os='ubuntu'], [data-os='mac']) #app[data-taskbar='bottom'] .taskbar-start::after {
+  inset: calc(-1 * var(--tb-hit) - 4px) -4px -4px;
+}
+html:is([data-os='ubuntu'], [data-os='mac']) #app[data-taskbar='top'] .taskbar-start::after {
+  inset: -4px -4px calc(-1 * var(--tb-hit) - 4px);
+}
+html:is([data-os='ubuntu'], [data-os='mac']) #app .start-label {
+  display: none;
+}
+html:is([data-os='ubuntu'], [data-os='mac']) #app .taskbar-start {
+  padding: 0;
+  justify-content: center;
+  border-right: 0;
+}
+html:is([data-os='ubuntu'], [data-os='mac']) #app:is([data-taskbar='left'], [data-taskbar='right']) .taskbar-start {
+  border-bottom: 0;
+}
+/* Start = Raster-Knopf („Apps anzeigen“ / Launchpad): 3 × 3 Punkte, kein Logo */
+html:is([data-os='ubuntu'], [data-os='mac']) #app .start-glyph {
+  width: 11px;
+  height: 11px;
+  padding: 0;
+  border-radius: 0;
+  background: radial-gradient(circle, currentColor 0 1.1px, transparent 1.4px) 0 0 / 3.67px 3.67px;
+  color: inherit;
+  font-size: 0;
+}
+html:is([data-os='ubuntu'], [data-os='mac']) #app:is([data-taskbar='left'], [data-taskbar='right']) .start-glyph {
+  width: 14px;
+  height: 14px;
+  background-size: 4.67px 4.67px;
+}
+/* Kopfleiste: Titel mittig */
+html:is([data-os='ubuntu'], [data-os='mac']) #app .work-title {
+  flex: 1;
+  text-align: center;
+}
+/* Anmeldung: rundes Bild mittig, Kennwort darunter */
+html:is([data-os='ubuntu'], [data-os='mac']) #app .login-mid {
+  position: static;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+}
+html:is([data-os='ubuntu'], [data-os='mac']) #app .login-user {
+  flex: 0 0 auto;
+  flex-direction: column;
+  padding: 0;
+  text-align: center;
+}
+html:is([data-os='ubuntu'], [data-os='mac']) #app .login-pic {
+  width: 48px;
+  height: 48px;
+  border: 0;
+  border-radius: 50%;
+  box-shadow: none;
+}
+html:is([data-os='ubuntu'], [data-os='mac']) #app .login-info {
+  align-items: center;
+  gap: 5px;
+}
+html:is([data-os='ubuntu'], [data-os='mac']) #app .login-name {
+  font: 600 13px / 1 var(--font-ui);
+}
+html:is([data-os='ubuntu'], [data-os='mac']) #app .login-host {
+  display: none;
+}
+html:is([data-os='ubuntu'], [data-os='mac']) #app .login-pw {
+  width: 130px;
+  height: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+html:is([data-os='ubuntu'], [data-os='mac']) #app .login.ok .login-pw {
+  background: #bfeed6;
+  color: var(--ink);
+}
+html:is([data-os='ubuntu'], [data-os='mac']) #app .login-hint {
+  max-width: 200px;
+  text-align: center;
+}
+html:is([data-os='ubuntu'], [data-os='mac']) #app .login-foot {
+  justify-content: flex-end;
+  padding: 0 8px 7px;
+  border-top: 0;
+  background: none;
+}
+html:is([data-os='ubuntu'], [data-os='mac']) #app .login-off {
+  font-size: 0;
+}
+html:is([data-os='ubuntu'], [data-os='mac']) #app .login-off::before {
+  border: 0;
+  background: none;
+  font-size: 12px;
+}
+html:is([data-os='ubuntu'], [data-os='mac']) #app .login-welcome {
+  font: 500 18px / 1 var(--font-ui);
+  text-shadow: none;
+}
+@media (max-height: 680px) {
+  html:is([data-os='ubuntu'], [data-os='mac']) #app .login-mid {
+    gap: 6px;
+  }
+  html:is([data-os='ubuntu'], [data-os='mac']) #app .login-pic {
+    width: 36px;
+    height: 36px;
+  }
+  html[data-os='ubuntu'] #app .login-brand {
+    display: none;
+  }
+}
+
+/* ---------- Ubuntü: schwarze Leiste oben („Aktivitäten“, Uhr mittig), dunkles Dock, Aubergine ---------- */
+html[data-os='ubuntu'] #app {
+  --os-bar: #2a2a2c;
+  --os-bar-v: #2a2a2c;
+  --os-bar-fg: #f2f2f2;
+  --os-start-radius: 4px;
+  --os-start-radius-v: 4px;
+  --os-menu: rgba(44, 0, 30, 0.96);
+  --os-menu-head: transparent;
+  --os-menu-title: 'Anwendungen';
+  --os-menu-font: 600 11px / 1.2 var(--font-ui);
+  --os-title: #2f2f31;
+  --os-title-fg: #f2f2f2;
+  --os-title-shine: none;
+  --os-btn: #4a4a4d;
+  --os-btn-x: #e95420;
+  --os-btn-edge: transparent;
+  --os-btn-radius: 50%;
+  --os-btn-fg: #f2f2f2;
+  --os-btn-shadow: none;
+  --os-status: #f6f5f4;
+  --os-status-shade: inset 0 1px 0 #dedddb;
+  --os-login: linear-gradient(160deg, #2c001e 0%, #5e2750 50%, #77216f 75%, #3d0f30 100%);
+  --os-login-dim: #f1dcea;
+  --os-login-hint: #f1dcea;
+}
+html[data-os='ubuntu'] #app .topbar {
+  background: #0e0e0f;
+  color: #f2f2f2;
+}
+html[data-os='ubuntu'] #app .topbar-left::before {
+  content: 'Aktivitäten';
+}
+html[data-os='ubuntu'] #app .topbar-clock {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+html[data-os='ubuntu'] #app .topbar::after {
+  content: '⏻';
+  margin-left: auto;
+  font-size: 7px;
+}
+/* Dock: Apps in der Mitte (links liegt das Telefon über der Leiste), „Apps anzeigen“ am Ende */
+html[data-os='ubuntu'] #app .tray-area {
+  order: 0;
+  margin: 0 0 0 auto;
+  padding: 0 4px;
+}
+html[data-os='ubuntu'] #app .taskbar-start {
+  order: 1;
+  width: 30px;
+  margin-left: auto;
+}
+/* seitlich: „Apps anzeigen“ oben (gibt es bei Ubuntu als Einstellung); unten links liegt das Telefon über dem Dock */
+html[data-os='ubuntu'] #app:is([data-taskbar='left'], [data-taskbar='right']) .tray-area {
+  order: 1;
+  margin: 4px 0 auto;
+  padding: 0;
+}
+html[data-os='ubuntu'] #app:is([data-taskbar='left'], [data-taskbar='right']) .taskbar-start {
+  order: 0;
+  width: auto;
+  height: 28px;
+  margin: 0;
+}
+/* Startmenü: Aubergine, rund */
+html[data-os='ubuntu'] #app .launcher {
+  border-radius: 10px;
+}
+html[data-os='ubuntu'] #app .launcher::before {
+  border-bottom: 0;
+  color: #f2f2f2;
+  text-align: center;
+}
+html[data-os='ubuntu'] #app .launcher .app-label {
+  color: #f2f2f2;
+}
+/* Kopfleiste dunkel, runde Knöpfe, × orange */
+html[data-os='ubuntu'] #app .work-bar {
+  font-weight: 700;
+}
+html[data-os='ubuntu'] #app .win-btns {
+  gap: 5px;
+}
+html[data-os='ubuntu'] #app .win-btns > span {
+  width: 14px;
+  height: 14px;
+  font-size: 8px;
+}
+/* Browser „Glutfuchs“: hell, aktiver Tab mit orangem Strich oben */
+html[data-os='ubuntu'] #app .browser {
+  background: #f0f0f4;
+}
+html[data-os='ubuntu'] #app .br-tabs .br-tab {
+  border-radius: 5px 5px 0 0;
+  background: transparent;
+  border-color: transparent;
+}
+html[data-os='ubuntu'] #app .br-tabs .br-tab.on {
+  border-color: var(--ink);
+  background: #fff;
+  box-shadow: inset 0 2px 0 #e95420;
+}
+html[data-os='ubuntu'] #app .br-bar {
+  background: #fff;
+}
+html[data-os='ubuntu'] #app .br-url {
+  border-width: 1px;
+  border-radius: 4px;
+  background: #f0f0f4;
+}
+/* Terminal: Aubergine, Prompt grün und fett */
+html[data-os='ubuntu'] #app .work[data-kind='term'] {
+  --t-bg: #300a24;
+  --t-fg: #f2f2f2;
+  --t-dim: #c9a9bf;
+}
+html[data-os='ubuntu'] #app .work[data-kind='term'] :is(.typed-prompt, .prompt-user) {
+  color: #8ae234;
+  font-weight: 700;
+}
+html[data-os='ubuntu'] #app .work[data-kind='term'] .term-dots {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='1' y='2' width='14' height='12' rx='2' fill='%23300a24' stroke='%23ddd'/%3E%3Cpath d='M4 6l3 2-3 2M8 11h4' fill='none' stroke='%23fff' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+/* Anmeldung: Aubergine, oben schwarze Leiste mit Uhr, unten der Name */
+html[data-os='ubuntu'] #app .login-band:not(.login-foot) {
+  height: 14px;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  background: #0e0e0f;
+}
+html[data-os='ubuntu'] #app .login-clock {
+  display: block;
+  font: 600 9px / 1 var(--font-ui);
+}
+html[data-os='ubuntu'] #app .login-brand {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 9px;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  text-align: center;
+}
+html[data-os='ubuntu'] #app .login-brand b {
+  font: 600 13px / 1 var(--font-ui);
+  letter-spacing: 0.04em;
+  opacity: 0.85;
+}
+html[data-os='ubuntu'] #app .login-brand span {
+  display: none;
+}
+html[data-os='ubuntu'] #app .login-pic {
+  background: #f1dcea;
+}
+html[data-os='ubuntu'] #app .login-pw {
+  border-radius: 5px;
+}
+
+/* ---------- MäcOS: helle Menüleiste, schwebendes Dock, Ampel-Punkte links in den Fenstern ---------- */
+html[data-os='mac'] #app {
+  --os-bar: transparent;
+  --os-bar-v: transparent;
+  --os-bar-fg: #1d1d1f;
+  --os-start-radius: 5px;
+  --os-start-radius-v: 5px;
+  --os-start-down: rgba(0, 0, 0, 0.1);
+  --os-menu: rgba(246, 246, 248, 0.97);
+  --os-menu-head: transparent;
+  --os-menu-title: 'Launchpad';
+  --os-menu-font: 600 11px / 1.2 var(--font-ui);
+  --os-title: linear-gradient(180deg, #ececec, #dcdcdc);
+  --os-title-fg: #3a3a3c;
+  --os-title-shine: inset 0 1px 0 #f6f6f6;
+  --os-btn: #febc2e;
+  --os-btn-x: #ff5f57;
+  --os-btn-edge: rgba(0, 0, 0, 0.18);
+  --os-btn-radius: 50%;
+  --os-btn-fg: transparent;
+  --os-btn-shadow: none;
+  --os-status: #f5f5f7;
+  --os-status-shade: inset 0 1px 0 #e0e0e2;
+  --os-login:
+    radial-gradient(ellipse 70% 50% at 30% 30%, #f6a76b 0%, rgba(246, 167, 107, 0) 70%),
+    radial-gradient(ellipse 70% 60% at 75% 70%, #8a5bd6 0%, rgba(138, 91, 214, 0) 70%),
+    linear-gradient(160deg, #2e3b8f, #c2508f);
+  --os-login-dim: #fff;
+  --os-login-hint: #f3eefa;
+}
+html[data-os='mac'] #app .topbar {
+  background: rgba(246, 246, 248, 0.92);
+  color: #1d1d1f;
+  font-weight: 500;
+}
+html[data-os='mac'] #app .topbar-left::before {
+  content: '⌘   Finder   Ablage   Bearbeiten   Darstellung   Fenster';
+  white-space: pre;
+}
+html[data-os='mac'] #app .topbar-clock {
+  margin-left: auto;
+}
+/* Dock: schwebende Pille in der Mitte (Start und Apps je mit halber Rundung, wirken wie ein Stück) */
+html[data-os='mac'] #app .taskbar {
+  justify-content: center;
+  border: 0;
+}
+html[data-os='mac'] #app .taskbar-start,
+html[data-os='mac'] #app .tray-area {
+  margin: 1px 0;
+  background: rgba(246, 246, 248, 0.8);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.18);
+}
+html[data-os='mac'] #app .taskbar-start {
+  width: 28px;
+  border-radius: 6px 0 0 6px;
+}
+html[data-os='mac'] #app .tray-area {
+  margin-left: 0;
+  padding: 0 6px 0 2px;
+  border-left: 0;
+  border-radius: 0 6px 6px 0;
+}
+html[data-os='mac'] #app .start-glyph {
+  color: #6b6b70;
+}
+html[data-os='mac'] #app:is([data-taskbar='left'], [data-taskbar='right']) .taskbar {
+  border: 0;
+}
+html[data-os='mac'] #app:is([data-taskbar='left'], [data-taskbar='right']) .taskbar-start {
+  width: auto;
+  height: 28px;
+  margin: auto 1px 0;
+  border-radius: 6px 6px 0 0;
+}
+html[data-os='mac'] #app:is([data-taskbar='left'], [data-taskbar='right']) .tray-area {
+  margin: 0 1px auto;
+  padding: 2px 0 6px;
+  border-top: 0;
+  border-radius: 0 0 6px 6px;
+}
+/* Startmenü (Launchpad): hell, rund, schwebt mittig über dem Dock */
+html[data-os='mac'] #app:is([data-taskbar='bottom'], [data-taskbar='top']) .launcher {
+  left: 0;
+  right: 0;
+  width: fit-content;
+  max-height: calc(100% - var(--tb) - 12px);
+  margin: 0 auto;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+}
+html[data-os='mac'] #app[data-taskbar='bottom'] .launcher {
+  bottom: calc(var(--tb) + 6px);
+}
+html[data-os='mac'] #app .launcher::before {
+  border-bottom: 0;
+  color: #1d1d1f;
+  text-align: center;
+}
+/* Fenster: Ampel-Punkte links (ohne Zeichen), Titel mittig */
+html[data-os='mac'] #app .win-btns {
+  order: -1;
+  margin: 0 6px 0 0;
+  gap: 4px;
+}
+html[data-os='mac'] #app .win-btns > span {
+  width: 9px;
+  height: 9px;
+  border-width: 1px;
+  font-size: 0;
+}
+html[data-os='mac'] #app .win-btns > span:nth-child(2) {
+  background: #28c840;
+}
+html[data-os='mac'] #app .win-btns > .win-x {
+  order: -1;
+}
+html[data-os='mac'] #app .win-btns > span:first-child {
+  order: 0;
+}
+html[data-os='mac'] #app .term-dots {
+  display: none;
+}
+html[data-os='mac'] #app .work-bar {
+  font-weight: 600;
+}
+/* Browser „Pirsch“: hell, Adresse mittig im runden Feld, Tabs flach */
+html[data-os='mac'] #app .browser {
+  background: #ececec;
+}
+html[data-os='mac'] #app .br-tabs .br-tab {
+  border-radius: 5px 5px 0 0;
+  background: #dcdcdc;
+}
+html[data-os='mac'] #app .br-tabs .br-tab.on {
+  background: #f6f6f6;
+}
+html[data-os='mac'] #app .br-bar {
+  background: #f6f6f6;
+}
+html[data-os='mac'] #app .br-url {
+  justify-content: center;
+  border-width: 1px;
+  border-radius: 7px;
+  background: #e9e9eb;
+}
+/* Terminal: weiß, schwarze Schrift */
+html[data-os='mac'] #app .work[data-kind='term'] {
+  --t-bg: #fff;
+  --t-fg: #1d1d1f;
+  --t-dim: #6b6b70;
+}
+html[data-os='mac'] #app .work[data-kind='term'] :is(.typed-prompt, .prompt-user) {
+  color: #1d1d1f;
+}
+html[data-os='mac'] #app .work[data-kind='term'] :is(.work-head, .work-body, .last-closed) {
+  border-color: #d0d0d2;
+}
+/* Anmeldung: bunter Hintergrund, große Uhr oben, Bild und Kennwort-Pille unten in der Mitte, kein Name */
+html[data-os='mac'] #app .login-band:not(.login-foot) {
+  height: auto;
+  min-height: 0;
+  padding-top: 8%;
+  display: grid;
+  place-items: center;
+  background: none;
+}
+html[data-os='mac'] #app .login-clock {
+  display: block;
+  font: 600 34px / 1 var(--font-ui);
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.25);
+}
+html[data-os='mac'] #app .login-mid {
+  justify-content: flex-end;
+  padding-bottom: 6%;
+}
+html[data-os='mac'] #app .login-brand {
+  display: none;
+}
+html[data-os='mac'] #app .login-pic {
+  background: rgba(255, 255, 255, 0.85);
+}
+html[data-os='mac'] #app .login-pw {
+  border-radius: 9px;
+}
+@media (max-height: 680px) {
+  html[data-os='mac'] #app .login-clock {
+    font-size: 22px;
+  }
+  html[data-os='mac'] #app .login-band:not(.login-foot) {
+    padding-top: 4%;
+  }
 }

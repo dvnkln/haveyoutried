@@ -3,7 +3,7 @@ import type { GameState } from '../core/state';
 import { bus } from '../core/bus';
 import { bossProgress } from '../core/boss';
 import { activeOs, shownOs as shownOsOf } from '../core/os';
-import type { OsId } from '../content/systems';
+import { osOf, type OsId } from '../content/systems';
 import { productionPerSec, rates } from '../core/economy';
 import { addTickets } from '../core/state';
 import type { Sfx } from './audio';
@@ -147,6 +147,9 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
   const clockH = h('span');
   const clockM = h('span');
   const clockEl = h('span', { class: 'taskbar-clock', 'aria-hidden': 'true' }, [clockH, h('span', { class: 'clock-sep', text: ':' }), clockM]);
+  // Leiste oben (Systeme mit Dock, main.css: nur dort sichtbar): links Menü, Uhr; nur Anzeige
+  const topClock = h('span', { class: 'topbar-clock' });
+  const topbar = h('div', { class: 'topbar', 'aria-hidden': 'true' }, [h('span', { class: 'topbar-left' }), topClock]);
   // Infobereich rechts (wie bei XP): Tray-Apps und Uhr auf eigenem Feld
   // Suchfeld neben Start: nur Deko, sichtbar nur bei Systemen, die eins haben (main.css: html[data-os] .taskbar-search).
   // Text im eigenen Element, damit er mit „…“ gekürzt werden kann
@@ -168,7 +171,7 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
   let wallKeyShown = '';
   // bis zum ersten Anschlag ist kein Werkzeug offen: nur Hintergrundbild und Apps
   screen.append(
-    h('div', { class: 'desktop no-tool' }, [wallpaper, desk.work, desk.lastClosed, taskbar, launcher]),
+    h('div', { class: 'desktop no-tool' }, [wallpaper, topbar, desk.work, desk.lastClosed, taskbar, launcher]),
     desk.loginEl,
     h('div', { class: 'scanlines', 'aria-hidden': 'true' }),
   );
@@ -516,7 +519,9 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
       const host = companyOf(s.prestige.company).host;
       setText(promptUser, `root@${host}`);
       setText(rate, `+${formatRate(productionPerSec(s))}/s`);
-      if (root.dataset.taskbar !== s.settings.taskbar) root.dataset.taskbar = s.settings.taskbar;
+      // Leiste fest oben bei Systemen, die nur eine Leiste oben kennen (Debiam); sonst die Einstellung
+      const barPos = shownOs && osOf(shownOs).layout === 'gnome' ? 'top' : s.settings.taskbar;
+      if (root.dataset.taskbar !== barPos) root.dataset.taskbar = barPos;
       // Betriebssystem (nur Optik, main.css unter html[data-os=…]); an <html> wie der Büro-Stil.
       // Andere Wahl im System-Tab: Neustart erst, wenn die Einstellungen zu sind und nichts anderes läuft
       // (ein Incident schließt die Einstellungen auch: dann erst danach)
@@ -533,6 +538,7 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
         const now = new Date();
         setText(clockH, String(now.getHours()).padStart(2, '0'));
         setText(clockM, String(now.getMinutes()).padStart(2, '0'));
+        setText(topClock, `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);
       }
       // Incident, Dialog, Monitor oder Licht aus: Launcher zu
       if (launcherOpen && gameBlocked()) closeLauncher();

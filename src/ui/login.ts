@@ -35,11 +35,13 @@ export function createLogin(ctx: AppContext, onDone: () => void): Login {
   const host = h('span', { class: 'login-host' });
   const dots = h('span', { class: 'login-dots' });
   const hint = h('span', { class: 'login-hint' });
+  const clock = h('span', { class: 'login-clock' });
   // Logo-Name oder Dialogtitel des Systems, wie beim Vorbild (content/systems.ts loginBrand)
   const brand = h('b');
   const prompt = h('span');
   const el = h('div', { class: 'login', hidden: '', role: 'dialog', 'aria-label': 'Anmeldung' }, [
-    h('div', { class: 'login-band' }),
+    // oben: bei manchen Systemen Leiste mit Uhr bzw. große Uhr (main.css)
+    h('div', { class: 'login-band' }, [clock]),
     h('div', { class: 'login-mid' }, [
       h('div', { class: 'login-brand' }, [brand, prompt]),
       h('div', { class: 'login-user' }, [
@@ -83,6 +85,8 @@ export function createLogin(ctx: AppContext, onDone: () => void): Login {
       clearTimers();
       typed = 0;
       relabel();
+      const now = new Date();
+      setText(clock, `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);
       setText(host, companyOf(ctx.state.prestige.company).host);
       setText(hint, HINTS[reason]);
       setText(dots, '');

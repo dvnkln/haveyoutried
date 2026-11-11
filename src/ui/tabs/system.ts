@@ -11,8 +11,8 @@ import { clearWall, paintWall, validWall, wallChoices } from '../wallpaper';
 import { ACHIEVEMENTS } from '../../content/achievements';
 import { achievementCount } from '../../core/achievements';
 import { COMPANIES } from '../../content/companies';
-import { osOf, SYSTEMS, type OsId } from '../../content/systems';
-import { activeOs, chooseOs, osAvailable } from '../../core/os';
+import { osOf, SYSTEMS, type OsId, type OsLayout } from '../../content/systems';
+import { activeOs, chooseOs, osAvailable, shownOs } from '../../core/os';
 
 /**
  * Seitlich wischen = blättern (die Maus darf über den Rand hinausziehen).
@@ -37,6 +37,12 @@ function onSwipe(el: HTMLElement, step: (dir: number) => void, hooks: { down?():
   el.addEventListener('pointercancel', up);
 }
 
+/** Hinweis über der Taskleisten-Wahl je Aufbau des gezeigten Systems (leer = keiner) */
+const TASKBAR_HINT: Record<OsLayout, string> = {
+  taskbar: '',
+  gnome: 'Debiam hat seine Leiste fest oben. Darüber wird nicht diskutiert.',
+  dock: 'Die Leiste oben bleibt oben, verschieben kannst du das Dock.',
+};
 const OS_HINT = 'Jede Firma bringt ihr System mit. Einmal benutzt, bleibt es dir.';
 const OS_PENDING = 'Neustart, sobald du die Einstellungen schließt.';
 /** System ohne fertigen Look */
@@ -111,6 +117,8 @@ export function systemTab(): Tab {
     ]),
   );
   const tbPicker = h('div', { class: 'tb-picker', role: 'radiogroup', 'aria-label': 'Position der Taskleiste' }, tbButtons);
+  /** Hinweis, wenn das System die Leiste festlegt (Debiam: fest oben) oder nur das Dock verschiebt */
+  const tbHint = h('div', { class: 'hint' });
   // Betriebssystem: Skizze je System, gesperrte als „???“; die Wahl gilt ab dem Schließen der Einstellungen (Neustart, app.ts)
   const osButtons = SYSTEMS.map((o) =>
     h('button', { class: 'os-pick', type: 'button', role: 'radio', 'aria-checked': 'false', 'data-os': o.id }, [
@@ -454,7 +462,7 @@ export function systemTab(): Tab {
             h('div', { class: 'switch-carousel' }, [wallPrev, wallCard, wallNext]),
           ]),
           h('div', { class: 'setting-col' }, [h('div', { text: 'Betriebssystem' }), osHint, osPicker]),
-          h('div', { class: 'setting-col' }, [h('div', { text: 'Taskleiste' }), tbPicker]),
+          h('div', { class: 'setting-col' }, [h('div', { text: 'Taskleiste' }), tbHint, tbPicker]),
         ]),
 
         h('div', { class: 'section-title', text: '# Spielstand' }),
@@ -509,11 +517,17 @@ export function systemTab(): Tab {
       ambVolume.disabled = !s.settings.sound;
       volReset.hidden = !s.settings.sound || s.settings.volume === DEFAULT_VOLUME.volume;
       ambReset.hidden = !s.settings.sound || s.settings.ambienceVolume === DEFAULT_VOLUME.ambienceVolume;
+      // Leiste je System: Debiam legt sie fest (oben), bei Dock-Systemen verschiebt die Wahl nur das Dock
+      const layout = osOf(shownOs(s)).layout;
+      setText(tbHint, TASKBAR_HINT[layout]);
+      tbHint.hidden = !TASKBAR_HINT[layout];
       for (const b of tbButtons) {
         // Radiogruppe: nur die gewählte Position ist per Tab erreichbar
         const on = b.dataset.pos === s.settings.taskbar;
         if (b.getAttribute('aria-checked') !== String(on)) b.setAttribute('aria-checked', String(on));
         if (b.tabIndex !== (on ? 0 : -1)) b.tabIndex = on ? 0 : -1;
+        const fixed = layout === 'gnome';
+        if ((b as HTMLButtonElement).disabled !== fixed) (b as HTMLButtonElement).disabled = fixed;
       }
       const os = activeOs(s);
       SYSTEMS.forEach((o, i) => {

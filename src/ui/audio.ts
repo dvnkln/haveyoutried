@@ -560,6 +560,9 @@ export class Sfx {
     if (os === 'win7') return this.start7();
     if (os === 'win10') return this.start10();
     if (os === 'win11') return this.start11();
+    if (os === 'debian') return this.startDebian();
+    if (os === 'ubuntu') return this.startUbuntu();
+    if (os === 'mac') return this.startMac();
     this.unlockPing();
   }
 
@@ -619,6 +622,48 @@ export class Sfx {
     // Fläche aus Quinte darunter und Oktave über dem Grundton, kommt langsam (nicht auf den Melodietönen: die würden sich auslöschen)
     for (const f of [392, 1046.5]) this.tone('sine', f, f, t + 0.2, 0.014, 1.4, out, 0.35);
     this.tone('sine', 1567.98, 1567.98, t + 0.24, 0.012, 0.9, out, 0.05);
+  }
+
+  /** Debiam: schlicht wie GNOME, ein einzelner weicher Glockenton mit leiser Quinte darüber */
+  private startDebian(): void {
+    const r = this.ready();
+    if (!r) return;
+    const { out, t } = r;
+    this.tone('sine', 880, 880, t, 0.08, 1.2, out, 0.03);
+    this.tone('sine', 1320, 1320, t + 0.01, 0.018, 0.8, out, 0.03);
+    this.tone('sine', 440, 440, t, 0.02, 1.0, out, 0.08);
+  }
+
+  /** Ubuntü: kleines Klopf-Muster wie von Holz-Trommeln (weiche Sinus-Schläge), darunter ein leiser Grundton */
+  private startUbuntu(): void {
+    const r = this.ready();
+    if (!r) return;
+    const { out, t } = r;
+    this.tone('sine', 196, 196, t, 0.02, 1.4, out, 0.15);
+    // Rhythmus: ta – ta-ta – taa
+    [
+      [0, 392, 0.07, 0.28],
+      [0.24, 523.25, 0.06, 0.22],
+      [0.36, 587.33, 0.06, 0.22],
+      [0.55, 783.99, 0.065, 0.9],
+    ].forEach(([dt, f, peak, dec]) => this.tone('sine', f!, f!, t + dt!, peak!, dec!, out, 0.03));
+  }
+
+  /** MäcOS: ein warmer, voller Dur-Akkord, der lange ausklingt (kein Bass unter 130 Hz) */
+  private startMac(): void {
+    const r = this.ready();
+    if (!r) return;
+    const { out, t } = r;
+    for (const [f, peak] of [
+      [185, 0.014],
+      [277.18, 0.035],
+      [369.99, 0.035],
+      [466.16, 0.025],
+      [554.37, 0.018],
+    ] as const) {
+      this.tone('sine', f, f, t, peak, 2.2, out, 0.04);
+      this.tone('sine', f * 1.003, f * 1.003, t, peak * 0.5, 2.0, out, 0.05);
+    }
   }
 
   /** Neuer Anrufer: deutsches Freizeichen (425 Hz), ganz kurz und leise. */
