@@ -1,11 +1,8 @@
 import { incidentRunning } from '../core/incidents';
 
-/** Anmeldebildschirm steht (erster Start, nach einem Jobwechsel); login.ts meldet sich hier an */
-let loginCheck: () => boolean = () => false;
-export function registerLogin(active: () => boolean): void {
-  loginCheck = active;
-}
-export const loginShowing = () => loginCheck();
+/** Anmeldebildschirm steht (erster Start, nach einem Jobwechsel); wie hintShowing über das DOM */
+export const LOGIN_SELECTOR = '.login:not([hidden])';
+export const loginShowing = () => !!document.querySelector(LOGIN_SELECTOR);
 
 /**
  * Spiel gerade nicht ansprechbar: Dialog offen, App-Fenster offen, Incident läuft, Anmeldung, Licht oder Monitor aus.

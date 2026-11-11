@@ -2,7 +2,6 @@ import { LOGIN } from '../content/boot';
 import { companyOf } from '../content/companies';
 import { markLoggedIn } from '../core/login';
 import type { AppContext } from './app';
-import { registerLogin } from './blocked';
 import { h, setText } from './dom';
 
 /** Willkommen-Bildschirm wie bei XP: so lange „Willkommen“ steht, bevor der Desktop kommt */
@@ -48,9 +47,6 @@ export function createLogin(ctx: AppContext, onDone: () => void): Login {
     for (const t of timers) clearTimeout(t);
     timers = [];
   };
-
-  // gameBlocked/gamePaused fragen hier nach, ob die Anmeldung steht
-  registerLogin(() => !el.hidden);
 
   return {
     el,
