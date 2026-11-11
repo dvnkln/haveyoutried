@@ -616,8 +616,8 @@ export class Sfx {
     if (!r) return;
     const { out, t } = r;
     [523.25, 659.25, 783.99].forEach((f, i) => this.tone('sine', f, f, t + i * 0.11, 0.065, i === 2 ? 1.3 : 0.5, out, 0.035));
-    // Fläche aus Quinte und Oktave über dem Grundton, kommt langsam
-    for (const f of [783.99, 1046.5]) this.tone('sine', f, f, t + 0.2, 0.014, 1.4, out, 0.35);
+    // Fläche aus Quinte darunter und Oktave über dem Grundton, kommt langsam (nicht auf den Melodietönen: die würden sich auslöschen)
+    for (const f of [392, 1046.5]) this.tone('sine', f, f, t + 0.2, 0.014, 1.4, out, 0.35);
     this.tone('sine', 1567.98, 1567.98, t + 0.24, 0.012, 0.9, out, 0.05);
   }
 

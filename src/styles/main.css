@@ -10370,32 +10370,19 @@ html[data-os='win7'] #app .login-welcome {
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
 }
 
-/* ---------- Betriebssystem Fenster 10: flach, dunkle Taskleiste mit Suchfeld, weiße Titelleisten ----------
-   Farben über --os-*, Formen hier; Höhen bleiben gleich (Arbeitsfenster pixelgleich). */
-html[data-os='win10'] #app {
-  --os-bar: #1c1c1e;
-  --os-bar-v: #1c1c1e;
-  --os-bar-fg: #fff;
-  --os-shine: none;
+/* ---------- Betriebssysteme Fenster 10 und 11: flach, helle Titelleisten, Anmeldung mittig mit rundem Bild ----------
+   Gemeinsames hier, Unterschiede in den Blöcken je System darunter. Farben über --os-*, Formen hier;
+   Höhen bleiben gleich (Arbeitsfenster pixelgleich). */
+html:is([data-os='win10'], [data-os='win11']) #app {
   --os-text-shadow: none;
   --os-start: transparent;
-  --os-start-down: #3a3a3e;
   --os-start-shadow: none;
-  --os-start-radius: 0;
-  --os-start-radius-v: 0;
-  --os-start-font: 400 12px / 1 var(--font-ui);
   --os-tray: transparent;
   --os-tray-v: transparent;
   --os-tray-edge: transparent;
   --os-tray-shine: none;
   --os-tray-shine-v: none;
   --os-clock-shadow: none;
-  --os-menu: #2b2b2e;
-  --os-menu-head: #2b2b2e;
-  --os-menu-title: 'Alle Apps';
-  --os-menu-font: 600 11px / 1.2 var(--font-ui);
-  --os-title: #fff;
-  --os-title-fg: #1c1c1e;
   --os-title-shine: none;
   --os-btn: transparent;
   --os-btn-x: transparent;
@@ -10403,41 +10390,153 @@ html[data-os='win10'] #app {
   --os-btn-radius: 0;
   --os-btn-fg: #333;
   --os-btn-shadow: none;
-  --os-status: #f2f2f2;
   --os-status-fill: #cde9d8;
   --os-status-sent: #a8dcbd;
+}
+/* Start: ohne Beschriftung, nur Symbol */
+html:is([data-os='win10'], [data-os='win11']) #app .taskbar-start {
+  padding: 0;
+  justify-content: center;
+  border-right: 0;
+}
+html:is([data-os='win10'], [data-os='win11']) #app .start-label {
+  display: none;
+}
+html:is([data-os='win10'], [data-os='win11']) #app .start-glyph {
+  padding: 0;
+  color: transparent;
+}
+html:is([data-os='win10'], [data-os='win11']) #app:is([data-taskbar='left'], [data-taskbar='right']) .taskbar-start {
+  width: auto;
+  border-bottom: 0;
+}
+html:is([data-os='win10'], [data-os='win11']) #app .launcher::before {
+  border-bottom: 0;
+}
+/* Titelleiste flach, Symbole dünn; × ohne Farbe (rot erst beim Drüberfahren, gibt es am Handy nicht) */
+html:is([data-os='win10'], [data-os='win11']) #app .work-bar {
+  font-weight: 500;
+}
+html:is([data-os='win10'], [data-os='win11']) #app .win-btns {
+  gap: 4px;
+}
+html:is([data-os='win10'], [data-os='win11']) #app .win-btns > span {
+  width: 18px;
+  font-weight: 400;
+}
+html:is([data-os='win10'], [data-os='win11']) #app .br-url {
+  border-width: 1px;
+  background: #fff;
+}
+/* Anmeldung: alles mittig, großes rundes Bild, kein Name des Systems, rechts unten nur das Ausschalt-Symbol */
+html:is([data-os='win10'], [data-os='win11']) #app .login-band:not(.login-foot) {
+  display: none;
+}
+html:is([data-os='win10'], [data-os='win11']) #app .login-mid {
+  position: static;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+}
+html:is([data-os='win10'], [data-os='win11']) #app .login-brand {
+  display: none;
+}
+html:is([data-os='win10'], [data-os='win11']) #app .login-user {
+  flex: 0 0 auto;
+  flex-direction: column;
+  padding: 0;
+  text-align: center;
+}
+html:is([data-os='win10'], [data-os='win11']) #app .login-pic {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+}
+html:is([data-os='win10'], [data-os='win11']) #app .login-info {
+  align-items: center;
+  gap: 5px;
+}
+html:is([data-os='win10'], [data-os='win11']) #app .login-host {
+  display: none;
+}
+html:is([data-os='win10'], [data-os='win11']) #app .login-pw {
+  width: 130px;
+  height: 18px;
+}
+/* angenommen: Feld wird grün wie bei den anderen Systemen (die Regeln oben setzen sonst ihren Hintergrund durch) */
+html:is([data-os='win10'], [data-os='win11']) #app .login.ok .login-pw {
+  background: #bfeed6;
+}
+html:is([data-os='win10'], [data-os='win11']) #app .login-hint {
+  max-width: 200px;
+  text-align: center;
+}
+html:is([data-os='win10'], [data-os='win11']) #app .login-foot {
+  justify-content: flex-end;
+  padding: 0 8px 7px;
+  border-top: 0;
+  background: none;
+}
+html:is([data-os='win10'], [data-os='win11']) #app .login-off {
+  font-size: 0;
+}
+html:is([data-os='win10'], [data-os='win11']) #app .login-off::before {
+  border: 0;
+  border-radius: 0;
+  background: none;
+  font-size: 12px;
+}
+html:is([data-os='win10'], [data-os='win11']) #app .login-welcome {
+  font: 400 20px / 1 var(--font-ui);
+  text-shadow: none;
+}
+@media (max-height: 680px) {
+  html:is([data-os='win10'], [data-os='win11']) #app .login-mid {
+    gap: 6px;
+  }
+  html:is([data-os='win10'], [data-os='win11']) #app .login-pic {
+    width: 38px;
+    height: 38px;
+  }
+}
+
+/* ---------- Fenster 10: dunkle Taskleiste mit Suchfeld, dunkles Startmenü, PowerShell blau ---------- */
+html[data-os='win10'] #app {
+  --os-bar: #1c1c1e;
+  --os-bar-v: #1c1c1e;
+  --os-bar-fg: #fff;
+  --os-shine: none;
+  --os-start-down: #3a3a3e;
+  --os-start-radius: 0;
+  --os-start-radius-v: 0;
+  --os-menu: #2b2b2e;
+  --os-menu-head: #2b2b2e;
+  --os-menu-title: 'Alle Apps';
+  --os-menu-font: 600 11px / 1.2 var(--font-ui);
+  --os-title: #fff;
+  --os-title-fg: #1c1c1e;
+  --os-status: #f2f2f2;
   --os-status-shade: inset 0 1px 0 #e1e1e1;
   --os-login: linear-gradient(160deg, #0b2d63 0%, #0a4f9e 38%, #1279d3 52%, #0a4f9e 66%, #08244f 100%);
   --os-login-dim: #e3eefc;
   --os-login-hint: #e3eefc;
 }
-/* Start: kein Logo, nur ein schlichtes Fenster-Symbol (Rahmen mit Querstrich); ohne Beschriftung */
+/* Start: kein Logo, ein schlichtes Fenster-Symbol (Rahmen mit Querstrich). 64 px breit wie bei 7:
+   links ragt das Telefon über die Leiste (bis ~56 px), das Symbol muss rechts davon frei antippbar sein */
 html[data-os='win10'] #app .taskbar-start {
   width: 64px;
-  padding: 0;
-  justify-content: center;
-  border-right: 0;
-}
-html[data-os='win10'] #app .start-label {
-  display: none;
 }
 html[data-os='win10'] #app .start-glyph {
   width: 11px;
   height: 10px;
-  padding: 0;
   border: 1.5px solid #fff;
   border-radius: 1px;
   background: linear-gradient(#fff, #fff) center 2px / 100% 1.5px no-repeat;
-  color: transparent;
 }
-html[data-os='win10'] #app:is([data-taskbar='left'], [data-taskbar='right']) .taskbar-start {
-  width: auto;
-  border-bottom: 0;
-}
-/* Suchfeld: weißes Feld mit Lupe, schrumpft, verschwindet bei senkrechter Leiste */
+/* Suchfeld: weißes Feld mit Lupe, Text wird mit „…“ gekürzt; zu schmal oder senkrechte Leiste: weg */
 html[data-os='win10'] #app .taskbar-search {
   flex: 0 1 132px;
-  min-width: 0;
+  min-width: 64px;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -10447,6 +10546,10 @@ html[data-os='win10'] #app .taskbar-search {
   background: #f2f2f2;
   color: #666;
   font: 400 9.5px / 1 var(--font-ui);
+}
+html[data-os='win10'] #app .taskbar-search > span {
+  min-width: 0;
+  overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
@@ -10464,22 +10567,10 @@ html[data-os='win10'] #app .launcher {
   border-radius: 0;
 }
 html[data-os='win10'] #app .launcher::before {
-  border-bottom: 0;
   color: #c8c8c8;
 }
 html[data-os='win10'] #app .launcher .app-label {
   color: #f2f2f2;
-}
-/* Titelleiste: weiß und flach, Symbole dünn; × ohne Farbe (rot erst beim Drüberfahren, gibt es am Handy nicht) */
-html[data-os='win10'] #app .work-bar {
-  font-weight: 500;
-}
-html[data-os='win10'] #app .win-btns {
-  gap: 4px;
-}
-html[data-os='win10'] #app .win-btns > span {
-  width: 18px;
-  font-weight: 400;
 }
 /* Browser „Kante“: flache graue Leiste, eckige Tabs */
 html[data-os='win10'] #app .browser {
@@ -10489,18 +10580,14 @@ html[data-os='win10'] #app .br-tabs .br-tab {
   border-radius: 0;
   background: #d4d4d4;
 }
-html[data-os='win10'] #app .br-tabs .br-tab.on {
-  background: #f9f9f9;
-}
+html[data-os='win10'] #app .br-tabs .br-tab.on,
 html[data-os='win10'] #app .br-bar {
   background: #f9f9f9;
 }
 html[data-os='win10'] #app .br-url {
   border-radius: 2px;
-  border-width: 1px;
-  background: #fff;
 }
-/* PowerShell: blau, weiße Schrift, gelber Befehl (ssh-Sitzung) */
+/* PowerShell: blau, weiße Schrift, gelber Prompt (ssh-Sitzung) */
 html[data-os='win10'] #app .work[data-kind='term'] {
   --t-bg: #012456;
   --t-fg: #eeedf0;
@@ -10512,53 +10599,22 @@ html[data-os='win10'] #app .work[data-kind='term'] :is(.typed-prompt, .prompt-us
 html[data-os='win10'] #app .work[data-kind='term'] .term-dots {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='1' y='2' width='14' height='12' rx='2' fill='%23012456' stroke='%23cfe0ff'/%3E%3Cpath d='M4 6l3 2-3 2M8 11h4' fill='none' stroke='%23fff' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E");
 }
-/* Anmeldung: blaue Lichtstrahlen, großes rundes Bild mittig, Kennwortfeld mit Pfeil darin, rechts unten Symbole */
-html[data-os='win10'] #app .login-band:not(.login-foot) {
-  display: none;
-}
-html[data-os='win10'] #app .login-mid {
-  position: static;
-  flex-direction: column;
-  justify-content: center;
-  gap: 10px;
-}
-html[data-os='win10'] #app .login-brand {
-  display: none;
-}
-html[data-os='win10'] #app .login-user {
-  flex: 0 0 auto;
-  flex-direction: column;
-  padding: 0;
-  text-align: center;
-}
+/* Anmeldung: blaue Lichtstrahlen, Kennwortfeld mit Pfeil darin */
 html[data-os='win10'] #app .login-pic {
-  width: 52px;
-  height: 52px;
   border: 0;
-  border-radius: 50%;
   background: #c9d4e3;
   box-shadow: none;
-}
-html[data-os='win10'] #app .login-info {
-  align-items: center;
-  gap: 5px;
 }
 html[data-os='win10'] #app .login-name {
   font: 500 14px / 1 var(--font-ui);
 }
-html[data-os='win10'] #app .login-host {
-  display: none;
-}
 html[data-os='win10'] #app .login-pw {
   position: relative;
-  width: 130px;
-  height: 18px;
   padding-right: 20px;
   border: 1.5px solid rgba(255, 255, 255, 0.85);
   border-radius: 0;
   background: rgba(255, 255, 255, 0.92);
 }
-/* Pfeil im Feld rechts */
 html[data-os='win10'] #app .login-pw::after {
   content: '→';
   position: absolute;
@@ -10573,74 +10629,23 @@ html[data-os='win10'] #app .login-pw::after {
   font-size: 10px;
   letter-spacing: 0;
 }
-html[data-os='win10'] #app .login-hint {
-  max-width: 200px;
-  text-align: center;
-}
-html[data-os='win10'] #app .login-foot {
-  justify-content: flex-end;
-  padding: 0 8px 7px;
-  border-top: 0;
-  background: none;
-}
-html[data-os='win10'] #app .login-off {
-  font-size: 0;
-}
-html[data-os='win10'] #app .login-off::before {
-  border: 0;
-  border-radius: 0;
-  background: none;
-  font-size: 12px;
-}
-html[data-os='win10'] #app .login-welcome {
-  font: 400 20px / 1 var(--font-ui);
-  text-shadow: none;
-}
-@media (max-height: 680px) {
-  html[data-os='win10'] #app .login-mid {
-    gap: 6px;
-  }
-  html[data-os='win10'] #app .login-pic {
-    width: 38px;
-    height: 38px;
-  }
-}
 
-/* ---------- Betriebssystem Fenster 11: helle Taskleiste, Start und Apps in der Mitte, schwebendes Startmenü ----------
-   Farben über --os-*, Formen hier; Höhen bleiben gleich (Arbeitsfenster pixelgleich). */
+/* ---------- Fenster 11: helle Taskleiste, Start und Apps in der Mitte, schwebendes Startmenü ---------- */
 html[data-os='win11'] #app {
   --os-bar: #eef1f6;
   --os-bar-v: #eef1f6;
   --os-bar-fg: #1b1b1f;
   --os-shine: inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  --os-text-shadow: none;
-  --os-start: transparent;
   --os-start-down: #dde3ec;
-  --os-start-shadow: none;
   --os-start-radius: 4px;
   --os-start-radius-v: 4px;
-  --os-tray: transparent;
-  --os-tray-v: transparent;
-  --os-tray-edge: transparent;
-  --os-tray-shine: none;
-  --os-tray-shine-v: none;
-  --os-clock-shadow: none;
   --os-menu: #f4f6fa;
   --os-menu-head: transparent;
   --os-menu-title: 'Angeheftet';
   --os-menu-font: 600 11px / 1.2 var(--font-ui);
   --os-title: #f3f5f9;
   --os-title-fg: #1b1b1f;
-  --os-title-shine: none;
-  --os-btn: transparent;
-  --os-btn-x: transparent;
-  --os-btn-edge: transparent;
-  --os-btn-radius: 0;
-  --os-btn-fg: #333;
-  --os-btn-shadow: none;
   --os-status: #f3f5f9;
-  --os-status-fill: #cde9d8;
-  --os-status-sent: #a8dcbd;
   --os-status-shade: inset 0 1px 0 #e3e6ec;
   --os-login:
     radial-gradient(ellipse 60% 45% at 50% 62%, #7fb2f5 0%, rgba(127, 178, 245, 0) 70%),
@@ -10649,7 +10654,11 @@ html[data-os='win11'] #app {
   --os-login-dim: #1b2a44;
   --os-login-hint: #1b2a44;
 }
-/* Leiste unten oder oben: Start und Apps als Gruppe in der Mitte, die Uhr bleibt rechts */
+/* Leiste unten oder oben: Start und Apps als Gruppe genau in der Mitte (wie das Startmenü darüber),
+   die Uhr liegt rechts außen über der Leiste und nimmt der Gruppe keinen Platz weg */
+html[data-os='win11'] #app:is([data-taskbar='bottom'], [data-taskbar='top']) .taskbar {
+  position: relative;
+}
 html[data-os='win11'] #app:is([data-taskbar='bottom'], [data-taskbar='top']) .tray-area {
   display: contents;
 }
@@ -10660,39 +10669,34 @@ html[data-os='win11'] #app:is([data-taskbar='bottom'], [data-taskbar='top']) .tr
   margin: 0 auto 0 4px;
 }
 html[data-os='win11'] #app:is([data-taskbar='bottom'], [data-taskbar='top']) .taskbar-clock {
-  align-self: center;
-  padding-right: 7px;
+  position: absolute;
+  top: 0;
+  right: 7px;
+  bottom: 0;
+  align-items: center;
 }
-/* Start: kein Logo, ein blaues abgerundetes Quadrat mit Lichtkante; Knopf breit genug neben dem Telefon */
+/* Start: kein Logo, ein blaues abgerundetes Quadrat mit Lichtkante. Mittig, also weit weg vom Telefon links:
+   34 px reichen als Tippfläche */
 html[data-os='win11'] #app .taskbar-start {
   width: 34px;
   margin: 2px 0;
-  padding: 0;
-  justify-content: center;
-  border-right: 0;
-}
-html[data-os='win11'] #app .start-label {
-  display: none;
 }
 html[data-os='win11'] #app .start-glyph {
   width: 12px;
   height: 12px;
-  padding: 0;
   border-radius: 3px;
   background: linear-gradient(135deg, #7cc4ff 0%, #1f7ae0 55%, #0b52b8 100%);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
-  color: transparent;
 }
 html[data-os='win11'] #app:is([data-taskbar='left'], [data-taskbar='right']) .taskbar-start {
-  width: auto;
   margin: 2px;
-  border-bottom: 0;
 }
-/* Startmenü: schwebt mittig über der Leiste, rund, mit Abstand */
+/* Startmenü: schwebt mittig mit Abstand über der Leiste, rund; der Abstand geht von der Höhe ab */
 html[data-os='win11'] #app:is([data-taskbar='bottom'], [data-taskbar='top']) .launcher {
   left: 0;
   right: 0;
   width: fit-content;
+  max-height: calc(100% - var(--tb) - 12px);
   margin: 0 auto;
   border: 2px solid var(--ink);
   border-radius: 9px;
@@ -10707,19 +10711,7 @@ html[data-os='win11'] #app[data-taskbar='top'] .launcher {
   transform-origin: center top;
 }
 html[data-os='win11'] #app .launcher::before {
-  border-bottom: 0;
   color: #1b1b1f;
-}
-/* Titelleiste: hell und flach wie bei 10 */
-html[data-os='win11'] #app .work-bar {
-  font-weight: 500;
-}
-html[data-os='win11'] #app .win-btns {
-  gap: 4px;
-}
-html[data-os='win11'] #app .win-btns > span {
-  width: 18px;
-  font-weight: 400;
 }
 /* Browser „Kante“: hell, runde Tabs */
 html[data-os='win11'] #app .browser {
@@ -10729,98 +10721,38 @@ html[data-os='win11'] #app .br-tabs .br-tab {
   border-radius: 6px 6px 0 0;
   background: #dde3ec;
 }
-html[data-os='win11'] #app .br-tabs .br-tab.on {
-  background: #fafbfd;
-}
+html[data-os='win11'] #app .br-tabs .br-tab.on,
 html[data-os='win11'] #app .br-bar {
   background: #fafbfd;
 }
 html[data-os='win11'] #app .br-url {
-  border-width: 1px;
   border-radius: 6px;
-  background: #fff;
 }
 /* Terminal: dunkel, eigenes Symbol (Fenster mit Prompt) */
 html[data-os='win11'] #app .work[data-kind='term'] .term-dots {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='1' y='2' width='14' height='12' rx='2.5' fill='%23202020' stroke='%23bbb'/%3E%3Cpath d='M4 6l3 2-3 2M8 11h4' fill='none' stroke='%23fff' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E");
 }
-/* Anmeldung: heller Blüten-Hintergrund, rundes Bild, Kennwortfeld mit Unterstrich, dunkle Schrift */
+/* Anmeldung: heller Blüten-Hintergrund, dunkle Schrift, Kennwortfeld mit blauem Unterstrich */
 html[data-os='win11'] #app .login {
   color: #1b1b1f;
 }
-html[data-os='win11'] #app .login-band:not(.login-foot) {
-  display: none;
-}
-html[data-os='win11'] #app .login-mid {
-  position: static;
-  flex-direction: column;
-  justify-content: center;
-  gap: 10px;
-}
-html[data-os='win11'] #app .login-brand {
-  display: none;
-}
-html[data-os='win11'] #app .login-user {
-  flex: 0 0 auto;
-  flex-direction: column;
-  padding: 0;
-  text-align: center;
-}
 html[data-os='win11'] #app .login-pic {
-  width: 52px;
-  height: 52px;
   border: 2px solid rgba(255, 255, 255, 0.9);
-  border-radius: 50%;
   background: #dbe5f3;
   box-shadow: 0 2px 8px rgba(20, 40, 80, 0.25);
-}
-html[data-os='win11'] #app .login-info {
-  align-items: center;
-  gap: 5px;
 }
 html[data-os='win11'] #app .login-name {
   font: 600 14px / 1 var(--font-ui);
 }
-html[data-os='win11'] #app .login-host {
-  display: none;
-}
 html[data-os='win11'] #app .login-pw {
-  width: 130px;
-  height: 18px;
   border: 1px solid rgba(20, 40, 80, 0.25);
   border-bottom: 2px solid #1f7ae0;
   border-radius: 4px;
   background: rgba(255, 255, 255, 0.85);
 }
-html[data-os='win11'] #app .login-hint {
-  max-width: 200px;
-  text-align: center;
-}
-html[data-os='win11'] #app .login-foot {
-  justify-content: flex-end;
-  padding: 0 8px 7px;
-  border-top: 0;
-  background: none;
-}
-html[data-os='win11'] #app .login-off {
-  font-size: 0;
-}
 html[data-os='win11'] #app .login-off::before {
-  border: 0;
-  background: none;
   color: #1b1b1f;
-  font-size: 12px;
 }
 html[data-os='win11'] #app .login-welcome {
-  font: 500 20px / 1 var(--font-ui);
-  text-shadow: none;
-}
-@media (max-height: 680px) {
-  html[data-os='win11'] #app .login-mid {
-    gap: 6px;
-  }
-  html[data-os='win11'] #app .login-pic {
-    width: 38px;
-    height: 38px;
-  }
+  font-weight: 500;
 }
