@@ -580,12 +580,13 @@ export class Sfx {
 
   /**
    * 98: warme Fläche, die langsam anschwillt, darüber aufsteigende Glöckchen, darunter ein weicher Bass.
-   * Bass nicht unter ~130 Hz: Handy-Lautsprecher kratzen sonst (eine Oktave tiefer war fast die Hälfte der Energie).
+   * Bass nicht unter ~130 Hz, nur Sinus, weiche Einsätze, kein Hall: alles andere kratzt im Handy-Lautsprecher.
    */
   private start98(): void {
     const r = this.ready();
-    const out = this.space(0.35);
-    if (!r || !out) return;
+    if (!r) return;
+    // ohne Raumhall: gehaltene Töne durch den Hall kratzen auf Handy-Lautsprechern (auf dem Pixel getestet, ohne Hall sauber)
+    const out = r.out;
     const t = r.t;
     this.tone('sine', 138.59, 138.59, t, 0.02, 2.2, out, 0.35);
     // Des-Dur, je zwei leicht verstimmte Sinus-Stimmen: schwebt wie ein Synth-Pad.
