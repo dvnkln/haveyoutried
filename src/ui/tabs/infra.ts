@@ -42,7 +42,8 @@ export function infraTab(): Tab {
     const buyCost = h('span', { class: 'buy-cost' });
     const buy = h('button', { class: 'buy', type: 'button', 'data-gen': id }, [buyAmount, buyCost]);
     // eigene Kaufmenge dieser Zeile: antippen schaltet ×1 → ×10 → ×100 → max weiter
-    const step = h('button', { class: 'buy-step', type: 'button', 'aria-label': `Kaufmenge ${text.name}` });
+    // aria-label setzt render() mit der aktuellen Menge
+    const step = h('button', { class: 'buy-step', type: 'button' });
     step.addEventListener('click', () => {
       const cur = buyAmountFor(ctx.state, id);
       ctx.state.settings.buyAmounts[id] = BUY_AMOUNTS[(BUY_AMOUNTS.indexOf(cur) + 1) % BUY_AMOUNTS.length]!;
@@ -111,9 +112,11 @@ export function infraTab(): Tab {
     },
     render() {
       const s = ctx.state;
+      // aktiv nur, wenn alle sichtbaren Zeilen dieselbe Menge haben (noch keine sichtbar: die Menge für alle)
+      const shown = GENERATORS.filter((g) => isUnlocked(s, g.id)).map((g) => buyAmountFor(s, g.id));
+      const common = shown.length === 0 ? s.settings.buyAmount : shown.every((a) => a === shown[0]) ? shown[0] : null;
       for (const { amount, el } of segButtons) {
-        // aktiv nur, wenn wirklich alle sichtbaren Zeilen diese Menge haben
-        const on = GENERATORS.every((g) => !isUnlocked(s, g.id) || buyAmountFor(s, g.id) === amount);
+        const on = common === amount;
         setFlag(el, 'active', on);
         el.setAttribute('aria-checked', String(on));
       }
@@ -131,6 +134,8 @@ export function infraTab(): Tab {
         const amount = buyAmountFor(s, row.id);
         const { n, cost } = priceFor(s, row.id, amount);
         setText(row.step, `Menge ${amountLabel(amount)}`);
+        const label = `Kaufmenge ${GENERATOR_TEXT[row.id].name}: ${amountLabel(amount)}`;
+        if (row.step.getAttribute('aria-label') !== label) row.step.setAttribute('aria-label', label);
         setText(row.owned, g.owned > 0 ? `×${g.owned}` : '');
         setText(
           row.prod,

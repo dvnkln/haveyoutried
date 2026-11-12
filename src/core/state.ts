@@ -10,9 +10,10 @@ export const TAP_SOUND_IDS = ['blue', 'green', 'brown', 'red', 'black', 'silent'
 export type BuyAmount = 1 | 10 | 100 | 'max';
 export const BUY_AMOUNTS: readonly BuyAmount[] = [1, 10, 100, 'max'];
 
+export const isBuyAmount = (v: unknown): v is BuyAmount => (BUY_AMOUNTS as readonly unknown[]).includes(v);
+
 /** Kaufmenge einer Infrastruktur: eigene Einstellung der Zeile, sonst die für alle */
-export const buyAmountFor = (s: { settings: { buyAmount: BuyAmount; buyAmounts: Partial<Record<GeneratorId, BuyAmount>> } }, id: GeneratorId): BuyAmount =>
-  s.settings.buyAmounts[id] ?? s.settings.buyAmount;
+export const buyAmountFor = (s: GameState, id: GeneratorId): BuyAmount => s.settings.buyAmounts[id] ?? s.settings.buyAmount;
 
 export interface ActiveEvent {
   id: string;

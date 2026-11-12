@@ -313,20 +313,34 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
     const r = bubble.getBoundingClientRect();
     if (!bar || r.width === 0) return;
     const max = Math.floor(bar.right - BUBBLE_EDGE_PX - r.left);
-    callerEl.classList.add('wide');
-    for (let w = Math.ceil(r.width) + 16; w < max; w += 16) {
-      bubble.style.width = `${w}px`;
-      if (fits()) return;
+    // nur verbreitern, nie schmaler machen (leerer Tisch: die Blase ist schon fast so breit wie möglich)
+    if (max > r.width) {
+      callerEl.classList.add('wide');
+      for (let w = Math.ceil(r.width) + 16; w < max; w += 16) {
+        bubble.style.width = `${w}px`;
+        if (fits()) return;
+      }
+      bubble.style.width = `${max}px`;
     }
-    bubble.style.width = `${max}px`;
-    // niedrige Displays (nur zwei Zeilen): notfalls etwas kleinere Schrift
+    // notfalls etwas kleinere Schrift
     for (let px = 12; px >= BUBBLE_MIN_FONT_PX && !fits(); px -= 0.5) says.style.fontSize = `${px}px`;
-    // die längsten Sprüche: mit kleiner Schrift passt eine dritte Zeile in die gleiche Höhe
-    if (!fits()) says.style.webkitLineClamp = '3';
+    // niedrige Displays (nur zwei Zeilen): mit kleiner Schrift passt eine dritte Zeile in die gleiche Höhe
+    if (!fits() && getComputedStyle(says).webkitLineClamp === '2') says.style.webkitLineClamp = '3';
   };
-  window.addEventListener('resize', fitBubble);
+  // neu messen, wenn sich der Platz ändert (Drehen, Upgrade auf dem Tisch, Taskleiste) – höchstens einmal pro Bild
+  let fitFrame = 0;
+  const refitBubble = () => {
+    if (fitFrame) return;
+    fitFrame = requestAnimationFrame(() => {
+      fitFrame = 0;
+      fitBubble();
+    });
+  };
+  window.addEventListener('resize', refitBubble);
+  // die Blase selbst ändert die Breite des Anrufer-Platzes nicht (flex: 1, min-width: 0): keine Schleife
+  if (typeof ResizeObserver !== 'undefined') new ResizeObserver(refitBubble).observe(callerEl);
   // erst mit geladener Schrift stimmt die Messung
-  void document.fonts?.ready.then(fitBubble);
+  void document.fonts?.ready.then(refitBubble);
 
   /** initial = Anrufer beim Seitenstart: kein Klingeln, zählt nicht als angehört */
   const showCall = (c: Call, initial = false) => {
@@ -543,7 +557,6 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
     if (ctx.state.clicks >= CONFIG.onboardingClicks) {
       started = true;
       callerEl.classList.remove('quiet');
-      fitBubble();
       showCall(chooseCall(false), true);
       scheduleUrgent(firstUrgentDelay());
       scheduleCup();
@@ -641,7 +654,6 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
   const begin = () => {
     started = true;
     callerEl.classList.remove('quiet');
-    fitBubble();
     showCall(chooseCall());
     scheduleUrgent(firstUrgentDelay());
     scheduleCup();

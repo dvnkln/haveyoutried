@@ -92,7 +92,7 @@ const CABLE_COLORS = ['#ff9aa2', '#a0c4ff', '#ffd166', '#9be3c1', '#cdb4db', '#f
  * gerade nach oben, mit Kabelbinder gebündelt.
  */
 const CABLE_SOCKET_X = CABLE_COLORS.map((_, i) => 26 + i * 21);
-const CABLES = `<svg viewBox="0 17 200 17" preserveAspectRatio="xMidYMax meet">
+const CABLES = `<svg viewBox="0 12 200 22" preserveAspectRatio="xMidYMax meet">
   <rect x="10" y="20" width="180" height="12" rx="3" fill="#f4f1ea" ${INK}/>
   <path d="M13 29.5 h174" stroke="#d9d2c4" stroke-width="1.5" stroke-linecap="round"/>
   ${CABLE_SOCKET_X.map((x) => `<circle cx="${x}" cy="26" r="4" fill="#e3ddd1" stroke="var(--ink)" stroke-width="1.2"/><circle cx="${x - 1.5}" cy="26" r=".8" fill="var(--ink)"/><circle cx="${x + 1.5}" cy="26" r=".8" fill="var(--ink)"/>`).join('')}
@@ -102,16 +102,16 @@ const CABLES = `<svg viewBox="0 17 200 17" preserveAspectRatio="xMidYMax meet">
   <g class="cords">
   ${CABLE_COLORS.map((c, i) => {
     const x = CABLE_SOCKET_X[i]!;
-    // wild: Schlenker zur Seite, kreuzt die Nachbarn; ordentlich: gerade zur Mitte hoch
-    const swing = (i % 2 ? 1 : -1) * (14 + ((i * 11) % 18));
-    const messy = `M${x} 20 C${x} 12 ${x + swing} 16 ${x + swing * 0.6} 8 S${x - swing * 0.4} 2 ${x + swing * 0.3} -4`;
-    const tidy = `M${x} 20 C${x} 11 ${96 + i * 1.5} 12 ${96 + i * 1.5} -4`;
+    // sichtbar sind nur ein paar Pixel über dem Stecker, dann verschwinden die Kabel hinter dem Monitor:
+    // wild = Schlenker zur Seite über die Nachbarn, ordentlich = gerade hoch, mit Kabelbinder quer drüber
+    const swing = (i % 2 ? 1 : -1) * (12 + ((i * 7) % 10));
+    const messy = `M${x} 20 C${x} 15 ${x + swing} 18 ${x + swing} 11`;
+    const tidy = `M${x} 20 V11`;
     const cord = (d: string, cls: string) =>
       `<path class="${cls}" d="${d}" fill="none" stroke="var(--ink)" stroke-width="5.2" stroke-linecap="round"/><path class="${cls}" d="${d}" fill="none" stroke="${c}" stroke-width="2.8" stroke-linecap="round"/>`;
-    return `<g class="cable c${i + 1}">${cord(messy, 'cord-messy')}${cord(tidy, 'cord-tidy')}<rect x="${x - 5}" y="18.5" width="10" height="9.5" rx="2" fill="${c}" ${INK}/><path d="M${x - 2.5} 21.5 h5" stroke="var(--ink)" stroke-width="1" stroke-linecap="round" opacity=".45"/></g>`;
+    return `<g class="cable c${i + 1}">${cord(messy, 'cord-messy')}${cord(tidy, 'cord-tidy')}<rect x="${x - 5}" y="18.5" width="10" height="9.5" rx="2" fill="${c}" ${INK}/><path d="M${x - 2.5} 21.5 h5" stroke="var(--ink)" stroke-width="1" stroke-linecap="round" opacity=".45"/><rect class="cable-tie" x="${x - 10.5}" y="13.2" width="21" height="2.8" fill="#3b3540"/></g>`;
   }).join('')}
   </g>
-  <rect class="cable-tie" x="89" y="2" width="22" height="4" rx="1.5" fill="#3b3540" stroke="var(--ink)" stroke-width="1"/>
 </svg>`;
 
 /**
