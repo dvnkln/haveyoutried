@@ -191,7 +191,6 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
     h('div', { class: 'frost', 'aria-hidden': 'true' }),
   ]);
   const monitorArea = h('section', { class: 'monitor-area' }, [
-    props.cables,
     props.dust,
     props.kNote,
     props.beacon,

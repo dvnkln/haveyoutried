@@ -3765,8 +3765,7 @@ button {
 .plant,
 .postit,
 .book,
-.beacon,
-.cable-tag {
+.beacon {
   display: none;
 }
 .owned {
@@ -3911,54 +3910,6 @@ button {
   background: none;
 }
 
-.cables {
-  /* Steckdosenleiste liegt vor dem Monitorfuß auf dem Tisch, die Kabel verschwinden dahinter */
-  z-index: 2;
-  left: 18%;
-  right: 18%;
-  bottom: 0;
-  height: 25px;
-}
-.cables .cable,
-.cables[data-n='0'] {
-  display: none;
-}
-/* Kabel nur ein Stück über der Leiste, dann sind sie hinter dem Monitor (nicht über dem Gehäuse) */
-.cables svg {
-  overflow: hidden;
-}
-.cables[data-n='1'] .cable:nth-child(-n + 1),
-.cables[data-n='2'] .cable:nth-child(-n + 2),
-.cables[data-n='3'] .cable:nth-child(-n + 3),
-.cables[data-n='4'] .cable:nth-child(-n + 4),
-.cables[data-n='5'] .cable:nth-child(-n + 5),
-.cables[data-n='6'] .cable:nth-child(-n + 6),
-.cables[data-n='7'] .cable {
-  display: inline;
-}
-/* Steckdosenleiste: wild durcheinander, nach gutem Patch-Spiel gebündelt */
-.cables .cord-tidy,
-.cables .cable-tie,
-.cables.tidy .cord-messy {
-  display: none;
-}
-.cables.tidy .cord-tidy,
-.cables.tidy:not([data-n='0']) .cable-tie {
-  display: inline;
-}
-.cable-tag.owned {
-  /* klebt über dem Schalter rechts an der Steckdosenleiste (die hinteren Steckdosen werden erst spät belegt) */
-  position: absolute;
-  right: -7%;
-  bottom: 1px;
-  padding: 0 4px;
-  border: 1.5px solid var(--ink);
-  border-radius: 3px;
-  background: #fffaf0;
-  font: 700 7px / 1.4 var(--font-ui);
-  white-space: nowrap;
-  transform: rotate(-4deg);
-}
 
 .postit {
   position: absolute;

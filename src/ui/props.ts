@@ -85,34 +85,6 @@ const BEACON = `<svg viewBox="0 0 30 30">
   <rect x="3" y="22" width="24" height="6" rx="2" fill="#4b4453" ${INK}/>
 </svg>`;
 
-const CABLE_COLORS = ['#ff9aa2', '#a0c4ff', '#ffd166', '#9be3c1', '#cdb4db', '#f4a261', '#90e0ef'];
-/**
- * Steckdosenleiste vor dem Monitorfuß, erst mit dem Server unterm Tisch: pro Server steckt ein farbiger Stecker,
- * sein Kabel verschwindet wild durcheinander hinter dem Monitor. Aufgeräumt (nach gutem Patch-Spiel):
- * gerade nach oben, mit Kabelbinder gebündelt.
- */
-const CABLE_SOCKET_X = CABLE_COLORS.map((_, i) => 26 + i * 21);
-const CABLES = `<svg viewBox="0 12 200 22" preserveAspectRatio="xMidYMax meet">
-  <rect x="10" y="20" width="180" height="12" rx="3" fill="#f4f1ea" ${INK}/>
-  <path d="M13 29.5 h174" stroke="#d9d2c4" stroke-width="1.5" stroke-linecap="round"/>
-  ${CABLE_SOCKET_X.map((x) => `<circle cx="${x}" cy="26" r="4" fill="#e3ddd1" stroke="var(--ink)" stroke-width="1.2"/><circle cx="${x - 1.5}" cy="26" r=".8" fill="var(--ink)"/><circle cx="${x + 1.5}" cy="26" r=".8" fill="var(--ink)"/>`).join('')}
-  <rect x="174" y="22.5" width="11" height="7" rx="1.5" fill="#ff7b7b" stroke="var(--ink)" stroke-width="1.4"/>
-  <path d="M177.3 24 v4" stroke="#fff" stroke-width="1.1" stroke-linecap="round"/>
-  <circle cx="181.7" cy="26" r="1.5" fill="none" stroke="#fff" stroke-width="1"/>
-  <g class="cords">
-  ${CABLE_COLORS.map((c, i) => {
-    const x = CABLE_SOCKET_X[i]!;
-    // sichtbar sind nur ein paar Pixel über dem Stecker, dann verschwinden die Kabel hinter dem Monitor:
-    // wild = Schlenker zur Seite über die Nachbarn, ordentlich = gerade hoch, mit Kabelbinder quer drüber
-    const swing = (i % 2 ? 1 : -1) * (12 + ((i * 7) % 10));
-    const messy = `M${x} 20 C${x} 15 ${x + swing} 18 ${x + swing} 11`;
-    const tidy = `M${x} 20 V11`;
-    const cord = (d: string, cls: string) =>
-      `<path class="${cls}" d="${d}" fill="none" stroke="var(--ink)" stroke-width="5.2" stroke-linecap="round"/><path class="${cls}" d="${d}" fill="none" stroke="${c}" stroke-width="2.8" stroke-linecap="round"/>`;
-    return `<g class="cable c${i + 1}">${cord(messy, 'cord-messy')}${cord(tidy, 'cord-tidy')}<rect x="${x - 5}" y="18.5" width="10" height="9.5" rx="2" fill="${c}" ${INK}/><path d="M${x - 2.5} 21.5 h5" stroke="var(--ink)" stroke-width="1" stroke-linecap="round" opacity=".45"/><rect class="cable-tie" x="${x - 10.5}" y="13.2" width="21" height="2.8" fill="#3b3540"/></g>`;
-  }).join('')}
-  </g>
-</svg>`;
 
 /**
  * Maus im Tastatur-Stil: dicke Kontur, Tastenkappen-Kante unten.
@@ -232,9 +204,6 @@ export function createProps(ctx: AppContext) {
 
   // --- Fortschritt: Pflanze, Kabel ---
   const plant = svg(PLANT, 'prop plant');
-  const cables = svg(CABLES, 'prop cables');
-  const cableTag = h('span', { class: 'cable-tag', text: 'NICHT AUSSTECKEN' });
-  cables.append(cableTag);
 
   // --- Upgrades zum Anfassen ---
   const mug = svg(mugSvg('#fffaf0', null, ''), 'prop mug', 'button');
@@ -408,7 +377,6 @@ export function createProps(ctx: AppContext) {
     { upgrade: 'duck', el: duck },
     { upgrade: 'rtfm', el: book },
     { upgrade: 'monitoring', el: beacon },
-    { upgrade: 'undertable-1', el: cableTag },
     // eigener Schreibtisch für den Praktikanten: endlich eine Pflanze
     { upgrade: 'intern-1', el: plant },
     // Admin-Rechte (temporär): das Passwort klebt jetzt am Monitor
@@ -425,10 +393,6 @@ export function createProps(ctx: AppContext) {
     if (id === 'kanban') requestAnimationFrame(() => juice(incidentSign, POP, 420, true));
   });
 
-  let tidyUntil = 0;
-  bus.on('incidentResolved', ({ id, score, abandoned }) => {
-    if (id === 'patch' && !abandoned && isSolved(score)) tidyUntil = performance.now() + 60_000;
-  });
 
   let lastClick = performance.now();
   bus.on('click', () => (lastClick = performance.now()));
@@ -462,11 +426,7 @@ export function createProps(ctx: AppContext) {
     // Monitoring-Leuchte: rot und drehend während eines Incidents
     setFlag(beacon, 'alarm', !!incidentRunning());
 
-    // Steckdosenleiste erst mit dem Server unterm Tisch (der braucht Strom): pro Server ein Stecker, höchstens alle Dosen
-    const n = Math.min(CABLE_COLORS.length, s.generators.undertable.owned);
-    if (cables.dataset.n !== String(n)) cables.dataset.n = String(n);
-    setFlag(cables, 'tidy', now < tidyUntil);
   };
 
-  return { incidentSign, calendar, notes, plant, cables, mug, duck, mouse, mate, dust, kNote, book, beacon, render };
+  return { incidentSign, calendar, notes, plant, mug, duck, mouse, mate, dust, kNote, book, beacon, render };
 }
