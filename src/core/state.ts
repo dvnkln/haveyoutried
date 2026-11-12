@@ -10,6 +10,10 @@ export const TAP_SOUND_IDS = ['blue', 'green', 'brown', 'red', 'black', 'silent'
 export type BuyAmount = 1 | 10 | 100 | 'max';
 export const BUY_AMOUNTS: readonly BuyAmount[] = [1, 10, 100, 'max'];
 
+/** Kaufmenge einer Infrastruktur: eigene Einstellung der Zeile, sonst die für alle */
+export const buyAmountFor = (s: { settings: { buyAmount: BuyAmount; buyAmounts: Partial<Record<GeneratorId, BuyAmount>> } }, id: GeneratorId): BuyAmount =>
+  s.settings.buyAmounts[id] ?? s.settings.buyAmount;
+
 export interface ActiveEvent {
   id: string;
   /** Spielzeit, ab der „keine Reaktion“ gilt */
@@ -73,7 +77,10 @@ export interface GameState {
     sound: boolean;
     volume: number;
     tapSound: string;
+    /** Kaufmenge für alle Zeilen (Leiste oben im Infra-Tab) */
     buyAmount: BuyAmount;
+    /** eigene Kaufmenge je Infrastruktur (Knopf in der Zeile); fehlt = buyAmount */
+    buyAmounts: Partial<Record<GeneratorId, BuyAmount>>;
     wallpaper: string;
     ambienceVolume: number;
     /** wo die Taskleiste im Monitor sitzt */
@@ -116,6 +123,7 @@ export function createInitialState(now: number): GameState {
       volume: DEFAULT_VOLUME.volume,
       tapSound: 'blue',
       buyAmount: 1,
+      buyAmounts: {},
       wallpaper: 'auto',
       ambienceVolume: DEFAULT_VOLUME.ambienceVolume,
       taskbar: 'bottom',

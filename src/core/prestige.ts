@@ -75,6 +75,7 @@ export function quitJob(state: GameState, rnd: () => number = Math.random): numb
   for (const g of GENERATORS) state.generators[g.id] = { owned: 0 };
   state.upgrades = {};
   state.settings.buyAmount = 1; // neuer Job, keine Infrastruktur: ×10/Max wäre nur verwirrend
+  state.settings.buyAmounts = {};
   state.buffs = [];
   state.events.active = null;
   scheduleNext(state); // sonst piept es am ersten Arbeitstag sofort

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { deserialize, EXP_REVALUED_FLAG, serialize } from '../../src/core/save';
-import { createInitialState } from '../../src/core/state';
+import { buyAmountFor, createInitialState } from '../../src/core/state';
 import { prestigeGain } from '../../src/core/prestige';
 
 describe('Spielstand', () => {
@@ -9,8 +9,22 @@ describe('Spielstand', () => {
     s.tickets = 42.5;
     s.generators.cron.owned = 3;
     s.settings.buyAmount = 'max';
+    s.settings.buyAmounts = { intern: 10, ansible: 1 };
     s.upgrades = { coffee: true };
     expect(deserialize(serialize(s), 999)).toEqual(s);
+  });
+
+  it('eigene Kaufmengen je Zeile: nur gültige Mengen bekannter Infrastruktur', () => {
+    const s = deserialize(
+      JSON.stringify({ version: 3, settings: { buyAmount: 10, buyAmounts: { intern: 100, cron: 7, quatsch: 10, bash: 'max' } } }),
+      0,
+    )!;
+    expect(s.settings.buyAmounts).toEqual({ intern: 100, bash: 'max' });
+    expect(buyAmountFor(s, 'intern')).toBe(100);
+    // ohne eigene Menge gilt die für alle
+    expect(buyAmountFor(s, 'cron')).toBe(10);
+    // alter Spielstand ohne das Feld
+    expect(deserialize(JSON.stringify({ version: 1 }), 0)!.settings.buyAmounts).toEqual({});
   });
 
   it('alte/teilweise Saves bekommen Defaults für neue Felder', () => {

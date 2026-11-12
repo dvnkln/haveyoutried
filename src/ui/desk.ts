@@ -131,6 +131,11 @@ function pausableTimeout(ms: number, el: Element, done: () => void, early?: () =
 /** Espresso-Melodie läuft beim Daumenwechsel weiter: erst nach so langer Pause ohne Taste anhalten */
 const MELODY_GRACE_MS = 150;
 
+/** Abstand der verbreiterten Anrufer-Blase zum rechten Tischrand */
+const BUBBLE_EDGE_PX = 10;
+/** kleinste Schrift in der Anrufer-Blase, wenn auch die volle Breite nicht reicht */
+const BUBBLE_MIN_FONT_PX = 10;
+
 export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, screen: () => HTMLElement) {
   let call: Call | null = null;
   let callerLeft = randInt(CONFIG.callerTicketsMin, CONFIG.callerTicketsMax);
@@ -293,6 +298,36 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
     return { face: caller.face, who: caller.who, ...fresh(caller.lines) };
   };
 
+  /**
+   * Blase so breit, dass der ganze Spruch hineinpasst: mit vielen Upgrades auf dem Tisch bleibt ihr wenig Platz,
+   * dann ragt sie nach rechts über Becher, Mate & Co. (höchstens bis zum Tischrand), statt den Text abzuschneiden.
+   */
+  const fitBubble = () => {
+    bubble.style.width = '';
+    says.style.fontSize = '';
+    says.style.webkitLineClamp = '';
+    callerEl.classList.remove('wide');
+    const fits = () => says.scrollHeight <= says.clientHeight + 1;
+    if (fits()) return;
+    const bar = callerEl.parentElement?.getBoundingClientRect();
+    const r = bubble.getBoundingClientRect();
+    if (!bar || r.width === 0) return;
+    const max = Math.floor(bar.right - BUBBLE_EDGE_PX - r.left);
+    callerEl.classList.add('wide');
+    for (let w = Math.ceil(r.width) + 16; w < max; w += 16) {
+      bubble.style.width = `${w}px`;
+      if (fits()) return;
+    }
+    bubble.style.width = `${max}px`;
+    // niedrige Displays (nur zwei Zeilen): notfalls etwas kleinere Schrift
+    for (let px = 12; px >= BUBBLE_MIN_FONT_PX && !fits(); px -= 0.5) says.style.fontSize = `${px}px`;
+    // die längsten Sprüche: mit kleiner Schrift passt eine dritte Zeile in die gleiche Höhe
+    if (!fits()) says.style.webkitLineClamp = '3';
+  };
+  window.addEventListener('resize', fitBubble);
+  // erst mit geladener Schrift stimmt die Messung
+  void document.fonts?.ready.then(fitBubble);
+
   /** initial = Anrufer beim Seitenstart: kein Klingeln, zählt nicht als angehört */
   const showCall = (c: Call, initial = false) => {
     call = c;
@@ -305,6 +340,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
     setText(face, c.face);
     setText(who, c.who);
     setText(says, c.text);
+    fitBubble();
     callerUntil = performance.now() + CONFIG.callerMinShowMs + c.text.length * CONFIG.callerShowMsPerChar;
     callerLeft = randInt(CONFIG.callerTicketsMin, CONFIG.callerTicketsMax);
     if (c.reply) ctx.log.template(c.reply);
@@ -507,6 +543,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
     if (ctx.state.clicks >= CONFIG.onboardingClicks) {
       started = true;
       callerEl.classList.remove('quiet');
+      fitBubble();
       showCall(chooseCall(false), true);
       scheduleUrgent(firstUrgentDelay());
       scheduleCup();
@@ -604,6 +641,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
   const begin = () => {
     started = true;
     callerEl.classList.remove('quiet');
+    fitBubble();
     showCall(chooseCall());
     scheduleUrgent(firstUrgentDelay());
     scheduleCup();

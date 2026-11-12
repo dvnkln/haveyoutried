@@ -51,6 +51,7 @@ describe('Berufserfahrung', () => {
     s.achievements = { first: 1 };
     s.settings.sound = false;
     s.settings.buyAmount = 'max';
+    s.settings.buyAmounts = { intern: 10 };
     const quit: number[] = [];
     const off = bus.on('jobQuit', (e) => quit.push(e.gained));
 
@@ -65,6 +66,7 @@ describe('Berufserfahrung', () => {
     expect(s.upgrades).toEqual({});
     expect(s.buffs).toEqual([]);
     expect(s.settings.buyAmount).toBe(1);
+    expect(s.settings.buyAmounts).toEqual({});
     // bleibt
     expect(s.ticketsAllTime).toBe(1_000 * P);
     expect(s.clicks).toBe(1234);

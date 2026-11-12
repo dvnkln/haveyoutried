@@ -212,6 +212,12 @@ const browserTools = () =>
   h('div', { class: 'br-tools', 'aria-hidden': 'true' }, BROWSER_TOOLS.map((x) => h('span', { text: x })));
 const BROWSER_TOOLS = ['← Zurück', '→', '✕', '↻', '⌂ Startseite'];
 
+/** Adresse in Domain und Rest geteilt: Safari (MäcOS) zeigt nur die Domain, die anderen Browser alles */
+const addrParts = (url: string): (string | HTMLElement)[] => {
+  const cut = url.indexOf('/');
+  return cut < 0 ? [url] : [url.slice(0, cut), h('span', { class: 'br-path', text: url.slice(cut) })];
+};
+
 /** Browser-Rahmen: Tab-Leiste und Adresszeile (Schloss bzw. „Nicht sicher“) */
 const browser = (url: string, secure: boolean, active: string, title?: string, extra?: { site: string; title: string }) =>
   h('div', { class: 'browser' }, [
@@ -221,7 +227,7 @@ const browser = (url: string, secure: boolean, active: string, title?: string, e
       h('span', { class: 'br-nav', text: '‹ › ↻' }),
       h('span', { class: `br-url${secure ? '' : ' insecure'}` }, [
         h('span', { class: 'br-lock', text: secure ? '🔒︎' : '⚠ Nicht sicher' }),
-        h('span', { class: 'br-addr', text: url }),
+        h('span', { class: 'br-addr' }, addrParts(url)),
       ]),
     ]),
   ]);
@@ -948,7 +954,7 @@ export function createWork(
     memeScroll.scrollTop = 0;
     if (memes) startScrolling();
     for (const t of memeTabs) t.classList.toggle('on', t.dataset.site === site);
-    setText(memeAddr, site === 'forum' ? 'readit.example/r/all/hot' : '404gag.example/hot');
+    memeAddr.replaceChildren(...addrParts(site === 'forum' ? 'readit.example/r/all/hot' : '404gag.example/hot'));
     // Fenstertitel wie bei XP: Seite – Browser
     if (memes) setText(title, `${BROWSER_TABS.find((x) => x.site === site)!.title} – ${browserName()}`);
   };

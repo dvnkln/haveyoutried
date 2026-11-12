@@ -1,4 +1,4 @@
-import { CONFIG, GENERATORS } from '../config';
+import { CONFIG } from '../config';
 import { CALENDAR_LINES, DUCK_LINES, INCIDENT_SIGN, MOUSE_LINES, MOUSE_NEW_LINES, MOUSE_OLD_LINES, MUG_DESIGNS, POSTITS, type MugGen } from '../content/props';
 import { bus } from '../core/bus';
 import { incidentRunning, isSolved } from '../core/incidents';
@@ -86,12 +86,32 @@ const BEACON = `<svg viewBox="0 0 30 30">
 </svg>`;
 
 const CABLE_COLORS = ['#ff9aa2', '#a0c4ff', '#ffd166', '#9be3c1', '#cdb4db', '#f4a261', '#90e0ef'];
-const CABLES = `<svg viewBox="0 0 300 60" preserveAspectRatio="none">
+/**
+ * Steckdosenleiste vor dem Monitorfuß, erst mit dem Server unterm Tisch: pro Server steckt ein farbiger Stecker,
+ * sein Kabel verschwindet wild durcheinander hinter dem Monitor. Aufgeräumt (nach gutem Patch-Spiel):
+ * gerade nach oben, mit Kabelbinder gebündelt.
+ */
+const CABLE_SOCKET_X = CABLE_COLORS.map((_, i) => 26 + i * 21);
+const CABLES = `<svg viewBox="0 17 200 17" preserveAspectRatio="xMidYMax meet">
+  <rect x="10" y="20" width="180" height="12" rx="3" fill="#f4f1ea" ${INK}/>
+  <path d="M13 29.5 h174" stroke="#d9d2c4" stroke-width="1.5" stroke-linecap="round"/>
+  ${CABLE_SOCKET_X.map((x) => `<circle cx="${x}" cy="26" r="4" fill="#e3ddd1" stroke="var(--ink)" stroke-width="1.2"/><circle cx="${x - 1.5}" cy="26" r=".8" fill="var(--ink)"/><circle cx="${x + 1.5}" cy="26" r=".8" fill="var(--ink)"/>`).join('')}
+  <rect x="174" y="22.5" width="11" height="7" rx="1.5" fill="#ff7b7b" stroke="var(--ink)" stroke-width="1.4"/>
+  <path d="M177.3 24 v4" stroke="#fff" stroke-width="1.1" stroke-linecap="round"/>
+  <circle cx="181.7" cy="26" r="1.5" fill="none" stroke="#fff" stroke-width="1"/>
+  <g class="cords">
   ${CABLE_COLORS.map((c, i) => {
-    const x = 40 + i * 32;
-    const sag = 20 + ((i * 17) % 30);
-    return `<path class="cable c${i + 1}" d="M${x} 0 C${x - 30} ${sag} ${x + 40} ${sag + 10} ${x + (i % 2 ? 25 : -25)} 60" fill="none" stroke="${c}" stroke-width="4" stroke-linecap="round"/>`;
+    const x = CABLE_SOCKET_X[i]!;
+    // wild: Schlenker zur Seite, kreuzt die Nachbarn; ordentlich: gerade zur Mitte hoch
+    const swing = (i % 2 ? 1 : -1) * (14 + ((i * 11) % 18));
+    const messy = `M${x} 20 C${x} 12 ${x + swing} 16 ${x + swing * 0.6} 8 S${x - swing * 0.4} 2 ${x + swing * 0.3} -4`;
+    const tidy = `M${x} 20 C${x} 11 ${96 + i * 1.5} 12 ${96 + i * 1.5} -4`;
+    const cord = (d: string, cls: string) =>
+      `<path class="${cls}" d="${d}" fill="none" stroke="var(--ink)" stroke-width="5.2" stroke-linecap="round"/><path class="${cls}" d="${d}" fill="none" stroke="${c}" stroke-width="2.8" stroke-linecap="round"/>`;
+    return `<g class="cable c${i + 1}">${cord(messy, 'cord-messy')}${cord(tidy, 'cord-tidy')}<rect x="${x - 5}" y="18.5" width="10" height="9.5" rx="2" fill="${c}" ${INK}/><path d="M${x - 2.5} 21.5 h5" stroke="var(--ink)" stroke-width="1" stroke-linecap="round" opacity=".45"/></g>`;
   }).join('')}
+  </g>
+  <rect class="cable-tie" x="89" y="2" width="22" height="4" rx="1.5" fill="#3b3540" stroke="var(--ink)" stroke-width="1"/>
 </svg>`;
 
 /**
@@ -132,11 +152,29 @@ const MOUSE = `<svg viewBox="0 -21 40 84">
 
 /** Club-Mate-artige Flasche: der übernommene Praktikant hat sich eingerichtet */
 /** 0,5-l-Flasche Mate: gut doppelt so hoch wie der Becher */
-const MATE = `<svg viewBox="0 0 16 44">
-  <path d="M6 2 h4 v8 c0 3 4 5 4 10 v20 a3 3 0 0 1 -3 3 h-6 a3 3 0 0 1 -3 -3 v-20 c0 -5 4 -7 4 -10Z" fill="#f2b84b" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round"/>
-  <rect x="5.5" y="1" width="5" height="3" rx="1" fill="#4b4453"/>
-  <rect x="2.5" y="22" width="11" height="10" rx="1.5" fill="#fffaf0" stroke="var(--ink)" stroke-width="1.4"/>
-  <path d="M5 27 h6" stroke="var(--ink)" stroke-width="1.4" stroke-linecap="round"/>
+/**
+ * Mate, 0,5 l: klares Glas mit kupferfarbenem Inhalt (oben im Hals Luft), blauer Kronkorken,
+ * Halsetikett und gelbes Bauchetikett mit blauem Band und rotem Schriftzug; Glanzlicht auf dem Glas.
+ */
+const MATE_SHAPE = 'M8 5 h4 v12 c0 3.2 5.5 5 5.5 10 v24.5 a2.5 2.5 0 0 1 -2.5 2.5 h-10 a2.5 2.5 0 0 1 -2.5 -2.5 v-24.5 c0 -5 5.5 -6.8 5.5 -10Z';
+const MATE = `<svg viewBox="0 0 20 56">
+  <defs><clipPath id="mate-glass"><path d="${MATE_SHAPE}"/></clipPath></defs>
+  <path d="${MATE_SHAPE}" fill="#eef3ea"/>
+  <g clip-path="url(#mate-glass)">
+    <rect x="0" y="15" width="20" height="41" fill="#d98a3d"/>
+    <rect x="0" y="15" width="20" height="1.6" fill="#f2c27a"/>
+    <circle cx="6" cy="49" r=".7" fill="#f6d39a"/><circle cx="13.5" cy="47" r=".55" fill="#f6d39a"/><circle cx="11" cy="51" r=".5" fill="#f6d39a"/>
+  </g>
+  <path d="M5.2 27 c-.4 6 -.4 18 0 23" fill="none" stroke="#fff" stroke-width="1.3" stroke-linecap="round" opacity=".55"/>
+  <rect x="7.6" y="9" width="4.8" height="4.6" rx=".6" fill="#ffd84d" stroke="var(--ink)" stroke-width="1"/>
+  <rect x="7.6" y="10.6" width="4.8" height="1.4" fill="#3a6fd8"/>
+  <rect x="2.5" y="31" width="15" height="15" fill="#ffd84d" stroke="var(--ink)" stroke-width="1.2"/>
+  <rect x="2.5" y="31" width="15" height="3.4" fill="#3a6fd8" stroke="var(--ink)" stroke-width="1.2"/>
+  <path d="M5 39.5 c1 -1.6 2 1.6 3 0 s2 1.6 3 0 s2 1.6 3 0" fill="none" stroke="#e04848" stroke-width="1.3" stroke-linecap="round"/>
+  <path d="M6 43 h8" stroke="var(--ink)" stroke-width=".9" stroke-linecap="round" opacity=".6"/>
+  <path d="${MATE_SHAPE}" fill="none" stroke="var(--ink)" stroke-width="1.8" stroke-linejoin="round"/>
+  <rect x="7.2" y="2" width="5.6" height="3.4" rx=".8" fill="#3a6fd8" stroke="var(--ink)" stroke-width="1.4"/>
+  <path d="M8.4 5.4 v-1 M10 5.4 v-1 M11.6 5.4 v-1" stroke="var(--ink)" stroke-width=".7"/>
 </svg>`;
 
 /** Staubmaus unterm Tisch, bis der Staubsauger kommt */
@@ -152,7 +190,6 @@ type UpgradeProp = { upgrade: string; el: HTMLElement };
 const SQUEAK_PRESS_MS = SQUEAK_PRESS_S * 1_000;
 
 /** Requisiten am Schreibtisch: kleine Gags, Upgrades zum Anfassen, Spielstand im Bild. */
-
 export function createProps(ctx: AppContext) {
   const { state } = ctx;
 
@@ -165,6 +202,7 @@ export function createProps(ctx: AppContext) {
     h('span', { class: 'sign-row' }, [signOld, signValue]),
     h('span', { class: 'sign-label', text: INCIDENT_SIGN }),
     h('span', { class: 'wb-tray', 'aria-hidden': 'true' }, [h('span', { class: 'wb-marker' })]),
+    h('span', { class: 'wb-kanban', 'aria-hidden': 'true' }, [h('span', { class: 'kb-todo' }), h('span', { class: 'kb-doing' }), h('span', { class: 'kb-fire' })]),
   ]);
   bus.on('incidentStart', () => {
     // alte Zahl durchstreichen, neu bei 0 anfangen
@@ -424,8 +462,8 @@ export function createProps(ctx: AppContext) {
     // Monitoring-Leuchte: rot und drehend während eines Incidents
     setFlag(beacon, 'alarm', !!incidentRunning());
 
-    // Kabelsalat: ein Kabel pro Generator-Typ im Bestand
-    const n = GENERATORS.filter((g) => s.generators[g.id].owned > 0).length;
+    // Steckdosenleiste erst mit dem Server unterm Tisch (der braucht Strom): pro Server ein Stecker, höchstens alle Dosen
+    const n = Math.min(CABLE_COLORS.length, s.generators.undertable.owned);
     if (cables.dataset.n !== String(n)) cables.dataset.n = String(n);
     setFlag(cables, 'tidy', now < tidyUntil);
   };

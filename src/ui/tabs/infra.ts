@@ -2,7 +2,7 @@ import { CONFIG, GENERATORS, type GeneratorId } from '../../config';
 import { GENERATOR_TEXT, LOCKED_TEXT } from '../../content/generators';
 import { buyGenerator } from '../../core/actions';
 import { generatorDef, generatorProduction, isUnlocked, priceFor } from '../../core/economy';
-import { BUY_AMOUNTS, type BuyAmount } from '../../core/state';
+import { BUY_AMOUNTS, buyAmountFor, type BuyAmount } from '../../core/state';
 import type { AppContext, Tab } from '../app';
 import { h, juice, setDisabled, setFlag, setText, SHAKE } from '../dom';
 import { formatNumber, formatRate } from '../format';
@@ -15,6 +15,7 @@ interface Row {
   buy: HTMLButtonElement;
   buyAmount: HTMLElement;
   buyCost: HTMLElement;
+  step: HTMLButtonElement;
 }
 
 const amountLabel = (a: BuyAmount) => (a === 'max' ? 'max' : `×${a}`);
@@ -40,6 +41,13 @@ export function infraTab(): Tab {
     const buyAmount = h('span', { class: 'buy-amount' });
     const buyCost = h('span', { class: 'buy-cost' });
     const buy = h('button', { class: 'buy', type: 'button', 'data-gen': id }, [buyAmount, buyCost]);
+    // eigene Kaufmenge dieser Zeile: antippen schaltet ×1 → ×10 → ×100 → max weiter
+    const step = h('button', { class: 'buy-step', type: 'button', 'aria-label': `Kaufmenge ${text.name}` });
+    step.addEventListener('click', () => {
+      const cur = buyAmountFor(ctx.state, id);
+      ctx.state.settings.buyAmounts[id] = BUY_AMOUNTS[(BUY_AMOUNTS.indexOf(cur) + 1) % BUY_AMOUNTS.length]!;
+      ctx.haptic('tap');
+    });
     const el = h('li', { class: 'gen', 'data-gen': id }, [
       h('div', { class: 'gen-main' }, [
         h('div', { class: 'gen-head' }, [
@@ -50,10 +58,10 @@ export function infraTab(): Tab {
         h('div', { class: 'gen-desc', text: text.desc }),
         prod,
       ]),
-      buy,
+      h('div', { class: 'buy-col' }, [buy, step]),
     ]);
     buy.addEventListener('click', () => {
-      if (buyGenerator(ctx.state, id, ctx.state.settings.buyAmount)) {
+      if (buyGenerator(ctx.state, id, buyAmountFor(ctx.state, id))) {
         ctx.haptic('buy');
         juice(el, SHAKE, 260);
       } else {
@@ -61,7 +69,7 @@ export function infraTab(): Tab {
         ctx.haptic('error');
       }
     });
-    return { id, el, owned, prod, buy, buyAmount, buyCost };
+    return { id, el, owned, prod, buy, buyAmount, buyCost, step };
   };
 
   return {
@@ -73,8 +81,10 @@ export function infraTab(): Tab {
       const seg = h('div', { class: 'seg', role: 'radiogroup', 'aria-label': 'Kaufmenge' });
       for (const amount of BUY_AMOUNTS) {
         const el = h('button', { class: 'seg-btn', type: 'button', role: 'radio', text: amountLabel(amount) });
+        // setzt alle Zeilen auf einmal (eigene Mengen der Zeilen fallen weg)
         el.addEventListener('click', () => {
           ctx.state.settings.buyAmount = amount;
+          ctx.state.settings.buyAmounts = {};
           ctx.haptic('tap');
         });
         seg.append(el);
@@ -102,7 +112,8 @@ export function infraTab(): Tab {
     render() {
       const s = ctx.state;
       for (const { amount, el } of segButtons) {
-        const on = s.settings.buyAmount === amount;
+        // aktiv nur, wenn wirklich alle sichtbaren Zeilen diese Menge haben
+        const on = GENERATORS.every((g) => !isUnlocked(s, g.id) || buyAmountFor(s, g.id) === amount);
         setFlag(el, 'active', on);
         el.setAttribute('aria-checked', String(on));
       }
@@ -117,7 +128,9 @@ export function infraTab(): Tab {
         }
         const def = generatorDef(row.id);
         const g = s.generators[row.id];
-        const { n, cost } = priceFor(s, row.id, s.settings.buyAmount);
+        const amount = buyAmountFor(s, row.id);
+        const { n, cost } = priceFor(s, row.id, amount);
+        setText(row.step, `Menge ${amountLabel(amount)}`);
         setText(row.owned, g.owned > 0 ? `×${g.owned}` : '');
         setText(
           row.prod,
@@ -134,10 +147,10 @@ export function infraTab(): Tab {
       if (teaser.hidden === showTeaser) teaser.hidden = !showTeaser;
       if (firstLocked) setText(teaserCost, formatNumber(generatorDef(firstLocked).baseCost * CONFIG.unlockAtFraction));
     },
-    /** Punkt am Icon: mindestens ein freigeschalteter Generator ist in der gewählten Menge bezahlbar (bei „max“: mindestens einer) */
+    /** Punkt am Icon: mindestens ein freigeschalteter Generator ist in seiner eigenen Menge bezahlbar (bei „max“: mindestens einer) */
     badge() {
       const s = ctx.state;
-      return GENERATORS.some((g) => isUnlocked(s, g.id) && priceFor(s, g.id, s.settings.buyAmount).cost <= s.tickets) ? 1 : 0;
+      return GENERATORS.some((g) => isUnlocked(s, g.id) && priceFor(s, g.id, buyAmountFor(s, g.id)).cost <= s.tickets) ? 1 : 0;
     },
   };
 }

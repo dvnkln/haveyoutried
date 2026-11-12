@@ -3912,14 +3912,20 @@ button {
 }
 
 .cables {
-  z-index: 0;
+  /* Steckdosenleiste liegt vor dem Monitorfuß auf dem Tisch, die Kabel verschwinden dahinter */
+  z-index: 2;
   left: 18%;
   right: 18%;
   bottom: 0;
-  height: 34px;
+  height: 20px;
 }
-.cables .cable {
+.cables .cable,
+.cables[data-n='0'] {
   display: none;
+}
+/* Kabel nur ein Stück über der Leiste, dann sind sie hinter dem Monitor (nicht über dem Gehäuse) */
+.cables svg {
+  overflow: hidden;
 }
 .cables[data-n='1'] .cable:nth-child(-n + 1),
 .cables[data-n='2'] .cable:nth-child(-n + 2),
@@ -3930,24 +3936,28 @@ button {
 .cables[data-n='7'] .cable {
   display: inline;
 }
-.cables svg {
-  transition: transform 0.6s;
-  transform-origin: top;
+/* Steckdosenleiste: wild durcheinander, nach gutem Patch-Spiel gebündelt */
+.cables .cord-tidy,
+.cables .cable-tie,
+.cables.tidy .cord-messy {
+  display: none;
 }
-.cables.tidy svg {
-  transform: scaleY(0.45);
+.cables.tidy .cord-tidy,
+.cables.tidy:not([data-n='0']) .cable-tie {
+  display: inline;
 }
 .cable-tag.owned {
+  /* klebt über dem Schalter rechts an der Steckdosenleiste (die hinteren Steckdosen werden erst spät belegt) */
   position: absolute;
-  left: 50%;
-  bottom: 2px;
+  right: -7%;
+  bottom: 1px;
   padding: 0 4px;
   border: 1.5px solid var(--ink);
   border-radius: 3px;
   background: #fffaf0;
   font: 700 7px / 1.4 var(--font-ui);
   white-space: nowrap;
-  transform: translateX(-50%) rotate(-4deg);
+  transform: rotate(-4deg);
 }
 
 .postit {
@@ -9149,21 +9159,50 @@ body:has(.tut-note:not([hidden])) .tap-hint {
   }
 }
 
-/* Kanban-Upgrade: drei Zettel-Spalten oben am Whiteboard (Todo gelb, Doing blau, Brennt rot, rot gestapelt) */
-.incident-sign.has-kanban::before {
-  content: '';
+/* Kanban-Upgrade: drei Zettel ordentlich nebeneinander oben am Whiteboard (Todo gelb, Doing blau, Brennt rot), je mit Magnet */
+.wb-kanban {
+  display: none;
+}
+.incident-sign.has-kanban .wb-kanban {
   position: absolute;
   z-index: 2;
-  left: 5px;
-  right: 5px;
-  top: -5px;
+  left: 0;
+  right: 0;
+  top: -6px;
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  pointer-events: none;
+}
+.wb-kanban > span {
+  position: relative;
+  width: 14px;
   height: 11px;
-  background: linear-gradient(90deg, #ffd166 0 26%, transparent 26% 37%, #a0c4ff 37% 63%, transparent 63% 74%, #ff9aa2 74% 100%);
-  border-radius: 2px;
-  -webkit-mask: linear-gradient(90deg, #000 0 26%, transparent 26% 37%, #000 37% 63%, transparent 63% 74%, #000 74% 100%);
-  mask: linear-gradient(90deg, #000 0 26%, transparent 26% 37%, #000 37% 63%, transparent 63% 74%, #000 74% 100%);
-  filter: drop-shadow(0 1px 0 var(--ink)) drop-shadow(0 -1px 0 var(--ink));
-  transform: rotate(-2deg);
+  border: 1.5px solid var(--ink);
+  border-radius: 1.5px;
+  /* eine Zeile „Handschrift“ auf jedem Zettel */
+  background: linear-gradient(transparent 55%, rgba(61, 44, 46, 0.35) 55% 68%, transparent 68%) 3px 0 / 7px 100% no-repeat;
+}
+.wb-kanban > span::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -3px;
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  border: 1px solid var(--ink);
+  border-radius: 50%;
+  background: #6a7280;
+}
+.wb-kanban > .kb-todo {
+  background-color: #ffd166;
+}
+.wb-kanban > .kb-doing {
+  background-color: #a0c4ff;
+}
+.wb-kanban > .kb-fire {
+  background-color: #ff9aa2;
 }
 
 /* Zähler: bei großen Zahlen fällt „Tickets“ weg, statt dass die Zahl abgeschnitten wird */
@@ -9733,14 +9772,8 @@ body:has(.tut-note:not([hidden])) .tap-hint {
   box-shadow: inset 1px 1px 0 #808080;
 }
 
-/* Web-Apps im Browser (Ticketsystem, KI, Suche, Webinterface): wird es eng, fällt die Tab-Leiste weg, die Adresszeile bleibt */
-.work.tight .browser .br-tabs {
-  display: none;
-}
-.work.tight .browser .br-bar {
-  border-top: 0;
-  margin-top: 0;
-}
+/* Web-Apps im Browser (Ticketsystem, KI, Suche, Webinterface): wird es eng, bleiben die Tabs, nur Tab-Leiste und
+   Adresszeile werden schmaler (Regeln am Dateiende, nach den Höhen der Systeme) */
 
 /* Seitenleisten der Meme-Seiten (Desktop-Ansicht): links Navigation, rechts Infokasten */
 .meme-side {
@@ -11978,4 +12011,239 @@ body > .incident .term-win .net-term {
   border: 0;
   border-radius: 0;
   box-shadow: none;
+}
+
+/* ---------- Titel wirklich mittig (MäcOS, Debiam, Ubuntü): in der Mitte der ganzen Leiste, nicht nur des Rests neben den Knöpfen ---------- */
+html:is([data-os='debian'], [data-os='ubuntu'], [data-os='mac']) #app .work-bar {
+  display: grid;
+  grid-template-columns: 1fr minmax(0, max-content) 1fr;
+}
+html:is([data-os='debian'], [data-os='ubuntu'], [data-os='mac']) #app .work-bar > .work-title {
+  grid-column: 2;
+}
+html:is([data-os='debian'], [data-os='ubuntu']) #app .work-bar > .win-btns {
+  grid-column: 3;
+  justify-self: end;
+}
+html[data-os='mac'] #app .work-bar > .win-btns {
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: start;
+}
+html:is([data-os='debian'], [data-os='ubuntu']) #app .work-bar > .term-dots {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+/* MäcOS-Statusleiste wie im Finder: schmal, hellgrau, kleine graue Schrift in der Mitte */
+html[data-os='mac'] #app .desktop > .last-closed {
+  box-shadow: inset 0 1px 0 #d4d4d8;
+  color: #6e6e73;
+  font-weight: 500;
+  font-size: 9.5px;
+  text-align: center;
+}
+html[data-os='mac'] #app .desktop > .last-closed[data-streak]:not([data-streak='']) {
+  /* Serie-Abzeichen rechts: links gleich viel Platz, damit der Text mittig bleibt */
+  padding-left: 40px;
+}
+
+/* Anrufer-Blase mit langem Spruch: breiter als ihr Platz, liegt dann über der Deko daneben (desk.ts fitBubble) */
+.caller.wide .bubble {
+  z-index: 6;
+  flex: 0 0 auto;
+}
+
+/* ---------- MäcOS-Dock: ein Stück Glas (hell, leicht durchscheinend, feine Kante um das Ganze, keine Naht in der Mitte) ---------- */
+html[data-os='mac'] #app .taskbar {
+  /* Kante um Start + Apps zusammen: drop-shadow folgt der Form beider Teile */
+  filter: drop-shadow(0 0 0.6px rgba(0, 0, 0, 0.55)) drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.18));
+}
+html[data-os='mac'] #app .taskbar-start,
+html[data-os='mac'] #app .tray-area {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(236, 236, 242, 0.6));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+/* Launchpad als App-Symbol: graues Quadrat mit weißem Punkteraster */
+html[data-os='mac'] #app:is([data-taskbar='bottom'], [data-taskbar='top']) .start-glyph {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  background:
+    radial-gradient(circle, #fff 0 0.75px, transparent 1px) 1px 1px / 3px 3px,
+    linear-gradient(180deg, #9a9aa2, #5f5f66);
+  box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.4);
+}
+/* Apps im Dock: Symbole wie im Launchpad mit runden Ecken, ohne Comic-Kante */
+html[data-os='mac'] #app:is([data-taskbar='bottom'], [data-taskbar='top']) .tray-app .app-tile {
+  border-radius: 3px;
+}
+
+/* Infra: eigene Kaufmenge je Zeile, kleiner Knopf unter dem Kaufen-Knopf (antippen = nächste Menge) */
+.buy-col {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.sheet .buy-step {
+  min-height: 30px;
+  padding: 0 8px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background: #fff3c4;
+  color: var(--ink);
+  font: 600 11.5px / 1 var(--font-ui);
+  box-shadow: inset 0 -2px 0 rgba(61, 44, 46, 0.18);
+}
+.sheet .buy-step:active {
+  background: var(--butter);
+  box-shadow: none;
+}
+
+/* ---------- MäcOS-Browser „Pirsch“ wie Safari im kompakten Modus: eine Zeile mit Zurück/Vor, Adressfeld (= aktiver Tab)
+   und den anderen Tabs als kleine Symbole; im Adressfeld nur die Domain, mittig. Spart eine Zeile, die Tabs müssen
+   deshalb auch bei Platzmangel nicht weg. ---------- */
+html[data-os='mac'] #app .browser {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 6px;
+  background: #f6f6f6;
+}
+html[data-os='mac'] #app .browser .br-bar {
+  order: -1;
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: 5px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: none;
+}
+html[data-os='mac'] #app .br-nav {
+  color: #8e8e93;
+}
+html[data-os='mac'] #app .br-url {
+  justify-content: center;
+  padding: 1px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: #e3e3e7;
+  color: #1d1d1f;
+}
+html[data-os='mac'] #app .br-path {
+  display: none;
+}
+html[data-os='mac'] #app .browser .br-tabs,
+html[data-os='mac'] #app .work.tight .browser .br-tabs {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0;
+}
+html[data-os='mac'] #app .br-tabs .br-tab.on {
+  display: none;
+}
+html[data-os='mac'] #app .br-tabs .br-tab {
+  max-width: none;
+  padding: 2px 3px;
+  border: 0;
+  border-radius: 5px;
+  background: #e3e3e7;
+}
+html[data-os='mac'] #app .br-tabs .br-tab :is(.br-tab-title, .br-x) {
+  display: none;
+}
+html[data-os='mac'] #app .br-new {
+  display: none;
+}
+
+/* ---------- Browser flacher (alle Systeme): Tab-Leiste und Adresszeile brauchen weniger Höhe, die Tabs fallen seltener weg ---------- */
+.br-tabs {
+  padding-top: 2px;
+}
+.br-tabs .br-tab {
+  padding: 1px 6px;
+  font-size: 9.5px;
+  line-height: 1.25;
+}
+.br-bar {
+  padding: 2px 6px;
+}
+.br-url {
+  padding: 0 7px;
+  font-size: 10px;
+  line-height: 1.4;
+}
+.br-nav {
+  font-size: 10px;
+}
+
+/* ---------- XP („Netzsurfer“, Firefox 3) und 7 („Netz-Erkunder 8“, IE 8): Adresszeile oben, Tabs darunter, wie damals ---------- */
+html:is([data-os='xp'], [data-os='win7']) #app .browser {
+  display: flex;
+  flex-direction: column;
+}
+html:is([data-os='xp'], [data-os='win7']) #app .browser .br-bar {
+  order: -1;
+  margin: 0;
+  border-top: 0;
+  border-bottom: 1px solid rgba(61, 44, 46, 0.35);
+}
+html:is([data-os='xp'], [data-os='win7']) #app .browser .br-tabs {
+  padding: 2px 6px 0;
+}
+html[data-os='xp'] #app .browser .br-bar {
+  background: linear-gradient(180deg, #f7f6f1, #e9e7dd);
+}
+html[data-os='xp'] #app .br-nav {
+  color: #2f7d32;
+  font-weight: 700;
+}
+/* IE 8: blaue Pfeile, Adressfeld eckig */
+html[data-os='win7'] #app .browser .br-bar {
+  background: linear-gradient(180deg, #eef4fb, #d9e6f5);
+}
+html[data-os='win7'] #app .br-nav {
+  color: #1f5fb4;
+  font-weight: 700;
+}
+
+/* ---------- Firefox („Eiswiesel“, „Glutfuchs“): Tabs schweben als runde Kärtchen über der Leiste ---------- */
+html:is([data-os='debian'], [data-os='ubuntu']) #app .br-tabs {
+  align-items: center;
+  padding: 2px 6px;
+}
+html:is([data-os='debian'], [data-os='ubuntu']) #app .br-tabs .br-tab {
+  border: 0;
+  border-radius: 4px;
+}
+html:is([data-os='debian'], [data-os='ubuntu']) #app .br-tabs .br-tab.on {
+  border: 0;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.18), 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+html[data-os='ubuntu'] #app .br-tabs .br-tab.on {
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.18), inset 0 2px 0 #e95420;
+}
+html:is([data-os='debian'], [data-os='ubuntu']) #app .br-bar {
+  border-top: 1px solid #d7d7db;
+  margin-top: 0;
+}
+
+/* eng: Tabs bleiben sichtbar, Tab-Leiste und Adresszeile rücken zusammen (MäcOS hat ohnehin nur eine Zeile) */
+html:not([data-os='mac']) #app .work.tight .browser .br-tabs {
+  padding-top: 1px;
+}
+html:not([data-os='mac']) #app .work.tight .browser .br-tabs .br-tab {
+  padding: 0 5px;
+  font-size: 9px;
+  line-height: 1.2;
+}
+html:not([data-os='mac']) #app .work.tight .browser .br-bar {
+  padding: 1px 6px;
+}
+html:not([data-os='mac']) #app .work.tight .browser .br-url {
+  font-size: 9.5px;
+  line-height: 1.3;
 }

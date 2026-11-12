@@ -1,4 +1,4 @@
-import { CONFIG } from '../config';
+import { CONFIG, GENERATORS } from '../config';
 import { migrateLogin } from './login';
 import { migrateOs } from './os';
 import { BUY_AMOUNTS, TAP_SOUND_IDS, TASKBAR_POSITIONS, createInitialState, SAVE_VERSION, type BuyAmount, type GameState } from './state';
@@ -79,6 +79,13 @@ export function deserialize(json: string, now: number): GameState | null {
   // Union-Typ, den der generische Merge nicht abdeckt
   const amount = isPlain(data.settings) ? data.settings.buyAmount : undefined;
   state.settings.buyAmount = BUY_AMOUNTS.includes(amount as BuyAmount) ? (amount as BuyAmount) : 1;
+  // eigene Mengen je Zeile: nur bekannte Infrastruktur mit gültiger Menge
+  const perRow = isPlain(data.settings) && isPlain(data.settings.buyAmounts) ? data.settings.buyAmounts : {};
+  state.settings.buyAmounts = {};
+  for (const g of GENERATORS) {
+    const a = perRow[g.id];
+    if (BUY_AMOUNTS.includes(a as BuyAmount)) state.settings.buyAmounts[g.id] = a as BuyAmount;
+  }
   // Boosts: nur wohlgeformte Einträge übernehmen
   state.buffs = (Array.isArray(state.buffs) ? state.buffs : []).filter(
     (b) =>
