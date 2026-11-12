@@ -7,6 +7,8 @@ import { CertSim } from '../../src/ui/incidents/certs';
 import { UpsSim } from '../../src/ui/incidents/ups';
 import { CoolingSim } from '../../src/ui/incidents/cooling';
 import { RackSim } from '../../src/ui/incidents/rack';
+import { segmentHitsBox, SIZE, segmentsCross, UntangleSim } from '../../src/ui/incidents/untangle';
+import { TANGLE_DEVICES } from '../../src/content/incidents';
 
 const CFG = INCIDENTS.games.diskfull;
 
@@ -539,5 +541,138 @@ describe('Rack', () => {
     expect(sim.place(p.id, r.bottom)).toBe('ok');
     sim.unplace(p.id);
     expect(sim.runs().reduce((s, x) => s + x.size, 0)).toBe(before);
+  });
+});
+
+describe('Kabelsalat', () => {
+  const U = INCIDENTS.games.untangle;
+
+  /** Mensch mit Augenmaß: nimmt ein Gerät mit vielen Kreuzungen und probiert ein paar Stellen grob aus */
+  const play = (sim: UntangleSim, tries: number, moves: number, rnd: () => number) => {
+    for (let m = 0; m < moves && !sim.done; m++) {
+      const cnt = new Map<number, number>();
+      for (const x of sim.crossingPoints()) for (const ci of [x.i, x.j]) for (const n of [sim.cables[ci]!.a, sim.cables[ci]!.b]) cnt.set(n, (cnt.get(n) ?? 0) + 1);
+      for (const x of sim.covered()) for (const n of [x.node, sim.cables[x.cable]!.a, sim.cables[x.cable]!.b]) cnt.set(n, (cnt.get(n) ?? 0) + 1);
+      const cand = [...cnt.entries()].sort((a, b) => b[1] - a[1]);
+      const i = cand[Math.floor(rnd() * Math.min(2, cand.length))]![0];
+      let best = { p: { x: sim.nodes[i]!.x, y: sim.nodes[i]!.y }, c: sim.crossings() };
+      for (let t = 0; t < tries; t++) {
+        sim.drag(i, { x: rnd() * SIZE, y: rnd() * SIZE });
+        const c = sim.drop(i);
+        if (c < best.c) best = { p: { x: sim.nodes[i]!.x, y: sim.nodes[i]!.y }, c };
+      }
+      sim.drag(i, best.p);
+      sim.drop(i);
+    }
+  };
+
+  it('Start: verknotet im erlaubten Bereich, alles hängt zusammen, jedes Gerät hat zwei Kabel', () => {
+    for (let seed = 1; seed <= 200; seed++) {
+      const sim = new UntangleSim(U, seeded(seed));
+      expect(sim.nodes).toHaveLength(U.devices);
+      expect(new Set(sim.nodes.map((n) => n.dev.name)).size).toBe(U.devices);
+      expect(sim.cables.length).toBeGreaterThanOrEqual(U.cables - 1);
+      expect(sim.startCrossings).toBeGreaterThanOrEqual(U.startCrossMin);
+      expect(sim.startCrossings).toBeLessThanOrEqual(U.startCrossMax);
+      const deg = Array<number>(U.devices).fill(0);
+      for (const c of sim.cables) {
+        deg[c.a]!++;
+        deg[c.b]!++;
+      }
+      expect(deg.every((d) => d >= 2 && d <= U.maxDegree)).toBe(true);
+      // zusammenhängend
+      const seen = new Set([0]);
+      for (let k = 0; k < U.devices; k++) for (const c of sim.cables) if (seen.has(c.a) || seen.has(c.b)) seen.add(c.a).add(c.b);
+      expect(seen.size).toBe(U.devices);
+      // keine Geräte übereinander
+      for (let a = 0; a < U.devices; a++) for (let b = a + 1; b < U.devices; b++) expect(sim.overlaps(sim.nodes[a]!, sim.nodes[b]!)).toBe(false);
+    }
+  });
+
+  it('es gibt immer eine ordentliche Lage: dorthin geschoben ist alles entwirrt (volle Punktzahl)', () => {
+    for (let seed = 1; seed <= 200; seed++) {
+      const sim = new UntangleSim(U, seeded(seed));
+      sim.solution.forEach((p, i) => sim.drag(i, p));
+      sim.solution.forEach((_, i) => sim.drop(i));
+      expect(sim.crossings()).toBe(0);
+      expect(sim.done).toBe(true);
+      expect(sim.score()).toBe(1);
+    }
+  });
+
+  it('Runden sehen verschieden aus: andere Geräte', () => {
+    const names = new Set<string>();
+    for (let seed = 1; seed <= 100; seed++) new UntangleSim(U, seeded(seed)).nodes.forEach((n) => names.add(n.dev.name));
+    expect(names.size).toBe(TANGLE_DEVICES.length);
+  });
+
+  it('Kabel, die sich nur am selben Gerät berühren, kreuzen sich nicht', () => {
+    const o = { x: 50, y: 50 };
+    expect(segmentsCross(o, { x: 0, y: 0 }, o, { x: 100, y: 0 })).toBe(false);
+    expect(segmentsCross({ x: 0, y: 0 }, { x: 100, y: 100 }, { x: 0, y: 100 }, { x: 100, y: 0 })).toBe(true);
+  });
+
+  it('Kabel unter einem fremden Gerät zählt wie eine Kreuzung (sieht sonst aus wie angeschlossen)', () => {
+    expect(segmentHitsBox({ x: 0, y: 50 }, { x: 100, y: 50 }, { x: 50, y: 52 }, 10, 5)).toBe(true);
+    expect(segmentHitsBox({ x: 0, y: 50 }, { x: 100, y: 50 }, { x: 50, y: 60 }, 10, 5)).toBe(false);
+    expect(segmentHitsBox({ x: 0, y: 50 }, { x: 30, y: 50 }, { x: 50, y: 50 }, 10, 5)).toBe(false);
+    const sim = new UntangleSim(U, seeded(5));
+    sim.solution.forEach((p, i) => sim.drag(i, p));
+    expect(sim.covered()).toHaveLength(0);
+    // ein Gerät mitten auf ein fremdes Kabel legen
+    const c = sim.cables[0]!;
+    const k = sim.nodes.findIndex((_, i) => i !== c.a && i !== c.b);
+    const a = sim.nodes[c.a]!;
+    const b = sim.nodes[c.b]!;
+    sim.drag(k, { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
+    expect(sim.covered().some((x) => x.node === k && x.cable === 0)).toBe(true);
+    expect(sim.crossings()).toBeGreaterThan(0);
+  });
+
+  it('auf ein anderes Gerät fallen gelassen: rutscht daneben', () => {
+    const sim = new UntangleSim(U, seeded(9));
+    sim.drag(0, sim.nodes[1]!);
+    sim.drop(0);
+    for (let b = 1; b < U.devices; b++) expect(sim.overlaps(sim.nodes[0]!, sim.nodes[b]!)).toBe(false);
+  });
+
+  it('Wertung zählt den besten Stand: nochmal verschlimmern kostet nichts', () => {
+    const sim = new UntangleSim(U, seeded(11));
+    sim.solution.forEach((p, i) => sim.drag(i, p));
+    sim.solution.forEach((_, i) => sim.drop(i));
+    const best = sim.score();
+    sim.drag(0, { x: 0, y: 0 });
+    sim.drop(0);
+    expect(sim.score()).toBe(best);
+  });
+
+  it('fair mit menschlichem Tempo (≈1,4 s je Zug → 20 Züge): oft ganz entwirrt, immer über der Lösungsschwelle', () => {
+    for (const tries of [4, 12]) {
+      let solved = 0;
+      const N = 200;
+      for (let seed = 1; seed <= N; seed++) {
+        const sim = new UntangleSim(U, seeded(seed));
+        play(sim, tries, 20, seeded(seed + 999));
+        if (sim.done) solved++;
+        expect(isSolved(sim.score())).toBe(true);
+      }
+      // der Bot probiert blind; ein Mensch sieht die Struktur und schafft mehr
+      expect(solved / N).toBeGreaterThan(0.5);
+    }
+  });
+
+  it('Zeit läuft ab, während man das letzte Gerät noch hält: der gehaltene Stand zählt', () => {
+    const sim = new UntangleSim(U, seeded(13));
+    sim.solution.forEach((p, i) => sim.drag(i, p));
+    expect(sim.crossings()).toBe(0);
+    expect(sim.score()).toBe(1);
+  });
+
+  it('nie schon gelöst beim Start', () => {
+    for (let seed = 1; seed <= 500; seed++) expect(new UntangleSim(U, seeded(seed)).startCrossings).toBeGreaterThan(0);
+  });
+
+  it('Nichtstun ist nicht gelöst', () => {
+    expect(isSolved(new UntangleSim(U, seeded(1)).score())).toBe(false);
   });
 });

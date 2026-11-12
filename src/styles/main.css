@@ -13572,3 +13572,141 @@ html:not([data-os='mac']) #app .work.tight .browser .br-url {
 .rk-return.loaded {
   border-color: #23915c;
 }
+
+/* ---------- Kabelsalat: Technikraum von oben, Doppelboden mit 60-cm-Platten ---------- */
+.tg {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.tg-win {
+  width: min(100%, 380px);
+  margin-inline: auto;
+  border: var(--outline) solid var(--ink);
+  border-radius: 10px;
+  background: #c9cdd3;
+  box-shadow: 0 4px 0 var(--ink);
+  overflow: hidden;
+}
+.tg-head {
+  padding: 5px 9px;
+  border-bottom: 2px solid var(--ink);
+  background: #3a3f4b;
+  color: #d5dae2;
+  font: 400 10.5px / 1.35 var(--font-ui);
+}
+.tg-head > b {
+  color: #fff;
+}
+.tg-board {
+  position: relative;
+  aspect-ratio: 1;
+  touch-action: none;
+  user-select: none;
+  /* Bodenplatten: helle Fläche, dunkle Fugen, je Platte ein leichter Schimmer */
+  background:
+    linear-gradient(90deg, #8d939c 0 1.5px, transparent 1.5px) 0 0 / 25% 25%,
+    linear-gradient(#8d939c 0 1.5px, transparent 1.5px) 0 0 / 25% 25%,
+    radial-gradient(circle at 30% 25%, #e3e6ea, #d2d6dc 70%) 0 0 / 25% 25%;
+}
+.tg-lines,
+.tg-marks {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.tg-cable-under {
+  stroke: var(--ink);
+  stroke-width: 6.5px;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.tg-cable-under.tangled {
+  stroke: var(--red);
+}
+.tg-cable {
+  stroke-width: 3.5px;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.tg-x {
+  fill: var(--red);
+  stroke: #fff;
+  stroke-width: 2px;
+  vector-effect: non-scaling-stroke;
+}
+.tg-dev {
+  position: absolute;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  min-width: 0;
+  padding: 0 0 6%;
+  transform: translate(-50%, -50%);
+  border: 0;
+  background: none;
+  color: var(--ink);
+  /* Schatten folgt der Form (runder AP, Kamera …), nicht dem Kasten */
+  filter: drop-shadow(0 2.5px 0 rgba(61, 44, 46, 0.45));
+  font: 600 clamp(8px, 2.5vw, 10px) / 1 var(--font-ui);
+  cursor: grab;
+  touch-action: none;
+  transition: transform 0.08s, filter 0.08s;
+}
+.tg-art {
+  position: absolute;
+  inset: 0;
+}
+.tg-art > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+/* Etikett vom Beschriftungsgerät */
+.tg-dev > b {
+  position: absolute;
+  bottom: 7%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  display: -webkit-box;
+  max-width: 96%;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  padding: 1px 3px;
+  border-radius: 1.5px;
+  background: #fffdf6;
+  box-shadow: 0 0 0 1px rgba(61, 44, 46, 0.35);
+  font-weight: 600;
+  text-align: center;
+  hyphens: manual;
+  overflow-wrap: normal;
+}
+/* liegt auf einem fremden Kabel: roter Rand um die Form */
+.tg-dev.on-cable {
+  filter: drop-shadow(1.5px 0 0 var(--red)) drop-shadow(-1.5px 0 0 var(--red)) drop-shadow(0 1.5px 0 var(--red)) drop-shadow(0 -1.5px 0 var(--red));
+}
+.tg-dev.dragging {
+  z-index: 3;
+  transform: translate(-50%, -50%) scale(1.08);
+  filter: drop-shadow(0 6px 0 rgba(61, 44, 46, 0.3));
+  cursor: grabbing;
+}
+.tg-dev.on-cable.dragging {
+  filter: drop-shadow(1.5px 0 0 var(--red)) drop-shadow(-1.5px 0 0 var(--red)) drop-shadow(0 1.5px 0 var(--red)) drop-shadow(0 -1.5px 0 var(--red)) drop-shadow(0 6px 0 rgba(61, 44, 46, 0.3));
+}
+.tg-info {
+  min-height: 2.7em;
+  color: var(--ink);
+  font: 600 12px / 1.35 var(--font-ui);
+}
+.tg-info[data-kind='ok'] {
+  color: #1f7a50;
+}

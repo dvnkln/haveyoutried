@@ -111,7 +111,7 @@ export type EventEffectId = keyof typeof EVENT_EFFECTS;
 
 // --- Incidents (Minispiele nach Monitoring-Alarm) ---
 
-export const INCIDENT_IDS = ['raid', 'spam', 'services', 'loggrep', 'network', 'patch', 'diskfull', 'certs', 'ups', 'cooling', 'rack'] as const;
+export const INCIDENT_IDS = ['raid', 'spam', 'services', 'loggrep', 'network', 'patch', 'diskfull', 'certs', 'ups', 'cooling', 'rack', 'untangle'] as const;
 export type IncidentId = (typeof INCIDENT_IDS)[number];
 
 /** Ab dieser Leistung gilt ein Incident als gelöst (RECOVERY statt ESCALATION) */
@@ -297,6 +297,21 @@ export const INCIDENTS = {
       /** so viele Rack-Geräte in der Lieferung (davon eins schwer), dazu eins ohne Rackschienen */
       deliveries: 5,
       wrongPenaltyMs: 1_500,
+    },
+    untangle: {
+      durationMs: 30_000,
+      /** so viele Geräte liegen im Salat, verbunden mit so vielen Kabeln (jedes Gerät hat mindestens zwei) */
+      devices: 7,
+      cables: 10,
+      maxDegree: 4,
+      /** Spielfeld 100 × 100; ein Gerät ist so groß (gleiche Einheiten) */
+      boxW: 19,
+      boxH: 10,
+      /** so viel Abstand hat ein Kabel in der Lösung mindestens zu fremden Geräten (Rand bis Kabel) */
+      clearance: 2,
+      /** Kreuzungen beim Start, inkl. Kabel unter fremden Geräten (neu gewürfelt, bis es passt) */
+      startCrossMin: 6,
+      startCrossMax: 12,
     },
   },
 } as const;

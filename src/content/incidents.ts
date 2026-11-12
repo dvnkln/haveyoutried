@@ -202,6 +202,23 @@ export const INCIDENT_TEXT: Record<IncidentId, IncidentText> = {
       'Nicht alles passte. Die Reste stehen jetzt im Serverraum auf dem Boden, neben dem Zeug, das da seit 2019 steht.',
     ],
   },
+  untangle: {
+    host: 'vt-eg',
+    service: 'LINK',
+    info: 'gi0/7 flapping (213 changes), cable path unknown',
+    okInfo: 'link stable, cable traced',
+    goal: 'Kabelsalat! Geräte ziehen, bis sich kein Kabel mehr kreuzt und keins unter einem fremden Gerät durchläuft.',
+    good: [
+      'Entwirrt. Das Wackelkabel war sofort zu sehen: geknickt, unter einem Stuhlbein. Seit Monaten.',
+      'Alles liegt ordentlich. Ein Kabel führte übrigens nirgendwohin. Es bleibt liegen. Man weiß ja nie.',
+      'Entwirrt. Der Kollege, der das Knäuel „organisch gewachsen“ nannte, schaut jetzt ganz kleinlaut.',
+    ],
+    bad: [
+      'Zu viel Salat. Das Wackelkabel wackelt weiter. Der Switch zählt die Link-Wechsel inzwischen fünfstellig.',
+      'Halb entwirrt. Der Rest verschwindet wieder unter dem Doppelboden. Aus den Augen, aus dem Ticket.',
+      'Noch verknotet. Die Bodenplatte geht nicht mehr zu. Jetzt steht ein Warnhütchen drauf.',
+    ],
+  },
 };
 
 /** Button-Texte zum Übernehmen eines Incidents (zufällig) */
@@ -661,4 +678,32 @@ export const RACK_ODD: { name: string; what: string; desc: string }[] = [
   { name: 'Tower-Server', what: 'mit Rollen', desc: 'Ohne Rackschienen. „Passt schon irgendwie“, sagt der Einkauf.' },
   { name: 'Desktop-NAS', what: 'Weihnachtsangebot', desc: 'Aus dem Elektromarkt. Vier Platten, ein Lüfter, kein Rack.' },
   { name: 'Mini-PC', what: 'mit Klettband', desc: 'Der Vertrieb will ihn „ins Rechenzentrum“. Er hat eine Halterung für die Monitorrückseite.' },
+];
+
+// --- Kabelsalat ---
+
+export interface TangleDevice {
+  name: string;
+  /** Aussehen der Front */
+  look: 'switch' | 'router' | 'firewall' | 'server' | 'nas' | 'ap' | 'printer' | 'phone' | 'cam' | 'clock' | 'media' | 'box';
+  /** steht unten, sobald man das Gerät anfasst */
+  desc: string;
+}
+
+const td = (name: string, look: TangleDevice['look'], desc: string): TangleDevice => ({ name, look, desc });
+
+/** Geräte im Verteiler; jede Runde liegen andere im Salat */
+export const TANGLE_DEVICES: TangleDevice[] = [
+  td('Switch', 'switch', 'Alle Wege führen hierher. Leider auch alle Kabel.'),
+  td('Router', 'router', 'Hier kommt das Internet rein. Von wo, weiß nur der Anbieter.'),
+  td('Firewall', 'firewall', 'Blinkt rot, seit sie eingebaut ist. Laut Handbuch heißt das „alles in Ordnung“.'),
+  td('NAS', 'nas', 'Heißt im Netz „NAS-alt“, auf dem Aufkleber „NAS-neu“ und im Team „das Ding“.'),
+  td('WLAN-AP', 'ap', 'Hing mal an der Wand. Jetzt liegt er hier. Der Empfang im Flur ist seitdem „anders“.'),
+  td('Drucker', 'printer', '2. OG. Wacht nachts um drei auf und druckt eine leere Seite. Seit Jahren.'),
+  td('TK-Anlage', 'phone', 'Klingelt intern, sobald jemand ihr Kabel anfasst. Aus Prinzip.'),
+  td('Kamera', 'cam', 'Hofeinfahrt. Filmt seit 2016 dieselbe Mülltonne. In HD.'),
+  td('Stempel\u00aduhr', 'clock', 'Wenn die ausfällt, beschwert sich niemand. Außer der Personalabteilung.'),
+  td('Kiste ???', 'box', 'Grauer Kasten, ein grünes Lämpchen, kein Typenschild. Steht in keiner Inventarliste. Läuft.'),
+  td('Konverter', 'media', 'Medienkonverter. Macht aus Glasfaser Kupfer. Klein, warm, und es gibt genau einen.'),
+  td('srv-neu', 'server', 'Heißt „neu“, weil er den alten ersetzt hat. Der alte läuft auch noch. Irgendwo.'),
 ];

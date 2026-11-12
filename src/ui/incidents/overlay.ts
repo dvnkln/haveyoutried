@@ -18,6 +18,7 @@ import { certsGame } from './certs';
 import { upsGame } from './ups';
 import { coolingGame } from './cooling';
 import { rackGame } from './rack';
+import { untangleGame } from './untangle';
 import type { Minigame } from './types';
 
 const GAMES: Record<IncidentId, () => Minigame> = {
@@ -32,6 +33,7 @@ const GAMES: Record<IncidentId, () => Minigame> = {
   ups: upsGame,
   cooling: coolingGame,
   rack: rackGame,
+  untangle: untangleGame,
 };
 
 const p2 = (n: number) => String(n).padStart(2, '0');
