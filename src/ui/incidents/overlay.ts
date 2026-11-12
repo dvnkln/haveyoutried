@@ -1,5 +1,5 @@
 import { INCIDENTS, type IncidentId } from '../../config';
-import { DONE_LABELS, INCIDENT_TEXT, TAKE_LABELS } from '../../content/incidents';
+import { DONE_LABELS, INCIDENT_BRIEF, INCIDENT_TEXT, RUNBOOK_GO, TAKE_LABELS, WIKI_EDITED } from '../../content/incidents';
 import { bus } from '../../core/bus';
 import { rates } from '../../core/economy';
 import { endIncident, isSolved, resolveIncident, setForgivenMistakes } from '../../core/incidents';
@@ -36,7 +36,22 @@ const GAMES: Record<IncidentId, () => Minigame> = {
   untangle: untangleGame,
 };
 
+/** Logo des Wikis: eine verknotete Schleife (Konfusion eben) */
+const wikiLogo = () => {
+  const el = h('span', { class: 'wiki-logo', 'aria-hidden': 'true' });
+  el.innerHTML = WIKI_LOGO;
+  return el;
+};
+const WIKI_LOGO =
+  '<svg viewBox="0 0 24 24"><path d="M4 16c3-9 9 4 13-5 2-5-4-7-6-3s3 9 9 8" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg>';
 const p2 = (n: number) => String(n).padStart(2, '0');
+const hhmmss = (d = new Date()) => `${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}`;
+/** feste interne Adresse je Host (sieht echt aus, ändert sich nicht zwischen Alarmen) */
+const hostIp = (host: string) => {
+  let x = 7;
+  for (const c of host) x = (x * 31 + c.charCodeAt(0)) % 65_521;
+  return `10.0.${(x >> 8) % 250}.${(x % 250) + 2}`;
+};
 
 type RowState = 'crit' | 'warn' | 'ok' | 'esc';
 const STATE_LABEL: Record<RowState, string> = { crit: 'CRITICAL', warn: 'WARNING', ok: 'OK', esc: 'ESCALATED' };
@@ -83,11 +98,18 @@ export function mountIncidentOverlay(ctx: AppContext): void {
     setText(clock, `${p2(d.getHours())}:${p2(d.getMinutes())}`);
   };
   /** Inhalt im Monitor tauschen (Alarm → Spiel → Ergebnis) */
-  const screen = (state: 'crit' | 'ok' | 'esc', ...children: HTMLElement[]) => {
+  const screen = (state: 'crit' | 'ok' | 'esc' | 'wiki', ...children: HTMLElement[]) => {
     root.dataset.state = state;
     body.replaceChildren(...children);
     body.scrollTop = 0;
+    for (const c of children) moreObserver?.observe(c);
   };
+  /** steht unter dem klebenden Knopf noch Text? Nur dann bekommt er den weichen Übergang nach oben */
+  const markMore = () => body.classList.toggle('more', body.scrollHeight - body.scrollTop - body.clientHeight > 2);
+  body.addEventListener('scroll', markMore, { passive: true });
+  // misst auch, sobald der Alarm sichtbar wird (vorher 0 × 0) und wenn Schrift oder Inhalt die Höhe ändern
+  const moreObserver = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(markMore) : null;
+  moreObserver?.observe(body);
   const app = document.getElementById('app');
   // Licht des Monitors an der Wand; die Abdunklung selbst ist eine Maske mit Loch in Monitorform
   const spot = h('div', { class: 'inc-spot', 'aria-hidden': 'true' });
@@ -318,15 +340,17 @@ export function mountIncidentOverlay(ctx: AppContext): void {
     setForgivenMistakes(forgive);
     let forgiveTimeLeft = forgive;
 
-    // --- Phase 1: Monitoring-Alarm, wartet auf manuelles Übernehmen ---
+    // --- Phase 1: Monitoring-Alarm, wartet auf manuelles Übernehmen (nur die Meldung, die Aufgabe steht im Runbook) ---
+    const brief = INCIDENT_BRIEF[id];
     const take = h('button', { class: 'btn btn-danger nag-ack nag-take', type: 'button', text: pick(TAKE_LABELS), disabled: '' });
     const alert = h('div', { class: 'mon-page mon-compact' }, [
       summary(1, 2),
       h('div', { class: 'mon-table' }, [monRow('crit', text.host, text.service, text.info, '0m 03s', true)]),
       h('div', { class: 'mon-detail' }, [
         h('div', { class: 'nag-title', text: `** PROBLEM: ${text.host}/${text.service} is CRITICAL **` }),
+        h('div', { class: 'nag-facts', text: `${hostIp(text.host)} · HARD 3/3 · ${hhmmss()}` }),
+        h('div', { class: 'nag-output' }, brief.detail.map((l) => h('div', { text: l }))),
         h('div', { class: 'nag-assign', text: 'Assigned to: you' }),
-        h('div', { class: 'nag-task' }, [h('span', { class: 'nag-key', text: 'Aufgabe: ' }), text.goal]),
         take,
       ]),
     ]);
@@ -373,14 +397,55 @@ export function mountIncidentOverlay(ctx: AppContext): void {
       }
     };
     window.addEventListener('resize', fit);
-    const startGame = () => {
+
+    // --- Phase 1b: Runbook im Firmen-Wiki, ohne Zeitdruck; erst der Knopf startet den Countdown ---
+    const showRunbook = () => {
       clearInterval(nag);
+      root.classList.add('playing');
+      inMonitor(false);
+      const rb = brief.runbook;
+      // kurz gesperrt: ein doppelter Tipp auf „Übernehmen“ soll das Runbook nicht gleich überspringen
+      const go = h('button', { class: 'btn btn-primary nag-ack wiki-go', type: 'button', text: pick(RUNBOOK_GO), disabled: '' });
+      setTimeout(() => (go.disabled = false), INCIDENTS.ackArmMs);
+      go.addEventListener('click', () => {
+        ctx.sfx.tick();
+        startGame();
+        last = performance.now();
+        requestAnimationFrame(frame);
+      });
+      screen(
+        'wiki',
+        h('div', { class: 'wiki' }, [
+          h('div', { class: 'wiki-bar' }, [
+            wikiLogo(),
+            h('b', { text: 'Konfusion' }),
+            h('span', { class: 'wiki-crumb', text: 'IT › Runbooks' }),
+          ]),
+          h('article', { class: 'wiki-page' }, [
+            h('h2', { class: 'wiki-title', text: `Runbook: ${rb.title}` }),
+            h('div', { class: 'wiki-meta', text: pick(WIKI_EDITED) }),
+            h('div', { class: 'wiki-alert', text: `Ausgelöst von: ${text.host}/${text.service}` }),
+            h('ol', { class: 'wiki-steps' }, rb.steps.map((st) => h('li', { text: st }))),
+            h('div', { class: 'wiki-warn' }, [h('b', { text: 'Achtung: ' }), rb.warn]),
+            h('div', { class: 'wiki-go-row' }, [go, h('small', { text: `Danach: ${INCIDENTS.readyMs / 1_000} Sekunden Countdown, dann läuft die Uhr.` })]),
+            h('div', { class: 'wiki-comments' }, [
+              h('div', { class: 'wiki-ch', text: '1 Kommentar' }),
+              h('div', { class: 'wiki-comment' }, [
+                h('span', { class: 'wiki-avatar', 'aria-hidden': 'true', text: rb.note.who.slice(0, 1) }),
+                h('span', {}, [h('b', { text: rb.note.who }), h('span', { text: rb.note.text })]),
+              ]),
+            ]),
+          ]),
+        ]),
+      );
+      go.focus({ preventScroll: true });
+    };
+
+    const startGame = () => {
       elapsed = 0;
       // erst Countdown: Spielfeld sichtbar, aber eingefroren
       phase = 'ready';
       readyLeft = INCIDENTS.readyMs;
-      root.classList.add('playing');
-      inMonitor(false);
       screen(
         'crit',
         h('div', { class: 'inc-game' }, [
@@ -391,7 +456,8 @@ export function mountIncidentOverlay(ctx: AppContext): void {
           ]),
           bar,
           status,
-          h('div', { class: 'inc-goal', text: text.goal }),
+          // Erinnerung aus dem Runbook (eine Quelle für die Regeln)
+          h('div', { class: 'inc-goal', text: brief.runbook.warn }),
           stage,
         ]),
       );
@@ -499,9 +565,7 @@ export function mountIncidentOverlay(ctx: AppContext): void {
     };
     take.addEventListener('click', () => {
       ctx.sfx.tick();
-      startGame();
-      last = performance.now();
-      requestAnimationFrame(frame);
+      showRunbook();
     });
   };
 

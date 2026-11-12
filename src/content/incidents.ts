@@ -7,8 +7,6 @@ export interface IncidentText {
   info: string;
   /** Info-Zeile der RECOVERY-Meldung */
   okInfo: string;
-  /** Anweisung während des Spiels */
-  goal: string;
   /** Kommentar nach dem Spiel, je nach Leistung */
   good: string[];
   bad: string[];
@@ -20,7 +18,6 @@ export const INCIDENT_TEXT: Record<IncidentId, IncidentText> = {
     service: 'RAID',
     info: 'md0 degraded [UUUU_UUUUUUU]',
     okInfo: 'md0 active, resync complete',
-    goal: 'Defekte Platten (rot) antippen und tauschen. Ab 3 gleichzeitig ist das Array tot.',
     good: [
       'Alle Platten getauscht. Hot-Spare war sogar da. Wer hat den eingebaut? Egal.',
       'Rebuild durch. Die Platten waren alle aus derselben Charge. Das wird nicht der letzte Abend gewesen sein.',
@@ -37,7 +34,6 @@ export const INCIDENT_TEXT: Record<IncidentId, IncidentText> = {
     service: 'MAIL-QUEUE',
     info: 'queue: 4211 messages, deferred: 3982',
     okInfo: 'queue: 3 messages',
-    goal: 'Mails sortieren: Spam nach links, echte Mails nach rechts. Achte auf den Absender.',
     good: [
       'Queue leer. Die Phishing-Mails sind weg, der Kuchen im 3. OG ist angekündigt. Ordnung.',
       'Sauber sortiert. Die Buchhaltung bekommt ihre Mails, der „IT-Support“ von firma-it.support nicht.',
@@ -54,7 +50,6 @@ export const INCIDENT_TEXT: Record<IncidentId, IncidentText> = {
     service: 'CLUSTER',
     info: '7 services CRITICAL, 2 WARNING',
     okInfo: 'all services OK',
-    goal: 'Finde die Ursache und starte nur diesen Dienst neu. Achte darauf, wovon ein Dienst abhängt.',
     good: [
       'Ursache gefunden, nur den einen Dienst neu gestartet, alles grün. Wie im Lehrbuch.',
       'Root Cause sauber behoben. Du schreibst sogar ein Postmortem. Vielleicht.',
@@ -71,7 +66,6 @@ export const INCIDENT_TEXT: Record<IncidentId, IncidentText> = {
     service: 'ERROR-RATE',
     info: 'error rate 37 % (threshold 5 %)',
     okInfo: 'error rate 0.2 %',
-    goal: 'Tippe neue, echte Fehler (FATAL/CRIT) an, bevor sie oben rausscrollen. Die üblichen ERRORs sind seit 2014 da – ignorieren.',
     good: [
       'Ursache im Log gefunden. Du hast sogar den Stacktrace bis zum Ende gelesen. Respekt.',
       'grep -v "known issue" | grep FATAL – und schon war es offensichtlich.',
@@ -88,7 +82,6 @@ export const INCIDENT_TEXT: Record<IncidentId, IncidentText> = {
     service: 'PING',
     info: 'packet loss 100 %, rta n/a',
     okInfo: 'packet loss 0 %, rta 0.4 ms',
-    goal: 'Dein eigener Rechner ist offline – keine Tickets mehr. Arbeite dich von unten nach oben durch (OSI!). Falsche Reihenfolge kostet Zeit.',
     good: [
       'Netz wieder da. Systematisch von Layer 1 nach oben. Wie im Lehrbuch. Das Lehrbuch ist von 2003.',
       'Online. Die Queue ist in der Zwischenzeit nicht kürzer geworden. Komisch.',
@@ -105,7 +98,6 @@ export const INCIDENT_TEXT: Record<IncidentId, IncidentText> = {
     service: 'PORTS',
     info: '12 ports down after Aufräumaktion (Immobilienmanagement)',
     okInfo: 'all access ports up',
-    goal: 'Dose links mit dem passenden Switch-Port rechts verbinden: antippen + antippen oder ziehen. Finger weg vom Uplink!',
     good: [
       'Alles gepatcht. Diesmal sogar beschriftet. Das hält bis zur nächsten Aufräumaktion.',
       'Ports up. Das Immobilienmanagement hat versprochen, nie wieder „Kabel zu ordnen“.',
@@ -122,7 +114,6 @@ export const INCIDENT_TEXT: Record<IncidentId, IncidentText> = {
     service: 'DISK /',
     info: '97 % used, 3 GB free, nohup.out growing',
     okInfo: '68 % used',
-    goal: 'Platz schaffen, bis der Balken unter der Zielmarke ist: Feld antippen, Beschreibung lesen, dann löschen. Finger weg von allem, was die Firma braucht.',
     good: [
       'Platz geschaffen, nichts Wichtiges gelöscht. Das Monitoring ist grün. Für etwa drei Wochen.',
       'Aufgeräumt. Den Übeltäter, der die Platte vollschreibt, hast du auch gefunden. Er sitzt zwei Türen weiter.',
@@ -139,7 +130,6 @@ export const INCIDENT_TEXT: Record<IncidentId, IncidentText> = {
     service: 'TLS-CERTS',
     info: '5 certificates expire within 90 days, renewal cron disabled',
     okInfo: 'all certificates valid',
-    goal: 'Zeile antippen = Zertifikat erneuern. certbot schafft nur eins auf einmal und erst ab 30 Tagen Restlaufzeit. Keins darf ablaufen.',
     good: [
       'Alles grün, null Warnseiten. Du trägst dir in 60 Tagen einen Termin ein. Und einen Tag später noch einen.',
       'Rechtzeitig erneuert. Den Cronjob dafür gab es übrigens. Er war seit 2022 auskommentiert.',
@@ -156,7 +146,6 @@ export const INCIDENT_TEXT: Record<IncidentId, IncidentText> = {
     service: 'UPS',
     info: 'ON BATTERY, load 100 %, runtime 15 min',
     okInfo: 'all servers shut down cleanly, waiting for mains',
-    goal: 'Stromausfall! Server sauber herunterfahren, bevor der Akku leer ist: gedrückt halten. Erst die, die keiner mehr braucht, sonst stürzen andere ab.',
     good: [
       'Alles sauber unten, bevor der Akku leer war. Als der Strom zurückkam, startete alles in der richtigen Reihenfolge. Fast.',
       'Geordnet heruntergefahren. Draußen repariert der Bagger gerade das Kabel, das er vorhin gefunden hat.',
@@ -173,7 +162,6 @@ export const INCIDENT_TEXT: Record<IncidentId, IncidentText> = {
     service: 'TEMP',
     info: 'CRAC 1 failed, zone temperatures drifting',
     okInfo: 'all zones 18–27 °C',
-    goal: 'Klimagerät 1 ist ausgefallen. Regler hoch = kälter. Der Pfeil am Thermometer zeigt, wohin die Temperatur läuft: halt ihn im grünen Bereich (18–27 °C).',
     good: [
       'Alle Racks im grünen Bereich. Der Techniker für Klimagerät 1 kommt morgen. Zwischen 8 und 18 Uhr.',
       'Temperatur gehalten. Du hast jetzt ein Gefühl für Thermodynamik und einen Pullover im Serverraum.',
@@ -190,7 +178,6 @@ export const INCIDENT_TEXT: Record<IncidentId, IncidentText> = {
     service: 'INVENTORY',
     info: '6 parcels at loading dock, rack 07: free units fragmented',
     okInfo: 'all devices mounted, cabling (mostly) tidy',
-    goal: 'Lieferung einbauen: Gerät antippen, dann eine leuchtende Lücke. Schweres unter die Linie. Was keine Rackschienen hat, geht in die Retoure.',
     good: [
       'Alles eingebaut, schwer unten, leicht oben. Das Rack sieht aus wie im Prospekt. Bis morgen jemand ein Kabel braucht.',
       'Eingebaut, und es ist sogar noch eine Höheneinheit frei. Die ist ab morgen voll. Du weißt nur noch nicht, womit.',
@@ -207,7 +194,6 @@ export const INCIDENT_TEXT: Record<IncidentId, IncidentText> = {
     service: 'LINK',
     info: 'gi0/7 flapping (213 changes), cable path unknown',
     okInfo: 'link stable, cable traced',
-    goal: 'Kabelsalat! Geräte ziehen, bis sich kein Kabel mehr kreuzt und keins unter einem fremden Gerät durchläuft.',
     good: [
       'Entwirrt. Das Wackelkabel war sofort zu sehen: geknickt, unter einem Stuhlbein. Seit Monaten.',
       'Alles liegt ordentlich. Ein Kabel führte übrigens nirgendwohin. Es bleibt liegen. Man weiß ja nie.',
@@ -707,3 +693,189 @@ export const TANGLE_DEVICES: TangleDevice[] = [
   td('Konverter', 'media', 'Medienkonverter. Macht aus Glasfaser Kupfer. Klein, warm, und es gibt genau einen.'),
   td('srv-neu', 'server', 'Heißt „neu“, weil er den alten ersetzt hat. Der alte läuft auch noch. Irgendwo.'),
 ];
+
+// --- Alarm-Details und Runbooks (Wiki „Konfusion“) ---
+
+export interface IncidentBrief {
+  /** zusätzliche Zeilen der Alarmmeldung (Plugin-Ausgabe, englisch/gemischt wie echte Checks) */
+  detail: string[];
+  /** Wiki-Seite vor dem Spiel: in Ruhe lesen, dann Countdown */
+  runbook: {
+    title: string;
+    steps: string[];
+    /** Kasten „Achtung“ */
+    warn: string;
+    /** Kommentar unter der Seite */
+    note: { who: string; text: string };
+  };
+}
+
+export const INCIDENT_BRIEF: Record<IncidentId, IncidentBrief> = {
+  raid: {
+    detail: ['md0: sdk faulty, sdf SMART: 1832 reallocated sectors', 'hot spare: none (Ticket „Spare bestellen“ offen seit 2021)'],
+    runbook: {
+      title: 'Defekte Platten tauschen',
+      steps: [
+        'Rote Platte = defekt. Antippen, dann wird sie getauscht.',
+        'Eine getauschte Platte baut sich erst neu auf und ist danach wieder grün.',
+        'Es fallen immer wieder neue aus. Dranbleiben, bis die Zeit um ist.',
+      ],
+      warn: 'Ab 3 defekten Platten gleichzeitig ist das Array tot.',
+      note: { who: 'Vorgänger', text: 'Schacht 7 hakt beim Rausziehen. Nicht rütteln, das mag er nicht.' },
+    },
+  },
+  spam: {
+    detail: ['postfix/qmgr: 3982 deferred, oldest 2d 4h', 'top sender: 412 msgs from a domain registered yesterday'],
+    runbook: {
+      title: 'Mailqueue sortieren',
+      steps: [
+        'Oben liegt jeweils eine Mail.',
+        'Spam: nach links wischen oder „◀ Spam“. Echte Mail: nach rechts oder „Echt ▶“.',
+        'Entscheidend ist die Domain hinter dem @ (fett gedruckt).',
+      ],
+      warn: 'Der Name vor dem @ darf lügen. Die Domain nicht.',
+      note: { who: 'Geschäftsführung', text: 'Der Newsletter vom Golfclub ist kein Spam. Den lese ich. Später.' },
+    },
+  },
+  services: {
+    detail: ['check_cluster: 7 CRITICAL, 2 WARNING, 0 OK in Kette', 'dependency map: zuletzt gepflegt vor dem letzten Umzug'],
+    runbook: {
+      title: 'Die eine Ursache finden',
+      steps: [
+        'Viele Dienste sind rot, aber nur einer ist die Ursache. Der Rest fällt hinterher um.',
+        'Unter jedem Dienst steht, was er braucht. Folge den Abhängigkeiten nach unten.',
+        'Den kaputten Dienst antippen, der selbst nichts Kaputtes braucht: Neustart.',
+      ],
+      warn: 'Neustart am falschen Dienst kostet Zeit.',
+      note: { who: 'Werkstudent', text: 'Ich hab einfach alle neu gestartet. Hat 40 Minuten gedauert, aber dann ging es.' },
+    },
+  },
+  loggrep: {
+    detail: ['app.log: 12.400 lines/min, ERROR 37 %', 'new since 09:12: FATAL in payment-worker (3×)'],
+    runbook: {
+      title: 'Neue Fehler im Log erwischen',
+      steps: [
+        'Das Log läuft von unten nach oben durch.',
+        'Neue, echte Fehler (FATAL oder CRIT) antippen, bevor sie oben verschwinden.',
+        'Normale ERROR-Zeilen ignorieren, die kommen jeden Tag.',
+      ],
+      warn: 'Harmlose Zeilen antippen kostet Zeit.',
+      note: { who: 'Entwicklung', text: 'Die ERRORs sind Absicht. Damit man merkt, dass das Logging läuft.' },
+    },
+  },
+  network: {
+    detail: ['admin-pc: no route to host, last seen 4 min ago', 'ticket queue: unreachable from this workstation'],
+    runbook: {
+      title: 'Eigener Rechner offline',
+      steps: [
+        'Ohne Netz keine Tickets. Fehlersuche von unten nach oben, wie im OSI-Modell.',
+        'Erst Kabel und Link, dann Adresse, dann Namensauflösung und alles darüber.',
+        'Immer den nächsten Schritt antippen. Manche Knöpfe sind Ablenkung.',
+      ],
+      warn: 'Falsche Reihenfolge kostet Zeit.',
+      note: { who: 'Vorgänger', text: 'Erst mal gucken, ob das Lämpchen an der Dose leuchtet. Hätte mir zwei Tage gespart.' },
+    },
+  },
+  patch: {
+    detail: ['sw-core01: access ports notconnect, uplink ok', 'last change: gestern 16:58 (Aufräumaktion)'],
+    runbook: {
+      title: 'Patchfeld neu stecken',
+      steps: [
+        'Links die Dosen mit Abteilung, rechts die Switch-Ports mit VLAN.',
+        'Dose antippen, dann den Port mit dem passenden VLAN (z. B. Buchhaltung → BUHA). Ziehen geht auch.',
+        'Jede Dose genau einmal.',
+      ],
+      warn: 'Finger weg vom Uplink. Ein Kabel dort legt das ganze Netz lahm.',
+      note: { who: 'Hausmeister', text: 'Ich hab nur die grünen zu den grünen gesteckt. Sah ordentlicher aus.' },
+    },
+  },
+  diskfull: {
+    detail: ['/: 97 % used, inodes 61 %', 'top writer: +200 MB/s, process owner: unbekannt'],
+    runbook: {
+      title: 'Platz auf der Platte schaffen',
+      steps: [
+        'Jedes Feld ist eine Datei, groß heißt groß. Antippen zeigt, was es ist.',
+        'Überflüssiges löschen, bis der Balken unter der Zielmarke ist.',
+        'Eine Datei wächst nach. Die löst sich nicht durch Löschen allein.',
+      ],
+      warn: 'Was die Firma braucht, bleibt. Löschen-Wollen kostet Zeit.',
+      note: { who: 'Chef', text: 'Meine Urlaubsfotos liegen da nur vorübergehend. Seit 2017.' },
+    },
+  },
+  certs: {
+    detail: ['certbot.timer: inactive (dead) since last upgrade', 'last successful renewal: never'],
+    runbook: {
+      title: 'Zertifikate erneuern',
+      steps: [
+        'Zeile antippen = Zertifikat mit certbot erneuern.',
+        'certbot schafft nur eins auf einmal, und erst ab 30 Tagen Restlaufzeit.',
+        'Zwischendurch kommen neue Domains dazu. Im Blick behalten.',
+      ],
+      warn: 'Keins darf ablaufen.',
+      note: { who: 'Marketing', text: 'Können wir das grüne Schloss auch in Firmenblau haben?' },
+    },
+  },
+  ups: {
+    detail: ['ups: ON BATTERY since 00:00:41, input 0 V', 'mains: Hausanschluss tot, Netzbetreiber informiert'],
+    runbook: {
+      title: 'Bei Stromausfall geordnet herunterfahren',
+      steps: [
+        'Server gedrückt halten = sauber herunterfahren. Einer nach dem anderen.',
+        'Erst die, von denen nichts mehr abhängt. Datenbank und Speicher zum Schluss.',
+        'Jeder Server, der aus ist, schont den Akku.',
+      ],
+      warn: 'Wer zu früh die Basis abschaltet, reißt alles mit, was darauf läuft.',
+      note: { who: 'Vorgänger', text: 'Die Anleitung lag ausgedruckt im Serverraum. Der war dunkel.' },
+    },
+  },
+  cooling: {
+    detail: ['CRAC 1: compressor fault E-17', 'CRAC 2: running at 100 % (allein)'],
+    runbook: {
+      title: 'Klimaausfall – Racks kühl halten',
+      steps: [
+        'Jedes Rack hat einen Regler. Hoch = mehr Kühlung = kälter.',
+        'Der Pfeil am Thermometer zeigt, wohin die Temperatur gerade läuft.',
+        'Ereignisse (Backup, Benchmark …) ändern die Abwärme. Nachregeln.',
+      ],
+      warn: 'Grüner Bereich: 18 bis 27 °C. Zu kalt ist auch falsch.',
+      note: { who: 'Empfang', text: 'Im Serverraum ist es so schön kühl. Darf ich da meine Pflanzen überwintern?' },
+    },
+  },
+  rack: {
+    detail: ['dock: 6 parcels for rack 07, 1 without rail kit', 'rack 07: freie HE über mehrere Lücken verteilt'],
+    runbook: {
+      title: 'Lieferung ins Rack einbauen',
+      steps: [
+        'Gerät rechts antippen, dann eine leuchtende Lücke im Schrank.',
+        'Schweres gehört unter die gestrichelte Linie.',
+        'Was keine Rackschienen hat, kommt nicht ins Rack: ab in die Retoure.',
+      ],
+      warn: 'Falsch einsortiert kostet Zeit. Eingebautes lässt sich wieder ausbauen.',
+      note: { who: 'Einkauf', text: 'Das war im Angebot. Ob es passt, stand nicht dabei.' },
+    },
+  },
+  untangle: {
+    detail: ['gi0/7: link up/down 213× in 10 min', 'cable path: undokumentiert'],
+    runbook: {
+      title: 'Kabelsalat entwirren',
+      steps: [
+        'Geräte ziehen. Die Kabel gehen mit.',
+        'Rote Punkte zeigen, wo sich zwei Kabel kreuzen.',
+        'Roter Rand: Ein fremdes Kabel läuft unter dem Gerät durch. Zählt auch.',
+      ],
+      warn: 'Fertig ist es erst, wenn kein Rot mehr übrig ist.',
+      note: { who: 'Vertrieb', text: 'Können wir nicht einfach WLAN machen?' },
+    },
+  },
+};
+
+/** Wer die Runbook-Seite zuletzt angefasst hat (zufällig) */
+export const WIKI_EDITED = [
+  'bearbeitet von deinem Vorgänger · 3 Aufrufe, alle von ihm',
+  'bearbeitet von dir, nachts um vier · Du erinnerst dich nicht',
+  'bearbeitet vom Praktikanten · vom Chef mit 👍 freigegeben',
+  'bearbeitet von „admin“ · Wer ist admin? Gute Frage.',
+];
+
+/** Knopf unter dem Runbook: startet den Countdown */
+export const RUNBOOK_GO = ['Gelesen. Los!', 'Klingt machbar. Los!', 'Alles klar, Uhr starten.', 'Runbook im Kopf. Los!'];

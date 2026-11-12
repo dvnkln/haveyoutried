@@ -222,8 +222,16 @@ for (const id of INCIDENT_IDS) {
     await page.clock.runFor(20_000);
     await expect(page.locator('.inc-game')).toHaveCount(0);
     await expect(take).toBeEnabled();
-    await expect(alert.locator('.nag-task')).not.toBeEmpty();
+    await expect(alert.locator('.nag-output')).not.toBeEmpty();
     await take.click();
+    // Runbook: ohne Zeitdruck lesen, erst der Knopf startet den Countdown
+    const go = page.locator('.wiki-go');
+    await expect(go).toBeVisible();
+    await expect(page.locator('.wiki-steps li').first()).not.toBeEmpty();
+    await shot(page, `inc-${id}-1b-runbook`);
+    await page.clock.runFor(5_000);
+    await expect(page.locator('.inc-game')).toHaveCount(0);
+    await go.click();
     // Countdown: Spielfeld sichtbar, aber gesperrt
     await expect(page.locator('.inc-ready')).toHaveText('3');
     await expect(page.locator('.inc-game')).toBeVisible();
@@ -268,6 +276,9 @@ test('Patchkabel: Antippen-Antippen und Ziehen verbinden, Uplink straft', async 
   await page.clock.runFor(2_500);
   await page.clock.runFor(1_500);
   await page.locator('.nag-take').click();
+  // Runbook-Knopf ist kurz gesperrt (gegen Doppeltipp)
+  await page.clock.runFor(INCIDENTS.ackArmMs + 100);
+  await page.locator('.wiki-go').click();
   await page.clock.runFor(3_200);
 
   const vlan = (dept: string) => PATCH_DEPARTMENTS.find((d) => d.name === dept)!.vlan;
@@ -310,6 +321,9 @@ test('Patchkabel: Ziehen und außerhalb loslassen hängt nicht, Fehlklick zählt
   await page.goto('/?incident=patch');
   await page.clock.runFor(4_000);
   await page.locator('.nag-take').click();
+  // Runbook-Knopf ist kurz gesperrt (gegen Doppeltipp)
+  await page.clock.runFor(INCIDENTS.ackArmMs + 100);
+  await page.locator('.wiki-go').click();
   await page.clock.runFor(3_200);
 
   const left = page.locator('.port-left').first();

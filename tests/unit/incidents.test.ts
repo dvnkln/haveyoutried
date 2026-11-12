@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { INCIDENT_IDS, INCIDENTS } from '../../src/config';
-import { INCIDENT_TEXT, MAILS, ROOT_CAUSES, SERVICES } from '../../src/content/incidents';
+import { INCIDENT_BRIEF, INCIDENT_TEXT, MAILS, ROOT_CAUSES, SERVICES } from '../../src/content/incidents';
 import { bus } from '../../src/core/bus';
 import { rates } from '../../src/core/economy';
 import {
@@ -241,7 +241,9 @@ describe('Inhalte', () => {
   it('jeder Incident hat Texte', () => {
     for (const id of INCIDENT_IDS) {
       const t = INCIDENT_TEXT[id];
-      expect(t.host && t.service && t.goal && t.good.length && t.bad.length).toBeTruthy();
+      expect(t.host && t.service && t.good.length && t.bad.length).toBeTruthy();
+      const b = INCIDENT_BRIEF[id];
+      expect(b.detail.length && b.runbook.steps.length && b.runbook.warn && b.runbook.note.text).toBeTruthy();
     }
   });
 });

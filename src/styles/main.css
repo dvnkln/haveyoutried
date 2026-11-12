@@ -3339,13 +3339,6 @@ button {
   color: var(--red);
 }
 
-.nag-task {
-  margin-top: 10px;
-  padding: 8px 10px;
-  border-left: 3px solid var(--amber);
-  background: rgba(255, 176, 0, 0.08);
-  color: var(--fg);
-}
 .inc-stage {
   position: relative;
 }
@@ -4211,11 +4204,6 @@ html.basement {
 }
 .nag-problem {
   background: #fff1f1 !important;
-}
-.nag-task {
-  border-radius: 10px;
-  background: #fff3c4;
-  border-left-color: var(--butter);
 }
 .inc-tag {
   border: 2px solid var(--ink);
@@ -6407,7 +6395,7 @@ html.basement {
   color: #4a5060;
   overflow-wrap: anywhere;
 }
-/* Detailbereich: Benachrichtigung, Aufgabe, Knopf */
+/* Detailbereich: Benachrichtigung, Check-Details, Knopf */
 .mon-detail {
   padding: 10px 12px 12px;
   border: 2px solid #c9cdd8;
@@ -6431,11 +6419,6 @@ html.basement {
   margin-top: 8px;
   font: 700 15px / 1.2 var(--font-ui);
   color: #c26f00;
-}
-.mon-detail .nag-task {
-  margin-top: 8px;
-  font-family: var(--font-ui);
-  font-size: 13px;
 }
 .mon-perf {
   display: flex;
@@ -7300,11 +7283,6 @@ body:has(> #app.sheet-open) > .quip {
   margin-top: 4px;
   font-size: 13px;
 }
-.screen > .incident .mon-detail .nag-task {
-  margin-top: 5px;
-  padding: 5px 8px;
-  font-size: 12px;
-}
 .screen > .incident .mon-detail .nag-take,
 .screen > .incident .mon-detail .nag-close {
   min-height: 42px;
@@ -7316,13 +7294,16 @@ body:has(> #app.sheet-open) > .quip {
   position: sticky;
   bottom: 0;
   z-index: 1;
-  box-shadow: 0 -8px 10px 2px #fff;
+}
+/* weicher Übergang nur, wenn wirklich Text unter dem Knopf verschwindet (sonst wirkt alles milchig) */
+.screen > .incident .mon-body.more .mon-detail :is(.nag-take, .nag-close) {
+  box-shadow: 0 -5px 6px 0 rgba(255, 255, 255, 0.9);
 }
 .screen > .incident .mon-detail .nag-comment {
   margin: 5px 0 3px;
   font-size: 12.5px;
 }
-/* Spielkopf: eine Zeile, dünner Balken, Aufgabe steht schon im Alarm */
+/* Spielkopf: eine Zeile, dünner Balken (im kleinen Monitor ohne Erinnerungszeile) */
 .screen > .incident .inc-game {
   gap: 4px;
 }
@@ -13709,4 +13690,184 @@ html:not([data-os='mac']) #app .work.tight .browser .br-url {
 }
 .tg-info[data-kind='ok'] {
   color: #1f7a50;
+}
+
+/* ---------- Alarm: echte Check-Details statt Aufgabe ---------- */
+.mon-detail .nag-facts {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 10px;
+  color: #4a5060;
+  font: 10.5px / 1.4 var(--font);
+}
+.mon-detail .nag-output {
+  margin-top: 5px;
+  padding: 4px 7px;
+  border-left: 3px solid #d64545;
+  border-radius: 2px;
+  background: #f6f2f2;
+  color: #2b2f3a;
+  font: 10.5px / 1.4 var(--font);
+  overflow-wrap: anywhere;
+}
+.screen > .incident .mon-detail .nag-facts,
+.screen > .incident .mon-detail .nag-output {
+  font-size: 9.5px;
+}
+
+/* ---------- Runbook im Firmen-Wiki „Konfusion“ (vor dem Countdown, ohne Zeitdruck) ---------- */
+.incident[data-state='wiki'] .mon-top {
+  display: none;
+}
+.incident[data-state='wiki'] .mon-body {
+  padding: 0;
+  background: #fff;
+}
+.wiki {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  background: #fff;
+  color: #172b4d;
+}
+.wiki-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #0b4fa8;
+  color: #fff;
+  font: 600 13px / 1.2 var(--font-ui);
+}
+.wiki-logo {
+  display: block;
+  width: 22px;
+  height: 22px;
+}
+.wiki-logo > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.wiki-crumb {
+  margin-left: auto;
+  color: #c7dcff;
+  font-weight: 400;
+  font-size: 11px;
+}
+.wiki-page {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 560px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 14px 16px 20px;
+  font: 400 14px / 1.45 var(--font-ui);
+}
+.wiki-title {
+  margin: 0;
+  font: 600 20px / 1.2 var(--font-ui);
+  color: #172b4d;
+}
+.wiki-meta {
+  margin-top: -6px;
+  color: #6b778c;
+  font-size: 11.5px;
+}
+.wiki-alert {
+  align-self: flex-start;
+  padding: 1px 7px;
+  border-radius: 3px;
+  background: #ffebe6;
+  color: #bf2600;
+  font: 600 11px / 1.5 var(--font);
+}
+.wiki-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+.wiki-steps > li {
+  position: relative;
+  padding-left: 30px;
+  counter-increment: step;
+}
+.wiki-steps > li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: grid;
+  place-items: center;
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+  background: #deebff;
+  color: #0b4fa8;
+  font: 700 12px / 1 var(--font-ui);
+}
+.wiki-warn {
+  padding: 8px 10px;
+  border-left: 4px solid #ff991f;
+  border-radius: 3px;
+  background: #fffae6;
+  font-size: 13.5px;
+}
+.wiki-go-row {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  margin-top: 4px;
+}
+.wiki-go.btn {
+  min-height: 48px;
+  border-color: #072f66;
+  background: #0b4fa8;
+  box-shadow: 0 4px 0 #072f66;
+  color: #fff;
+  font-size: 16px;
+}
+.wiki-go-row > small {
+  color: #6b778c;
+  font-size: 11.5px;
+  text-align: center;
+}
+.wiki-comments {
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 1px solid #dfe1e6;
+}
+.wiki-ch {
+  margin-bottom: 6px;
+  color: #6b778c;
+  font: 600 11.5px / 1.2 var(--font-ui);
+}
+.wiki-comment {
+  display: flex;
+  gap: 8px;
+  font-size: 13px;
+}
+.wiki-comment > span:last-child {
+  display: flex;
+  flex-direction: column;
+}
+.wiki-comment b {
+  font-weight: 600;
+}
+.wiki-avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #6554c0;
+  color: #fff;
+  font: 700 12px / 1 var(--font-ui);
 }

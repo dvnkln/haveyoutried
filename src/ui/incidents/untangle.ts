@@ -364,11 +364,18 @@ const ART: Record<TangleDevice['look'], string> = {
     `<path d="M7 5h12a3 3 0 0 1 3 3v2h-5v6h5v2a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3z" fill="#2b2830" stroke="${INK}" stroke-width="1.4"/>` +
     box(27, 7, 16, 8, '#b8d4a8', 1, 1) +
     range(9).map((i) => `<rect x="${48 + (i % 3) * 7}" y="${7 + Math.floor(i / 3) * 5.5}" width="5" height="4" rx="1" fill="#e9e3d6"/>`).join(''),
-  // Bullet-Kamera: Sonnendach, Gehäuse, Objektiv vorne, Halterung (füllt die Fläche, damit „liegt auf Kabel“ stimmt)
+  // Überwachungskamera (Bullet) von der Seite: Sonnendach, großes Objektiv mit Glasreflex, Aufnahme-Lämpchen,
+  // Arm zur Wandplatte. Gehäuse füllt die Trefferfläche weitgehend, damit „liegt auf Kabel“ zum Bild passt.
   cam:
-    `<rect x="56" y="20" width="9" height="14" fill="#c9cdd6" stroke="${INK}" stroke-width="1.5"/>` + box(42, 31, 33, 7, '#c9cdd6', 1.5, 1.5) +
-    box(8, 7, 64, 19, '#f4f1ea', 9) + box(10, 2, 64, 7, '#e2ddd2', 3, 1.5) +
-    box(1, 8, 13, 17, '#1f232a', 3) + `<circle cx="7.5" cy="16.5" r="4" fill="#3b82d6"/><circle cx="6.3" cy="15.2" r="1.2" fill="#cfe6ff"/>` + led(66, 17, '#ff4d4d', 1),
+    `<path d="M56 24L62 30H65" fill="none" stroke="${INK}" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>` +
+    `<path d="M56 24L62 30H65" fill="none" stroke="#c9cdd6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>` +
+    box(64, 13, 10, 26, '#c9cdd6', 2, 1.6) + led(69, 17, '#7a8090', 1) + led(69, 35, '#7a8090', 1) +
+    box(8, 4, 55, 30, '#f4f1ea', 13) + `<path d="M14 29.5H57" stroke="#ddd6c8" stroke-width="3" stroke-linecap="round"/>` +
+    `<path d="M2 7Q2 1 8 1H59Q63 1 63 5V8H2Z" fill="#e6e0d3" stroke="${INK}" stroke-width="1.8" stroke-linejoin="round"/>` +
+    box(2, 7, 16, 26, '#2b2f38', 4, 1.6) +
+    `<circle cx="10" cy="17" r="6.8" fill="#15181e" stroke="#4a505c" stroke-width="1.2"/><circle cx="10" cy="17" r="4.5" fill="#2e5f9e"/>` +
+    `<circle cx="10" cy="17" r="1.9" fill="#0e1a2e"/><ellipse cx="8.2" cy="15" rx="1.5" ry="0.9" fill="#cfe6ff"/>` +
+    led(24, 12, '#ff4d4d', 1.3),
   // Stempeluhr: Stempelkarte steckt oben, grünes Display mit Uhrzeit
   clock:
     `<rect x="48" y="-11" width="14" height="17" fill="#f7e9b8" stroke="${INK}" stroke-width="1.4"/><path d="M51 -7h8M51 -4h8M51 -1h6" stroke="#c9a85a" stroke-width="1"/>` +
