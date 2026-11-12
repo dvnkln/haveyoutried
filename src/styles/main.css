@@ -13871,3 +13871,340 @@ html:not([data-os='mac']) #app .work.tight .browser .br-url {
   color: #fff;
   font: 700 12px / 1 var(--font-ui);
 }
+
+/* ---------- Bandsicherung: Autoloader (wie HPE StoreEver 1/8) mit Display, zwei Magazine à vier Bänder ---------- */
+.incident .inc-game-root > .bk {
+  margin-block: auto;
+}
+.bk {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.bk-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 7px 9px 9px;
+  border: var(--outline) solid var(--ink);
+  border-radius: 10px;
+  background: #3a3f4b;
+  box-shadow: 0 4px 0 var(--ink);
+}
+.bk-brand {
+  color: #c9cdd6;
+  font: 400 11px / 1.2 var(--font-ui);
+}
+.bk-brand > b {
+  color: #fff;
+  letter-spacing: 0.04em;
+}
+.bk-front {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+/* gelbgrünes Punktmatrix-Display, wie an Bandwechslern üblich */
+.bk-lcd {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 5px 8px;
+  border: 2px solid #1e222b;
+  border-radius: 4px;
+  background: #c6d68a;
+  box-shadow: inset 0 0 8px rgba(50, 70, 10, 0.35);
+  color: #26330c;
+  font: 600 11px / 1.25 var(--font);
+}
+.bk-lcd > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bk-lcd-2 {
+  font-weight: 400;
+}
+/* Laufwerksschacht mit Lämpchen */
+.bk-drive {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+.bk-slit {
+  width: 44px;
+  height: 9px;
+  border: 1.5px solid #1e222b;
+  border-radius: 2px;
+  background: #15181e;
+  box-shadow: inset 0 2px 0 rgba(0, 0, 0, 0.5);
+}
+.bk-led {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #4a4f5a;
+}
+.bk-drive.busy .bk-led {
+  background: #6ee08a;
+  box-shadow: 0 0 6px rgba(110, 224, 138, 0.8);
+  animation: bk-blink 0.2s steps(2) infinite;
+}
+.bk-drive.busy.bad .bk-led {
+  background: #ffc74d;
+  box-shadow: 0 0 6px rgba(255, 199, 77, 0.8);
+}
+@keyframes bk-blink {
+  50% {
+    opacity: 0.35;
+  }
+}
+.bk-job {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-height: 2.9em;
+  font: 400 11.5px / 1.3 var(--font-ui);
+  color: var(--fg-dim);
+}
+.bk-path {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--fg);
+  font: 600 12px / 1.3 var(--font);
+}
+.bk-mags {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+/* Greifer: Rahmen, der beim Vorspielen von Fach zu Fach fährt, mit Klaue am linken Rand */
+.bk-picker {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  border: 2px solid #ffd166;
+  border-radius: 6px;
+  box-shadow:
+    0 0 0 2px rgba(255, 209, 102, 0.25),
+    0 0 14px rgba(255, 209, 102, 0.55);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+}
+.bk-picker.on {
+  opacity: 1;
+}
+.bk-picker.glide {
+  transition:
+    opacity 0.15s,
+    transform 0.19s cubic-bezier(0.3, 0.7, 0.3, 1);
+}
+.bk-claw {
+  position: absolute;
+  top: 50%;
+  left: -9px;
+  width: 9px;
+  height: 18px;
+  margin-top: -9px;
+  border: 2px solid #ffd166;
+  border-right: 0;
+  border-radius: 4px 0 0 4px;
+  background: #3a3f4b;
+}
+.bk-mag {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 3px 5px 5px;
+  border: var(--outline) solid var(--ink);
+  border-radius: 8px;
+  background: #2f333d;
+  box-shadow: 0 3px 0 var(--ink);
+}
+.bk-mag-cap {
+  color: #9aa0ad;
+  font: 400 10px / 1.2 var(--font-ui);
+}
+.bk-tape {
+  display: grid;
+  grid-template-columns: 14px 116px minmax(0, 1fr) 20px;
+  align-items: center;
+  gap: 7px;
+  min-height: 38px;
+  margin: 0;
+  padding: 3px 6px 3px 4px;
+  border: 1.5px solid #1e222b;
+  border-radius: 4px;
+  background: #4a505d;
+  color: #eceaf1;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.bk-tape:disabled {
+  cursor: default;
+}
+.bk-slot {
+  color: #9aa0ad;
+  font: 600 10.5px / 1 var(--font);
+  text-align: right;
+}
+/* Kassette von hinten: dunkles Gehäuse, weißes Etikett mit farbigen Ziffern und Strichcode */
+.bk-cart {
+  display: flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 6px;
+  border: 1.5px solid #15181e;
+  border-radius: 3px 3px 5px 5px;
+  background: linear-gradient(#34363f, #23252c);
+}
+.bk-tape.k-clean .bk-cart {
+  background: linear-gradient(#d9dbe0, #b9bcc4);
+}
+.bk-label {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  width: 100%;
+  padding: 1px 2px 2px;
+  border-radius: 1px;
+  background: #fbfbf7;
+}
+.bk-chars {
+  display: flex;
+  gap: 1px;
+}
+.bk-chars > span {
+  flex: 1;
+  color: #15181e;
+  font: 700 8.5px / 1.25 var(--font);
+  text-align: center;
+}
+.bk-bars {
+  height: 5px;
+  background: repeating-linear-gradient(90deg, #15181e 0 1px, transparent 1px 2px, #15181e 2px 4px, transparent 4px 5px, #15181e 5px 6px, transparent 6px 8px);
+}
+.bk-info {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 600 11.5px / 1.2 var(--font);
+}
+.bk-badge {
+  color: #ffc74d;
+  font: 700 16px / 1 var(--font-ui);
+  text-align: center;
+}
+/* Katalog spielt vor: das gerade gezeigte Band leuchtet */
+.bk-tape.lit {
+  border-color: #ffc74d;
+  background: #75703f;
+  box-shadow: inset 0 0 0 1px #ffc74d;
+}
+/* Band wird ein Stück herausgezogen, der Scanner fährt rot übers Etikett, Name und Nummer springen auf */
+.bk-tape.lit .bk-cart {
+  animation: bk-pull 0.24s cubic-bezier(0.3, 1.4, 0.5, 1) both;
+}
+.bk-tape.lit .bk-label {
+  position: relative;
+  overflow: hidden;
+}
+.bk-tape.lit .bk-label::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  left: 0;
+  width: 3px;
+  background: #ff3b3b;
+  box-shadow: 0 0 6px 2px rgba(255, 59, 59, 0.7);
+  animation: bk-scan 0.42s ease-in-out 0.08s both;
+}
+.bk-tape.lit .bk-info {
+  animation: bk-in 0.22s ease-out both;
+}
+.bk-tape.lit .bk-badge {
+  animation: bk-pop 0.3s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+}
+@keyframes bk-pull {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(6px);
+  }
+}
+@keyframes bk-scan {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  to {
+    transform: translateX(98px);
+    opacity: 0;
+  }
+}
+@keyframes bk-in {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+}
+@keyframes bk-pop {
+  from {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bk-tape.lit .bk-cart,
+  .bk-tape.lit .bk-label::after,
+  .bk-tape.lit .bk-info,
+  .bk-tape.lit .bk-badge,
+  .bk-picker.glide {
+    animation: none;
+    transition: none;
+  }
+}
+.bk-tape.known .bk-info {
+  color: #c9cdd6;
+  font-style: italic;
+}
+.bk-tape.useless .bk-info {
+  color: #ffb3b3;
+}
+.bk-tape.done {
+  background: #3d4a42;
+}
+.bk-tape.done .bk-badge {
+  color: #6ee08a;
+}
+.bk-tape.done .bk-cart,
+.bk-tape.done .bk-info {
+  opacity: 0.6;
+}
+.bk-tape.loading {
+  border-color: #6ee08a;
+}
+.bk-tape.loading .bk-cart {
+  transform: translateX(6px);
+  transition: transform 0.15s;
+}
+.bk-reply {
+  min-height: 2.7em;
+  color: var(--fg);
+  font: 600 12px / 1.35 var(--font-ui);
+}

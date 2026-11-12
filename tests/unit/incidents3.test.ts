@@ -9,6 +9,7 @@ import { CoolingSim } from '../../src/ui/incidents/cooling';
 import { RackSim } from '../../src/ui/incidents/rack';
 import { segmentHitsBox, SIZE, segmentsCross, UntangleSim } from '../../src/ui/incidents/untangle';
 import { TANGLE_DEVICES } from '../../src/content/incidents';
+import { TapeSim, weekStart } from '../../src/ui/incidents/tapes';
 
 const CFG = INCIDENTS.games.diskfull;
 
@@ -674,5 +675,173 @@ describe('Kabelsalat', () => {
 
   it('Nichtstun ist nicht gelöst', () => {
     expect(isSolved(new UntangleSim(U, seeded(1)).score())).toBe(false);
+  });
+});
+
+describe('Bandsicherung', () => {
+  const T = INCIDENTS.games.tapes;
+  const today = new Date(2026, 10, 12); // Donnerstag
+
+  /** Vorspielen abwarten */
+  const watch = (sim: TapeSim) => {
+    while (sim.phase === 'show') sim.update(50);
+  };
+
+  /** Spieler: schaut zu, legt dann im Tempo nach; `miss` = Fehlgriffe je Auftrag */
+  const play = (seed: number, tempo: () => number, miss = 0) => {
+    const sim = new TapeSim(T, seeded(seed), today);
+    let budget = T.durationMs;
+    let wait = 0;
+    let misses = 0;
+    let round = -1;
+    let phase = sim.phase;
+    const dt = 50;
+    while (budget > 0 && !sim.done) {
+      if (sim.round !== round) {
+        round = sim.round;
+        misses = miss;
+      }
+      // nach dem Vorspielen erst kurz besinnen
+      if (sim.phase === 'recall' && phase !== 'recall') wait = tempo();
+      phase = sim.phase;
+      if (sim.phase === 'recall' && !sim.busy) {
+        wait -= dt;
+        if (wait <= 0) {
+          wait = tempo();
+          if (misses > 0) {
+            misses--;
+            const wrong = sim.tapes.find((t) => !t.done && t !== sim.next)!;
+            sim.insert(wrong.slot);
+            budget -= T.wrongPenaltyMs;
+          } else sim.insert(sim.next!.slot);
+        }
+      }
+      sim.update(dt);
+      budget -= dt;
+    }
+    return sim;
+  };
+
+  it('Start: volles Magazin, eindeutige Strichcodes, Reihenfolge Voll → Mo → Di …', () => {
+    for (let seed = 1; seed < 100; seed++) {
+      const sim = new TapeSim(T, seeded(seed), today);
+      expect(sim.tapes).toHaveLength(8);
+      expect(new Set(sim.tapes.map((t) => t.barcode)).size).toBe(8);
+      const need = sim.tapes.filter((t) => t.need >= 0).sort((a, b) => a.need - b.need);
+      expect(need[0]!.kind).toBe('full');
+      expect(need.slice(1).every((t) => t.kind === 'inc')).toBe(true);
+      expect(need.length).toBeGreaterThanOrEqual(Math.max(...T.rounds));
+      expect(sim.tapes.map((t) => t.slot)).toEqual([...Array(8).keys()]);
+      // mehr als Voll + Mo–Fr gibt das Magazin nicht her
+      expect(Math.max(...T.rounds)).toBeLessThanOrEqual(6);
+    }
+  });
+
+  it('nur vergangene Woche: der Freitag im Magazin liegt vor heute', () => {
+    for (let d = 0; d < 7; d++) {
+      const day = new Date(2026, 10, 8 + d);
+      const sun = weekStart(day);
+      expect(sun.getDay()).toBe(0);
+      expect(new Date(sun.getFullYear(), sun.getMonth(), sun.getDate() + 5) < day).toBe(true);
+    }
+  });
+
+  it('Vorspielen: jedes nötige Band leuchtet einmal, in Reihenfolge; solange gesperrt', () => {
+    const sim = new TapeSim(T, seeded(3), today);
+    expect(sim.insert(sim.tapes.find((t) => t.need === 0)!.slot)).toBe('locked');
+    const seen: number[] = [];
+    while (sim.phase === 'show') {
+      sim.update(20);
+      seen.push(...sim.drain().lit);
+    }
+    expect(seen.map((s) => sim.tapes[s]!.need)).toEqual([...Array(T.rounds[0]).keys()]);
+    expect(sim.phase).toBe('recall');
+  });
+
+  it('richtiges Band: belegt das Laufwerk kurz, dann zurückgespielt; nächstes wird verlangt', () => {
+    const sim = new TapeSim(T, seeded(5), today);
+    watch(sim);
+    const first = sim.next!;
+    expect(first.kind).toBe('full');
+    expect(sim.insert(first.slot)).toBe('ok');
+    // während des Ladens: zweiter Tipp ist kein Fehlgriff
+    expect(sim.insert(sim.tapes.find((t) => t.need === 1)!.slot)).toBe('busy');
+    sim.update(T.loadMs + 1);
+    expect(first.done).toBe(true);
+    expect(sim.restored).toBe(1);
+    expect(sim.next!.need).toBe(1);
+    expect(sim.insert(first.slot)).toBe('used');
+    expect(sim.wrong).toBe(0);
+  });
+
+  it('falsches Band: Fehlgriff, Auswurf, Etikett bekannt; kein zweites Vorspielen, gesucht bleibt dasselbe', () => {
+    const sim = new TapeSim(T, seeded(8), today);
+    watch(sim);
+    sim.insert(sim.next!.slot);
+    sim.update(T.loadMs + 1);
+    const want = sim.next!;
+    const other = sim.tapes.find((t) => t.need < 0)!;
+    expect(sim.insert(other.slot)).toBe('wrong');
+    expect(sim.wrong).toBe(1);
+    sim.update(T.ejectMs + 1);
+    expect(other.known).toBe(true);
+    expect(sim.phase).toBe('recall');
+    expect(sim.next).toBe(want);
+    expect(sim.insert(want.slot)).toBe('ok');
+  });
+
+  it('nächster Auftrag: dieselbe Folge plus ein Band, alles wieder im Magazin, anderer Ordner', () => {
+    const sim = new TapeSim(T, seeded(11), today);
+    const job1 = sim.job.path;
+    const order1 = sim.tapes.filter((t) => t.need >= 0 && t.need < T.rounds[0]!).sort((a, b) => a.need - b.need).map((t) => t.slot);
+    watch(sim);
+    for (let i = 0; i < T.rounds[0]!; i++) {
+      sim.insert(sim.next!.slot);
+      sim.update(T.loadMs + 1);
+    }
+    expect(sim.phase).toBe('pause');
+    sim.update(T.pauseMs + 1);
+    expect(sim.round).toBe(1);
+    expect(sim.phase).toBe('show');
+    expect(sim.job.path).not.toBe(job1);
+    expect(sim.tapes.some((t) => t.done || t.known)).toBe(false);
+    sim.drain();
+    const seen: number[] = [];
+    while (sim.phase === 'show') {
+      sim.update(20);
+      seen.push(...sim.drain().lit);
+    }
+    expect(seen).toHaveLength(T.rounds[1]!);
+    expect(seen.slice(0, order1.length)).toEqual(order1);
+  });
+
+  it('fair mit menschlichem Tempo (1–1,6 s je Band): immer fertig, Bestnote', () => {
+    for (let seed = 1; seed < 200; seed++) {
+      const r = seeded(seed * 3);
+      const sim = play(seed, () => 1_000 + r() * 600);
+      expect(sim.done).toBe(true);
+      expect(sim.score()).toBeGreaterThanOrEqual(0.95);
+    }
+  });
+
+  it('langsam (1,6 s), aber fehlerfrei: noch fertig', () => {
+    for (let seed = 1; seed < 100; seed++) expect(play(seed, () => 1_600).done).toBe(true);
+  });
+
+  it('ein Fehlgriff je Auftrag: nicht unbedingt fertig, aber gelöst', () => {
+    for (let seed = 1; seed < 100; seed++) expect(isSolved(play(seed, () => 1_600, 1).score())).toBe(true);
+  });
+
+  it('Zeit läuft ab, während das richtige Band lädt: zählt mit', () => {
+    const sim = new TapeSim(T, seeded(2), today);
+    watch(sim);
+    sim.insert(sim.next!.slot);
+    expect(sim.score()).toBeCloseTo(1 / sim.total);
+  });
+
+  it('Nichtstun ist nicht gelöst', () => {
+    const sim = new TapeSim(T, seeded(4), today);
+    sim.update(T.durationMs);
+    expect(isSolved(sim.score())).toBe(false);
   });
 });

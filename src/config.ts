@@ -111,7 +111,7 @@ export type EventEffectId = keyof typeof EVENT_EFFECTS;
 
 // --- Incidents (Minispiele nach Monitoring-Alarm) ---
 
-export const INCIDENT_IDS = ['raid', 'spam', 'services', 'loggrep', 'network', 'patch', 'diskfull', 'certs', 'ups', 'cooling', 'rack', 'untangle'] as const;
+export const INCIDENT_IDS = ['raid', 'spam', 'services', 'loggrep', 'network', 'patch', 'diskfull', 'certs', 'ups', 'cooling', 'rack', 'untangle', 'tapes'] as const;
 export type IncidentId = (typeof INCIDENT_IDS)[number];
 
 /** Ab dieser Leistung gilt ein Incident als gelöst (RECOVERY statt ESCALATION) */
@@ -312,6 +312,22 @@ export const INCIDENTS = {
       /** Kreuzungen beim Start, inkl. Kabel unter fremden Geräten (neu gewürfelt, bis es passt) */
       startCrossMin: 6,
       startCrossMax: 12,
+    },
+    tapes: {
+      durationMs: 40_000,
+      /** Bänder je Auftrag (Vollsicherung + Inkrementelle bis zum Stichtag, höchstens 6 = Voll + Mo–Fr); jeder Auftrag braucht die vorigen Bänder plus eins */
+      rounds: [3, 4, 5],
+      /** Katalog spielt die Reihenfolge vor: Pause davor, je Band so lange hell, Lücke dazwischen */
+      leadMs: 500,
+      litMs: 650,
+      gapMs: 200,
+      /** richtiges Band: wird geladen und zurückgespielt, so lange ist das Laufwerk belegt */
+      loadMs: 450,
+      /** falsches Band: Laufwerk liest das Etikett und wirft es aus (vorgespielt wird nicht nochmal) */
+      ejectMs: 600,
+      wrongPenaltyMs: 1_000,
+      /** Pause zwischen zwei Aufträgen */
+      pauseMs: 1_000,
     },
   },
 } as const;

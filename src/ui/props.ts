@@ -3,7 +3,7 @@ import { CALENDAR_LINES, DUCK_LINES, INCIDENT_SIGN, MOUSE_LINES, MOUSE_NEW_LINES
 import { bus } from '../core/bus';
 import { incidentRunning, isSolved } from '../core/incidents';
 import type { GameState } from '../core/state';
-import { pick } from '../util';
+import { pick, WEEKDAYS as DAYS } from '../util';
 import type { AppContext } from './app';
 import { SQUEAK_PRESS_S } from './audio';
 import { h, juice, POP, quip, setFlag, setText, SHAKE } from './dom';
@@ -323,7 +323,6 @@ export function createProps(ctx: AppContext) {
   });
 
   // --- Abreißkalender: Antippen reißt das Blatt ab, der nächste Tag (und Spruch) kommt ---
-  const DAYS = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
   const CAL_AUTO_LINES = [
     'kalender[7]: Blatt fällt von allein ab. Gefühlt war das gerade ein ganzer Tag.',
     'kalender[7]: Ein Tag weniger bis zur Rente. Der Kalender hat es selbst gemerkt.',

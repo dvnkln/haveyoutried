@@ -205,6 +205,8 @@ test('Zufallsevent: Pager → Entscheidung → Ergebnis', async ({ page, context
 
 for (const id of INCIDENT_IDS) {
   test(`Incident ${id}: Alarm → Spiel → Ergebnis`, async ({ page }) => {
+    // die Uhr läuft beim Vorspulen fast in Echtzeit (Frames), also so lange wie das Spiel plus Reserve
+    test.setTimeout(30_000 + INCIDENTS.games[id].durationMs);
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.clock.install();

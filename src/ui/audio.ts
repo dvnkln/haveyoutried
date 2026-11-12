@@ -140,6 +140,9 @@ const profile = (id: string): SwitchProfile => SWITCHES[id as SwitchId] ?? SWITC
 /** Länge des Gummienten-Pfeifens beim Zusammendrücken (props.ts wartet so lange mit dem Zurücksaugen) */
 export const SQUEAK_PRESS_S = 0.26;
 
+/** Töne der Bandfächer: C-Dur-Pentatonik C5 D5 E5 G5 A5 C6 D6 E6 (Hz) */
+const TAPE_NOTES = [523.25, 587.33, 659.26, 783.99, 880, 1046.5, 1174.66, 1318.51];
+
 export class Sfx {
   private ctx: AudioContext | null = null;
   private master: GainNode | null = null;
@@ -1214,6 +1217,19 @@ export class Sfx {
     }
     // Flattern: weiche Luftstöße
     for (let i = 0; i < 6; i++) this.hiss(r.t + 0.35 + i * 0.075, 0.09, 0.04, 'bandpass', 900, 0.8);
+  }
+
+  /**
+   * Bandwechsler, ein Ton je Fach (wie bei Simon): Pentatonik C5–E6, damit jede Folge nach etwas klingt.
+   * Sinus mit leiser Oktave, weicher Einsatz, darunter ein leises Klacken des Greifers. Nichts unter 500 Hz, nichts über 3 kHz.
+   */
+  slot(i: number): void {
+    const r = this.ready();
+    if (!r) return;
+    const f = TAPE_NOTES[i % TAPE_NOTES.length]!;
+    this.tone('sine', f, f, r.t, 0.22, 0.42, undefined, 0.03);
+    this.tone('sine', f * 2, f * 2, r.t, 0.05, 0.22, undefined, 0.03);
+    this.hiss(r.t, 0.05, 0.012, 'bandpass', 2400, 2);
   }
 
   /** Umschalten (Tabs, Einstellungen): leises Tick. */

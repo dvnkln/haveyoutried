@@ -3,7 +3,7 @@ import { DONE_LABELS, INCIDENT_BRIEF, INCIDENT_TEXT, RUNBOOK_GO, TAKE_LABELS, WI
 import { bus } from '../../core/bus';
 import { rates } from '../../core/economy';
 import { endIncident, isSolved, resolveIncident, setForgivenMistakes } from '../../core/incidents';
-import { pick } from '../../util';
+import { pad2 as p2, pick } from '../../util';
 import type { AppContext } from '../app';
 import { h, setText } from '../dom';
 import { describeEffect } from '../pager';
@@ -19,6 +19,7 @@ import { upsGame } from './ups';
 import { coolingGame } from './cooling';
 import { rackGame } from './rack';
 import { untangleGame } from './untangle';
+import { tapesGame } from './tapes';
 import type { Minigame } from './types';
 
 const GAMES: Record<IncidentId, () => Minigame> = {
@@ -34,6 +35,7 @@ const GAMES: Record<IncidentId, () => Minigame> = {
   cooling: coolingGame,
   rack: rackGame,
   untangle: untangleGame,
+  tapes: tapesGame,
 };
 
 /** Logo des Wikis: eine verknotete Schleife (Konfusion eben) */
@@ -44,7 +46,6 @@ const wikiLogo = () => {
 };
 const WIKI_LOGO =
   '<svg viewBox="0 0 24 24"><path d="M4 16c3-9 9 4 13-5 2-5-4-7-6-3s3 9 9 8" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg>';
-const p2 = (n: number) => String(n).padStart(2, '0');
 const hhmmss = (d = new Date()) => `${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}`;
 /** feste interne Adresse je Host (sieht echt aus, ändert sich nicht zwischen Alarmen) */
 const hostIp = (host: string) => {

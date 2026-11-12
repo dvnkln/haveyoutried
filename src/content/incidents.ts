@@ -205,6 +205,22 @@ export const INCIDENT_TEXT: Record<IncidentId, IncidentText> = {
       'Noch verknotet. Die Bodenplatte geht nicht mehr zu. Jetzt steht ein Warnhütchen drauf.',
     ],
   },
+  tapes: {
+    host: 'bk01',
+    service: 'RESTORE',
+    info: 'job 0815: waiting for media',
+    okInfo: 'restore complete, 0 errors, 2 warnings (ignored)',
+    good: [
+      'Alles zurück. Die Buchhaltung hat nichts gemerkt und fragt trotzdem, warum es so lange gedauert hat.',
+      'Zurückgespielt. Der Katalog bekommt jetzt eine Kopie auf einem anderen Server. Steht zumindest im Ticket.',
+      'Restore durch. Du klebst einen Zettel an den Bandwechsler: „Funktioniert. Wirklich.“ Datum, Unterschrift.',
+    ],
+    bad: [
+      'Halb zurückgespielt. Bis Dienstag ist alles da, ab Mittwoch tippt die Buchhaltung nach.',
+      'Zu viele falsche Bänder. Das Laufwerk will jetzt ein Reinigungsband. Es hat recht.',
+      'Restore abgebrochen. Die Sicherung heißt ab heute offiziell „Archiv“. Aus einem Archiv muss man nichts zurückholen.',
+    ],
+  },
 };
 
 /** Button-Texte zum Übernehmen eines Incidents (zufällig) */
@@ -678,6 +694,16 @@ export interface TangleDevice {
 
 const td = (name: string, look: TangleDevice['look'], desc: string): TangleDevice => ({ name, look, desc });
 
+/** Restore-Aufträge fürs Bandspiel: Ordner und was ihm passiert ist */
+export const TAPE_JOBS: { path: string; why: string }[] = [
+  { path: '\\\\fs01\\Buchhaltung', why: 'Der Sync-Client hat „Ordner leeren“ sehr ernst genommen.' },
+  { path: '\\\\fs01\\Personal', why: 'Jemand hat aufgeräumt. Mit Shift+Entf.' },
+  { path: '\\\\fs01\\Vertrieb\\Angebote', why: 'Ein Makro aus „Mahnung_dringend.docm“ hat alles verschlüsselt.' },
+  { path: '\\\\fs01\\Projekte\\2024', why: 'In einen Ordner namens „Papierkorb (alt)“ gezogen. Der wird nachts geleert.' },
+  { path: '\\\\fs01\\Marketing\\Logo', why: 'Mit dem Stand vom letzten Jahr überschrieben. Alle 600 Dateien.' },
+  { path: '\\\\fs01\\Einkauf', why: 'Ein Skript sollte alte Dateien löschen. „Alt“ war als „vor morgen“ definiert.' },
+];
+
 /** Geräte im Verteiler; jede Runde liegen andere im Salat */
 export const TANGLE_DEVICES: TangleDevice[] = [
   td('Switch', 'switch', 'Alle Wege führen hierher. Leider auch alle Kabel.'),
@@ -865,6 +891,19 @@ export const INCIDENT_BRIEF: Record<IncidentId, IncidentBrief> = {
       ],
       warn: 'Fertig ist es erst, wenn kein Rot mehr übrig ist.',
       note: { who: 'Vertrieb', text: 'Können wir nicht einfach WLAN machen?' },
+    },
+  },
+  tapes: {
+    detail: ['restore job 0815: 41.212 files requested', 'catalog db: down, Rest nur noch im Cache des Autoloaders'],
+    runbook: {
+      title: 'Ordner vom Band zurückholen',
+      steps: [
+        'Der Katalog spielt die nötigen Bänder in Reihenfolge vor: Eins nach dem anderen leuchtet kurz auf.',
+        'Dann bist du dran: dieselben Fächer in derselben Reihenfolge antippen.',
+        'Jeder neue Auftrag braucht dieselben Bänder wie der vorige, plus eins.',
+      ],
+      warn: 'Ein falsches Band wird ausgeworfen und kostet Zeit. Vorgespielt wird nur einmal.',
+      note: { who: 'Vorgänger', text: 'Die Bänder sind beschriftet. Mit Strichcode. Den kann ich auch nicht lesen.' },
     },
   },
 };
