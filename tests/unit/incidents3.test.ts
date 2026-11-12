@@ -10,6 +10,7 @@ import { RackSim } from '../../src/ui/incidents/rack';
 import { segmentHitsBox, SIZE, segmentsCross, UntangleSim } from '../../src/ui/incidents/untangle';
 import { TANGLE_DEVICES } from '../../src/content/incidents';
 import { TapeSim, weekStart } from '../../src/ui/incidents/tapes';
+import { AREAS, JAM_DIRS, JamSim, type Step } from '../../src/ui/incidents/jam';
 
 const CFG = INCIDENTS.games.diskfull;
 
@@ -843,5 +844,241 @@ describe('Bandsicherung', () => {
     const sim = new TapeSim(T, seeded(4), today);
     sim.update(T.durationMs);
     expect(isSolved(sim.score())).toBe(false);
+  });
+});
+
+describe('Druckerstau', () => {
+  const J = INCIDENTS.games.jam;
+
+  /** einen Schritt so ausführen, wie das Display ihn verlangt */
+  const act = (sim: JamSim, st: Step) => {
+    if (st.k === 'open' || st.k === 'close') sim.toggle(st.area);
+    else if (st.k === 'toner-out' || st.k === 'toner-in') sim.toner();
+    else if (st.k === 'lever' || st.k === 'lever-in') sim.toggleLever();
+    else if (st.k === 'pull') sim.pull(st.area, sim.jam(st.area)!.dir);
+  };
+
+  /** Spieler im Tempo, `tears` = so oft je Runde zuerst in die falsche Richtung gezogen */
+  const play = (seed: number, tempo: () => number, tears = 0) => {
+    const sim = new JamSim(J, seeded(seed));
+    let budget = J.durationMs;
+    let round = -1;
+    let left = 0;
+    let actions = 0;
+    while (budget > 0 && !sim.done) {
+      if (sim.phase === 'print') {
+        sim.update(50);
+        budget -= 50;
+        continue;
+      }
+      if (sim.round !== round) {
+        round = sim.round;
+        left = tears;
+      }
+      budget -= tempo();
+      if (budget <= 0) break;
+      const st = sim.next();
+      actions++;
+      if (st.k === 'pull' && left > 0) {
+        left--;
+        const d = sim.jam(st.area)!.dir;
+        sim.pull(st.area, ({ left: 'right', right: 'left', up: 'down', down: 'up' } as const)[d]);
+        budget -= J.tearPenaltyMs;
+        continue;
+      }
+      act(sim, st);
+    }
+    return { sim, used: J.durationMs - budget, actions };
+  };
+
+  it('Start: eine Staustelle, nie nur das Ausgabefach; Runden 1/2/3, Code passt dazu', () => {
+    for (let seed = 1; seed < 300; seed++) {
+      const sim = new JamSim(J, seeded(seed));
+      expect(sim.jams).toHaveLength(J.rounds[0]!);
+      expect(sim.jams[0]!.area).not.toBe('D');
+      expect(sim.code).toMatch(/^13\.[A-D][1-9]$/);
+      expect(sim.total).toBe(6);
+    }
+  });
+
+  it('neue Runde nimmt zuerst Stellen, die vorher nicht dran waren', () => {
+    for (let seed = 1; seed < 300; seed++) {
+      const sim = new JamSim(J, seeded(seed));
+      let prev = sim.jams.map((j) => j.area);
+      for (let r = 1; r < 3; r++) {
+        while (sim.phase === 'jam') act(sim, sim.next());
+        while (sim.phase === 'print') sim.update(100);
+        const now = sim.jams.map((j) => j.area);
+        const overlap = now.filter((a) => prev.includes(a)).length;
+        // nur so viele Wiederholungen, wie es bei vier Stellen sein müssen
+        expect(overlap).toBe(Math.max(0, prev.length + now.length - AREAS.length));
+        prev = now;
+      }
+    }
+  });
+
+  it('letzte Runde: alles raus, aber nicht zugemacht = nicht volle Punktzahl (aber gelöst)', () => {
+    const sim = new JamSim(J, seeded(2));
+    for (let r = 0; r < 2; r++) {
+      while (sim.phase === 'jam') act(sim, sim.next());
+      while (sim.phase === 'print') sim.update(100);
+    }
+    // alle Blätter raus, aber nichts zurückbauen oder schließen
+    for (const j of [...sim.jams]) {
+      if (j.area === 'A') {
+        sim.toggle('A');
+        sim.toner();
+      } else if (j.area === 'B') {
+        sim.toggle('B');
+        sim.toggleLever();
+      } else if (j.area === 'C') sim.toggle('C');
+      expect(sim.pull(j.area, j.dir)).toBe('ok');
+    }
+    expect(sim.done).toBe(false);
+    expect(sim.score()).toBeLessThan(1);
+    expect(isSolved(sim.score())).toBe(true);
+    while (!sim.done) act(sim, sim.next());
+    expect(sim.score()).toBe(1);
+  });
+
+  it('Abwechslung: alle Bereiche und Richtungen kommen vor, innerhalb einer Runde verschiedene Bereiche', () => {
+    const seen = new Set<string>();
+    for (let seed = 1; seed < 300; seed++) {
+      const { sim } = play(seed, () => 500);
+      expect(sim.done).toBe(true);
+    }
+    for (let seed = 1; seed < 300; seed++) {
+      const sim = new JamSim(J, seeded(seed));
+      for (let r = 0; r < 3; r++) {
+        expect(new Set(sim.jams.map((j) => j.area)).size).toBe(sim.jams.length);
+        for (const j of sim.jams) {
+          expect(JAM_DIRS[j.area]).toContain(j.dir);
+          seen.add(j.area + j.dir);
+        }
+        while (sim.phase === 'jam') act(sim, sim.next());
+        while (sim.phase === 'print') sim.update(100);
+      }
+    }
+    expect(seen.size).toBe(AREAS.reduce((n, a) => n + JAM_DIRS[a].length, 0));
+  });
+
+  it('Toner liegt vor dem Blatt in A, Klappe A geht ohne Toner nicht zu', () => {
+    const sim = new JamSim(J, seeded(1));
+    sim.jams = [{ area: 'A', dir: 'left', torn: false, cleared: false }];
+    expect(sim.pull('A', 'left')).toBe('hidden');
+    expect(sim.toner()).toBe('locked');
+    sim.toggle('A');
+    expect(sim.pull('A', 'left')).toBe('hidden');
+    expect(sim.toner()).toBe('open');
+    expect(sim.toggle('A')).toBe('toner');
+    expect(sim.open.A).toBe(true);
+    expect(sim.pull('A', 'left')).toBe('ok');
+    expect(sim.wrong).toBe(0);
+  });
+
+  it('Fixiereinheit: fester Hebel hält das Blatt (ohne Riss); vor dem Schließen muss er wieder runter', () => {
+    const sim = new JamSim(J, seeded(1));
+    sim.jams = [{ area: 'B', dir: 'down', torn: false, cleared: false }];
+    sim.toggle('B');
+    expect(sim.reachable('B')).toBe(false);
+    expect(sim.pull('B', 'down')).toBe('held');
+    expect(sim.pull('B', 'up')).toBe('held');
+    expect(sim.wrong).toBe(0);
+    expect(sim.jam('B')!.torn).toBe(false);
+    sim.toggleLever();
+    expect(sim.pull('B', 'down')).toBe('ok');
+    expect(sim.toggle('B')).toBe('lever');
+    expect(sim.open.B).toBe(true);
+    expect(sim.next()).toEqual({ k: 'lever-in' });
+    sim.toggleLever();
+    expect(sim.toggle('B')).toBe('closed');
+  });
+
+  it('Hinweis bleibt beim geöffneten Bereich, bis er wieder zu ist; erst dann der nächste', () => {
+    const sim = new JamSim(J, seeded(1));
+    sim.jams = [
+      { area: 'A', dir: 'left', torn: false, cleared: false },
+      { area: 'B', dir: 'up', torn: false, cleared: false },
+    ];
+    expect(sim.next()).toEqual({ k: 'open', area: 'A' });
+    sim.toggle('A');
+    expect(sim.next()).toEqual({ k: 'toner-out' });
+    sim.toner();
+    expect(sim.next()).toEqual({ k: 'pull', area: 'A' });
+    sim.pull('A', 'left');
+    // nicht zu B springen: erst Toner rein und Klappe zu
+    expect(sim.next()).toEqual({ k: 'toner-in' });
+    sim.toner();
+    expect(sim.next()).toEqual({ k: 'close', area: 'A' });
+    sim.toggle('A');
+    expect(sim.next()).toEqual({ k: 'open', area: 'B' });
+    sim.toggle('B');
+    expect(sim.next()).toEqual({ k: 'lever' });
+    sim.toggleLever();
+    sim.pull('B', 'up');
+    expect(sim.next()).toEqual({ k: 'lever-in' });
+    sim.toggleLever();
+    expect(sim.next()).toEqual({ k: 'close', area: 'B' });
+    sim.toggle('B');
+    expect(sim.next()).toEqual({ k: 'print' });
+  });
+
+  it('mehrere offen: der zuletzt geöffnete kommt zuerst dran; leer geöffnet heißt wieder zu', () => {
+    const sim = new JamSim(J, seeded(1));
+    sim.jams = [{ area: 'C', dir: 'up', torn: false, cleared: false }];
+    sim.toggle('C');
+    sim.toggle('A');
+    expect(sim.next()).toEqual({ k: 'close', area: 'A' });
+    sim.toggle('A');
+    expect(sim.next()).toEqual({ k: 'pull', area: 'C' });
+  });
+
+  it('gegen den Pfeil reißt es (Rest bleibt), seitlich passiert nichts', () => {
+    const sim = new JamSim(J, seeded(1));
+    sim.jams = [{ area: 'D', dir: 'left', torn: false, cleared: false }];
+    expect(sim.pull('D', 'up')).toBe('sideways');
+    expect(sim.wrong).toBe(0);
+    expect(sim.pull('D', 'right')).toBe('torn');
+    expect(sim.wrong).toBe(1);
+    expect(sim.jam('D')).toBeDefined();
+    expect(sim.pull('D', 'left')).toBe('ok');
+    expect(sim.jam('D')).toBeUndefined();
+  });
+
+  it('weiter geht es erst, wenn alles frei, drin und zu ist; dann Druckpause und neuer Stau', () => {
+    const sim = new JamSim(J, seeded(4));
+    while (sim.jams.some((j) => !j.cleared)) act(sim, sim.next());
+    expect(sim.phase).toBe('jam');
+    while (sim.phase === 'jam') act(sim, sim.next());
+    expect(sim.phase).toBe('print');
+    expect(sim.drain().roundDone).toBe(true);
+    expect(sim.toggle('A')).toBe('locked');
+    sim.update(J.printMs);
+    expect(sim.drain().printed).toBe(true);
+    expect(sim.round).toBe(1);
+    expect(sim.jams).toHaveLength(J.rounds[1]!);
+  });
+
+  it('alles richtig: volle Punktzahl, fertig nach der letzten Runde', () => {
+    const { sim } = play(9, () => 600);
+    expect(sim.done).toBe(true);
+    expect(sim.score()).toBe(1);
+  });
+
+  it('menschliches Tempo (1–1,6 s je Handgriff) schafft es immer; mit einem Riss je Runde meistens', () => {
+    let slowMax = 0;
+    let tornSolved = 0;
+    const N = 400;
+    for (let seed = 1; seed <= N; seed++) {
+      const r = seeded(seed * 3);
+      const tempo = () => 1_000 + r() * 600;
+      const clean = play(seed, tempo);
+      expect(clean.sim.done).toBe(true);
+      slowMax = Math.max(slowMax, play(seed, () => 1_600).used);
+      if (isSolved(play(seed, tempo, 1).sim.score())) tornSolved++;
+    }
+    // langsamster sauberer Lauf passt in die Zeit, mit Luft
+    expect(slowMax).toBeLessThan(J.durationMs);
+    expect(tornSolved / N).toBeGreaterThan(0.9);
   });
 });

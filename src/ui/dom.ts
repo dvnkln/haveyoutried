@@ -34,6 +34,21 @@ export function setDisabled(el: HTMLButtonElement, disabled: boolean): void {
   if (el.disabled !== disabled) el.disabled = disabled;
 }
 
+/**
+ * Knopf kurz sperren (gegen Fehlgriffe beim Dauertippen): sichtbar grau, unten füllt sich ein Balken
+ * genau so lange, wie gesperrt ist (eine Zahl für Balken und Freigabe). War er schon gesperrt, bleibt er es.
+ */
+export function armButton(btn: HTMLButtonElement, ms: number): void {
+  if (btn.disabled || ms <= 0) return;
+  btn.disabled = true;
+  btn.classList.add('arming');
+  btn.style.setProperty('--arm', `${ms}ms`);
+  setTimeout(() => {
+    btn.disabled = false;
+    btn.classList.remove('arming');
+  }, ms);
+}
+
 const reduceMotionQuery =
   typeof matchMedia === 'function' ? matchMedia('(prefers-reduced-motion: reduce)') : null;
 

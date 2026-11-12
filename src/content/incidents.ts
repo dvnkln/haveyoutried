@@ -221,6 +221,22 @@ export const INCIDENT_TEXT: Record<IncidentId, IncidentText> = {
       'Restore abgebrochen. Die Sicherung heißt ab heute offiziell „Archiv“. Aus einem Archiv muss man nichts zurückholen.',
     ],
   },
+  jam: {
+    host: 'prn-3og-dieter',
+    service: 'PRINT',
+    info: 'paper jam, 47 jobs waiting',
+    okInfo: 'ready, queue empty, 1 job printed twice',
+    good: [
+      'Läuft. Du klebst einen Zettel dran: „Papier vor dem Einlegen auffächern.“ Er hält bis zum Mittag.',
+      'Frei. Ursache: 60-g-Papier aus dem Sonderangebot. Der Einkauf ist informiert und zuckt mit den Schultern.',
+      'Dieter druckt wieder. Die Schlange vor ihm löst sich auf, ohne dass dir jemand dankt. So soll es sein.',
+    ],
+    bad: [
+      'Noch Fetzen drin. Dieter zieht jetzt über jede Seite einen grauen Streifen. Das Marketing nennt es Designelement.',
+      'Stau bleibt. An Dieter hängt jetzt ein Zettel „Außer Betrieb“. Der Zettel ist ausgedruckt. Auf einem anderen Drucker.',
+      'Abgebrochen. Das halbe Stockwerk läuft mit USB-Sticks zum Copyshop. Die Warteschlange hat Zeit.',
+    ],
+  },
 };
 
 /** Button-Texte zum Übernehmen eines Incidents (zufällig) */
@@ -704,6 +720,16 @@ export const TAPE_JOBS: { path: string; why: string }[] = [
   { path: '\\\\fs01\\Einkauf', why: 'Ein Skript sollte alte Dateien löschen. „Alt“ war als „vor morgen“ definiert.' },
 ];
 
+/** Druckaufträge, an denen Dieter hängen bleibt (einer je Runde) */
+export const PRINT_JOBS: { file: string; who: string; pages: number; note: string }[] = [
+  { file: 'Lebenslauf_NEU_2026.docx', who: 'Vertrieb', pages: 3, note: 'Muss raus, bevor der Chef am Drucker vorbeikommt.' },
+  { file: 'Umsatz_Q3.xlsx', who: 'Controlling', pages: 912, note: 'Kein Druckbereich gesetzt: jede Zelle bekommt ihre eigene Seite.' },
+  { file: 'Handbuch_LaserJam_404.pdf', who: 'Du', pages: 188, note: 'Um nachzulesen, wie man einen Papierstau behebt.' },
+  { file: 'Dienstplan_Dezember.xlsx', who: 'Lager', pages: 2, note: 'In Schriftgröße 6, damit alles auf zwei Seiten passt. Eine Lupe liegt bei.' },
+  { file: 'Konzertkarten.pdf', who: 'Azubi', pages: 2, note: 'Privat, in Farbe. „Der Drucker ist doch eh da.“' },
+  { file: 'Präsentation_Kunde.pptx', who: 'Marketing', pages: 1, note: 'Eine Folie mit 34 Animationen. Auf Papier sieht man keine davon.' },
+];
+
 /** Geräte im Verteiler; jede Runde liegen andere im Salat */
 export const TANGLE_DEVICES: TangleDevice[] = [
   td('Switch', 'switch', 'Alle Wege führen hierher. Leider auch alle Kabel.'),
@@ -904,6 +930,19 @@ export const INCIDENT_BRIEF: Record<IncidentId, IncidentBrief> = {
       ],
       warn: 'Ein falsches Band wird ausgeworfen und kostet Zeit. Vorgespielt wird nur einmal.',
       note: { who: 'Vorgänger', text: 'Die Bänder sind beschriftet. Mit Strichcode. Den kann ich auch nicht lesen.' },
+    },
+  },
+  jam: {
+    detail: ['printer: 13.B9 paper jam, fuser 185 °C', 'queue: 47 jobs, davon 12× dieselbe Datei (es kam ja nichts raus)'],
+    runbook: {
+      title: 'Papierstau beheben (Dieter, 3. OG)',
+      steps: [
+        'Orange Buchstaben am Drucker zeigen, wo Papier steckt. Das Display sagt dasselbe als Fehlercode.',
+        'Klappe auf. Manchmal ist etwas im Weg: Tonerkassette herausnehmen, grünen Andruckhebel vom Blatt wegklappen.',
+        'Das Blatt in Pfeilrichtung herauswischen. Dann alles wieder rein und zu, vorher druckt er nicht weiter.',
+      ],
+      warn: 'Gegen den Pfeil reißt das Blatt. Kostet Zeit, und der Rest steckt noch drin.',
+      note: { who: 'Vorgänger', text: 'Alles Grüne darf man anfassen. Alles andere hat schon mal jemand angefasst.' },
     },
   },
 };

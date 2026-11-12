@@ -3062,6 +3062,32 @@ button {
   width: 100%;
   margin-top: 14px;
 }
+/* kurz gesperrt (gegen Fehlgriffe): sichtbar blass, unten füllt sich ein Balken bis zur Freigabe */
+/* position: relative für den Balken; der klebende Knopf im Monitor behält sein sticky (stärkere Regel) */
+.btn.arming:disabled {
+  position: relative;
+  overflow: hidden;
+  /* deckend bleiben (der Knopf im Monitor klebt über Text), nur farblos */
+  filter: grayscale(0.85) contrast(0.8) brightness(1.08);
+  cursor: default;
+}
+.btn.arming:disabled::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 4px;
+  background: currentColor;
+  opacity: 0.6;
+  transform-origin: left;
+  animation: nag-arm var(--arm, 1.2s) linear forwards;
+}
+@keyframes nag-arm {
+  from {
+    transform: scaleX(0);
+  }
+}
 @keyframes nag-in {
   from {
     transform: scale(0.94);
@@ -14207,4 +14233,527 @@ html:not([data-os='mac']) #app .work.tight .browser .br-url {
   min-height: 2.7em;
   color: var(--fg);
   font: 600 12px / 1.35 var(--font-ui);
+}
+
+/* ---------- Druckerstau: Laserdrucker „Dieter“ von der Seite (wie HP LaserJet Pro), grün = anfassen ---------- */
+.incident .inc-game-root > .dj {
+  margin-block: auto;
+}
+.dj {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.dj-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 6px 9px 8px;
+  border: var(--outline) solid var(--ink);
+  border-radius: 10px;
+  background: #e6e2d9;
+  box-shadow: 0 4px 0 var(--ink);
+}
+.dj-brand {
+  color: #5b5a57;
+  font: 400 11px / 1.2 var(--font-ui);
+}
+.dj-brand > b {
+  color: #1f5fa8;
+  font-style: italic;
+  letter-spacing: 0.02em;
+}
+.dj-front {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+/* zweizeiliges Display mit blauer Beleuchtung */
+.dj-lcd {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 5px 8px;
+  border: 2px solid #2d3038;
+  border-radius: 4px;
+  background: #a9cbe6;
+  box-shadow: inset 0 0 8px rgba(10, 40, 70, 0.35);
+  color: #0e2a42;
+  font: 600 11px / 1.25 var(--font);
+}
+.dj-lcd > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dj-lcd-2 {
+  font-weight: 400;
+}
+.dj-led {
+  flex: none;
+  width: 11px;
+  height: 11px;
+  border: 2px solid #2d3038;
+  border-radius: 50%;
+  background: #6b6f78;
+}
+.dj-led.warn {
+  background: #f39a2b;
+  box-shadow: 0 0 6px #f39a2b;
+}
+.dj-led.ok {
+  background: #5fd27c;
+  box-shadow: 0 0 6px #5fd27c;
+}
+.dj-job {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  color: var(--fg);
+  font: 400 12px / 1.3 var(--font-ui);
+}
+.dj-file {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 600 12px / 1.3 var(--font);
+}
+.dj-note {
+  opacity: 0.85;
+}
+.dj-printer {
+  position: relative;
+  touch-action: none;
+  width: 100%;
+  max-width: 420px;
+  margin-inline: auto;
+  aspect-ratio: 320 / 200;
+  overflow: hidden;
+  border-radius: 12px;
+  -webkit-tap-highlight-color: transparent;
+}
+.dj-stage {
+  position: absolute;
+  inset: 0;
+  transform-origin: 0 0;
+  /* kurz: während der Fahrt verschiebt sich, was man antippen will */
+  transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+.dj-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.dj-shell {
+  fill: #e6e2d9;
+  stroke: var(--ink);
+  stroke-width: 2.5;
+}
+.dj-outtray {
+  fill: #cdc8be;
+  stroke: var(--ink);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+.dj-slot {
+  fill: #2a2d33;
+}
+.dj-cave {
+  fill: #3d424c;
+  stroke: #23262c;
+  stroke-width: 1.5;
+}
+.dj-path {
+  fill: none;
+  stroke: #6b7180;
+  stroke-width: 1.5;
+  stroke-dasharray: 3 3;
+}
+.dj-fuser {
+  fill: #9aa0aa;
+  stroke: #23262c;
+  stroke-width: 1.5;
+}
+.dj-roll {
+  fill: #2b2e35;
+  stroke: #6b7180;
+  stroke-width: 1;
+}
+.dj-hot {
+  fill: #f39a2b;
+  font: 700 8px var(--font-ui);
+  text-anchor: middle;
+}
+.dj-seam {
+  fill: #d8d3c9;
+  stroke: #b9b3a8;
+  stroke-width: 1;
+}
+.dj-foot {
+  fill: #55585f;
+}
+/* Klappen: geschlossen bündig im Gehäuse, offen schwenken sie zum Betrachter */
+.dj-door {
+  position: absolute;
+  z-index: 3;
+  padding: 0;
+  border: 2px solid #b9b3a8;
+  border-radius: 4px;
+  background: #e6e2d9;
+  box-shadow: inset 0 0 0 1px #f4f1ea;
+  transition: transform 0.28s cubic-bezier(0.3, 0.7, 0.3, 1), background 0.28s;
+  cursor: pointer;
+}
+.dj-door .dj-badge {
+  transition: opacity 0.1s;
+}
+.dj-door-a {
+  transform-origin: left center;
+}
+.dj-door-b {
+  transform-origin: right center;
+}
+/* offen: nach außen geklappt, schräg gesehen (schmal und verzerrt wie eine Tür, die zu einem hin aufsteht) */
+.dj-printer.a-open .dj-door-a {
+  transform: scaleX(-0.3) skewY(-14deg);
+  background: #cfcac0;
+}
+.dj-printer.b-open .dj-door-b {
+  transform: scaleX(-0.3) skewY(14deg);
+  background: #cfcac0;
+}
+.dj-door.open-side .dj-badge {
+  opacity: 0;
+}
+.dj-grip {
+  position: absolute;
+  top: 30%;
+  width: 7px;
+  height: 40%;
+  border: 1.5px solid #2c6b3c;
+  border-radius: 3px;
+  background: #4caf6a;
+}
+.dj-door-a .dj-grip {
+  right: 5px;
+}
+.dj-door-b .dj-grip {
+  left: 5px;
+}
+.dj-badge {
+  position: absolute;
+  top: 5px;
+  display: grid;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  border: 1.5px solid #5b5a57;
+  border-radius: 50%;
+  background: #fff;
+  color: #3b3a37;
+  font: 700 10px / 1 var(--font-ui);
+  pointer-events: none;
+}
+.dj-door-a .dj-badge {
+  right: 16px;
+}
+.dj-door-b .dj-badge {
+  left: 16px;
+}
+.dj-tray > .dj-badge {
+  top: 50%;
+  left: 13%;
+  translate: 0 -50%;
+}
+/* Stau dahinter: Buchstabe orange (wie die Stau-Anzeige echter Drucker), nicht blinkend */
+.dj-badge.jam,
+.jam > .dj-badge {
+  border-color: #a45a0c;
+  background: #f39a2b;
+  color: #fff;
+}
+.dj-badge-d {
+  width: auto;
+  height: auto;
+  aspect-ratio: 1;
+  top: auto;
+}
+/* Fach 2: Schublade, rausgezogen sieht man hinein (Papierstapel, darauf das zerknüllte Blatt) */
+.dj-tray {
+  position: absolute;
+  padding: 0;
+  border: 2px solid #b9b3a8;
+  border-radius: 4px;
+  background: #dcd7cd;
+  transition: transform 0.28s cubic-bezier(0.3, 0.7, 0.3, 1), background 0.2s;
+  cursor: pointer;
+}
+.dj-printer.c-open .dj-tray {
+  transform: translateX(-14%);
+  background: #3d424c;
+}
+.dj-tray-front {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 9%;
+  padding: 0;
+  border: 0;
+  border-right: 2px solid #b9b3a8;
+  cursor: pointer;
+  background: #d0cabf;
+}
+.dj-tray-handle {
+  position: absolute;
+  top: 35%;
+  left: 25%;
+  width: 50%;
+  height: 30%;
+  border: 1.5px solid #2c6b3c;
+  border-radius: 3px;
+  background: #4caf6a;
+}
+.dj-stack {
+  position: absolute;
+  left: 12%;
+  right: 4%;
+  bottom: 12%;
+  height: 40%;
+  border-radius: 1px;
+  background: repeating-linear-gradient(#fbfaf6 0 2px, #d9d6cf 2px 3px);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.dj-printer.c-open .dj-stack {
+  opacity: 1;
+}
+/* Tonerkassette: vor dem Blatt in A; herausgenommen liegt sie oben links auf dem Drucker */
+.dj-toner {
+  position: absolute;
+  z-index: 2;
+  padding: 0;
+  border: 2px solid #15171b;
+  border-radius: 6px 6px 10px 10px;
+  background: linear-gradient(#3a3e47, #23262c);
+  transition: transform 0.3s cubic-bezier(0.3, 0.7, 0.3, 1);
+  cursor: pointer;
+}
+.dj-printer.toner-out .dj-toner {
+  z-index: 4;
+  transform: translate(-4%, -66%) rotate(-3deg);
+}
+.dj-toner-grip {
+  position: absolute;
+  top: -5px;
+  left: 14%;
+  width: 34%;
+  height: 9px;
+  border: 1.5px solid #2c6b3c;
+  border-radius: 4px 4px 1px 1px;
+  background: #4caf6a;
+}
+.dj-toner-label {
+  position: absolute;
+  right: 8%;
+  bottom: 14%;
+  color: #c9cdd6;
+  font: 700 9px / 1 var(--font-ui);
+}
+/* grüner Andruckhebel: liegt quer über dem Blatt und drückt es an; gelöst klappt er nach oben weg */
+.dj-lever {
+  position: absolute;
+  z-index: 2;
+  padding: 0;
+  border: 1.5px solid #2c6b3c;
+  border-radius: 5px;
+  background: #4caf6a;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+  transform-origin: 10% 50%;
+  transition: transform 0.22s cubic-bezier(0.3, 0.7, 0.3, 1.3);
+  cursor: pointer;
+}
+.dj-lever::before {
+  content: '';
+  position: absolute;
+  inset: -14px -8px;
+}
+.dj-lever-pin {
+  position: absolute;
+  top: 50%;
+  left: 10%;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #2c6b3c;
+  translate: -50% -50%;
+}
+.dj-printer.lever-up .dj-lever {
+  transform: rotate(-80deg);
+}
+/* gelöst, Blatt noch drin: Wische, die am Hebel anfangen, gehen ans Blatt */
+.dj-lever.pass,
+.dj-toner.pass {
+  pointer-events: none;
+}
+/* Wischzonen: der ganze offene Bereich nimmt das Wischen an */
+.dj-zone {
+  position: absolute;
+  z-index: 1;
+  touch-action: none;
+  pointer-events: none;
+}
+.dj-zone.on {
+  pointer-events: auto;
+  cursor: grab;
+}
+/* Blätter: das freie Ende zeigt in Pfeilrichtung, das andere hängt zerknittert in den Walzen */
+.dj-sheet {
+  position: absolute;
+  pointer-events: none;
+}
+.dj-paper {
+  position: absolute;
+  inset: 0;
+  background: #a9a49a;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35));
+}
+.dj-paper::before {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  background: #fbfaf6;
+  clip-path: inherit;
+}
+.dj-sheet.to-left .dj-paper {
+  clip-path: polygon(0 0, 92% 0, 100% 30%, 94% 55%, 100% 80%, 92% 100%, 0 100%);
+}
+.dj-sheet.to-right .dj-paper {
+  clip-path: polygon(8% 0, 100% 0, 100% 100%, 8% 100%, 0 75%, 6% 50%, 0 25%);
+}
+.dj-sheet.to-up .dj-paper {
+  clip-path: polygon(0 0, 100% 0, 100% 92%, 75% 100%, 50% 94%, 25% 100%, 0 92%);
+}
+.dj-sheet.to-down .dj-paper {
+  clip-path: polygon(0 8%, 25% 0, 50% 6%, 75% 0, 100% 8%, 100% 100%, 0 100%);
+}
+.dj-sheet.torn .dj-paper::before {
+  background: #ebe7dd;
+}
+.dj-sheet.gone,
+.dj-printer:not(.c-open) .dj-sheet-C {
+  visibility: hidden;
+}
+/* Pfeil am freien Ende: grüner Punkt wie die Markierungen im Drucker, sitzt über dem Blatt */
+.dj-arrow {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #4caf6a;
+  color: #fff;
+  font: 700 11px / 1 var(--font-ui);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.dj-sheet.reach .dj-arrow {
+  opacity: 1;
+}
+.dj-sheet.to-left .dj-arrow {
+  left: 2px;
+  top: 50%;
+  translate: 0 -50%;
+}
+.dj-sheet.to-right .dj-arrow {
+  right: 2px;
+  top: 50%;
+  translate: 0 -50%;
+}
+.dj-sheet.to-up .dj-arrow {
+  top: 2px;
+  left: 50%;
+  translate: -50% 0;
+}
+.dj-sheet.to-down .dj-arrow {
+  bottom: 2px;
+  left: 50%;
+  translate: -50% 0;
+}
+/* Ausgabefach: Stapel, beim Drucken gleiten Seiten aus dem Schlitz */
+.dj-out {
+  position: absolute;
+  border-radius: 1px;
+  background: repeating-linear-gradient(#fbfaf6 0 2px, #d9d6cf 2px 3px);
+  transform: skewX(-8deg);
+  opacity: 0.9;
+}
+.dj-printer.printing .dj-out::after {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: 100%;
+  width: 100%;
+  height: 4px;
+  background: #fbfaf6;
+  border: 1px solid #a9a49a;
+  animation: dj-feed 0.45s ease-out infinite;
+}
+@keyframes dj-feed {
+  from {
+    translate: 70% 0;
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  to {
+    translate: -100% 3px;
+    opacity: 0.6;
+  }
+}
+.dj-reply {
+  min-height: 2.7em;
+  color: var(--fg);
+  font: 600 12px / 1.35 var(--font-ui);
+}
+@media (prefers-reduced-motion: reduce) {
+  .dj-stage,
+  .dj-door,
+  .dj-tray,
+  .dj-toner,
+  .dj-lever {
+    transition: none;
+  }
+  .dj-printer.printing .dj-out::after {
+    animation: none;
+  }
+}
+
+/* Was als Nächstes dran ist: ruhiger grüner Rahmen, kein Blinken */
+.dj-door.next,
+.dj-tray.next,
+.dj-toner.next,
+.dj-lever.next {
+  outline: 2.5px solid #5fd27c;
+  outline-offset: 2px;
+  box-shadow: 0 0 10px rgba(95, 210, 124, 0.7);
+}
+.dj-tray.next {
+  outline-offset: -1px;
+}
+/* herangezoomt: das Ausgabefach (oben) kommt erst danach dran und soll nicht ins Bild ragen */
+.dj-printer.zoomed .dj-sheet-D,
+.dj-printer.zoomed .dj-zone-D,
+.dj-printer.zoomed .dj-badge-d {
+  visibility: hidden;
+}
+/* heraus fast ohne Fahrt: danach will man sofort die nächste Klappe treffen */
+.dj-printer:not(.zoomed) .dj-stage {
+  transition-duration: 0.06s;
 }

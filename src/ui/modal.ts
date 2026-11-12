@@ -1,4 +1,4 @@
-import { h } from './dom';
+import { armButton, h } from './dom';
 
 export interface ModalAction {
   label: string;
@@ -62,10 +62,8 @@ export function showModal({
     h('div', { class: 'modal-body' }, body.map((b) => (typeof b === 'string' ? h('p', { text: b }) : b))),
     h('div', { class: stacked ? 'modal-actions stacked' : 'modal-actions' }, buttons),
   );
-  if (armDelayMs > 0) {
-    for (const b of buttons) b.disabled = true;
-    setTimeout(() => buttons.forEach((b) => (b.disabled = false)), armDelayMs);
-  }
+  // nur Knöpfe, die init nicht absichtlich gesperrt hat
+  for (const b of buttons) armButton(b, armDelayMs);
   dialog.addEventListener('cancel', (e) => {
     e.preventDefault();
     close();

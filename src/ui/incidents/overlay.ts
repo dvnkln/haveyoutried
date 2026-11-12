@@ -5,7 +5,7 @@ import { rates } from '../../core/economy';
 import { endIncident, isSolved, resolveIncident, setForgivenMistakes } from '../../core/incidents';
 import { pad2 as p2, pick } from '../../util';
 import type { AppContext } from '../app';
-import { h, setText } from '../dom';
+import { armButton, h, setText } from '../dom';
 import { describeEffect } from '../pager';
 import { raidGame } from './raid';
 import { servicesGame } from './services';
@@ -20,6 +20,7 @@ import { coolingGame } from './cooling';
 import { rackGame } from './rack';
 import { untangleGame } from './untangle';
 import { tapesGame } from './tapes';
+import { jamGame } from './jam';
 import type { Minigame } from './types';
 
 const GAMES: Record<IncidentId, () => Minigame> = {
@@ -36,6 +37,7 @@ const GAMES: Record<IncidentId, () => Minigame> = {
   rack: rackGame,
   untangle: untangleGame,
   tapes: tapesGame,
+  jam: jamGame,
 };
 
 /** Logo des Wikis: eine verknotete Schleife (Konfusion eben) */
@@ -343,7 +345,7 @@ export function mountIncidentOverlay(ctx: AppContext): void {
 
     // --- Phase 1: Monitoring-Alarm, wartet auf manuelles Übernehmen (nur die Meldung, die Aufgabe steht im Runbook) ---
     const brief = INCIDENT_BRIEF[id];
-    const take = h('button', { class: 'btn btn-danger nag-ack nag-take', type: 'button', text: pick(TAKE_LABELS), disabled: '' });
+    const take = h('button', { class: 'btn btn-danger nag-ack nag-take', type: 'button', text: pick(TAKE_LABELS) });
     const alert = h('div', { class: 'mon-page mon-compact' }, [
       summary(1, 2),
       h('div', { class: 'mon-table' }, [monRow('crit', text.host, text.service, text.info, '0m 03s', true)]),
@@ -361,7 +363,7 @@ export function mountIncidentOverlay(ctx: AppContext): void {
     ctx.sfx.alarm();
     ctx.haptic('milestone');
     // Button erst nach kurzer Sperre aktiv (gegen Fehlgriffe beim Dauertippen)
-    setTimeout(() => (take.disabled = false), INCIDENTS.ackArmMs);
+    armButton(take, INCIDENTS.ackArmMs);
     // Alarm wiederholen, bis jemand übernimmt
     const nag = setInterval(() => {
       // im Dunkeln (niemand da) piept es nicht die ganze Nacht
@@ -406,8 +408,8 @@ export function mountIncidentOverlay(ctx: AppContext): void {
       inMonitor(false);
       const rb = brief.runbook;
       // kurz gesperrt: ein doppelter Tipp auf „Übernehmen“ soll das Runbook nicht gleich überspringen
-      const go = h('button', { class: 'btn btn-primary nag-ack wiki-go', type: 'button', text: pick(RUNBOOK_GO), disabled: '' });
-      setTimeout(() => (go.disabled = false), INCIDENTS.ackArmMs);
+      const go = h('button', { class: 'btn btn-primary nag-ack wiki-go', type: 'button', text: pick(RUNBOOK_GO) });
+      armButton(go, INCIDENTS.runbookArmMs);
       go.addEventListener('click', () => {
         ctx.sfx.tick();
         startGame();
@@ -486,8 +488,8 @@ export function mountIncidentOverlay(ctx: AppContext): void {
       const score = game.score();
       const results = resolveIncident(ctx.state, id, score, rates(ctx.state));
       const good = isSolved(score);
-      const ack = h('button', { class: 'btn btn-primary nag-ack nag-close', type: 'button', text: pick(good ? DONE_LABELS.good : DONE_LABELS.bad), disabled: '' });
-      setTimeout(() => (ack.disabled = false), 600);
+      const ack = h('button', { class: 'btn btn-primary nag-ack nag-close', type: 'button', text: pick(good ? DONE_LABELS.good : DONE_LABELS.bad) });
+      armButton(ack, INCIDENTS.doneArmMs);
       ack.addEventListener('click', () => {
         window.removeEventListener('resize', fit);
         ctx.sfx.tick();

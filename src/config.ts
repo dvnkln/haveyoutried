@@ -111,7 +111,7 @@ export type EventEffectId = keyof typeof EVENT_EFFECTS;
 
 // --- Incidents (Minispiele nach Monitoring-Alarm) ---
 
-export const INCIDENT_IDS = ['raid', 'spam', 'services', 'loggrep', 'network', 'patch', 'diskfull', 'certs', 'ups', 'cooling', 'rack', 'untangle', 'tapes'] as const;
+export const INCIDENT_IDS = ['raid', 'spam', 'services', 'loggrep', 'network', 'patch', 'diskfull', 'certs', 'ups', 'cooling', 'rack', 'untangle', 'tapes', 'jam'] as const;
 export type IncidentId = (typeof INCIDENT_IDS)[number];
 
 /** Ab dieser Leistung gilt ein Incident als gelöst (RECOVERY statt ESCALATION) */
@@ -125,6 +125,10 @@ export const INCIDENTS = {
   maxMs: 12 * 60_000,
   /** „Übernehmen“-Button ist erst danach aktiv (gegen Fehlgriffe beim Dauertippen) */
   ackArmMs: 1_200,
+  /** Runbook-Knopf: nur gegen einen doppelten Tipp auf „Übernehmen“ (ein Doppeltipp dauert ~0,3 s) */
+  runbookArmMs: 500,
+  /** Ergebnis-Knopf nach dem Spiel (letzte Tipps im Spiel sollen ihn nicht treffen) */
+  doneArmMs: 600,
   /** Countdown vor dem Spielstart (Spielfeld schon sichtbar, aber eingefroren) */
   readyMs: 3_000,
   /** Alarm wiederholt sich, bis übernommen wird */
@@ -328,6 +332,18 @@ export const INCIDENTS = {
       wrongPenaltyMs: 1_000,
       /** Pause zwischen zwei Aufträgen */
       pauseMs: 1_000,
+    },
+    jam: {
+      durationMs: 50_000,
+      /** Staustellen je Runde (A Toner, B Fixiereinheit, C Fach 2, D Ausgabe); zuerst Stellen, die in der Runde davor nicht dran waren */
+      rounds: [1, 2, 3],
+      /** so weit (px) entlang des Blatts muss man wischen, bis gezogen wird; beim Loslassen reicht ein kurzer, schneller Schnipser (mehr als ein Tipp wackelt) */
+      swipePx: 18,
+      flickPx: 12,
+      /** gerissen (gegen den Pfeil): Zeitstrafe, ein Rest bleibt stecken */
+      tearPenaltyMs: 1_000,
+      /** alles frei und zu: so lange druckt er weiter, bis es wieder klemmt */
+      printMs: 1_500,
     },
   },
 } as const;

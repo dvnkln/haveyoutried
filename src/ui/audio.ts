@@ -1232,6 +1232,60 @@ export class Sfx {
     this.hiss(r.t, 0.05, 0.012, 'bandpass', 2400, 2);
   }
 
+  // --- Drucker (Druckerstau) ---
+
+  /** Kunststoffklappe: auf = Rasten löst sich und die Klappe schwingt, zu = sattes Einrasten. */
+  latch(open: boolean): void {
+    const r = this.ready();
+    if (!r) return;
+    this.hiss(r.t, open ? 0.6 : 0.9, 0.022, 'bandpass', open ? 1600 : 1150, 1.4);
+    this.tone('sine', open ? 420 : 330, open ? 300 : 210, r.t, open ? 0.25 : 0.4, 0.06, undefined, 0.004);
+    if (open) this.noiseHeld(r.t + 0.02, r.out, { peak: 0.07, attack: 0.04, hold: 0.05, release: 0.12, type: 'bandpass', f0: 900, f1: 1400, q: 0.8 });
+    else this.hiss(r.t + 0.035, 0.3, 0.015, 'bandpass', 2200, 2);
+  }
+
+  /** Blatt kommt heil heraus: weiches Schleifen über die Walzen, leises Knistern. */
+  paperPull(): void {
+    const r = this.ready();
+    const hp = this.filter('highpass', 400, 0.5);
+    const lp = this.filter('lowpass', 2600, 0.5);
+    if (!r || !hp || !lp) return;
+    this.noiseHeld(r.t, r.out, { peak: 0.13, attack: 0.04, hold: 0.1, release: 0.14, type: 'bandpass', f0: 2000, f1: 900, q: 0.7 });
+    this.buffer(r.t, this.paper(r.ctx.sampleRate, 0.3, [[0, 0.26]], 260, 0.05), r.out, 0.25, [hp, lp]);
+  }
+
+  /** Blatt reißt: dichtes, kurzes Ratschen (Höhen gedeckelt). */
+  paperTear(): void {
+    const r = this.ready();
+    const hp = this.filter('highpass', 600, 0.5);
+    const lp = this.filter('lowpass', 2800, 0.5);
+    if (!r || !hp || !lp) return;
+    this.buffer(r.t, this.paper(r.ctx.sampleRate, 0.24, [[0, 0.2]], 2600, 0.18), r.out, 0.28, [hp, lp]);
+    this.noiseHeld(r.t, r.out, { peak: 0.04, attack: 0.01, hold: 0.08, release: 0.08, type: 'bandpass', f0: 1500, f1: 2200, q: 1 });
+  }
+
+  /** Drucker läuft an: Motor surrt (Sinus), Seiten rascheln heraus. */
+  printRun(sec: number): void {
+    const r = this.ready();
+    if (!r) return;
+    const { ctx, out, t } = r;
+    const dur = Math.max(0.5, sec);
+    for (const [f, peak] of [[220, 0.05], [440, 0.022], [662, 0.008]] as const) {
+      const osc = ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(f * 0.9, t);
+      osc.frequency.exponentialRampToValueAtTime(f, t + 0.25);
+      osc.connect(this.held(ctx, out, t, peak, 0.12, dur - 0.3, 0.18));
+      osc.start(t);
+      osc.stop(t + dur + 0.1);
+    }
+    const pages = Math.max(1, Math.round(dur / 0.45));
+    for (let i = 0; i < pages; i++) {
+      const p = t + 0.3 + i * ((dur - 0.4) / pages);
+      this.noiseHeld(p, out, { peak: 0.035, attack: 0.05, hold: 0.06, release: 0.1, type: 'bandpass', f0: 1800, f1: 1100, q: 0.8 });
+    }
+  }
+
   /** Umschalten (Tabs, Einstellungen): leises Tick. */
   tick(): void {
     const r = this.ready();
