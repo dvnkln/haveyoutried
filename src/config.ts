@@ -111,7 +111,7 @@ export type EventEffectId = keyof typeof EVENT_EFFECTS;
 
 // --- Incidents (Minispiele nach Monitoring-Alarm) ---
 
-export const INCIDENT_IDS = ['raid', 'spam', 'services', 'loggrep', 'network', 'patch'] as const;
+export const INCIDENT_IDS = ['raid', 'spam', 'services', 'loggrep', 'network', 'patch', 'diskfull', 'certs', 'ups', 'cooling', 'rack'] as const;
 export type IncidentId = (typeof INCIDENT_IDS)[number];
 
 /** Ab dieser Leistung gilt ein Incident als gelöst (RECOVERY statt ESCALATION) */
@@ -144,7 +144,9 @@ export const INCIDENTS = {
   ] as { min: number; effects: EventEffectId[] }[],
   games: {
     raid: {
+      /** Durchhalten: mehr Zeit (Kubernetes Stufe 3) wäre hier eine Strafe */
       durationMs: 20_000,
+      survival: true,
       disks: 12,
       /** RAID 6: zwei Ausfälle verkraftbar, beim dritten ist das Array tot */
       maxFailed: 3,
@@ -190,6 +192,111 @@ export const INCIDENTS = {
       wrongPenaltyMs: 1_200,
       /** Kabel auf den Uplink: Broadcast-Sturm */
       uplinkPenaltyMs: 3_000,
+    },
+    diskfull: {
+      durationMs: 25_000,
+      /** so viele überflüssige bzw. wichtige Dateien liegen auf der Platte */
+      junk: 6,
+      keep: 4,
+      /** Größen schwanken je Runde um diesen Faktor (min..max) */
+      sizeMin: 0.8,
+      sizeMax: 1.25,
+      /** frei zu Beginn (GB); Kapazität ergibt sich aus der Summe */
+      startFreeGb: 3,
+      /** Ziel: so viel vom Überflüssigen muss weg (auf 5 GB gerundet, in diesen Grenzen) */
+      goalShare: 0.6,
+      goalMinGb: 15,
+      goalMaxGb: 40,
+      /** nohup.out wächst so schnell; läuft die Platte voll, ist das Spiel verloren */
+      growGbPerSec: 0.2,
+      growStartGb: 3,
+      /** Wichtiges löschen wollen: Zeitstrafe */
+      wrongPenaltyMs: 2_000,
+    },
+    certs: {
+      /** Durchhalten wie beim RAID: mehr Zeit wäre hier eine Strafe */
+      durationMs: 22_000,
+      survival: true,
+      /** so viele Zertifikate von Anfang an, dazu tauchen später weitere auf (Spielzeit in ms) */
+      start: 5,
+      arrivals: [7_000, 13_000],
+      /** Laufzeit wie bei Let's Encrypt; certbot erneuert erst ab dueDays Restlaufzeit */
+      maxDays: 90,
+      dueDays: 30,
+      /** so lange (Spielzeit) braucht ein Zertifikat von 90 Tagen bis 0, je Domain zufällig */
+      lifetimeMinMs: 7_500,
+      lifetimeMaxMs: 13_000,
+      /** Restlaufzeit beim Start bzw. beim Auftauchen (Tage) */
+      startDaysMin: 35,
+      startDaysMax: 85,
+      arriveDaysMin: 24,
+      arriveDaysMax: 40,
+      /** ein certbot-Lauf; nur einer gleichzeitig */
+      renewMs: 1_000,
+      /** „not yet due for renewal“ hält kurz auf */
+      notDueMs: 500,
+      /** Abzug je abgelaufenem Zertifikat */
+      expiredPenalty: 0.2,
+      /** laufen zwei Zertifikate dichter als das nacheinander ab, wird das Tempo des neuen angepasst */
+      minGapMs: 1_200,
+    },
+    ups: {
+      durationMs: 25_000,
+      /** so viele Server aus der vorderen Reihe (Anwendungen); dazu immer Datenbank, Anmeldung, Speicher */
+      front: 4,
+      /** gedrückt halten = sauber herunterfahren */
+      holdMs: 900,
+      /** Akku bei voller Last (alle Server an), Spielzeit */
+      batteryMs: 15_000,
+      /** Grundlast ohne Server (Switches, USV selbst): Anteil an voller Last */
+      idleLoad: 0.12,
+      /** Anzeige: so viele Minuten Restlaufzeit je Sekunde Spielzeit */
+      minutesPerSec: 1,
+    },
+    cooling: {
+      /** Durchhalten: mehr Zeit wäre hier eine Strafe */
+      durationMs: 22_000,
+      survival: true,
+      zones: 3,
+      /** grüner Bereich (ASHRAE-Empfehlung für Rechenzentren) und Startwert, °C */
+      minC: 18,
+      maxC: 27,
+      startC: 22.5,
+      /** Anzeigegrenzen des Thermometers */
+      scaleMinC: 12,
+      scaleMaxC: 33,
+      /** Ziel-Temperatur: Mitte + (Abwärme − Kühlung) × gainC; 10 % Regler ≈ 2 °C */
+      gainC: 16,
+      /** so schnell folgt die Temperatur dem Ziel (Zeitkonstante, ms) */
+      tauMs: 3_000,
+      /** Kühlleistung bei 100 % (in Einheiten der Abwärme) */
+      coolMax: 1.2,
+      /** Abwärme je Rack zu Beginn und Grenzen (Start immer spürbar neben dem Regler) */
+      heatStartMin: 0,
+      heatStartMax: 1.2,
+      heatMin: 0.15,
+      heatMax: 1.1,
+      /** Regler zu Beginn */
+      startPower: 0.5,
+      /** so weit liegt die Abwärme zu Beginn neben der Reglerstellung (× gainC = °C neben der Mitte) */
+      startOffMin: 0.45,
+      startOffMax: 0.6,
+      /** Ereignisse (Backup, Tür auf …) in diesem Abstand */
+      eventMinMs: 2_500,
+      eventMaxMs: 3_800,
+      /** Wertung: Anteil im grünen Bereich unter diesem Wert zählt nichts (auch Nichtstun bleibt eine Weile grün) */
+      scoreFloor: 0.4,
+    },
+    rack: {
+      durationMs: 30_000,
+      /** Schrankhöhe in Höheneinheiten; unten steht immer die USV */
+      heights: 18,
+      upsHe: 2,
+      /** Schweres muss ganz unterhalb dieser HE bleiben (obere Kante ≤ half) */
+      half: 9,
+      /** so viele Rack-Geräte in der Lieferung (davon eins schwer), dazu eins ohne Rackschienen */
+      deliveries: 5,
+      wrongPenaltyMs: 1_500,
     },
   },
 } as const;

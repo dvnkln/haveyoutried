@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { PATCH_DEPARTMENTS } from '../../src/content/incidents';
-import { SOLVE } from '../../src/config';
+import { INCIDENT_IDS, INCIDENTS, SOLVE } from '../../src/config';
 
 const SHOTS = process.env.SHOTS_DIR;
 const shot = async (page: import('@playwright/test').Page, name: string) => {
@@ -203,7 +203,7 @@ test('Zufallsevent: Pager → Entscheidung → Ergebnis', async ({ page, context
   expect(errors).toEqual([]);
 });
 
-for (const id of ['raid', 'spam', 'services', 'loggrep', 'network', 'patch']) {
+for (const id of INCIDENT_IDS) {
   test(`Incident ${id}: Alarm → Spiel → Ergebnis`, async ({ page }) => {
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
@@ -230,7 +230,8 @@ for (const id of ['raid', 'spam', 'services', 'loggrep', 'network', 'patch']) {
     await page.clock.runFor(2_500);
     await shot(page, `inc-${id}-2-game`);
 
-    await page.clock.runFor(30_000);
+    // Rest des Countdowns plus die ganze Spielzeit (je Spiel verschieden) und etwas Reserve
+    await page.clock.runFor(INCIDENTS.readyMs - 2_500 + INCIDENTS.games[id].durationMs + 1_000);
     const ack = page.locator('.nag-close');
     await expect(ack).toBeVisible();
     await expect(page.locator('.incident .effect-line').first()).not.toBeEmpty();

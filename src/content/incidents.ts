@@ -117,6 +117,91 @@ export const INCIDENT_TEXT: Record<IncidentId, IncidentText> = {
       'Die Kaffeemaschine hängt jetzt im Buchhaltungs-VLAN. Sie hat Zugriff auf die Gehälter.',
     ],
   },
+  diskfull: {
+    host: 'fs01',
+    service: 'DISK /',
+    info: '97 % used, 3 GB free, nohup.out growing',
+    okInfo: '68 % used',
+    goal: 'Platz schaffen, bis der Balken unter der Zielmarke ist: Feld antippen, Beschreibung lesen, dann löschen. Finger weg von allem, was die Firma braucht.',
+    good: [
+      'Platz geschaffen, nichts Wichtiges gelöscht. Das Monitoring ist grün. Für etwa drei Wochen.',
+      'Aufgeräumt. Den Übeltäter, der die Platte vollschreibt, hast du auch gefunden. Er sitzt zwei Türen weiter.',
+      'Wieder Luft auf fs01. Du legst einen Kalendereintrag zum Aufräumen an. Für in drei Wochen. Den verschiebst du dann.',
+    ],
+    bad: [
+      'Platte voll. Die Datenbank schreibt nichts mehr. Die Buchhaltung bucht jetzt auf Papier.',
+      'Neue Platte bestellt, Lieferzeit sechs Wochen. Bis dahin speichern alle auf den Desktop.',
+      'Zu langsam. Ein Kollege hat „irgendwas Großes“ gelöscht. Was genau, merkt ihr am Monatsende.',
+    ],
+  },
+  certs: {
+    host: 'web01',
+    service: 'TLS-CERTS',
+    info: '5 certificates expire within 90 days, renewal cron disabled',
+    okInfo: 'all certificates valid',
+    goal: 'Zeile antippen = Zertifikat erneuern. certbot schafft nur eins auf einmal und erst ab 30 Tagen Restlaufzeit. Keins darf ablaufen.',
+    good: [
+      'Alles grün, null Warnseiten. Du trägst dir in 60 Tagen einen Termin ein. Und einen Tag später noch einen.',
+      'Rechtzeitig erneuert. Den Cronjob dafür gab es übrigens. Er war seit 2022 auskommentiert.',
+      'Alle Schlösser zu. Die Hälfte der Domains kanntest du vorher nicht. Jetzt gehören sie dir.',
+    ],
+    bad: [
+      'Mehrere Warnseiten. Die Hotline erklärt jetzt den ganzen Tag, wo „Erweitert“ und „Trotzdem fortfahren“ sind.',
+      'Abgelaufen. Der Chef schlägt selbstsignierte Zertifikate vor. Für alles. Für immer.',
+      'Ein paar sind abgelaufen. Der Vertrieb hat die Warnseite abfotografiert und als „Sicherheitsfeature“ in die Präsentation gepackt.',
+    ],
+  },
+  ups: {
+    host: 'usv-srv',
+    service: 'UPS',
+    info: 'ON BATTERY, load 100 %, runtime 15 min',
+    okInfo: 'all servers shut down cleanly, waiting for mains',
+    goal: 'Stromausfall! Server sauber herunterfahren, bevor der Akku leer ist: gedrückt halten. Erst die, die keiner mehr braucht, sonst stürzen andere ab.',
+    good: [
+      'Alles sauber unten, bevor der Akku leer war. Als der Strom zurückkam, startete alles in der richtigen Reihenfolge. Fast.',
+      'Geordnet heruntergefahren. Draußen repariert der Bagger gerade das Kabel, das er vorhin gefunden hat.',
+      'Sauber runtergefahren, die USV hat noch Reserve. Die hebst du dir für den nächsten Stromausfall auf.',
+    ],
+    bad: [
+      'Hart ausgegangen. Beim Hochfahren prüft jede Platte erst mal ihr Gewissen. Das dauert.',
+      'Falsche Reihenfolge. Die Datenbank war weg, bevor die Anwendungen fertig waren. Die letzte Stunde Bestellungen auch.',
+      'Hart aus. Ein Server startet nicht mehr. Er lief seit 2017 durch und hat es sich anders überlegt.',
+    ],
+  },
+  cooling: {
+    host: 'glt-ug',
+    service: 'TEMP',
+    info: 'CRAC 1 failed, zone temperatures drifting',
+    okInfo: 'all zones 18–27 °C',
+    goal: 'Klimagerät 1 ist ausgefallen. Regler hoch = kälter. Der Pfeil am Thermometer zeigt, wohin die Temperatur läuft: halt ihn im grünen Bereich (18–27 °C).',
+    good: [
+      'Alle Racks im grünen Bereich. Der Techniker für Klimagerät 1 kommt morgen. Zwischen 8 und 18 Uhr.',
+      'Temperatur gehalten. Du hast jetzt ein Gefühl für Thermodynamik und einen Pullover im Serverraum.',
+      'Sauber geregelt. Die Server haben nichts gemerkt. Das ist das höchste Lob, das es gibt.',
+    ],
+    bad: [
+      'Zu warm. Die Server haben sich selbst gedrosselt. Alles läuft, nur halb so schnell. Merkt keiner, sagt der Chef.',
+      'Zu kalt geregelt. Auf Rack A hat sich Tau gebildet. Ein Kollege wischt ihn mit seinem Ärmel weg.',
+      'Mal zu warm, mal zu kalt. Die Server haben jetzt Schnupfen. Sagt zumindest der Praktikant.',
+    ],
+  },
+  rack: {
+    host: 'rz-rack07',
+    service: 'INVENTORY',
+    info: '6 parcels at loading dock, rack 07: free units fragmented',
+    okInfo: 'all devices mounted, cabling (mostly) tidy',
+    goal: 'Lieferung einbauen: Gerät antippen, dann eine leuchtende Lücke. Schweres unter die Linie. Was keine Rackschienen hat, geht in die Retoure.',
+    good: [
+      'Alles eingebaut, schwer unten, leicht oben. Das Rack sieht aus wie im Prospekt. Bis morgen jemand ein Kabel braucht.',
+      'Eingebaut, und es ist sogar noch eine Höheneinheit frei. Die ist ab morgen voll. Du weißt nur noch nicht, womit.',
+      'Fertig. Die Kartons stapeln sich jetzt im Flur. Das Immobilienmanagement hat schon eine Mail geschrieben.',
+    ],
+    bad: [
+      'Halb eingebaut. Der Rest liegt oben auf dem Rack. „Provisorisch“, steht auf einem Zettel.',
+      'Das Storage hängt ganz oben. Das Rack wippt, wenn jemand die Tür zumacht.',
+      'Nicht alles passte. Die Reste stehen jetzt im Serverraum auf dem Boden, neben dem Zeug, das da seit 2019 steht.',
+    ],
+  },
 };
 
 /** Button-Texte zum Übernehmen eines Incidents (zufällig) */
@@ -347,3 +432,233 @@ export const PATCH_DEPARTMENTS: { name: string; vlan: string }[] = [
   { name: 'Kaffeemaschine', vlan: 'IOT-KAFFEE' },
 ];
 
+
+// --- Platte voll ---
+
+export type DiskKind = 'video' | 'archive' | 'db' | 'mail' | 'iso' | 'log' | 'sys' | 'vm' | 'table' | 'home';
+
+export interface DiskEntry {
+  name: string;
+  path: string;
+  gb: number;
+  kind: DiskKind;
+  /** was in der Detailzeile steht */
+  desc: string;
+  /** nur bei Wichtigem: was passiert, wenn man es löschen will (Strg+C gerade noch rechtzeitig) */
+  nearMiss?: string;
+}
+
+const junk = (name: string, path: string, gb: number, kind: DiskKind, desc: string): DiskEntry => ({ name, path, gb, kind, desc });
+const keep = (name: string, path: string, gb: number, kind: DiskKind, desc: string, nearMiss: string): DiskEntry => ({ name, path, gb, kind, desc, nearMiss });
+
+/** Kann weg. Namen sind ehrlich (bei 25 Sekunden keine Fallen), die Farbe verrät aber nichts. */
+export const DISK_JUNK: DiskEntry[] = [
+  junk('core.48213', '/var/crash/core.48213', 9, 'archive', 'Speicherabbild vom Absturz letzten Dienstag. Analysiert hat es niemand. Wird auch niemand.'),
+  junk('ubuntu-16.04.iso', '/home/praktikant/Downloads/', 5, 'iso', 'Dasselbe ISO, dreimal heruntergeladen. Für alle Fälle.'),
+  junk('Sommerfest_4K.mov', '/srv/share/Alle/Sommerfest_4K.mov', 11, 'video', '47 Minuten Rede vom Chef. In 4K. Der Ton fehlt, das ist das Beste daran.'),
+  junk('apt-Cache', '/var/cache/apt/archives/', 4, 'archive', 'Installationspakete von 2019. Längst installiert, trotzdem aufgehoben.'),
+  junk('backup_vor_update.tar', '/root/backup_vor_update.tar', 13, 'archive', 'Backup von 2017. Liegt auf derselben Platte wie das Original. Hilft also genau nie.'),
+  junk('export_alles.csv', '/tmp/export_alles.csv', 7, 'table', 'Jemand wollte die ganze Datenbank in Excel öffnen. Excel wollte nicht.'),
+  junk('Testserver_ALT.vmdk', '/srv/vm/Testserver_ALT.vmdk', 10, 'vm', 'Test-VM vom Vorgänger. Das Passwort kennt keiner. Gestartet hat sie seit Jahren niemand.'),
+  junk('syslog.*.gz', '/var/log/syslog.2.gz … syslog.2847.gz', 6, 'log', 'Rotiert wird fleißig. Gelöscht wurde nie.'),
+  junk('dump_altsystem.sql.gz', '/var/backups/dump_altsystem.sql.gz', 8, 'db', 'Dump der alten Datenbank. Das System wurde 2017 abgeschaltet, die Daten sind längst umgezogen.'),
+  junk('Webinare/', '/srv/share/Alle/Webinare/', 12, 'video', 'Aufzeichnungen aller Webinare seit 2020. Angeschaut: nie. Nicht mal von den Vortragenden.'),
+  junk('Spiele/', '/home/azubi/Spiele/', 9, 'home', 'Komplette Spielesammlung vom Azubi. Auf dem Fileserver. Er wird Fragen beantworten müssen.'),
+  junk('render_tmp/', '/tmp/render_tmp/', 6, 'video', 'Zwischenstände vom Imagefilm. Der Film ist seit einem Jahr fertig.'),
+  junk('Druckertreiber/', '/srv/share/IT/Druckertreiber/', 5, 'archive', 'Treiber für Drucker, die seit 2019 auf dem Wertstoffhof stehen.'),
+  junk('LÖSCHEN_AB_2002/', '/srv/share/Alle/LÖSCHEN_AB_2002/', 7, 'home', 'Steht seit 2001 so drauf. Es ist jetzt so weit. Schon seit einer Weile.'),
+  junk('ALT_TEST.zip', '/home/entwicklung/ALT_TEST.zip', 5, 'archive', 'Ein alter Test, gepackt. Was getestet wurde, weiß keiner mehr. Ergebnis: alt.'),
+  junk('kann_weg/', '/srv/share/IT/kann_weg/', 6, 'home', 'Angelegt 2015, damit endlich etwas weggeht. Es ging nichts weg. Bis heute.'),
+  junk('Copy of Copy of müll.zip', '/srv/share/Alle/Copy of Copy of müll.zip', 6, 'archive', 'Hieß schon im Original „müll“. Wurde trotzdem zweimal kopiert. Sicher ist sicher.'),
+  junk('asdf/', '/root/asdf/', 4, 'home', 'Ordner „asdf“. Darin: „qwer“. Darin: „jklö“. Darin: 4 GB Testdaten von irgendwem.'),
+  junk('neu2_alt/', '/srv/share/IT/neu2_alt/', 5, 'archive', 'Liegt neben neu/, neu2/ und alt_neu/. Die anderen sind leer, der hier leider nicht. Gebraucht wird keiner.'),
+  junk('Bilanz_2009_Kopie.xlsx', '/home/chef/Desktop/Kopie von Kopie/', 5, 'table', 'Die 14. Kopie derselben Bilanz. Das Original liegt sicher in der Buchhaltung.'),
+];
+
+/** Bleibt. Löschen wollen kostet Zeit. */
+export const DISK_KEEP: DiskEntry[] = [
+  keep('postgresql', '/var/lib/postgresql/', 20, 'db', 'Produktivdatenbank. Alles, was die Firma weiß.', 'Strg+C gerade noch rechtzeitig. Die Datenbank lebt. Dein Puls liegt bei 180.'),
+  keep('mysql', '/var/lib/mysql/', 16, 'db', 'Warenwirtschaft: Lager, Lieferanten, offene Bestellungen.', 'Abgebrochen. Das Lager hätte ab morgen nach Gefühl bestellt.'),
+  keep('mail', '/srv/mail/', 14, 'mail', 'Alle Postfächer. Auch das vom Chef, mit 40.000 ungelesenen Mails.', 'Abgebrochen. 300 Leute hätten ab morgen keine Mails mehr gehabt. Manche hätten sich gefreut.'),
+  keep('Buchhaltung', '/srv/share/Buchhaltung/', 8, 'table', 'Jahresabschlüsse der letzten zehn Jahre. Das Finanzamt fragt danach.', 'Abgebrochen. Die nächste Betriebsprüfung wäre sonst sehr kurz geworden. Für dich.'),
+  keep('usr', '/usr/', 6, 'sys', 'Das Betriebssystem. Ohne das läuft auch rm nicht mehr.', 'rm hätte sich selbst gelöscht. Mitten im Satz. Gerade noch abgebrochen.'),
+  keep('ticketdb', '/var/lib/ticketdb/', 9, 'db', 'Das Ticketsystem. Alle offenen Tickets, auch deine.', 'Abgebrochen. Kurz war der Gedanke verlockend.'),
+  keep('kunden/', '/srv/share/kunden/', 11, 'table', 'Kundenstamm: Adressen, Verträge, Ansprechpartner.', 'Abgebrochen. Der Vertrieb hätte ab morgen raten müssen, wer seine Kunden sind.'),
+  keep('webshop/', '/srv/www/webshop/', 7, 'home', 'Der Webshop. Läuft, verkauft, bitte nicht anfassen.', 'Abgebrochen. Der Shop hätte ab sofort nichts mehr verkauft. Nicht mal das Sonderangebot.'),
+  keep('Personal/', '/srv/share/Personal/', 5, 'table', 'Personalakten: Verträge, Zeugnisse, Gehälter.', 'Abgebrochen. Die Personalabteilung hätte dich als Erstes gefunden.'),
+  keep('git/', '/srv/git/', 9, 'archive', 'Alle Git-Repositories. Der Code der Firma mit zwölf Jahren Historie.', 'Abgebrochen. Die Entwicklung hätte gesagt, sie hat ja Klone. Hat sie nicht.'),
+  keep('lizenzen/', '/opt/lizenzen/', 4, 'archive', 'Lizenzdateien der CAD-Software. Neu kaufen kostet 40.000 €.', 'Abgebrochen. Die Konstruktion hätte ab morgen wieder mit Lineal gearbeitet.'),
+];
+
+export interface DiskGrower extends DiskEntry {
+  /** nach dem Löschen: die Datei kommt wieder */
+  again: string;
+}
+
+/** Wächst während des Spiels; löschen gibt Platz, dann fängt die Datei von vorn an. Eine pro Runde. */
+export const DISK_GROWERS: DiskGrower[] = [
+  {
+    name: 'nohup.out',
+    path: '/home/praktikant/nohup.out',
+    gb: 0,
+    kind: 'log',
+    desc: 'Ausgabe vom Skript des Praktikanten. Läuft seit Freitag und schreibt jede Millisekunde „läuft noch“.',
+    again: 'Gelöscht. Das Skript legt einfach eine neue an. Es läuft noch.',
+  },
+  {
+    name: 'kueche.mjpg',
+    path: '/srv/cam/kueche.mjpg',
+    gb: 0,
+    kind: 'video',
+    desc: 'Die Testkamera in der Kaffeeküche nimmt seit der Probeinstallation alles auf. Es passiert nie etwas.',
+    again: 'Gelöscht. Die Kamera nimmt weiter auf. Gerade holt jemand Milch.',
+  },
+  {
+    name: 'deferred/',
+    path: '/var/spool/postfix/deferred/',
+    gb: 0,
+    kind: 'mail',
+    desc: 'Zwei Abwesenheitsnotizen antworten sich gegenseitig. Seit Montag. Die Queue wächst mit jeder Antwort.',
+    again: 'Queue geleert. Die beiden Notizen haben sofort wieder angefangen. Sie haben sich viel zu sagen.',
+  },
+];
+
+// --- Zertifikate ---
+
+export interface CertDomain {
+  host: string;
+  /** was dahinter läuft (kleine Zeile unter dem Namen) */
+  what: string;
+  /** was passiert, wenn es abläuft */
+  expired: string;
+}
+
+const cd = (host: string, what: string, expired: string): CertDomain => ({ host, what, expired });
+
+/** Von Anfang an im Monitoring */
+export const CERT_DOMAINS: CertDomain[] = [
+  cd('shop.firma.de', 'Webshop', 'Kunden sehen eine Warnseite. Drei klicken trotzdem auf „Weiter“. Der Rest kauft woanders.'),
+  cd('mail.firma.de', 'Webmail', 'Outlook fragt jetzt jeden Morgen, ob man dem Server vertraut. Alle klicken „Ja“. Für immer.'),
+  cd('vpn.firma.de', 'VPN', 'Der Außendienst kommt nicht mehr rein. Er meldet sich auffällig nicht.'),
+  cd('api.firma.de', 'Schnittstelle der App', 'Die App zeigt nur noch „Fehler -1“. Die Bewertungen im Store auch.'),
+  cd('wiki.firma.de', 'Wiki', 'Das Wiki ist weg. Gemerkt hat es nach einer Stunde jemand, der etwas eintragen wollte. Der Erste seit Monaten.'),
+  cd('sso.firma.de', 'Anmeldung für alles', 'Niemand kann sich mehr anmelden. Nirgends. Die Kaffeemaschine geht noch.'),
+  cd('tickets.firma.de', 'Ticketsystem', 'Das Ticketsystem ist zu. Die Tickets kommen jetzt per Telefon. Alle gleichzeitig.'),
+  cd('status.firma.de', 'Statusseite', 'Die Statusseite meldet ihren eigenen Ausfall nicht. Sie ist ja ausgefallen.'),
+];
+
+/** Tauchen mitten im Spiel auf: keiner wusste, dass es sie gibt */
+export const CERT_SURPRISES: CertDomain[] = [
+  cd('gewinnspiel2019.firma.de', 'Gewinnspiel von 2019, läuft noch', 'Das Gewinnspiel ist weg. Beschwert hat sich genau einer. Er hatte gewonnen.'),
+  cd('drucker3og.firma.de', 'Drucker mit eigener Webseite', 'Der Drucker zeigt eine Zertifikatswarnung an. Er druckt sie auch aus.'),
+  cd('blog-chef.firma.de', 'Blog vom Chef, ein Artikel (2020)', 'Der Chef hat die Warnung sofort bemerkt. Er liest seinen Blog täglich.'),
+  cd('shop-alt.firma.de', 'Alter Shop, „wird 2021 abgeschaltet“', 'Der alte Shop ist weg. Wie geplant, nur drei Jahre später und aus Versehen.'),
+];
+
+// --- USV / Stromausfall ---
+
+export interface UpsServer {
+  name: string;
+  role: string;
+  /** diese Server müssen laufen, solange dieser läuft */
+  needs: string[];
+}
+
+const srv = (name: string, role: string, needs: string[]): UpsServer => ({ name, role, needs });
+
+/** Anwendungen: davon kommen einige pro Runde */
+export const UPS_FRONT: UpsServer[] = [
+  srv('web01', 'Webshop', ['db01', 'nas01']),
+  srv('app01', 'Warenwirtschaft', ['db01', 'ldap01']),
+  srv('mail01', 'Mail', ['ldap01', 'nas01']),
+  srv('wiki01', 'Wiki', ['db01']),
+  srv('print01', 'Druckserver', ['ldap01']),
+  srv('ci01', 'Buildserver', ['nas01']),
+  srv('crm01', 'CRM', ['db01', 'ldap01']),
+];
+
+/** Immer dabei: darauf bauen die anderen auf */
+export const UPS_CORE: UpsServer[] = [srv('db01', 'Datenbank', ['nas01']), srv('ldap01', 'Anmeldung', []), srv('nas01', 'Speicher (NFS)', [])];
+
+/** Was nach einem Absturz noch passiert (zufällig) */
+export const UPS_CRASH_AFTER = [
+  'Beim nächsten Start: Dateisystemprüfung, 40 Minuten.',
+  'Die letzten zehn Minuten Daten sind weg.',
+  'Das Journal wird beim Start erst mal komplett nachgelesen.',
+  'Die Logdatei endet mitten im Satz.',
+];
+
+// --- Serverraum-Klima ---
+
+export interface CoolEvent {
+  /** {rack} wird durch den Namen ersetzt; ohne {rack} betrifft es alle Zonen */
+  text: string;
+  /** Änderung der Abwärme */
+  delta: number;
+}
+
+const ce = (text: string, delta: number): CoolEvent => ({ text, delta });
+
+export const COOL_EVENTS: CoolEvent[] = [
+  ce('Backup startet auf {rack}. Die Platten werden warm.', 0.3),
+  ce('Der Buildserver in {rack} baut den Monolithen. Komplett.', 0.35),
+  ce('{rack}: Jemand hat den Benchmark „nur kurz“ angeworfen.', 0.3),
+  ce('{rack}: Der Datenbank-Index wird neu aufgebaut. Alle Kerne glühen.', 0.3),
+  ce('Ein Server in {rack} hat sich schlafen gelegt. Weniger Abwärme.', -0.3),
+  ce('{rack}: Das Backup ist fertig. Die Platten kühlen ab.', -0.3),
+  ce('Jemand hat in {rack} einen Ventilator von zu Hause hingestellt. Er hilft sogar.', -0.25),
+  ce('Die Tür zum Serverraum steht offen. Draußen sind 31 °C.', 0.2),
+  ce('Die Sonne steht jetzt auf dem Fenster vom Serverraum. Ja, er hat eins.', 0.15),
+  ce('Ein Gewitter zieht auf, es wird kühler. Endlich spielt das Wetter mal mit.', -0.15),
+];
+
+// --- Hardware einbauen (Rack) ---
+
+export interface RackDevice {
+  name: string;
+  /** was es ist (kleine Zeile) */
+  what: string;
+  he: number;
+  kg: number;
+  heavy?: boolean;
+  /** wie die Front aussieht (angedeutet) */
+  look: RackLook;
+}
+
+export type RackLook = 'switch' | 'patch' | 'ups' | 'server' | 'storage' | 'gpu' | 'firewall' | 'tape' | 'kvm' | 'cable' | 'blank' | 'mystery';
+
+const dev = (name: string, what: string, he: number, kg: number, look: RackLook, heavy = false): RackDevice => ({ name, what, he, kg, heavy, look });
+
+/** Lieferung: davon kommt pro Runde ein schweres und mehrere andere */
+export const RACK_NEW: RackDevice[] = [
+  dev('sw-acc05', 'Switch', 1, 4, 'switch'),
+  dev('fw02', 'Firewall', 1, 6, 'firewall'),
+  dev('srv-app03', 'Server', 2, 24, 'server'),
+  dev('srv-db02', 'Datenbankserver', 2, 27, 'server'),
+  dev('srv-mail02', 'Mailserver', 2, 22, 'server'),
+  dev('tape01', 'Bandlaufwerk', 3, 21, 'tape'),
+  dev('nas02', 'Storage', 4, 41, 'storage', true),
+  dev('gpu01', 'GPU-Server für „KI“', 4, 38, 'gpu', true),
+];
+
+/** Steht schon im Rack */
+export const RACK_OLD: RackDevice[] = [
+  dev('Patchfeld', '24 Ports, 3 beschriftet', 1, 2, 'patch'),
+  dev('sw-core01', 'Core-Switch', 1, 7, 'switch'),
+  dev('Kabelbügel', 'theoretisch', 1, 1, 'cable'),
+  dev('srv-web01', 'Webserver', 2, 23, 'server'),
+  dev('???', 'läuft seit 2014, keiner weiß wofür', 2, 25, 'mystery'),
+  dev('KVM', 'Monitor-Schublade zum Ausklappen', 1, 12, 'kvm'),
+];
+
+/** Füllt Rest-Höheneinheiten (eine Blende, kein Gerät) */
+export const RACK_BLANK: RackDevice = dev('Blindblende', 'hält die kalte Luft drin', 1, 0, 'blank');
+
+export const RACK_UPS: RackDevice = dev('usv01', 'USV', 2, 30, 'ups');
+
+/** Hat keine Rackschienen: muss in die Retoure */
+export const RACK_ODD: { name: string; what: string; desc: string }[] = [
+  { name: 'Tower-Server', what: 'mit Rollen', desc: 'Ohne Rackschienen. „Passt schon irgendwie“, sagt der Einkauf.' },
+  { name: 'Desktop-NAS', what: 'Weihnachtsangebot', desc: 'Aus dem Elektromarkt. Vier Platten, ein Lüfter, kein Rack.' },
+  { name: 'Mini-PC', what: 'mit Klettband', desc: 'Der Vertrieb will ihn „ins Rechenzentrum“. Er hat eine Halterung für die Monitorrückseite.' },
+];

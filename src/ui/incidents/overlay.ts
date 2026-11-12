@@ -13,6 +13,11 @@ import { spamGame } from './spam';
 import { logGrepGame } from './loggrep';
 import { networkGame } from './network';
 import { patchGame } from './patch';
+import { diskFullGame } from './diskfull';
+import { certsGame } from './certs';
+import { upsGame } from './ups';
+import { coolingGame } from './cooling';
+import { rackGame } from './rack';
 import type { Minigame } from './types';
 
 const GAMES: Record<IncidentId, () => Minigame> = {
@@ -22,6 +27,11 @@ const GAMES: Record<IncidentId, () => Minigame> = {
   loggrep: logGrepGame,
   network: networkGame,
   patch: patchGame,
+  diskfull: diskFullGame,
+  certs: certsGame,
+  ups: upsGame,
+  cooling: coolingGame,
+  rack: rackGame,
 };
 
 const p2 = (n: number) => String(n).padStart(2, '0');
@@ -298,8 +308,9 @@ export function mountIncidentOverlay(ctx: AppContext): void {
     const text = INCIDENT_TEXT[id];
     const game = GAMES[id]();
     // Service Mesh (Kubernetes Stufe 3): Selbstheilung verschafft 30 % mehr Zeit.
-    // Nicht beim RAID: da geht es ums Durchhalten, mehr Zeit wäre dort eine Strafe.
-    const duration = INCIDENTS.games[id].durationMs * (ctx.state.upgrades['k8s-3'] && id !== 'raid' ? 1.3 : 1);
+    // Nicht bei Spielen ums Durchhalten (survival: RAID, Zertifikate, Klima): mehr Zeit wäre dort eine Strafe.
+    const cfg: { durationMs: number; survival?: boolean } = INCIDENTS.games[id];
+    const duration = cfg.durationMs * (ctx.state.upgrades['k8s-3'] && !cfg.survival ? 1.3 : 1);
     // Doku gefunden (Server unterm Tisch Stufe 3): ein Fehlgriff zählt nicht, weder in der Wertung noch als Zeitstrafe
     const forgive = ctx.state.upgrades['undertable-3'] ? 1 : 0;
     setForgivenMistakes(forgive);

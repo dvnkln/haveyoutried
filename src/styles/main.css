@@ -12198,3 +12198,1377 @@ html:not([data-os='mac']) #app .work.tight .browser .br-url {
   font-size: 9.5px;
   line-height: 1.3;
 }
+
+/* ---------- Platte voll: Belegungskarte wie WinDirStat (Kacheln nach Größe, Kissen-Schattierung) ---------- */
+.incident .inc-game-root > .du {
+  margin-block: auto;
+}
+.du {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.du-win {
+  display: flex;
+  flex-direction: column;
+  border: var(--outline) solid var(--ink);
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 4px 0 var(--ink);
+  overflow: hidden;
+}
+.du-gauge {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 6px 8px 7px;
+  border-bottom: 2px solid var(--ink);
+  background: #f4f1f8;
+  color: var(--ink);
+  font: 600 11px / 1.2 var(--font-ui);
+}
+.du-bar {
+  position: relative;
+  height: 12px;
+  border: 1.5px solid var(--ink);
+  border-radius: 4px;
+  background: #fff;
+}
+.du-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 2px 0 0 2px;
+  background: #3cc47c;
+  transition: width 0.25s ease-out;
+}
+.du-fill[data-level='warn'] {
+  background: #ffc74d;
+}
+.du-fill[data-level='crit'] {
+  background: #ff7a7a;
+}
+/* Zielmarke: bis hierhin muss der Balken runter */
+.du-goal {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  border-left: 2px dashed var(--ink);
+}
+.du-map {
+  position: relative;
+  aspect-ratio: 100 / 92;
+  background: #fff;
+}
+.du-tile {
+  --c: #d6d0c4;
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  margin: 0;
+  padding: 4px 5px;
+  border: 0;
+  border-radius: 0;
+  /* Kissen wie WinDirStat: Licht oben links, Kante als Linie */
+  background:
+    radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0) 70%),
+    var(--c);
+  box-shadow: inset 0 0 0 1px var(--ink);
+  color: var(--ink);
+  font: 600 10.5px / 1.15 var(--font-ui);
+  text-align: left;
+  overflow: hidden;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.du-name {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  /* lieber „Drucker-treiber“ als „Druckertre-iber“ */
+  hyphens: auto;
+}
+.du-size {
+  font-weight: 400;
+  color: rgba(61, 44, 46, 0.75);
+}
+.du-tile.selected {
+  z-index: 1;
+  box-shadow:
+    inset 0 0 0 3px var(--ink),
+    inset 0 0 0 5px #fff;
+}
+.du-tile[data-gone] {
+  background: repeating-linear-gradient(45deg, #f4f1f8 0 6px, #e9e4f0 6px 12px);
+  cursor: default;
+}
+.du-tile[data-gone] > * {
+  visibility: hidden;
+}
+.du-tile[data-gone]::after {
+  content: 'frei';
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+.du-tile.k-video { --c: #ffb4a2; }
+.du-tile.k-archive { --c: #ffd98a; }
+.du-tile.k-db { --c: #a8d8ff; }
+.du-tile.k-mail { --c: #c9b6ff; }
+.du-tile.k-iso { --c: #b8e6b0; }
+.du-tile.k-log { --c: #f6c6e0; }
+.du-tile.k-sys { --c: #d6d0c4; }
+.du-tile.k-vm { --c: #9fe0d6; }
+.du-tile.k-table { --c: #c4e88a; }
+.du-tile.k-home { --c: #ffe3a6; }
+.du-info {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+  padding: 7px 8px 8px;
+  border-top: 2px solid var(--ink);
+  background: #f4f1f8;
+}
+.du-text {
+  flex: 1;
+  min-width: 0;
+  /* feste Höhe (Pfad, Balken, drei Zeilen): wechselnde Texte schieben nichts herum */
+  height: 7.4em;
+  padding: 4px 7px;
+  border: 1.5px solid var(--ink);
+  border-radius: 4px;
+  background: #fff;
+  color: var(--ink);
+  font: 400 12px / 1.3 var(--font-ui);
+  overflow: hidden;
+}
+.du-path {
+  color: var(--ink-soft);
+  font: 11px / 1.3 var(--font);
+  overflow-wrap: anywhere;
+}
+.du-desc.warn {
+  color: var(--red);
+  font-weight: 600;
+}
+.du-desc.ok {
+  color: var(--green);
+  font-weight: 600;
+}
+.incident .du-rm {
+  flex: 0 0 auto;
+  min-width: 72px;
+  font-family: var(--font);
+  font-size: 13px;
+}
+.incident .du-rm:not(:disabled) {
+  background: #ff8e8e;
+  box-shadow: inset 0 -3px 0 #d96464;
+}
+.incident .du-rm:disabled {
+  color: var(--ink-soft);
+  opacity: 0.6;
+}
+/* Menüleiste und Laufwerkszeile wie in QDirStat/WinDirStat */
+.du-menu {
+  display: flex;
+  gap: 10px;
+  padding: 2px 8px;
+  border-bottom: 1.5px solid #c9c2d6;
+  background: #fff;
+  color: var(--ink);
+  font: 400 10.5px / 1.4 var(--font-ui);
+  white-space: nowrap;
+  overflow: hidden;
+}
+.du-menu > span:first-letter {
+  text-decoration: underline;
+}
+.du-drive {
+  color: var(--ink-soft);
+  font-weight: 400;
+}
+.du-drive > b {
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 10.5px;
+}
+.du-pct {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 2px 0 3px;
+  color: var(--ink);
+  font: 600 11px / 1.2 var(--font-ui);
+}
+.du-pct[hidden] {
+  display: none;
+}
+.du-pct-bar {
+  position: relative;
+  flex: 0 0 64px;
+  height: 9px;
+  border: 1.5px solid var(--ink);
+  border-radius: 2px;
+  background: #fff;
+  overflow: hidden;
+}
+.du-pct-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: #8fa8ff;
+}
+.incident .du-rm {
+  align-self: stretch;
+}
+
+/* ---------- Zertifikate: Ablaufdaten wie im Monitoring (Uptime Kuma), darunter certbot im Terminal ---------- */
+.incident .inc-game-root > .certs {
+  margin-block: auto;
+}
+.certs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.cert-win {
+  border: var(--outline) solid var(--ink);
+  border-radius: 10px;
+  background: #f4f6f8;
+  box-shadow: 0 4px 0 var(--ink);
+  overflow: hidden;
+}
+.cert-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 9px;
+  border-bottom: 2px solid var(--ink);
+  background: #fff;
+  color: var(--ink);
+  font: 600 13px / 1.2 var(--font-ui);
+}
+.cert-logo {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid var(--ink);
+  border-radius: 50%;
+  background: #5cdd8b;
+  font-size: 11px;
+}
+.cert-tab {
+  margin-left: auto;
+  padding: 1px 8px;
+  border-radius: 99px;
+  background: #e6ebf0;
+  color: var(--ink-soft);
+  font-size: 11px;
+}
+.cert-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 7px;
+}
+.cert-row {
+  display: grid;
+  grid-template-columns: 66px minmax(0, 1fr) 70px;
+  align-items: center;
+  gap: 7px;
+  min-height: 46px;
+  margin: 0;
+  padding: 5px 8px 5px 6px;
+  border: 1.5px solid var(--ink);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: inset 0 -2px 0 rgba(61, 44, 46, 0.12);
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.cert-scan {
+  display: none;
+}
+/* Platzhalter für später entdeckte Domains: hält den Platz, verrät aber nichts */
+.cert-row[data-state='hidden'] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-style: dashed;
+  border-color: #b9b0c4;
+  background: transparent;
+  box-shadow: none;
+  pointer-events: none;
+}
+.cert-row[data-state='hidden'] > * {
+  display: none;
+}
+.cert-row[data-state='hidden'] > .cert-scan {
+  display: block;
+  color: #a49fb5;
+  font: 400 11px var(--font);
+}
+.cert-row[data-busy='1']:not([data-state='renewing']) {
+  opacity: 0.72;
+}
+.cert-pill {
+  justify-self: start;
+  padding: 2px 7px;
+  border: 1.5px solid var(--ink);
+  border-radius: 99px;
+  background: #5cdd8b;
+  font: 600 10px / 1.2 var(--font-ui);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.cert-row[data-state='due'] .cert-pill {
+  background: #ffc74d;
+}
+.cert-row[data-state='crit'] .cert-pill {
+  background: #ff9a6b;
+}
+.cert-row[data-state='expired'] {
+  background: #fff1f1;
+}
+.cert-row[data-state='expired'] .cert-pill {
+  background: #ff6b6b;
+  color: #fff;
+}
+.cert-row[data-state='renewing'] {
+  background: #eef4ff;
+}
+.cert-row[data-state='renewing'] .cert-pill {
+  background: #8fb0ff;
+  font-size: 9px;
+}
+.cert-name {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.cert-name > b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 600 11.5px / 1.25 var(--font);
+}
+.cert-name > small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink-soft);
+  font: 400 11px / 1.25 var(--font-ui);
+}
+.cert-row.surprise .cert-name > b::after {
+  content: ' neu';
+  color: #c26f00;
+  font: 600 10px var(--font-ui);
+}
+.cert-life {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  font: 600 11px / 1.2 var(--font-ui);
+  white-space: nowrap;
+}
+.cert-bar {
+  position: relative;
+  width: 100%;
+  height: 7px;
+  border: 1.5px solid var(--ink);
+  border-radius: 4px;
+  background: #fff;
+}
+.cert-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 2px;
+  background: #5cdd8b;
+}
+.cert-row:is([data-state='due'], [data-state='crit']) .cert-fill {
+  background: #ffb03b;
+}
+/* ab hier erneuert certbot */
+.cert-due {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  border-left: 1.5px dashed var(--ink);
+}
+.cert-term {
+  height: 74px;
+  overflow: hidden;
+  padding: 5px 8px;
+  color: #e9e6f2;
+  font: 11px / 1.35 var(--font);
+}
+.cert-line {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cert-line.cmd {
+  color: #f4f1f8;
+}
+.cert-line.ok {
+  color: #8ee6b4;
+}
+.cert-line.err {
+  color: #ff9a9a;
+}
+.cert-line.warn {
+  color: #ffd27a;
+}
+.cert-line.dim {
+  color: #a49fb5;
+}
+.cert-reply {
+  min-height: 2.7em;
+  color: var(--red);
+  font: 600 12px / 1.35 var(--font-ui);
+}
+.cert-meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #9a90a6;
+  font: 500 10px / 1.3 var(--font-ui);
+}
+.cert-lock {
+  display: inline-block;
+  width: 8px;
+  height: 10px;
+  margin-right: 4px;
+  vertical-align: -1px;
+  color: #23915c;
+}
+.cert-lock > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.cert-row:is([data-state='due'], [data-state='crit']) .cert-lock {
+  color: #c26f00;
+}
+.cert-row[data-state='expired'] .cert-lock {
+  color: var(--red);
+}
+
+/* ---------- USV: Gerät mit LC-Display (wie APC Smart-UPS), darunter das Rack mit 1-HE-Servern ---------- */
+.incident .inc-game-root > .ups {
+  margin-block: auto;
+}
+.ups {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ups-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 7px 9px 9px;
+  border: var(--outline) solid var(--ink);
+  border-radius: 10px;
+  background: #3a3f4b;
+  box-shadow: 0 4px 0 var(--ink);
+}
+.ups-brand {
+  color: #c9cdd6;
+  font: 400 11px / 1.2 var(--font-ui);
+}
+.ups-brand > b {
+  color: #fff;
+  letter-spacing: 0.06em;
+}
+.ups-lcd {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 8px;
+  border: 2px solid #1e222b;
+  border-radius: 4px;
+  background: #cfe6ff;
+  box-shadow: inset 0 0 8px rgba(30, 60, 110, 0.35);
+  color: #17325c;
+  font: 600 11px / 1.25 var(--font);
+}
+.ups-mode {
+  letter-spacing: 0.04em;
+}
+.ups-lcd-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ups-batt {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1.5px solid #17325c;
+  border-radius: 2px;
+}
+.ups-batt > span {
+  width: 6px;
+  height: 12px;
+  background: rgba(23, 50, 92, 0.12);
+}
+.ups-batt > span.on {
+  background: #17325c;
+}
+.ups-vals {
+  display: flex;
+  flex-direction: column;
+  font-weight: 400;
+}
+.ups-rack {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 5px 0;
+  border: var(--outline) solid var(--ink);
+  border-radius: 10px;
+  background: #2f333d;
+  box-shadow: 0 4px 0 var(--ink);
+}
+.ups-unit {
+  position: relative;
+  display: grid;
+  grid-template-columns: 9px minmax(0, 1fr) 40px 9px;
+  align-items: stretch;
+  min-height: 50px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-block: 1.5px solid #1e222b;
+  background: #4a505d;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+/* Rack-Schienen mit Schraube */
+.ups-ear {
+  background:
+    radial-gradient(circle at 50% 50%, #9aa0ad 0 2px, transparent 2.5px),
+    #3b404b;
+}
+.ups-face {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  column-gap: 6px;
+  align-content: center;
+  margin: 4px 0;
+  padding: 3px 16px 3px 8px;
+  border: 1.5px solid #1e222b;
+  border-radius: 3px;
+  /* Lochblech rechts angedeutet */
+  background:
+    radial-gradient(circle, rgba(30, 34, 43, 0.22) 1px, transparent 1.4px) right 4px top 0 / 6px 6px repeat-y,
+    #eceaf1;
+}
+.ups-name {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+  white-space: nowrap;
+}
+.ups-name > b {
+  font: 600 12.5px / 1.2 var(--font);
+}
+.ups-name > small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--ink-soft);
+  font: 400 11px / 1.2 var(--font-ui);
+}
+.ups-needs {
+  grid-column: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink-soft);
+  font: 400 11px / 1.3 var(--font-ui);
+}
+.ups-needs > b {
+  color: var(--ink);
+  font: 600 10.5px var(--font);
+}
+.ups-needs > b.gone {
+  color: #a49fb5;
+  text-decoration: line-through;
+}
+.ups-state {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  color: #23915c;
+  font: 600 10.5px / 1.2 var(--font-ui);
+}
+.ups-power {
+  display: grid;
+  place-items: center;
+}
+/* Einschaltknopf mit LED-Ring */
+.ups-led {
+  width: 22px;
+  height: 22px;
+  border: 2px solid #1e222b;
+  border-radius: 50%;
+  background: #2b2f38;
+  box-shadow:
+    inset 0 0 0 3px #5cdd8b,
+    0 0 6px rgba(92, 221, 139, 0.6);
+}
+/* Halten: Balken unten füllt sich */
+.ups-hold {
+  position: absolute;
+  left: 9px;
+  bottom: 1px;
+  height: 4px;
+  width: calc((100% - 18px) * var(--hold, 0));
+  border-radius: 2px;
+  background: #ffc74d;
+}
+.ups-unit[data-state='stopping'] .ups-led {
+  box-shadow:
+    inset 0 0 0 3px #ffc74d,
+    0 0 6px rgba(255, 199, 77, 0.7);
+}
+.ups-unit[data-state='stopping'] .ups-state {
+  color: #c26f00;
+}
+.ups-unit[data-state='off'] {
+  cursor: default;
+}
+.ups-unit[data-state='off'] .ups-face {
+  background: #c9c6cf;
+}
+.ups-unit[data-state='off'] .ups-face,
+.ups-unit[data-state='off'] .ups-needs > b {
+  color: #6d6577;
+}
+.ups-unit[data-state='off'] .ups-state {
+  color: #4f4858;
+}
+.ups-unit[data-state='off'] .ups-led {
+  box-shadow: inset 0 0 0 3px #4a4f5a;
+}
+.ups-unit[data-state='crashed'] {
+  cursor: default;
+}
+.ups-unit[data-state='crashed'] .ups-face {
+  background: #ffd9d9;
+}
+.ups-unit[data-state='crashed'] .ups-state {
+  color: var(--red);
+}
+.ups-unit[data-state='crashed'] .ups-led {
+  box-shadow:
+    inset 0 0 0 3px #ff6b6b,
+    0 0 6px rgba(255, 107, 107, 0.6);
+}
+.ups-reply {
+  min-height: 2.7em;
+  color: var(--red);
+  font: 600 12px / 1.35 var(--font-ui);
+}
+
+/* ---------- Serverraum-Klima: Bedienfeld der Gebäudeleittechnik, je Zone Anzeige, Thermometer, Regler ---------- */
+.incident .inc-game-root > .cool {
+  margin-block: auto;
+}
+.cool {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.cool-win {
+  border: var(--outline) solid var(--ink);
+  border-radius: 10px;
+  background: #e9edf1;
+  box-shadow: 0 4px 0 var(--ink);
+  overflow: hidden;
+}
+.cool-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 6px;
+  padding: 5px 9px;
+  border-bottom: 2px solid var(--ink);
+  background: #34495e;
+  color: #d5dee8;
+  font: 400 10.5px / 1.35 var(--font-ui);
+}
+.cool-head > b {
+  width: 100%;
+  color: #fff;
+  font-size: 12px;
+}
+.cool-fault {
+  padding: 0 5px;
+  border-radius: 3px;
+  background: #ff6b6b;
+  color: #fff;
+  font-weight: 600;
+}
+.cool-zones {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  padding: 8px;
+}
+.cool-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 4px 7px;
+  border: 1.5px solid var(--ink);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  transition: background-color 0.3s;
+}
+.cool-zone[data-state='hot'] {
+  background: #ffe9e0;
+}
+.cool-zone[data-state='cold'] {
+  background: #e5f1ff;
+}
+.cool-name {
+  font: 600 12px / 1.2 var(--font-ui);
+}
+.cool-lcd {
+  align-self: stretch;
+  padding: 3px 0;
+  border: 1.5px solid #1e222b;
+  border-radius: 4px;
+  background: #20262e;
+  color: #8ee6b4;
+  font: 600 14px / 1.2 var(--font);
+  text-align: center;
+  white-space: nowrap;
+}
+.cool-zone[data-state='hot'] .cool-lcd {
+  color: #ff9a9a;
+}
+.cool-zone[data-state='cold'] .cool-lcd {
+  color: #9ad0ff;
+}
+.cool-trend {
+  color: var(--ink-soft);
+  font: 400 10.5px / 1.2 var(--font-ui);
+  white-space: nowrap;
+}
+.cool-ctl {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  height: 170px;
+  margin-top: 4px;
+}
+/* Thermometer: grüner Bereich, Strich = aktuelle Temperatur */
+.cool-thermo {
+  position: relative;
+  width: 12px;
+  margin-left: 16px;
+  border: 1.5px solid var(--ink);
+  border-radius: 6px;
+  background: linear-gradient(#ffd6cc, #fff 45%, #dcebff);
+}
+.cool-band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: rgba(60, 196, 124, 0.45);
+}
+.cool-tick {
+  position: absolute;
+  right: calc(100% + 3px);
+  transform: translateY(50%);
+  color: var(--ink-soft);
+  font: 400 9.5px / 1 var(--font-ui);
+}
+.cool-mark {
+  position: absolute;
+  left: -5px;
+  right: -5px;
+  height: 3px;
+  transform: translateY(50%);
+  border-radius: 2px;
+  background: var(--ink);
+  transition: bottom 0.1s linear;
+}
+/* Regler: ganze Schiene ist Trefferfläche */
+.cool-track {
+  --p: 0.5;
+  position: relative;
+  width: 40px;
+  border: 1.5px solid var(--ink);
+  border-radius: 10px;
+  background: #eef1f4;
+  cursor: ns-resize;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.cool-fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(var(--p) * 100%);
+  border-radius: 0 0 8px 8px;
+  background: #9fd4ff;
+}
+.cool-knob {
+  position: absolute;
+  left: -5px;
+  right: -5px;
+  bottom: calc(var(--p) * 100%);
+  height: 18px;
+  transform: translateY(50%);
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+  background:
+    linear-gradient(transparent 7px, #b9b0c4 7px 9px, transparent 9px),
+    #fff;
+  box-shadow: 0 2px 0 var(--ink);
+}
+.cool-fan {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--ink-soft);
+  font: 400 10.5px / 1.2 var(--font-ui);
+}
+.cool-pct {
+  color: var(--ink);
+  font: 600 12px / 1.2 var(--font);
+}
+.cool-reply {
+  min-height: 2.7em;
+  color: #c26f00;
+  font: 600 12px / 1.35 var(--font-ui);
+}
+.cool-reply[data-kind='cold'] {
+  color: #2f6db5;
+}
+/* Pfeil am Thermometer: dorthin läuft die Temperatur (grün, wenn das Ziel passt) */
+.cool-aim {
+  position: absolute;
+  left: calc(100% + 2px);
+  width: 0;
+  height: 0;
+  transform: translateY(50%);
+  border-block: 7px solid transparent;
+  border-right: 11px solid #ff6b6b;
+  transition: bottom 0.15s ease-out;
+}
+.cool-aim[data-ok='1'] {
+  border-right-color: #23915c;
+}
+.cool-end {
+  position: absolute;
+  left: 0;
+  right: 0;
+  color: var(--ink-soft);
+  font: 400 9.5px / 1 var(--font-ui);
+  text-align: center;
+  pointer-events: none;
+}
+.cool-end.top {
+  top: 4px;
+}
+.cool-end.bottom {
+  bottom: 4px;
+}
+/* Platz für den Pfeil zwischen Thermometer und Regler */
+.cool-ctl {
+  gap: 14px;
+}
+.cool-track {
+  width: 44px;
+}
+
+/* ---------- Rack: 19-Zoll-Schrank mit HE-Schiene, rechts die Lieferung als Kartons ---------- */
+.incident .inc-game-root > .rk {
+  margin-block: auto;
+}
+.rk {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.rk-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+}
+.rk-frame {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  padding: 6px 6px 6px 3px;
+  border: var(--outline) solid var(--ink);
+  border-radius: 8px;
+  background: #2f333d;
+  box-shadow: 0 4px 0 var(--ink);
+}
+.rk-rail {
+  display: grid;
+  grid-template-rows: repeat(18, 1fr);
+  height: 360px;
+  color: #9aa0ad;
+  font: 400 8.5px / 1 var(--font);
+}
+.rk-rail > span {
+  display: grid;
+  place-items: center;
+}
+.rk-cab {
+  position: relative;
+  height: 360px;
+  border-inline: 3px solid #4a505d;
+  background: repeating-linear-gradient(#262a32 0 19px, #1f232a 19px 20px);
+}
+.rk-dev,
+.rk-gap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 0 6px;
+  border: 0;
+  text-align: left;
+}
+.rk-dev {
+  display: flex;
+  align-items: center;
+  border-block: 1px solid #1e222b;
+  background: linear-gradient(#5b6271, #4a505d);
+  color: #eef0f4;
+  overflow: hidden;
+}
+/* neu eingebaut: sieht aus wie die anderen, mit grünem Rand (antippen = ausbauen) */
+.rk-dev.new {
+  box-shadow: inset 0 0 0 2px #5cdd8b;
+  cursor: pointer;
+}
+.rk-face {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: baseline;
+  gap: 5px;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.rk-face > b {
+  /* Name hat Vorrang, die Beschreibung bekommt den Rest */
+  flex: 0 0 auto;
+  font: 600 10.5px / 1.1 var(--font);
+}
+.rk-face > small {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0.75;
+  font: 400 9.5px / 1.1 var(--font-ui);
+}
+.rk-gap {
+  display: grid;
+  place-items: center;
+  background: transparent;
+  color: #8a909d;
+  font: 400 10px / 1 var(--font-ui);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.rk-gap.fit {
+  z-index: 1;
+  background: rgba(92, 221, 139, 0.25);
+  box-shadow: inset 0 0 0 2px #5cdd8b;
+  color: #c9f5d9;
+  font-weight: 600;
+}
+.rk-gap.nofit {
+  opacity: 0.45;
+}
+/* Linie: Schweres nur darunter */
+.rk-half {
+  position: absolute;
+  left: -3px;
+  right: -3px;
+  z-index: 2;
+  border-top: 2px dashed #ffc74d;
+  pointer-events: none;
+}
+.rk-legend {
+  grid-column: 1 / -1;
+  margin-top: 5px;
+  color: #ffc74d;
+  font: 600 9.5px / 1.2 var(--font-ui);
+  text-align: center;
+}
+.rk-tray {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+/* Karton: braun, mit Klebeband */
+.rk-box {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  min-height: 48px;
+  margin: 0;
+  padding: 5px 7px 5px 9px;
+  border: 1.5px solid var(--ink);
+  border-radius: 6px;
+  background:
+    linear-gradient(90deg, transparent 0 calc(100% - 22px), rgba(255, 255, 255, 0.35) calc(100% - 22px) calc(100% - 12px), transparent calc(100% - 12px)),
+    #e6c48f;
+  box-shadow: inset 0 -3px 0 rgba(61, 44, 46, 0.18);
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.rk-box > b {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 600 11px / 1.2 var(--font);
+}
+.rk-box > small {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #6b5236;
+  font: 400 10px / 1.2 var(--font-ui);
+}
+.rk-spec {
+  font: 600 10.5px / 1.2 var(--font-ui);
+}
+.rk-heavy {
+  position: absolute;
+  top: 4px;
+  right: 5px;
+  padding: 0 4px;
+  border-radius: 3px;
+  background: #3a3f4b;
+  color: #ffc74d;
+  font: 600 9px / 1.4 var(--font-ui);
+}
+.rk-box.odd {
+  /* Packpapier-Karton: Klebeband quer, Klappe oben angedeutet */
+  min-height: 62px;
+  padding: 7px 9px 6px;
+  border: 1.5px solid #7a5530;
+  border-radius: 3px;
+  background:
+    linear-gradient(#b8854a, #b8854a) 0 9px / 100% 1px no-repeat,
+    linear-gradient(90deg, transparent 0 58%, rgba(233, 197, 143, 0.9) 58% 72%, transparent 72%),
+    #d8a868;
+  box-shadow: inset 0 -3px 0 rgba(90, 60, 30, 0.25), 0 2px 0 #7a5530;
+  color: #3d2c2e;
+}
+.rk-box.selected {
+  z-index: 1;
+  box-shadow:
+    0 0 0 3px #5cdd8b,
+    inset 0 -3px 0 rgba(61, 44, 46, 0.18);
+}
+.rk-box.placed {
+  opacity: 0.35;
+  cursor: default;
+}
+.rk-return {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  margin: 2px 0 0;
+  padding: 4px;
+  border: 2px dashed #8a7466;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+}
+.rk-return > b {
+  font: 600 12px / 1.2 var(--font-ui);
+}
+.rk-return > small {
+  color: var(--ink-soft);
+  font: 400 10px / 1.2 var(--font-ui);
+}
+.rk-info {
+  min-height: 2.7em;
+  color: var(--ink);
+  font: 600 12px / 1.35 var(--font-ui);
+}
+.rk-info[data-kind='warn'] {
+  color: var(--red);
+}
+.rk-info[data-kind='ok'] {
+  color: #1f7a50;
+}
+
+/* ---------- Rack: angedeutete Fronten je Gerätetyp (rechts neben dem Namen) ---------- */
+.rk-dev {
+  gap: 6px;
+}
+.rk-deco {
+  position: relative;
+  flex: 0 1 38%;
+  min-width: 24px;
+  align-self: stretch;
+  margin: 3px 0;
+}
+/* Switch: Portreihe mit Link-LEDs darüber */
+.look-switch .rk-deco {
+  background:
+    radial-gradient(circle, #5cdd8b 0 1.2px, transparent 1.6px) 0 1px / 8px 4px repeat-x,
+    repeating-linear-gradient(90deg, #15181e 0 6px, transparent 6px 8px) 0 5px / 100% 7px no-repeat;
+}
+:is(.rk-dev, .rk-card).look-switch {
+  background: linear-gradient(#4f6a8a, #3f5672);
+}
+/* Patchfeld: helle Buchsen auf schwarzem Blech */
+.look-patch .rk-deco {
+  background: repeating-linear-gradient(90deg, #e9ecf1 0 5px, #e9ecf1 5px 5px, transparent 5px 8px) 0 50% / 100% 7px no-repeat;
+}
+:is(.rk-dev, .rk-card).look-patch {
+  background: linear-gradient(#2b2f38, #1f232a);
+}
+/* USV: kleines blaues Display und drei Knöpfe */
+.look-ups .rk-deco {
+  background:
+    linear-gradient(#cfe6ff, #cfe6ff) 0 50% / 42% 11px no-repeat,
+    radial-gradient(circle, #9aa0ad 0 2.5px, transparent 3px) 62% 50% / 8px 8px no-repeat,
+    radial-gradient(circle, #9aa0ad 0 2.5px, transparent 3px) 80% 50% / 8px 8px no-repeat,
+    radial-gradient(circle, #5cdd8b 0 2.5px, transparent 3px) 98% 50% / 8px 8px no-repeat;
+}
+:is(.rk-dev, .rk-card).look-ups {
+  background: linear-gradient(#2b2f38, #1f232a);
+}
+/* Server: Plattenschächte, rechts Betriebs-LED */
+.look-server .rk-deco,
+.look-mystery .rk-deco {
+  background:
+    radial-gradient(circle, #5cdd8b 0 2px, transparent 2.5px) 100% 4px / 6px 6px no-repeat,
+    repeating-linear-gradient(90deg, #2b2f38 0 9px, #8a909d 9px 10px, #2b2f38 10px 11px, transparent 11px 13px) 0 0 / calc(100% - 9px) 100% no-repeat;
+  border-radius: 2px;
+}
+/* ???: gelber Zettel mit Fragezeichen */
+.look-mystery .rk-deco::after {
+  content: '?';
+  position: absolute;
+  left: 22%;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  transform: translateY(-50%) rotate(-6deg);
+  background: #ffe27a;
+  color: var(--ink);
+  font: 600 11px / 1 var(--font-ui);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+}
+/* Storage: Raster aus Plattenschächten */
+.look-storage .rk-deco {
+  background:
+    repeating-linear-gradient(90deg, transparent 0 10px, #4a505d 10px 12px),
+    repeating-linear-gradient(transparent 0 11px, #4a505d 11px 13px),
+    #23272f;
+  background-clip: padding-box;
+  border: 1px solid #1e222b;
+  border-radius: 2px;
+}
+.look-storage .rk-deco::after {
+  content: '';
+  position: absolute;
+  inset: 3px 4px auto auto;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #5cdd8b;
+}
+/* GPU-Server: großes Lüftungsgitter */
+.look-gpu .rk-deco {
+  background:
+    radial-gradient(circle, #1e222b 0 2.2px, transparent 2.6px) 0 0 / 7px 7px,
+    radial-gradient(circle, #1e222b 0 2.2px, transparent 2.6px) 3.5px 3.5px / 7px 7px,
+    #6b7383;
+  border: 1px solid #1e222b;
+  border-radius: 3px;
+}
+:is(.rk-dev, .rk-card).look-gpu {
+  background: linear-gradient(#3a3f4b, #2b2f38);
+}
+/* Firewall: wenige Ports, orangefarbene Front */
+.look-firewall .rk-deco {
+  background: repeating-linear-gradient(90deg, #15181e 0 6px, transparent 6px 9px) 100% 50% / 35px 8px no-repeat;
+}
+:is(.rk-dev, .rk-card).look-firewall {
+  background: linear-gradient(#d9733b, #b85d2c);
+}
+/* Bandlaufwerk: Kassettenschlitz und Auswurfknopf */
+.look-tape .rk-deco {
+  background:
+    linear-gradient(#15181e, #15181e) 0 50% / 72% 7px no-repeat,
+    radial-gradient(circle, #c9cdd6 0 3px, transparent 3.5px) 90% 50% / 10px 10px no-repeat;
+}
+/* KVM-Schublade: Griff */
+.look-kvm .rk-deco {
+  background: linear-gradient(#aeb4c0, #8a909d) 50% 50% / 70% 6px no-repeat;
+  border-radius: 3px;
+}
+/* Kabelführung: Bügel */
+.look-cable .rk-deco {
+  /* Bügel: helle Halbbögen nebeneinander */
+  background: radial-gradient(ellipse 5px 6px at 50% 100%, transparent 0 3px, #aeb4c0 3.5px 5px, transparent 5.5px) 0 60% / 14px 10px repeat-x;
+}
+:is(.rk-dev, .rk-card).look-cable {
+  background: linear-gradient(#3a3f4b, #2b2f38);
+}
+/* Blindblende: glattes Blech mit Schrauben links und rechts */
+:is(.rk-dev, .rk-card).look-blank {
+  background: #3b404b;
+}
+.look-blank .rk-deco {
+  position: absolute;
+  inset: 0 3px;
+  margin: 0;
+  background:
+    radial-gradient(circle, #9aa0ad 0 1.8px, transparent 2.2px) 0 50% / 8px 8px no-repeat,
+    radial-gradient(circle, #9aa0ad 0 1.8px, transparent 2.2px) 100% 50% / 8px 8px no-repeat;
+}
+
+/* Lieferung: Geräte schon als Front, Höhe nach HE */
+.rk-card {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0 7px;
+  border: 1.5px solid #1e222b;
+  border-radius: 3px;
+  background: linear-gradient(#5b6271, #4a505d);
+  box-shadow: 0 2px 0 var(--ink);
+  color: #eef0f4;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.rk-card-text {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+}
+.rk-card-text > b {
+  font: 600 10.5px / 1.2 var(--font);
+  white-space: nowrap;
+}
+.rk-card .rk-spec {
+  color: #c9cdd6;
+  font: 400 10px / 1.2 var(--font-ui);
+  white-space: nowrap;
+}
+.rk-card .rk-spec > em {
+  display: block;
+  color: #ffc74d;
+  font-style: normal;
+  font-weight: 600;
+}
+.rk-card .rk-deco {
+  flex-basis: 34%;
+}
+.rk-card.selected {
+  z-index: 1;
+  box-shadow:
+    0 0 0 3px #5cdd8b,
+    0 2px 0 var(--ink);
+}
+.rk-card.placed {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.rk-box.odd > small {
+  color: #5a3d22;
+}
+.rk-up {
+  position: absolute;
+  top: 3px;
+  right: 6px;
+  color: #3d2c2e;
+  font: 600 11px / 1 var(--font-ui);
+  letter-spacing: -2px;
+}
+/* Versandaufkleber mit Strichcode */
+.rk-label {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  width: 26px;
+  height: 18px;
+  border: 1px solid #b8a080;
+  background:
+    repeating-linear-gradient(90deg, #3d2c2e 0 1px, transparent 1px 2px, #3d2c2e 2px 4px, transparent 4px 5px) 3px 9px / 20px 6px no-repeat,
+    linear-gradient(#cfc6b8, #cfc6b8) 3px 3px / 14px 2px no-repeat,
+    #fbf8f2;
+}
+.rk-box.odd > .rk-spec {
+  padding-right: 32px;
+}
+.rk-return-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+.rk-cart {
+  flex: 0 0 38px;
+  height: 46px;
+}
+.rk-cart > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.rk-cart-box {
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.rk-return.loaded .rk-cart-box {
+  opacity: 1;
+}
+.rk-return.loaded {
+  border-color: #23915c;
+}
