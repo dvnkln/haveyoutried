@@ -6,7 +6,7 @@
 
 import type { OsId } from '../content/systems';
 import { TAP_SOUND_IDS } from '../core/state';
-import { MELODY_FAST, noteFreq, type Melody, type MelodyStyle } from '../content/melodies';
+import { MELODY_FAST, melodyRoot, noteFreq, type Melody, type MelodyStyle } from '../content/melodies';
 
 type AudioCtor = typeof AudioContext;
 /** Mindestabstand zwischen zwei Tastenklicks (s) und wie weit sie sich höchstens aufstauen dürfen */
@@ -23,6 +23,13 @@ const bassRange = (f: number) => {
   let x = f;
   while (x >= 110) x /= 2;
   while (x < 55) x *= 2;
+  return x;
+};
+/** Elektro-Bass (zwei Daumen): Grundton 130–260 Hz, Oktave darüber auf dem Offbeat – schiebt auch im Handylautsprecher, ohne Tiefbass */
+const driveRange = (f: number) => {
+  let x = f;
+  while (x >= 260) x /= 2;
+  while (x < 130) x *= 2;
   return x;
 };
 
@@ -350,23 +357,35 @@ export class Sfx {
       const len = l * sixteenth;
       if (n) {
         const f = noteFreq(n);
-        this.melVoice(f, st.next, Math.max(0.12, len * 0.95), m.style, level === 2 ? 1 : 0.9);
+        // zwei Daumen: Klassik wird zur Elektro-Fassung (gleiche Noten, Synth-Klang)
+        const style = level === 2 && m.style === 'classic' ? 'synth' : m.style;
+        this.melVoice(f, st.next, Math.max(0.12, len * 0.95), style, level === 2 ? 0.7 : 0.9);
         // zwei Daumen: zweite Stimme eine Oktave höher (schlicht, spart Klangbausteine)
-        if (level === 2) this.melSimple(f * 2, st.next, Math.max(0.1, len * 0.8), 0.4);
+        // (nicht über 1,5 kHz: die Oktave darüber läge über 3 kHz und kratzt im Handylautsprecher)
+        if (level === 2 && f <= 1500) this.melSimple(f * 2, st.next, Math.max(0.1, len * 0.8), 0.3);
       }
-      // Bass auf den Schlägen (zwei Daumen: doppelt so oft), Schlagzeug nur mit zwei Daumen
       for (let k = 0; k < l; k++) {
         const p = st.pos + k;
         const t = st.next + k * sixteenth;
         const beat = p % 4 === 0;
-        if (beat || (level === 2 && p % 2 === 0)) {
-          const root = m.bass ? m.bass[Math.floor(p / 16) % m.bass.length]! : n;
-          if (root) this.melBass(bassRange(noteFreq(root)), t, sixteenth * (level === 2 ? 1.8 : 3.5));
+        if (level === 1) {
+          // ein Daumen: Bass auf den Schlägen, Hi-Hat nur bei Elektro
+          if (beat) {
+            const root = (m.bass ? melodyRoot(m, p) : null) ?? n;
+            if (root) this.melBass(bassRange(noteFreq(root)), t, sixteenth * 3.5);
+          }
+          if (m.style !== 'classic' && p % 2 === 1) this.melHat(t, 0.04);
+          continue;
         }
-        if (level === 2) {
-          if (beat) this.melKick(t);
-          this.melHat(t, p % 2 ? 0.05 : 0.09);
-        } else if (m.style !== 'classic' && p % 2 === 1) this.melHat(t, 0.04);
+        // zwei Daumen: Achtel-Oktavbass auf dem Grundton (Offbeat eine Oktave höher), Kick auf jedem Schlag,
+        // Clap auf 2 und 4, Hi-Hat auf jedem Sechzehntel, auf dem Offbeat lauter
+        if (p % 2 === 0) {
+          const root = melodyRoot(m, p) ?? n;
+          if (root) this.melDrive(driveRange(noteFreq(root)) * (beat ? 1 : 2), t, sixteenth * 1.7);
+        }
+        if (beat) this.melKick(t);
+        if (p % 8 === 4) this.melClap(t);
+        this.melHat(t, p % 4 === 2 ? 0.07 : 0.025);
       }
       st.pos += l;
       st.next += len;
@@ -375,8 +394,8 @@ export class Sfx {
   }
 
   /** Hüllkurve für Melodie-Töne (merkt sich den Ton fürs Ausblenden beim Anhalten) */
-  private melGain(t: number, peak: number, len: number): GainNode {
-    const g = this.env(this.ctx!, this.master!, t, peak, 0.005, Math.max(0.01, len - 0.005));
+  private melGain(t: number, peak: number, len: number, attack = 0.005): GainNode {
+    const g = this.env(this.ctx!, this.master!, t, peak, attack, Math.max(0.01, len - attack));
     this.melGains.push({ g, start: t, end: t + len });
     return g;
   }
@@ -455,16 +474,66 @@ export class Sfx {
     o.stop(t + len + 0.02);
   }
 
+  /**
+   * Elektro-Bass: Sägezahn durch Tiefpass, der zuschnappt. Weicher Einsatz (30 ms) hinter dem Kick = „pumpt“
+   * wie mit Sidechain und knackt nicht.
+   */
+  private melDrive(f: number, t: number, len: number): void {
+    const ctx = this.ctx!;
+    const g = this.melGain(t, 0.22, len + 0.03, 0.03);
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.Q.value = 5;
+    lp.frequency.setValueAtTime(1400, t);
+    lp.frequency.exponentialRampToValueAtTime(320, t + len);
+    lp.connect(g);
+    const o = ctx.createOscillator();
+    o.type = 'sawtooth';
+    o.frequency.value = f;
+    o.connect(lp);
+    o.start(t);
+    o.stop(t + len + 0.06);
+  }
+
+  /** Clap: drei kurz versetzte Rauschstöße um 1,5 kHz (über melGain, damit er beim Anhalten mit verstummt) */
+  private melClap(t: number): void {
+    if (!this.noise) return;
+    for (const [dt, peak, dur] of [[0, 0.16, 0.02], [0.011, 0.14, 0.02], [0.022, 0.18, 0.12]] as const) {
+      const src = this.ctx!.createBufferSource();
+      src.buffer = this.noise;
+      const bp = this.ctx!.createBiquadFilter();
+      bp.type = 'bandpass';
+      bp.frequency.value = 1500;
+      bp.Q.value = 1.2;
+      src.connect(bp).connect(this.melGain(t + dt, peak, dur));
+      src.start(t + dt, Math.random() * 0.8, dur + 0.05);
+    }
+  }
+
+  /**
+   * Kick fürs Handy: fällt nur bis 75 Hz und ist kurz (Tiefbass kratzt im Lautsprecher und ist dort ohnehin nicht
+   * zu hören); der „Punch“ kommt vom Ton um 120–200 Hz und einem kurzen Klick.
+   */
   private melKick(t: number): void {
     const ctx = this.ctx!;
-    const g = this.melGain(t, 0.45, 0.25);
+    const g = this.melGain(t, 0.32, 0.13);
     const o = ctx.createOscillator();
-    o.frequency.setValueAtTime(150, t);
-    o.frequency.exponentialRampToValueAtTime(40, t + 0.2);
+    o.frequency.setValueAtTime(200, t);
+    o.frequency.exponentialRampToValueAtTime(75, t + 0.12);
     o.connect(g);
     o.start(t);
-    o.stop(t + 0.3);
+    o.stop(t + 0.16);
+    if (!this.noise) return;
+    const src = ctx.createBufferSource();
+    src.buffer = this.noise;
+    const bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.value = 2500;
+    bp.Q.value = 0.8;
+    src.connect(bp).connect(this.melGain(t, 0.06, 0.012));
+    src.start(t, Math.random() * 0.9, 0.03);
   }
+
 
   /** Startzeit des letzten Tastenklicks (Audio-Zeit) */
   private lastTapAt = 0;

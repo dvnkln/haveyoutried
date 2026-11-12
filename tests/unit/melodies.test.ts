@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MELODIES, noteFreq } from '../../src/content/melodies';
+import { MELODIES, melodyLength, melodyRoot, noteFreq } from '../../src/content/melodies';
 
 describe('Espresso-Melodien', () => {
   it('jede Note gültig, Längen positiv, Bass gültig', () => {
@@ -12,6 +12,17 @@ describe('Espresso-Melodien', () => {
       for (const b of m.bass ?? []) expect(noteFreq(b), `${m.id} Bass ${b}`).toBeGreaterThan(20);
     }
     expect(new Set(MELODIES.map((m) => m.id)).size).toBe(MELODIES.length);
+  });
+
+  it('Elektro-Bass: Harmonie so lang wie ein Durchlauf, jeder Grundton gültig, auch im zweiten Durchlauf', () => {
+    for (const m of MELODIES) {
+      const len = melodyLength(m);
+      if (m.harmony) expect(m.harmony.reduce((a, [, l]) => a + l, 0), m.id).toBe(len);
+      for (let p = 0; p < len * 2; p++) {
+        const r = melodyRoot(m, p);
+        if (m.harmony || m.bass) expect(noteFreq(r!), `${m.id} @${p}`).toBeGreaterThan(20);
+      }
+    }
   });
 
   it('A4 = 440 Hz', () => {
