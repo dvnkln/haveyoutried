@@ -2,7 +2,7 @@ import { INCIDENTS } from '../../config';
 import { progressScore } from '../../core/incidents';
 import { PRINT_JOBS } from '../../content/incidents';
 import { randInt, shuffle } from '../../util';
-import { cssZoom, h, juice, SHAKE, setFlag, setText } from '../dom';
+import { cssZoom, h, juice, onTap, SHAKE, setFlag, setText, TAP_PX } from '../dom';
 import type { GameApi, Minigame } from './types';
 
 const CFG = INCIDENTS.games.jam;
@@ -280,11 +280,8 @@ const zoomOf = ([x, y, w, hh]: [number, number, number, number]) => {
 /** Fach 2 im Gehäuse */
 const TRAY: [number, number, number, number] = [38, 136, 244, 48];
 
-/**
- * Bis hierhin bewegt ist es noch ein Tipp (px). Ein Schnipser beim Loslassen braucht deutlich mehr Weg entlang des
- * Blatts (CFG.flickPx); dazwischen passiert nichts, damit ein verrutschter Tipp nie zieht oder reißt.
- */
-const TAP_PX = 8;
+// Ein Schnipser beim Loslassen braucht deutlich mehr Weg entlang des Blatts (CFG.flickPx) als ein Tipp (TAP_PX);
+// dazwischen passiert nichts, damit ein verrutschter Tipp nie zieht oder reißt.
 
 const ARROW: Record<Dir, string> = { left: '←', right: '→', up: '↑', down: '↓' };
 
@@ -448,30 +445,6 @@ export function jamGame(): Minigame {
     B: h('div', { class: 'dj-zone dj-zone-B', style: box(168, 46, 110, 80), 'aria-hidden': 'true' }),
     C: h('div', { class: 'dj-zone dj-zone-C', style: 'left:9%;top:0;width:91%;height:100%', 'aria-hidden': 'true' }),
     D: h('div', { class: 'dj-zone dj-zone-D', style: box(130, 4, 150, 36), 'aria-hidden': 'true' }),
-  };
-  /**
-   * Antippen direkt am Finger (pointerdown → pointerup auf demselben Teil, kaum bewegt) statt über click:
-   * der kommt bei Touch verzögert und landet nach einer Änderung gern auf dem, was jetzt darunter liegt.
-   * Tastatur (Enter/Leertaste) löst weiterhin click mit detail 0 aus.
-   */
-  const onTap = (el: HTMLElement, fn: () => void, skip?: string) => {
-    let down: { x: number; y: number; id: number } | null = null;
-    el.addEventListener('pointerdown', (e) => {
-      // z. B. Fach 2: Tipps in den Wischbereich (liegt im Fach) regelt der Bereich selbst
-      if (e.button > 0 || (skip && (e.target as Element).closest(skip))) return;
-      e.preventDefault();
-      down = { x: e.clientX, y: e.clientY, id: e.pointerId };
-    });
-    el.addEventListener('pointerup', (e) => {
-      if (!down || e.pointerId !== down.id) return;
-      const moved = Math.hypot(e.clientX - down.x, e.clientY - down.y);
-      down = null;
-      if (moved < TAP_PX) fn();
-    });
-    el.addEventListener('pointercancel', () => (down = null));
-    el.addEventListener('click', (e) => {
-      if (e.detail === 0) fn();
-    });
   };
   /** offene Bereiche nehmen immer Tippen/Wischen an (auch zum Zurückbauen und Schließen); D nur mit Blatt */
   const zoneOn = (a: JamArea) => {

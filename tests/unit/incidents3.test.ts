@@ -11,6 +11,8 @@ import { segmentHitsBox, SIZE, segmentsCross, UntangleSim } from '../../src/ui/i
 import { TANGLE_DEVICES } from '../../src/content/incidents';
 import { TapeSim, weekStart } from '../../src/ui/incidents/tapes';
 import { AREAS, JAM_DIRS, JamSim, type Step } from '../../src/ui/incidents/jam';
+import { LbSim } from '../../src/ui/incidents/lb';
+import { LB_EVENTS } from '../../src/content/incidents';
 
 const CFG = INCIDENTS.games.diskfull;
 
@@ -1080,5 +1082,130 @@ describe('Druckerstau', () => {
     // langsamster sauberer Lauf passt in die Zeit, mit Luft
     expect(slowMax).toBeLessThan(J.durationMs);
     expect(tornSolved / N).toBeGreaterThan(0.9);
+  });
+});
+
+describe('Lastverteiler', () => {
+  const LB = INCIDENTS.games.lb;
+  /** Bot mit menschlichem Tempo: sieht, was zu tun ist, handelt nach `react` ms, danach 0,4 s für den nächsten Griff */
+  const play = (seed: number, react: number, mode: 'idle' | 'red' | 'all') => {
+    const sim = new LbSim(LB, seeded(seed));
+    const seen = new Map<number, number>();
+    let busy = 0;
+    for (let t = 0; t < LB.durationMs; t += 50) {
+      sim.update(50);
+      if (mode === 'idle') continue;
+      busy -= 50;
+      sim.servers.forEach((s, i) => {
+        const want = s.inPool ? s.health === 'down' || (mode === 'all' && s.health === 'slow') : s.health === 'ok';
+        if (!want) seen.delete(i);
+        else if (!seen.has(i)) seen.set(i, sim.t);
+      });
+      if (busy > 0) continue;
+      for (const [i, since] of seen) {
+        if (sim.t - since >= react) {
+          sim.toggle(i);
+          seen.delete(i);
+          busy = 400;
+          break;
+        }
+      }
+    }
+    return sim;
+  };
+
+  it('Start: einer steht auf Wartung, alle gesund', () => {
+    for (let seed = 1; seed < 50; seed++) {
+      const sim = new LbSim(LB, seeded(seed));
+      expect(sim.servers.filter((s) => !s.inPool)).toHaveLength(1);
+      expect(sim.servers.every((s) => s.health === 'ok')).toBe(true);
+    }
+  });
+
+  it('Round Robin: abgestürzt = 502, Warteschlange voll = 503, niemand im Pool = 503', () => {
+    const sim = new LbSim(LB, () => 0);
+    sim.servers.forEach((s) => (s.inPool = true));
+    sim.servers[0]!.health = 'down';
+    sim.servers[1]!.queue = LB.queueMax;
+    sim.update(1_000);
+    const r = sim.drainRouted();
+    expect(r.filter((x) => x.server === 0).every((x) => x.code === 502)).toBe(true);
+    expect(r.filter((x) => x.server === 1).some((x) => x.code === 503)).toBe(true);
+    expect(r.filter((x) => x.server >= 2).every((x) => x.code === 200)).toBe(true);
+    sim.servers.forEach((_, i) => sim.toggle(i));
+    sim.update(500);
+    expect(sim.drainRouted().every((x) => x.server === -1 && x.code === 503)).toBe(true);
+  });
+
+  it('erholt sich nur draußen, ist solange gesperrt, danach muss er von Hand wieder rein', () => {
+    const sim = new LbSim(LB, () => 0);
+    const s = sim.servers[2]!;
+    s.inPool = true;
+    s.health = 'down';
+    s.healLeft = LB.rebootMs;
+    sim.update(LB.rebootMs + 100);
+    expect(s.health).toBe('down');
+    expect(sim.toggle(2)).toBe(true);
+    // draußen gesperrt, bis er fertig ist: zurückholen geht nicht
+    sim.update(LB.rebootMs / 2);
+    expect(sim.locked(2)).toBe(true);
+    expect(sim.toggle(2)).toBe(false);
+    expect(s.inPool).toBe(false);
+    sim.update(LB.rebootMs / 2 + 100);
+    expect(sim.locked(2)).toBe(false);
+    expect(sim.toggle(2)).toBe(true);
+    expect(s.inPool).toBe(true);
+    expect(s.health).toBe('ok');
+    expect(sim.drainEvents().some((e) => e.kind === 'healed' && e.server === 2)).toBe(true);
+  });
+
+  it('nie zwei kranke Server gleichzeitig, auch wenn niemand eingreift', () => {
+    for (let seed = 1; seed < 200; seed++) {
+      const sim = new LbSim(LB, seeded(seed));
+      for (let t = 0; t < LB.durationMs; t += 50) {
+        sim.update(50);
+        expect(sim.servers.filter((s) => s.health !== 'ok').length).toBeLessThanOrEqual(1);
+      }
+    }
+  });
+
+  it('jede Runde kommen alle drei Störungsarten vor, Texte nie zweimal hintereinander', () => {
+    for (let seed = 1; seed < 200; seed++) {
+      const sim = new LbSim(LB, seeded(seed));
+      const kinds = new Set<string>();
+      let last = '';
+      for (let t = 0; t < LB.durationMs; t += 50) {
+        sim.update(50);
+        for (const e of sim.drainEvents()) {
+          if (e.kind === 'healed') continue;
+          kinds.add(e.kind);
+          expect(e.text).not.toBe(last);
+          last = e.text;
+        }
+        // perfekt spielen, damit Störungen kommen können
+        sim.servers.forEach((s, i) => {
+          if (s.inPool === (s.health !== 'ok')) sim.toggle(i);
+        });
+      }
+      expect(kinds.size, `seed ${seed}`).toBe(3);
+    }
+  });
+
+  it('Fairness: menschliches Tempo (1–1,6 s) schafft es immer gut, Nichtstun nie, nur Rote rausnehmen deutlich schlechter', () => {
+    let red = 0;
+    for (let seed = 1; seed <= 300; seed++) {
+      expect(play(seed, 0, 'idle').score()).toBe(0);
+      expect(play(seed, 1_600, 'all').score(), `seed ${seed}`).toBeGreaterThan(0.7);
+      expect(play(seed, 1_000, 'all').score(), `seed ${seed}`).toBeGreaterThan(0.8);
+      red += play(seed, 1_300, 'red').score() / 300;
+    }
+    // wer Gelb ignoriert, kommt meist noch durch, aber deutlich schlechter
+    expect(red).toBeLessThan(0.65);
+  });
+
+  it('Texte: Platzhalter da, keine Doppelten', () => {
+    for (const t of [...LB_EVENTS.crash, ...LB_EVENTS.slow, LB_EVENTS.healed]) expect(t).toContain('{srv}');
+    const all = [...LB_EVENTS.crash, ...LB_EVENTS.slow, ...LB_EVENTS.spike];
+    expect(new Set(all).size).toBe(all.length);
   });
 });

@@ -3,6 +3,7 @@ import { progressScore } from '../../core/incidents';
 import { NOISE_WARNINGS, ROOT_CAUSES, SERVICES, type ServiceDef } from '../../content/incidents';
 import { weightedPick } from '../../util';
 import { h, juice, SHAKE, setText } from '../dom';
+import { termBar } from './term';
 import type { GameApi, Minigame } from './types';
 
 const CFG = INCIDENTS.games.services;
@@ -104,7 +105,14 @@ export function servicesGame(): Minigame {
   const sim = new ServicesSim();
   let api: GameApi | null = null;
   const tiles = new Map<string, { el: HTMLButtonElement; state: HTMLElement; msg: HTMLElement }>();
+  // Rückmeldung als Konsole unter dem Fenster: Befehl, dann was passiert ist
+  const cmd = h('div', { class: 'svc-cmd' });
   const info = h('div', { class: 'svc-info', 'aria-live': 'polite' });
+  const say = (command: string, text: string, kind: 'ok' | 'bad' | '' = '') => {
+    setText(cmd, command);
+    setText(info, text);
+    info.dataset.kind = kind;
+  };
   let locked = false;
 
   const paint = () => {
@@ -125,7 +133,7 @@ export function servicesGame(): Minigame {
     if (res === 'fixed') {
       api.sfx.good();
       api.haptic('buy');
-      setText(info, `systemctl restart ${s.id} → OK. Alles hängt dran, alles kommt zurück.`);
+      say(`$ systemctl restart ${s.id}`, 'OK. Alles hängt dran, alles kommt zurück.', 'ok');
       locked = true;
       for (const t of tiles.values()) t.el.dataset.state = 'ok';
       setTimeout(() => {
@@ -133,7 +141,7 @@ export function servicesGame(): Minigame {
         if (sim.done) api?.finish();
         else {
           paint();
-          setText(info, `Runde ${sim.round + 1}: Wo liegt die Ursache?`);
+          say(`# Runde ${sim.round + 1}/${CFG.rounds}`, 'Wo liegt die Ursache?');
         }
       }, 650);
     } else if (res === 'symptom' || res === 'noise') {
@@ -141,15 +149,14 @@ export function servicesGame(): Minigame {
       api.haptic('error');
       api.penalize(CFG.wrongPenaltyMs);
       juice(tile.el, SHAKE, 260);
-      setText(
-        info,
-        res === 'symptom'
-          ? `systemctl restart ${s.id} → läuft kurz, dann wieder CRITICAL. Das ist nur ein Symptom.`
-          : `systemctl restart ${s.id} → hilft nicht. Die Warnung hat damit nichts zu tun.`,
+      say(
+        `$ systemctl restart ${s.id}`,
+        res === 'symptom' ? 'Läuft kurz, dann wieder CRITICAL. Das ist nur ein Symptom.' : 'Hilft nicht. Die Warnung hat damit nichts zu tun.',
+        'bad',
       );
     } else {
       api.sfx.tick();
-      setText(info, `${s.label} läuft. Den neu zu starten bringt nichts.`);
+      say(`$ systemctl restart ${s.id}`, `${s.label} lief schon. Der Neustart hat nichts geändert.`);
     }
   };
 
@@ -170,9 +177,21 @@ export function servicesGame(): Minigame {
         tiles.set(s.id, { el, state, msg });
         grid.append(el);
       }
-      setText(info, 'Runde 1: Wo liegt die Ursache?');
+      say(`# Runde 1/${CFG.rounds}`, 'Wo liegt die Ursache?');
       paint();
-      root.append(h('div', { class: 'services' }, [grid, info]));
+      root.append(
+        h('div', { class: 'services' }, [
+          // Fenster nach Vorbild: Service-Übersicht des Monitorings, gruppiert nach Host
+          h('div', { class: 'svc-win' }, [
+            h('div', { class: 'svc-head', 'aria-hidden': 'true' }, [
+              h('b', { text: 'Service-Abhängigkeiten' }),
+              h('span', { text: 'hostgroup: cluster · Antippen = systemctl restart' }),
+            ]),
+            grid,
+          ]),
+          h('div', { class: 'term-win' }, [termBar('admin@monitoring: ~'), h('div', { class: 'svc-term' }, [cmd, info])]),
+        ]),
+      );
     },
     update() {
       /* ereignisgetrieben */

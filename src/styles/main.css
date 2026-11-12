@@ -14757,3 +14757,606 @@ html:not([data-os='mac']) #app .work.tight .browser .br-url {
 .dj-printer:not(.zoomed) .dj-stage {
   transition-duration: 0.06s;
 }
+
+/* --- Incident: Lastverteiler (Statistikseite nach Vorbild, Server als Karten zum Antippen) --- */
+.lb {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.lb-win {
+  border: var(--outline) solid var(--ink);
+  border-radius: 10px;
+  background: #f4f6fa;
+  box-shadow: 0 4px 0 var(--ink);
+  overflow: hidden;
+}
+.lb-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 4px;
+  padding: 5px 9px;
+  border-bottom: 2px solid var(--ink);
+  background: #3f6fb5;
+  color: #dbe7f8;
+  font: 400 10.5px / 1.35 var(--font-ui);
+}
+.lb-head > b:first-child {
+  width: 100%;
+  color: #fff;
+  font-size: 12px;
+}
+.lb-off {
+  padding: 0 4px;
+  border-radius: 3px;
+  background: #ff6b6b;
+  color: #fff;
+  font-weight: 600;
+}
+/* Internet → Lastverteiler, darunter verzweigt die Leitung zu den Servern */
+.lb-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 8px 0;
+  color: var(--ink);
+  font: 400 11px / 1.2 var(--font-ui);
+}
+.lb-cloud {
+  padding: 3px 9px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink-soft);
+}
+.lb-arrow {
+  color: var(--ink-soft);
+}
+.lb-dev {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3px 10px;
+  border: 1.5px solid var(--ink);
+  border-radius: 6px;
+  background: #2b313b;
+  color: #9fd8ff;
+  font: 600 11px / 1.25 var(--font);
+}
+.lb-dev > b {
+  color: #fff;
+  font-family: var(--font-ui);
+}
+.lb-rate {
+  font-weight: 600;
+}
+.lb-spike {
+  position: absolute;
+  right: 8px;
+  top: 10px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #ff9f43;
+  color: #fff;
+  font: 600 10.5px / 1.4 var(--font-ui);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.lb-spike.on {
+  opacity: 1;
+}
+.lb-pool {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--n, 4), minmax(0, 1fr));
+  gap: 6px;
+  padding: 14px 8px 8px;
+}
+/* senkrecht vom Lastverteiler runter, dann waagrecht zu allen Servern */
+.lb-pool::before,
+.lb-pool::after {
+  content: '';
+  position: absolute;
+  background: var(--ink);
+}
+.lb-pool::before {
+  left: 50%;
+  top: 0;
+  width: 2px;
+  height: 14px;
+  transform: translateX(-1px);
+}
+.lb-pool::after {
+  /* von der Mitte der ersten bis zur Mitte der letzten Spalte */
+  left: calc(50% / var(--n, 4) + 3px);
+  right: calc(50% / var(--n, 4) + 3px);
+  top: 13px;
+  height: 2px;
+}
+.lb-srv {
+  --bg: #c9f5c9;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 5px;
+  min-width: 0;
+  margin: 0;
+  padding: 0 4px 6px;
+  border: 1.5px solid var(--ink);
+  border-top: 0;
+  border-radius: 0 0 8px 8px;
+  background: var(--bg);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.25s;
+}
+.lb-srv[data-state='down'] {
+  --bg: #ffa3a3;
+}
+.lb-srv[data-state='slow'] {
+  --bg: #ffe07a;
+}
+.lb-srv[data-state='maint'] {
+  --bg: #bcd6ff;
+}
+.lb-srv[data-state='heal'] {
+  --bg: #e2e2e6;
+}
+.lb-srv:focus-visible {
+  outline: 3px solid #3f6fb5;
+  outline-offset: 2px;
+}
+/* Draht von oben, auf dem die Anfragen herunterfallen; draußen ist er ab */
+.lb-wire {
+  position: relative;
+  height: 22px;
+  margin: 0 -4px;
+  background: linear-gradient(var(--ink), var(--ink)) center / 2px 100% no-repeat;
+}
+.lb-srv[data-state='maint'] .lb-wire,
+.lb-srv[data-state='heal'] .lb-wire {
+  background: linear-gradient(var(--ink), var(--ink)) center top / 2px 40% no-repeat;
+}
+.lb-srv[data-state='maint'] .lb-wire::after,
+.lb-srv[data-state='heal'] .lb-wire::after {
+  content: '✂';
+  position: absolute;
+  left: 50%;
+  top: 7px;
+  transform: translateX(-50%) rotate(90deg);
+  color: var(--ink-soft);
+  font-size: 11px;
+  line-height: 1;
+}
+.lb-dot {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 7px;
+  height: 7px;
+  margin-left: -3.5px;
+  border: 1.5px solid var(--ink);
+  border-radius: 50%;
+  background: #fff;
+  animation: lb-drop 0.32s linear forwards;
+}
+.lb-dot.bad {
+  background: #ff5b5b;
+}
+@keyframes lb-drop {
+  from {
+    transform: translateY(-2px);
+  }
+  to {
+    transform: translateY(16px);
+  }
+}
+/* Tower-Server von vorn */
+.lb-tower {
+  --lcd: #8fe3a8;
+  --pwr: #5fe08a;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: -2px;
+  padding: 4px 4px 5px;
+  border: 1.5px solid var(--ink);
+  border-radius: 6px 6px 4px 4px;
+  background: linear-gradient(90deg, #2b313b, #3d4552 18%, #353c48 82%, #262b34);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 3px 0 -1px #1d2128;
+  transition: filter 0.25s;
+}
+.lb-srv[data-state='down'] .lb-tower {
+  --lcd: #ff8f8f;
+  --pwr: #ff5b5b;
+}
+.lb-srv[data-state='slow'] .lb-tower {
+  --lcd: #ffd25e;
+  --pwr: #ffc531;
+}
+.lb-srv[data-state='maint'] .lb-tower {
+  --lcd: #94bcff;
+  --pwr: #6aa0ff;
+}
+.lb-srv[data-state='heal'] .lb-tower {
+  --lcd: #b9bdc7;
+  --pwr: #6b7280;
+}
+/* draußen: Kabel ab, Gerät etwas dunkler */
+.lb-srv[data-state='maint'] .lb-tower,
+.lb-srv[data-state='heal'] .lb-tower {
+  filter: brightness(0.88);
+}
+.lb-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 3px;
+  padding: 0 1px;
+  color: #dfe5ee;
+  font: 600 11px / 1.1 var(--font-ui);
+}
+.lb-power {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--pwr);
+  box-shadow: 0 0 4px var(--pwr);
+}
+/* Status-LCD wie an echten Servern: Hintergrundlicht je Zustand */
+.lb-lcd {
+  padding: 2px 0;
+  border: 1px solid #12161c;
+  border-radius: 2px;
+  background: var(--lcd);
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.3);
+  color: #15202b;
+  font: 700 9.5px / 1.3 var(--font);
+  letter-spacing: -0.3px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: background-color 0.2s;
+}
+/* Plattenschächte: Griffleiste links, Aktivitäts-LED rechts (leuchtet = wartende Anfrage) */
+.lb-bays {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.lb-bay {
+  position: relative;
+  height: 11px;
+  border: 1px solid #12161c;
+  border-radius: 2px;
+  background:
+    repeating-linear-gradient(90deg, #4a5260 0 1px, transparent 1px 3px) 3px 3px / 40% 3px no-repeat,
+    linear-gradient(#272c35, #20252d);
+}
+.lb-led {
+  position: absolute;
+  right: 3px;
+  top: 3px;
+  width: 22%;
+  height: 3px;
+  border-radius: 2px;
+  background: #3b424d;
+}
+.lb-led.on {
+  background: #4fe08a;
+  box-shadow: 0 0 3px #4fe08a;
+}
+.lb-bays > .lb-bay:nth-child(-n + 3) > .lb-led.on {
+  background: #ffb52e;
+  box-shadow: 0 0 3px #ffb52e;
+}
+.lb-bays > .lb-bay:first-child > .lb-led.on,
+.lb-srv[data-full='1'] .lb-led.on {
+  background: #ff5b5b;
+  box-shadow: 0 0 3px #ff5b5b;
+}
+/* Lüftungsgitter mit Netzschalter */
+.lb-grille {
+  position: relative;
+  height: 16px;
+  border-radius: 2px;
+  background: radial-gradient(circle, #14181e 1.1px, transparent 1.4px) 0 0 / 4px 4px, #2a3039;
+}
+.lb-btn-power {
+  position: absolute;
+  right: 3px;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background: #1c2027;
+  box-shadow: 0 0 0 1.5px var(--pwr);
+}
+/* Schalter: im Pool (rechts, grün) oder raus (links, grau); gesperrt = blass mit Füllbalken bis zur Freigabe */
+.lb-sw {
+  position: relative;
+  height: 22px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: #3cc47c;
+  color: #fff;
+  font: 600 10px / 19px var(--font-ui);
+  text-align: left;
+  padding-left: 5px;
+  letter-spacing: -0.2px;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: background-color 0.15s;
+}
+.lb-sw::after {
+  content: '';
+  position: absolute;
+  right: 2px;
+  top: 3px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 1px var(--ink);
+  transition: right 0.15s;
+}
+.lb-sw.off {
+  background: #9aa1ad;
+  padding-left: 0;
+  padding-right: 6px;
+  text-align: right;
+}
+.lb-sw.off::after {
+  right: calc(100% - 15px);
+}
+.lb-sw.locked {
+  border-color: #9aa1ad;
+  background: #e8e9ee;
+  color: #8a90a0;
+}
+.lb-sw.locked::after {
+  box-shadow: 0 0 0 1px #9aa1ad;
+}
+.lb-sw.locked::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  width: calc(var(--p, 0) * 100%);
+  background: #6b7280;
+}
+/* Fehlercode ploppt über der Karte hoch */
+.lb-pop {
+  position: absolute;
+  left: 50%;
+  top: 26px;
+  padding: 0 4px;
+  border-radius: 3px;
+  background: #d63c3c;
+  color: #fff;
+  font: 700 10.5px / 1.4 var(--font);
+  pointer-events: none;
+  animation: lb-pop 0.7s ease-out forwards;
+}
+@keyframes lb-pop {
+  from {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+  to {
+    transform: translate(-50%, -18px);
+    opacity: 0;
+  }
+}
+.lb-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 10px;
+  padding: 0 8px 8px;
+  color: var(--ink-soft);
+  font: 400 10.5px / 1.2 var(--font-ui);
+}
+.lb-legend > span::before {
+  content: '';
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 3px;
+  vertical-align: -1px;
+  border: 1px solid var(--ink);
+  border-radius: 2px;
+}
+.lb-legend > .k-up::before {
+  background: #c9f5c9;
+}
+.lb-legend > .k-down::before {
+  background: #ffa3a3;
+}
+.lb-legend > .k-slow::before {
+  background: #ffe07a;
+}
+.lb-legend > .k-maint::before {
+  background: #bcd6ff;
+}
+.lb-legend > .k-heal::before {
+  background: #e2e2e6;
+}
+.lb-reply {
+  min-height: 2.7em;
+  color: #c26f00;
+  font: 600 12px / 1.35 var(--font-ui);
+}
+.lb-reply[data-kind='crash'] {
+  color: #c63b3b;
+}
+.lb-reply[data-kind='healed'] {
+  color: #2f6db5;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lb-pop {
+    animation: none;
+    transform: translateX(-50%);
+  }
+}
+
+/* ---------- Spamfilter als Quarantäne im Mail-Gateway (Spamhausmeister): Kopfleiste, Werkzeugleiste, Ordner, Vorschau, Liste ---------- */
+.incident .spam {
+  gap: 8px;
+}
+.incident .spam.flash-ok,
+.incident .spam.flash-bad {
+  animation: none;
+}
+.spam.flash-ok > .mc-win {
+  animation: spam-flash-ok 0.4s ease-out;
+}
+.spam.flash-bad > .mc-win {
+  animation: spam-flash-bad 0.6s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .spam.flash-ok > .mc-win,
+  .spam.flash-bad > .mc-win {
+    animation: none;
+  }
+}
+.mc-win {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: var(--outline) solid var(--ink);
+  border-radius: 10px;
+  background: #f3f5f9;
+  box-shadow: 0 4px 0 var(--ink);
+  overflow: hidden;
+}
+.mc-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 4px 9px;
+  border-bottom: 3px solid #f08a24;
+  background: #263040;
+  color: #b9c3d3;
+  font: 400 10.5px / 1.35 var(--font-ui);
+  white-space: nowrap;
+  overflow: hidden;
+}
+.mc-title > b {
+  color: #fff;
+  font-size: 12px;
+}
+.mc-ribbon {
+  display: flex;
+  gap: 4px;
+  padding: 4px 6px;
+  border-bottom: 2px solid var(--ink);
+  background: #fff;
+  overflow: hidden;
+}
+.mc-ribbon > span {
+  padding: 1px 7px;
+  border: 1px solid #cdd3dc;
+  border-radius: 4px;
+  background: #f4f5f7;
+  color: #3a4352;
+  font: 600 10.5px / 1.4 var(--font-ui);
+  white-space: nowrap;
+}
+.mc-win .mc-bar {
+  margin: 6px 6px 0;
+  border-radius: 6px;
+}
+.mc-win .mail-stage {
+  margin: 0 6px;
+  overflow: hidden;
+}
+.mc-win .mail-card {
+  border: 1.5px solid #c9cdd8;
+  border-radius: 8px;
+  box-shadow: none;
+}
+.mc-win .mail-card[data-lean='spam'] {
+  box-shadow: -5px 0 0 #ff8e8e;
+}
+.mc-win .mail-card[data-lean='ham'] {
+  box-shadow: 5px 0 0 #8ee6b4;
+}
+.mc-win .mc-queue {
+  margin: 0 6px 6px;
+  border-width: 1.5px;
+}
+
+/* Lastverteiler wie die anderen mittig: liegt besser unter dem Daumen */
+.incident .inc-game-root > .lb {
+  margin-block: auto;
+}
+
+/* ---------- Dienste als Fenster nach Vorbild (Service-Übersicht im Monitoring) + Konsole darunter ---------- */
+.svc-win {
+  border: var(--outline) solid var(--ink);
+  border-radius: 10px;
+  background: #eef0f4;
+  box-shadow: 0 4px 0 var(--ink);
+  overflow: hidden;
+}
+.svc-head {
+  display: flex;
+  flex-direction: column;
+  padding: 5px 9px;
+  border-bottom: 2px solid var(--ink);
+  background: #1e2230;
+  color: #b9c0d0;
+  font: 400 10.5px / 1.35 var(--font-ui);
+}
+.svc-head > b {
+  color: #fff;
+  font-size: 12px;
+}
+.svc-win .svc-grid {
+  padding: 6px;
+}
+.svc-term {
+  min-height: 3.9em;
+  padding: 5px 8px;
+  color: #e9e6f2;
+  font: 11px / 1.35 var(--font);
+}
+.svc-cmd {
+  color: #8ee6b4;
+}
+.incident .svc-term .svc-info {
+  min-height: 0;
+  margin: 0;
+  color: #e9e6f2;
+  font: inherit;
+}
+.incident .svc-term .svc-info[data-kind='bad'] {
+  color: #ff9a9a;
+}
+.incident .svc-term .svc-info[data-kind='ok'] {
+  color: #8ee6b4;
+}
+
+/*
+ * Zeile unter dem Spiel, überall gleich: Ereignis = fett und farbig (orange Warnung, rot Fehler, grün geschafft, blau Info),
+ * Bedienhinweis oder Beschreibung = normal und dezent (lauter als die Achtung-Zeile oben soll sie nicht sein).
+ */
+.tg-info:not([data-kind='ok']),
+.rk-info:not([data-kind='ok'], [data-kind='warn']) {
+  color: var(--ink-soft);
+  font-weight: 400;
+}

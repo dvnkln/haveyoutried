@@ -1,6 +1,6 @@
 import { countedMistakes } from '../../core/incidents';
 import { INCIDENTS } from '../../config';
-import { MAILS, type Mail } from '../../content/incidents';
+import { MAIL_TOOLS, MAILS, type Mail } from '../../content/incidents';
 import { shuffle } from '../../util';
 import { cssZoom, h, juice, SHAKE, setText } from '../dom';
 import type { GameApi, Minigame } from './types';
@@ -102,7 +102,7 @@ export function spamGame(): Minigame {
         h('div', { class: 'mc-item' }, [h('span', { class: 'mc-dot' }), addressEl(m.from), h('span', { class: 'mc-subj', text: m.subject })]),
       ),
     );
-    setText(unreadEl, `${unread.toLocaleString('de-DE')} ungelesen`);
+    setText(unreadEl, `${unread.toLocaleString('de-DE')} zurückgehalten`);
   };
 
   let locked = false;
@@ -178,13 +178,16 @@ export function spamGame(): Minigame {
       hamBtn.addEventListener('click', () => decide(false));
 
       show();
-      wrap.append(
-        h('div', { class: 'mc-bar' }, [h('span', { class: 'mc-folder', text: 'Posteingang' }), unreadEl]),
+      // Quarantäne im Mail-Gateway nach Vorbild (Weboberfläche): Kopfleiste, Werkzeugleiste, Ordner, Vorschau, Liste;
+      // Knöpfe unter dem Fenster
+      const win = h('div', { class: 'mc-win' }, [
+        h('div', { class: 'mc-title', 'aria-hidden': 'true' }, [h('b', { text: 'Spamhausmeister' }), h('span', { text: 'Mail-Gateway mx01' })]),
+        h('div', { class: 'mc-ribbon', 'aria-hidden': 'true' }, MAIL_TOOLS.map((t) => h('span', { text: t }))),
+        h('div', { class: 'mc-bar' }, [h('span', { class: 'mc-folder', text: 'Quarantäne' }), unreadEl]),
         stage,
         queue,
-        feedback,
-        h('div', { class: 'mail-actions' }, [spamBtn, hamBtn]),
-      );
+      ]);
+      wrap.append(win, feedback, h('div', { class: 'mail-actions' }, [spamBtn, hamBtn]));
       root.append(wrap);
     },
     update() {

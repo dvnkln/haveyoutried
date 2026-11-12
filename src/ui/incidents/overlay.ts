@@ -21,6 +21,7 @@ import { rackGame } from './rack';
 import { untangleGame } from './untangle';
 import { tapesGame } from './tapes';
 import { jamGame } from './jam';
+import { lbGame } from './lb';
 import type { Minigame } from './types';
 
 const GAMES: Record<IncidentId, () => Minigame> = {
@@ -38,6 +39,7 @@ const GAMES: Record<IncidentId, () => Minigame> = {
   untangle: untangleGame,
   tapes: tapesGame,
   jam: jamGame,
+  lb: lbGame,
 };
 
 /** Logo des Wikis: eine verknotete Schleife (Konfusion eben) */
@@ -106,7 +108,43 @@ export function mountIncidentOverlay(ctx: AppContext): void {
     body.replaceChildren(...children);
     body.scrollTop = 0;
     for (const c of children) moreObserver?.observe(c);
+    fitPage();
   };
+  /**
+   * Alarm und Ergebnis sollen ohne Scrollen in den Monitor passen, egal wie groß er gerade ist
+   * (kleiner Startmonitor, kurze Handys): die Seite wird bis auf MIN_FIT verkleinert, darunter wird gescrollt.
+   * Erst ohne Zoom messen, dann setzen: so wächst sie auch wieder, wenn der Monitor größer wird.
+   */
+  const MIN_FIT = 0.72;
+  const fitPage = () => {
+    const page = body.querySelector<HTMLElement>(':scope > .mon-compact');
+    if (!page || !body.clientHeight) return;
+    page.style.zoom = '';
+    // Überlauf in Layout-Pixeln (scrollHeight): unberührt von der Wachs-Animation des Monitors (transform)
+    const over = () => body.scrollHeight - body.clientHeight;
+    if (over() <= 1) return;
+    let z = Math.max(MIN_FIT, body.clientHeight / body.scrollHeight);
+    // kleiner gezoomt brechen Zeilen seltener um: nachmessen und notfalls in kleinen Schritten weiter
+    for (let i = 0; i < 12; i++) {
+      page.style.zoom = String(z);
+      if (over() <= 1 || z <= MIN_FIT) break;
+      z = Math.max(MIN_FIT, z - 0.02);
+    }
+    markMore();
+  };
+  // Monitor ändert die Größe (Drehen, Fenster, Schreibtisch-Ausbau, Schrift geladen): neu einpassen
+  // erst im nächsten Frame: das Einpassen kann die Scrollleiste ein-/ausblenden und damit body selbst ändern
+  // (sonst meldet der Observer sich in derselben Runde erneut: „ResizeObserver loop …“)
+  let fitFrame = 0;
+  const fitObserver =
+    typeof ResizeObserver !== 'undefined'
+      ? new ResizeObserver(() => {
+          cancelAnimationFrame(fitFrame);
+          fitFrame = requestAnimationFrame(fitPage);
+        })
+      : null;
+  fitObserver?.observe(body);
+  void document.fonts?.ready.then(() => fitPage());
   /** steht unter dem klebenden Knopf noch Text? Nur dann bekommt er den weichen Übergang nach oben */
   const markMore = () => body.classList.toggle('more', body.scrollHeight - body.scrollTop - body.clientHeight > 2);
   body.addEventListener('scroll', markMore, { passive: true });

@@ -111,7 +111,7 @@ export type EventEffectId = keyof typeof EVENT_EFFECTS;
 
 // --- Incidents (Minispiele nach Monitoring-Alarm) ---
 
-export const INCIDENT_IDS = ['raid', 'spam', 'services', 'loggrep', 'network', 'patch', 'diskfull', 'certs', 'ups', 'cooling', 'rack', 'untangle', 'tapes', 'jam'] as const;
+export const INCIDENT_IDS = ['raid', 'spam', 'services', 'loggrep', 'network', 'patch', 'diskfull', 'certs', 'ups', 'cooling', 'rack', 'untangle', 'tapes', 'jam', 'lb'] as const;
 export type IncidentId = (typeof INCIDENT_IDS)[number];
 
 /** Ab dieser Leistung gilt ein Incident als gelöst (RECOVERY statt ESCALATION) */
@@ -344,6 +344,32 @@ export const INCIDENTS = {
       tearPenaltyMs: 1_000,
       /** alles frei und zu: so lange druckt er weiter, bis es wieder klemmt */
       printMs: 1_500,
+    },
+    lb: {
+      /** Durchhalten: mehr Zeit wäre hier eine Strafe */
+      durationMs: 30_000,
+      survival: true,
+      servers: 4,
+      /** Anfragen je Sekunde: steigt im Lauf des Spiels, bei einer Lastspitze × spikeMul */
+      rateStart: 5,
+      rateEnd: 7,
+      spikeMul: 1.5,
+      spikeMs: 4_000,
+      /** so viele Anfragen schafft ein Server je Sekunde (gesund / langsam) */
+      serveRps: 2.4,
+      slowRps: 0.3,
+      /** Warteschlange je Server; voll = 503 */
+      queueMax: 6,
+      /** erst raus aus dem Pool, dann erholt er sich in dieser Zeit (abgestürzt / langsam) */
+      rebootMs: 3_000,
+      calmMs: 2_000,
+      /** Störungen in diesem Abstand; die erste kommt früh */
+      firstEventMs: 2_500,
+      eventMinMs: 3_000,
+      eventMaxMs: 4_500,
+      /** Anteil beantworteter Anfragen: darunter 0 Punkte (Nichtstun), ab goal volle Punktzahl */
+      scoreFloor: 0.8,
+      scoreGoal: 0.94,
     },
   },
 } as const;

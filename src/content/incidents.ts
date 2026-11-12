@@ -237,6 +237,22 @@ export const INCIDENT_TEXT: Record<IncidentId, IncidentText> = {
       'Abgebrochen. Das halbe Stockwerk läuft mit USB-Sticks zum Copyshop. Die Warteschlange hat Zeit.',
     ],
   },
+  lb: {
+    host: 'lb01',
+    service: 'HTTP',
+    info: 'backend www: 3/4 UP, 503 rising',
+    okInfo: 'backend www: 4/4 UP, p99 180 ms',
+    good: [
+      'Läuft. Die Antwortzeit ist wieder unter einer Sekunde. Niemand hat gemerkt, dass sie je drüber war. Perfekt.',
+      'Pool gesund. Im Statusbericht steht „kurzzeitig erhöhte Latenz“. Das stimmt sogar.',
+      'Geschafft. Der Vertrieb fragt, ob man die Webseite „etwas schneller“ machen kann. Sie war nie schneller.',
+    ],
+    bad: [
+      'Zu viele 503er. Die Kundschaft hat Fotos von der Fehlerseite gemacht. Das Internet hat jetzt auch welche.',
+      'Der Pool hustet weiter. Auf der Startseite steht jetzt „Geplante Wartung“. Geplant seit zehn Minuten.',
+      'Abgebrochen. Auf der Fehlerseite steht „Wir sind gleich zurück“. Der Text ist von 2019.',
+    ],
+  },
 };
 
 /** Button-Texte zum Übernehmen eines Incidents (zufällig) */
@@ -730,6 +746,48 @@ export const PRINT_JOBS: { file: string; who: string; pages: number; note: strin
   { file: 'Präsentation_Kunde.pptx', who: 'Marketing', pages: 1, note: 'Eine Folie mit 34 Animationen. Auf Papier sieht man keine davon.' },
 ];
 
+/** Werkzeugleiste der Quarantäne im Mail-Gateway (Spamhausmeister) */
+export const MAIL_TOOLS = ['Freigeben', 'Löschen', 'Blocken', 'Whitelist'];
+
+/** Störungen am Lastverteiler: {srv} = betroffener Server */
+export const LB_EVENTS = {
+  /** abgestürzt: jede Anfrage dorthin endet als 502 */
+  crash: [
+    '{srv}: OOM-Killer hat sich ausgerechnet den Webserver ausgesucht',
+    '{srv}: Deploy halb durch. Die andere Hälfte kommt nach der Mittagspause.',
+    '{srv}: unattended-upgrades hat neu gestartet. Unbeaufsichtigt, wie versprochen.',
+    '{srv}: Port 80 belegt. Ein Kollege testet dort „nur ganz kurz“ etwas.',
+    '{srv}: Zertifikat neu, Konfiguration alt. Webserver startet nicht.',
+    '{srv}: Jemand hat in Prod ein Hotfix-Skript ausprobiert. Es hat gefixt. Den Server.',
+  ],
+  /** langsam: Warteschlange läuft voll, dann 503 */
+  slow: [
+    '{srv}: Antwortzeit 8 s. Das Backup läuft auf derselben Platte.',
+    '{srv}: Garbage Collection. Seit vier Sekunden. Und es hört nicht auf.',
+    '{srv}: Log-Level steht noch auf DEBUG. 2 GB pro Minute, jede Zeile wichtig.',
+    '{srv}: Cron-Job von 2017 berechnet wieder Statistiken, die niemand liest.',
+    '{srv}: Virenscanner prüft das komplette Webverzeichnis. Gründlich. Datei für Datei.',
+    '{srv}: Datenbankabfrage ohne Index. Sie liest gerade alle Kunden seit 1998.',
+  ],
+  /** Lastspitze: alle gesunden Server werden gebraucht */
+  spike: [
+    'Lastspitze: Gutscheincode „SORRY10“ für den Ausfall letzter Woche ist raus.',
+    'Lastspitze: Die Firma war im Lokalradio. Kurz, aber laut.',
+    'Lastspitze: Ein Suchmaschinen-Bot hat die Sitemap gefunden. Er will alles. Sofort.',
+    'Lastspitze: Der Chef hat den Link in den Firmenchat gestellt. 400 Leute drücken F5.',
+    'Lastspitze: Gewinnspiel gestartet. Teilnahme nur heute, also alle in dieser Minute.',
+  ],
+  /** draußen wieder gesund geworden */
+  healed: '{srv}: wieder gesund. Zurück in den Pool damit.',
+};
+
+/** Feste Zeilen im Spiel: Start und Antippen eines Servers, der sich draußen noch erholt */
+export const LB_TEXT = {
+  start: 'Ein Server steht noch auf Wartung. Antippen holt ihn in den Pool.',
+  lockedDown: '{srv} startet noch neu. Erst danach darf er wieder rein.',
+  lockedSlow: '{srv} erholt sich noch. Erst danach darf er wieder rein.',
+};
+
 /** Geräte im Verteiler; jede Runde liegen andere im Salat */
 export const TANGLE_DEVICES: TangleDevice[] = [
   td('Switch', 'switch', 'Alle Wege führen hierher. Leider auch alle Kabel.'),
@@ -943,6 +1001,19 @@ export const INCIDENT_BRIEF: Record<IncidentId, IncidentBrief> = {
       ],
       warn: 'Gegen den Pfeil reißt das Blatt. Kostet Zeit, und der Rest steckt noch drin.',
       note: { who: 'Vorgänger', text: 'Alles Grüne darf man anfassen. Alles andere hat schon mal jemand angefasst.' },
+    },
+  },
+  lb: {
+    detail: ['backend www: 1 server MAINT, queue 6/6, HTTP 503 rising', 'health checks: disabled (seit 2021, siehe Kommentar)'],
+    runbook: {
+      title: 'Lastverteiler: kranke Server aus dem Pool nehmen',
+      steps: [
+        'Der Lastverteiler schickt die Anfragen stur reihum an alle Server im Pool, auch an kaputte. Antippen nimmt einen Server raus oder holt ihn wieder rein.',
+        'Rot (abgestürzt, 502) und Gelb (langsam, die Warteschlange läuft über: 503) müssen raus. Draußen startet er neu (grau), das dauert ein paar Sekunden.',
+        'Danach steht er gesund draußen (blau) und muss von Hand wieder rein. Einer steht schon seit dem letzten Deploy so da.',
+      ],
+      warn: 'Bei Lastspitzen braucht es jeden gesunden Server. Wer grundlos draußen steht, fehlt dann.',
+      note: { who: 'Vorgänger', text: 'Den Health-Check hab ich ausgeschaltet. Der hat ständig Server rausgenommen.' },
     },
   },
 };

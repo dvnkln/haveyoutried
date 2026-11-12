@@ -49,6 +49,33 @@ export function armButton(btn: HTMLButtonElement, ms: number): void {
   }, ms);
 }
 
+/** Bis hierhin bewegt ist es noch ein Tipp (px) */
+export const TAP_PX = 8;
+
+/**
+ * Antippen direkt am Finger (pointerdown → pointerup auf demselben Teil, kaum bewegt) statt über click:
+ * der kommt bei Touch verzögert und landet nach einer Änderung gern auf dem, was jetzt darunter liegt.
+ * Tastatur (Enter/Leertaste) löst weiterhin click mit detail 0 aus. `skip`: Tipps auf diese Kinder regeln die selbst.
+ */
+export function onTap(el: HTMLElement, fn: () => void, skip?: string): void {
+  let down: { x: number; y: number; id: number } | null = null;
+  el.addEventListener('pointerdown', (e) => {
+    if (e.button > 0 || (skip && (e.target as Element).closest(skip))) return;
+    e.preventDefault();
+    down = { x: e.clientX, y: e.clientY, id: e.pointerId };
+  });
+  el.addEventListener('pointerup', (e) => {
+    if (!down || e.pointerId !== down.id) return;
+    const moved = Math.hypot(e.clientX - down.x, e.clientY - down.y);
+    down = null;
+    if (moved < TAP_PX) fn();
+  });
+  el.addEventListener('pointercancel', () => (down = null));
+  el.addEventListener('click', (e) => {
+    if (e.detail === 0) fn();
+  });
+}
+
 const reduceMotionQuery =
   typeof matchMedia === 'function' ? matchMedia('(prefers-reduced-motion: reduce)') : null;
 
