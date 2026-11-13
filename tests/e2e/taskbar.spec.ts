@@ -177,7 +177,7 @@ test('Neue Achievements: oben unter „Geschafft“, kein Punkt an Karriere, „
   await expect(page.locator('.ach.new')).toHaveCount(0);
 });
 
-test('Neue Achievements gelten als gelesen, wenn sie eine Weile im Blick waren', async ({ page }) => {
+test('Neue Achievements: im Blick = gelesen, Hervorhebung bleibt bis zum nächsten Öffnen', async ({ page }) => {
   const now = Date.now();
   const [a] = ACHIEVEMENTS;
   await seed(page, { flags: { 'tut:off': 1, 'ach:seen': now - 60_000 }, achievements: { [a!.id]: now - 1_000 } });
@@ -187,6 +187,14 @@ test('Neue Achievements gelten als gelesen, wenn sie eine Weile im Blick waren',
   await page.locator('.launcher .app-career').tap();
   const li = page.locator(`.ach[data-ach="${a!.id}"]`);
   await li.scrollIntoViewIfNeeded();
-  await expect(li).toHaveClass(/\bread\b/, { timeout: 4_000 });
-  await expect(page.locator('.ach-news')).toBeHidden();
+  // länger als die Lesezeit im Blick: bleibt trotzdem hervorgehoben, solange das Fenster offen ist
+  await page.waitForTimeout(2_500);
+  await expect(li).toHaveClass(/\bnew\b/);
+  await expect(li).not.toHaveClass(/\bread\b/);
+  await expect(page.locator('.ach-news')).toBeVisible();
+  // beim nächsten Öffnen nicht mehr neu
+  await page.locator('.sheet-close').tap();
+  await page.locator('.taskbar-start').tap();
+  await page.locator('.launcher .app-career').tap();
+  await expect(page.locator('.ach.new')).toHaveCount(0);
 });

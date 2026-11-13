@@ -52,6 +52,7 @@ export function careerTab(): Tab {
   const achNews = h('div', { class: 'ach-news', hidden: '' }, [newCount, readAll]);
   readAll.addEventListener('click', () => {
     markAllRead(ctx.state);
+    shownNew.clear();
     ctx.sfx.tick();
     for (const li of achList.querySelectorAll('.ach.new')) li.classList.add('read');
     updateNews();
@@ -63,11 +64,10 @@ export function careerTab(): Tab {
     if (!li.isConnected || !li.getClientRects().length) return;
     const id = li.dataset.ach;
     if (!id || !isUnread(ctx.state, id)) return;
+    // nur im Spielstand: die Hervorhebung bleibt, solange das Fenster offen ist
     markRead(ctx.state, id);
-    li.classList.add('read');
-    updateNews();
   };
-  /** neue Achievements: ~1 s im Blick = gelesen (Hervorhebung blendet aus, Reihenfolge bleibt bis zum nächsten Öffnen) */
+  /** neue Achievements: ~1 s im Blick = gelesen. Sichtbar wird das erst beim nächsten Öffnen. */
   const readTimers = new Map<Element, number>();
   const watcher =
     typeof IntersectionObserver === 'function'
@@ -90,9 +90,11 @@ export function careerTab(): Tab {
           { threshold: 0.6 },
         )
       : null;
-  /** Zeile „2 neu · Alle gelesen“ und Zähler am Chip */
+  /** in diesem Öffnen als neu hervorgehoben (bleibt bis zum Schließen, auch wenn intern schon gelesen) */
+  const shownNew = new Set<string>();
+  /** Zeile „2 neu · Alle gelesen“ */
   const updateNews = () => {
-    const unread = ACHIEVEMENTS.filter((a) => isUnread(ctx.state, a.id)).length;
+    const unread = shownNew.size;
     achNews.hidden = unread === 0;
     setText(newCount, unread === 1 ? '1 neues Achievement' : `${unread} neue Achievements`);
   };
@@ -187,13 +189,15 @@ export function careerTab(): Tab {
     for (const t of readTimers.values()) clearTimeout(t);
     readTimers.clear();
     watcher?.disconnect();
+    // dazugekommene neue (auch während das Fenster offen ist)
+    for (const a of ACHIEVEMENTS) if (isUnread(s, a.id)) shownNew.add(a.id);
     // neue zuerst (unter „Geschafft“), sonst Reihenfolge wie in der Liste
-    const order = [...ACHIEVEMENTS].sort((a, b) => Number(isUnread(s, b.id)) - Number(isUnread(s, a.id)));
+    const order = [...ACHIEVEMENTS].sort((a, b) => Number(shownNew.has(b.id)) - Number(shownNew.has(a.id)));
     achList.replaceChildren(
       ...order.map((a) => {
         const at = s.achievements[a.id];
         const done = !!at;
-        const fresh = isUnread(s, a.id);
+        const fresh = shownNew.has(a.id);
         const secret = a.hidden && !done;
         const show = filter === 'done' ? done : !done;
         const li = h('li', { class: `ach${done ? ' done' : ''}${secret ? ' secret' : ''}${fresh ? ' new' : ''}`, 'data-ach': a.id, hidden: show ? undefined : '' }, [
@@ -207,7 +211,7 @@ export function careerTab(): Tab {
           ]),
           fresh ? h('span', { class: 'ach-new', text: 'NEU' }) : '',
         ]);
-        if (fresh && show) {
+        if (fresh && show && isUnread(s, a.id)) {
           // ohne IntersectionObserver (alte WebViews): gilt nach kurzer Zeit im offenen Fenster als gelesen
           if (watcher) watcher.observe(li);
           else readTimers.set(li, window.setTimeout(() => readNow(li), READ_AFTER_MS));
@@ -284,6 +288,7 @@ export function careerTab(): Tab {
     onShow() {
       // gibt es neue, zeigt die Liste „Geschafft“ mit den neuen oben
       const s = ctx.state;
+      shownNew.clear();
       filter = ACHIEVEMENTS.some((a) => isUnread(s, a.id)) ? 'done' : 'open';
       achShown = -1;
     },

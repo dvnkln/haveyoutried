@@ -40,7 +40,7 @@ export function achievementMultiplier(state: GameState): number {
   return 1 + achievementCount(state) * ACHIEVEMENTS_CFG.bonusPerAchievement;
 }
 
-// --- gelesen/ungelesen (Karriere-App hebt neue hervor, bis sie eine Weile im Blick waren) ---
+// --- gelesen/ungelesen (eine Weile im Blick = gelesen; die Karriere-App hebt sie trotzdem hervor, bis das Fenster zu ist) ---
 
 /** alles bis zu diesem Zeitpunkt Freigeschaltete gilt als gelesen (im Spielstand, damit „neu“ ein Neuladen übersteht) */
 export const ACH_SEEN_FLAG = 'ach:seen';
