@@ -4639,9 +4639,11 @@ html.basement {
   transition: transform 0.4s;
   z-index: -1;
 }
-.tray-app.app-trash .app-tile::before {
-  border-width: 1px;
-  border-radius: 2px 2px 0 0;
+/* Tray: Kachelrand sauber wie bei den anderen Tray-Apps, kein Papier über dem Rand (sah dort wie eine Delle aus).
+   Der Tray-Papierkorb erscheint nur voll; das zeigt das Symbol selbst (TRASH_FULL_SVG in app.ts). */
+.tray-app.app-trash .app-tile::before,
+.tray-app.app-trash .app-tile::after {
+  content: none;
 }
 /* Hintergrund der Kachel noch einmal als Ebene ÜBER dem Papier: Was vom Papier in der Kachel steckt, ist verdeckt
    (sonst zeichnet sich der untere Rand als Strich quer über das Symbol). Rundung und Farbe von der Kachel geerbt;

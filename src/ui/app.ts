@@ -62,6 +62,9 @@ export interface App {
 
 const TRASH_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">
   <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/><path d="M10 11v6M14 11v6"/></svg>`;
+/** Voller Eimer (Tray, dort nur voll): Deckel weg, Papier schaut aus dem Eimer – alles innerhalb der Kachel */
+const TRASH_FULL_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">
+  <path d="M8.5 10 9.5 3.5l6 1-1 5.5" fill="#fff"/><path d="M4 10h16M6 10l1 10h10l1-10"/><path d="M10 13.5v3.5M14 13.5v3.5"/></svg>`;
 const svgTile = (markup: string) => {
   const el = h('span', { class: 'app-tile tile-trash', 'aria-hidden': 'true' });
   el.innerHTML = markup;
@@ -251,7 +254,7 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
     h('span', { class: 'nav-badge', 'aria-hidden': 'true' }),
   ]);
   // voll: auch im Tray, vor System (wie im Launcher)
-  const trashTray = trayItem('tray-app app-trash', 'Papierkorb', svgTile(TRASH_SVG));
+  const trashTray = trayItem('tray-app app-trash', 'Papierkorb', svgTile(TRASH_FULL_SVG));
   // Papierkorb füllt sich mit erledigten Tickets; voll geleert gibt es Altpapier-Pfand
   let trashCount = 0;
   bus.on('click', () => trashCount++);

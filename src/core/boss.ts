@@ -80,10 +80,19 @@ function newTask(s: GameState, rates: { pps: number; click: number }, rnd: () =>
   bus.emit('bossTask', { text: s.boss.text });
 }
 
-/** Pro Online-Tick: Aufgabe stellen, Fortschritt prüfen, Erfolg belohnen, Frist ablaufen lassen. */
-export function updateBoss(s: GameState, rates: () => { pps: number; click: number }, rnd: () => number = Math.random): void {
+/**
+ * Pro Online-Tick: Aufgabe stellen, Fortschritt prüfen, Erfolg belohnen, Frist ablaufen lassen.
+ * pausedMs > 0: Incident läuft. Dann keine neue Aufgabe (ihre Meldung sähe man nicht), Frist und Pause bis zur
+ * nächsten stehen; gewertet wird erst danach.
+ */
+export function updateBoss(s: GameState, rates: () => { pps: number; click: number }, rnd: () => number = Math.random, pausedMs = 0): void {
   const b = s.boss;
   const t = s.stats.playTimeMs;
+  if (pausedMs > 0) {
+    if (b.kind) b.until += pausedMs;
+    else if (b.nextAt) b.nextAt += pausedMs;
+    return;
+  }
   if (!b.kind) {
     if (!b.nextAt) b.nextAt = t + BOSS.firstMs;
     if (t >= b.nextAt) newTask(s, rates(), rnd);

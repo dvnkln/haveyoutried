@@ -45,4 +45,30 @@ describe('Aufgaben vom Chef', () => {
     updateBoss(s, rates, () => 0);
     expect(s.boss.kind).not.toBe(first);
   });
+
+  it('während eines Incidents: keine neue Aufgabe, Frist steht, gewertet wird danach', () => {
+    const s = createInitialState(0);
+    s.stats.playTimeMs = 1;
+    s.boss.nextAt = 1;
+    let asked = 0;
+    off.push(bus.on('bossTask', () => asked++));
+    // fällige Aufgabe kommt nicht im Incident, sondern rückt mit
+    s.stats.playTimeMs = 60_000;
+    updateBoss(s, rates, () => 0, 59_999);
+    expect(asked).toBe(0);
+    expect(s.boss.nextAt).toBe(60_000);
+    updateBoss(s, rates, () => 0);
+    expect(asked).toBe(1);
+    // laufende Aufgabe: Frist verlängert sich um die Incident-Zeit, erledigt wird erst danach
+    const until = s.boss.until;
+    let done = 0;
+    off.push(bus.on('bossDone', () => done++));
+    s.flags.solved = s.boss.target;
+    s.stats.playTimeMs += 90_000;
+    updateBoss(s, rates, () => 0, 90_000);
+    expect(s.boss.until).toBe(until + 90_000);
+    expect(done).toBe(0);
+    updateBoss(s, rates, () => 0);
+    expect(done).toBe(1);
+  });
 });

@@ -104,11 +104,11 @@ export function updateEvents(
   dtMs: number,
   rates: () => { pps: number; click: number },
   now: Date = new Date(),
-  /** während eines Incidents: keine neuen Events, Pager-Countdown steht */
+  /** während eines Incidents: keine neuen Events, Pager-Countdown und Boosts stehen */
   paused = false,
 ): void {
-  // Boosts
-  if (state.buffs.length > 0) {
+  // Boosts: stehen während eines Incidents (man kann sie da ohnehin nicht nutzen)
+  if (state.buffs.length > 0 && !paused) {
     for (const b of state.buffs) b.remainingMs -= dtMs;
     const ended = state.buffs.filter((b) => b.remainingMs <= 0);
     if (ended.length > 0) {

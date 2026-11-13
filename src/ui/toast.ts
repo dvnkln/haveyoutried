@@ -50,9 +50,10 @@ export function createToaster(): { el: HTMLElement; show(title: string, text: st
   return {
     el,
     show(title, text, kind = 'achievement', onShow) {
-      // volle Schlange: älteste Meldung fällt weg, Fehler aber nie (kommen nur einmal)
+      // volle Schlange: älteste Meldung fällt weg, Fehler und Chef-Meldungen aber nie (kommen nur einmal; sonst
+      // käme z. B. „Aufgabe erledigt“ für eine Aufgabe, die man nie gesehen hat)
       if (queue.length >= MAX_QUEUED) {
-        const i = queue.findIndex((q) => q.kind !== 'error');
+        const i = queue.findIndex((q) => q.kind !== 'error' && !q.kind.startsWith('boss'));
         if (i >= 0) queue.splice(i, 1);
       }
       queue.push({ title, text, kind, onShow });

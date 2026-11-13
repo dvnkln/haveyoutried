@@ -118,6 +118,15 @@ describe('Effekte', () => {
     expect(s.buffs[0]!.remainingMs).toBe(45_000);
   });
 
+  it('Boosts stehen während eines Incidents', () => {
+    const s = createInitialState(0);
+    applyEffect(s, 'flow', rates(s));
+    updateEvents(s, 30_000, () => rates(s), new Date(), true);
+    expect(s.buffs[0]!.remainingMs).toBe(45_000);
+    updateEvents(s, 30_000, () => rates(s), new Date(), false);
+    expect(s.buffs[0]!.remainingMs).toBe(15_000);
+  });
+
   it('Dringend-Ticket gibt immer etwas Gutes', () => {
     for (let i = 0; i < 50; i++) {
       const s = createInitialState(0);
