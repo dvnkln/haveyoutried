@@ -1,9 +1,10 @@
 import { CONFIG } from '../config';
+import { fresh } from '../core/deck';
 import { CALENDAR_LINES, DUCK_LINES, INCIDENT_SIGN, MOUSE_LINES, MOUSE_NEW_LINES, MOUSE_OLD_LINES, MUG_DESIGNS, POSTITS, type MugGen } from '../content/props';
 import { bus } from '../core/bus';
 import { incidentRunning, isSolved } from '../core/incidents';
 import type { GameState } from '../core/state';
-import { pick, WEEKDAYS as DAYS } from '../util';
+import { WEEKDAYS as DAYS } from '../util';
 import type { AppContext } from './app';
 import { SQUEAK_PRESS_S } from './audio';
 import { h, juice, POP, quip, setFlag, setText, SHAKE } from './dom';
@@ -191,10 +192,10 @@ export function createProps(ctx: AppContext) {
   // --- Post-its ---
   const notes = [0].map((i) => {
     const el = h('button', { class: `postit postit-${i + 1}`, type: 'button', 'aria-label': 'Post-it umblättern' });
-    el.textContent = pick(POSTITS);
+    el.textContent = fresh('POSTITS', POSTITS);
     el.addEventListener('click', () => {
-      let next = pick(POSTITS);
-      while (next === el.textContent || notes.some((n) => n !== el && n.textContent === next)) next = pick(POSTITS);
+      let next = fresh('POSTITS', POSTITS);
+      while (next === el.textContent || notes.some((n) => n !== el && n.textContent === next)) next = fresh('POSTITS', POSTITS);
       el.textContent = next;
       juice(el, SHAKE, 300, true);
       ctx.sfx.tick();
@@ -245,7 +246,7 @@ export function createProps(ctx: AppContext) {
     }
     ctx.haptic('tap');
     juice(duck, [{ transform: 'scale(1)' }, { transform: 'scale(1.2, .8)' }, { transform: 'scale(1)' }], 260);
-    const line = pick(DUCK_LINES);
+    const line = fresh('DUCK_LINES', DUCK_LINES);
     ctx.log.write('info', line);
     quip(duck, line);
   });
@@ -267,7 +268,7 @@ export function createProps(ctx: AppContext) {
     if (now - lastMouseLine > 30_000) {
       lastMouseLine = now;
       // Kugel nur bei der alten Maus, Akku nur bei der ergonomischen (Funk-)Maus
-      const line = pick([...MOUSE_LINES, ...(ctx.state.upgrades.mouse ? MOUSE_NEW_LINES : MOUSE_OLD_LINES)]);
+      const line = fresh('MOUSE_LINES', [...MOUSE_LINES, ...(ctx.state.upgrades.mouse ? MOUSE_NEW_LINES : MOUSE_OLD_LINES)]);
       ctx.log.write('info', line);
       quip(mouse, line);
     }
@@ -355,7 +356,7 @@ export function createProps(ctx: AppContext) {
       setTimeout(() => old.remove(), 600);
     }
     ctx.sfx.tick();
-    if (auto) ctx.log.write('info', pick(CAL_AUTO_LINES));
+    if (auto) ctx.log.write('info', fresh('CAL_AUTO_LINES', CAL_AUTO_LINES));
     else ctx.haptic('tap');
     if (calOffset % 7 === 0) ctx.log.write('info', 'kalender[7]: Eine Woche abgerissen. Die Tickets sind trotzdem von heute.');
   };
@@ -367,7 +368,6 @@ export function createProps(ctx: AppContext) {
 
   const mate = svg(MATE, 'prop mate');
   const dust = svg(DUST, 'prop dust');
-  const kNote = h('span', { class: 'k-note', 'aria-hidden': 'true', text: 'Nicht neu starten. —K.' });
   const book = svg(BOOK, 'prop book');
   const beacon = svg(BEACON, 'prop beacon');
 
@@ -383,7 +383,6 @@ export function createProps(ctx: AppContext) {
     // Übernahmeangebot: der Praktikant bleibt – und mit ihm die Mate
     { upgrade: 'intern-3', el: mate },
     // Doku gefunden: ein Zettel am Kabel
-    { upgrade: 'undertable-3', el: kNote },
   ];
   // Kauf: Gegenstand hüpft auf den Tisch
   bus.on('upgrade', ({ id }) => {
@@ -427,5 +426,5 @@ export function createProps(ctx: AppContext) {
 
   };
 
-  return { incidentSign, calendar, notes, plant, mug, duck, mouse, mate, dust, kNote, book, beacon, render };
+  return { incidentSign, calendar, notes, plant, mug, duck, mouse, mate, dust, book, beacon, render };
 }

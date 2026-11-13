@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { bossReport, REPORT_ITEMS } from '../../src/content/report';
+import { fingerprint } from '../../src/core/deck';
 import { advanceStory, dueStoryCall, STORIES, STORY_GAP_MS } from '../../src/content/stories';
 import { TOPICS } from '../../src/content/topics';
 import { createInitialState } from '../../src/core/state';
@@ -57,6 +58,11 @@ describe('Mail vom Chef', () => {
     const r2 = bossReport(s, 3 * 3_600_000, false, () => 0.3);
     expect(r2.items.some((t) => t.includes('Cronjobs'))).toBe(true);
     // Zahlen in den Fragen nie größer als das, was wirklich geschlossen wurde
+    // nur die Zählfrage zu den Cronjobs im Topf (die andere gilt als schon gelesen)
+    s.decks = {};
+    const cronCount = REPORT_ITEMS.findIndex((i) => i.when && i.text(180, s, 1e6).includes('Cronjobs'));
+    const cronOther = REPORT_ITEMS.findIndex((i, n) => n !== cronCount && i.when?.(s) && i.text(180, s, 1e6).includes('Cron'));
+    s.decks.report = [fingerprint(REPORT_ITEMS[cronOther]!.text(60, s, 1e9))];
     const r3 = bossReport(s, 3 * 3_600_000, false, () => 0.3, 10);
     expect(r3.items.find((t) => t.includes('Cronjobs'))).toContain(' 4 Tickets');
   });

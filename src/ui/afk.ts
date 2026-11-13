@@ -1,8 +1,8 @@
 import { CONFIG } from '../config';
+import { fresh } from '../core/deck';
 import { afkTick, applyOfflineProgress, awayReport, restShare, type OfflineReport } from '../core/offline';
 import type { GameState } from '../core/state';
 import { tick } from '../core/tick';
-import { pick } from '../util';
 import type { SysLog } from './log';
 import type { Power } from './power';
 import { gamePaused } from './blocked';
@@ -33,11 +33,11 @@ export function createAfk(state: GameState, log: SysLog, power: Power, onWake: (
 
   const enter = () => {
     afk = true;
-    log.write('info', pick(LIGHTS_OFF_LINES));
+    log.write('info', fresh('LIGHTS_OFF_LINES', LIGHTS_OFF_LINES));
     // gilt sofort als dunkel (jede Berührung weckt), die Röhren gehen aber erst nach dem Monitor aus
     const delayMs = power.screenOff ? 0 : LIGHTS_AFTER_SCREEN_MS;
     power.screenOffNow();
-    power.lightsOff(pick(AFK_HINTS), { delayMs });
+    power.lightsOff(fresh('AFK_HINTS', AFK_HINTS), { delayMs });
   };
 
   const markInput = () => {
@@ -65,7 +65,7 @@ export function createAfk(state: GameState, log: SysLog, power: Power, onWake: (
     const idle = Date.now() - from.at;
     const gained = state.ticketsAllTime - from.tickets;
     afk = false;
-    log.write('info', pick(LIGHTS_ON_LINES));
+    log.write('info', fresh('LIGHTS_ON_LINES', LIGHTS_ON_LINES));
     markInput();
     return gained > 0 ? awayReport(idle, gained, restShare(state)) : null;
   };
@@ -79,7 +79,7 @@ export function createAfk(state: GameState, log: SysLog, power: Power, onWake: (
   power.onScreen(() => {
     markInput();
     if (booting) return;
-    log.write('info', pick(SCREEN_ON_LINES));
+    log.write('info', fresh('SCREEN_ON_LINES', SCREEN_ON_LINES));
     const report = takePending();
     if (report) setTimeout(() => onWake(report), MAIL_AFTER_SCREEN_MS);
   });

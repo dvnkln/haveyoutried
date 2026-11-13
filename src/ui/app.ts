@@ -1,4 +1,5 @@
 import type { Saver } from '../core/save';
+import { fresh } from '../core/deck';
 import type { GameState } from '../core/state';
 import { bus } from '../core/bus';
 import { bossProgress } from '../core/boss';
@@ -23,7 +24,7 @@ import { TRASH_LINES } from '../content/props';
 import { POWER_HINT, WALLPAPER_MARKS } from '../content/boot';
 import { paintWall } from './wallpaper';
 import { achievementCount } from '../core/achievements';
-import { hhmm, pick } from '../util';
+import { hhmm } from '../util';
 import { gameBlocked } from './blocked';
 
 /** Neustart (crt-restart, 1,4 s): bei diesem Zeitpunkt ist das Bild ganz dunkel */
@@ -160,7 +161,7 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
   const desk = createDesk(ctx, fx, () => root, () => screen);
   desk.promptSlot.replaceChildren(promptUser, ':~$ ');
   // Hintergrundbild: je Firma oder aus der Sammlung (System), dazu ein Wasserzeichen, das bei jedem Start ein anderes Problem meldet
-  const [markTitle, markText] = pick(WALLPAPER_MARKS);
+  const [markTitle, markText] = fresh('WALLPAPER_MARKS', WALLPAPER_MARKS);
   const wallpaper = h('div', { class: 'wallpaper', 'aria-hidden': 'true' }, [
     h('div', { class: 'wp-mark' }, [h('b', { text: markTitle }), h('span', { text: markText })]),
   ]);
@@ -192,7 +193,6 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
   ]);
   const monitorArea = h('section', { class: 'monitor-area' }, [
     props.dust,
-    props.kNote,
     props.beacon,
     monitor,
     desk.phone,
@@ -272,7 +272,7 @@ export function mountApp(root: HTMLElement, ctx: AppContext, tabs: Tab[]): App {
     const bonus = Math.max(r.pps * TRASH_BONUS_SEC, r.click * TRASH_BONUS_CLICKS);
     addTickets(ctx.state, bonus);
     trashCount = 0;
-    const line = pick(TRASH_LINES);
+    const line = fresh('TRASH_LINES', TRASH_LINES);
     ctx.log.write('info', line);
     quip(from, `${line} Altpapier-Pfand: +${formatNumber(bonus)} Tickets.`);
     ctx.log.write('ok', `trash[99]: Altpapier-Pfand eingelöst: +${formatNumber(bonus)} Tickets.`);

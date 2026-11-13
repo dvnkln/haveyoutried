@@ -28,11 +28,12 @@ import { logTab } from './ui/tabs/log';
 import { upgradesTab } from './ui/tabs/upgrades';
 import { systemTab } from './ui/tabs/system';
 import { careerTab } from './ui/tabs/career';
-import { pick } from './util';
+import { fresh, useDeckState } from './core/deck';
 
 const now = Date.now();
 const loaded = loadGame(now);
 const state = loaded ?? createInitialState(now);
+useDeckState(() => state);
 const startReport = loaded ? applyOfflineProgress(state, now) : null;
 
 const history = new TicketHistory();
@@ -114,7 +115,7 @@ if (revaluedFrom !== undefined) {
 /** Bericht über die Abwesenheit; onClose kommt auch, wenn es nichts zu berichten gibt */
 const showOfflineReport = (r: OfflineReport, onClose?: () => void) => {
   if (r.gained <= 0) return onClose?.();
-  log.template(pick(RETURN_LINES));
+  log.template(fresh('RETURN_LINES', RETURN_LINES));
   // kurz weg: knappe Meldung; länger weg: der Chef schreibt eine Mail mit „ein paar Fragen“
   if (r.elapsedMs < BOSS_REPORT_MIN_MS) {
     showModal({

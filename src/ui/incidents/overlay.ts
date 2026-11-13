@@ -1,9 +1,10 @@
 import { INCIDENTS, type IncidentId } from '../../config';
+import { fresh } from '../../core/deck';
 import { DONE_LABELS, INCIDENT_BRIEF, INCIDENT_TEXT, RUNBOOK_GO, TAKE_LABELS, WIKI_EDITED } from '../../content/incidents';
 import { bus } from '../../core/bus';
 import { rates } from '../../core/economy';
 import { endIncident, isSolved, resolveIncident, setForgivenMistakes } from '../../core/incidents';
-import { pad2 as p2, pick } from '../../util';
+import { pad2 as p2 } from '../../util';
 import type { AppContext } from '../app';
 import { armButton, h, setText } from '../dom';
 import { describeEffect } from '../pager';
@@ -383,7 +384,7 @@ export function mountIncidentOverlay(ctx: AppContext): void {
 
     // --- Phase 1: Monitoring-Alarm, wartet auf manuelles Übernehmen (nur die Meldung, die Aufgabe steht im Runbook) ---
     const brief = INCIDENT_BRIEF[id];
-    const take = h('button', { class: 'btn btn-danger nag-ack nag-take', type: 'button', text: pick(TAKE_LABELS) });
+    const take = h('button', { class: 'btn btn-danger nag-ack nag-take', type: 'button', text: fresh('TAKE_LABELS', TAKE_LABELS) });
     const alert = h('div', { class: 'mon-page mon-compact' }, [
       summary(1, 2),
       h('div', { class: 'mon-table' }, [monRow('crit', text.host, text.service, text.info, '0m 03s', true)]),
@@ -446,7 +447,7 @@ export function mountIncidentOverlay(ctx: AppContext): void {
       inMonitor(false);
       const rb = brief.runbook;
       // kurz gesperrt: ein doppelter Tipp auf „Übernehmen“ soll das Runbook nicht gleich überspringen
-      const go = h('button', { class: 'btn btn-primary nag-ack wiki-go', type: 'button', text: pick(RUNBOOK_GO) });
+      const go = h('button', { class: 'btn btn-primary nag-ack wiki-go', type: 'button', text: fresh('RUNBOOK_GO', RUNBOOK_GO) });
       armButton(go, INCIDENTS.runbookArmMs);
       go.addEventListener('click', () => {
         ctx.sfx.tick();
@@ -464,7 +465,7 @@ export function mountIncidentOverlay(ctx: AppContext): void {
           ]),
           h('article', { class: 'wiki-page' }, [
             h('h2', { class: 'wiki-title', text: `Runbook: ${rb.title}` }),
-            h('div', { class: 'wiki-meta', text: pick(WIKI_EDITED) }),
+            h('div', { class: 'wiki-meta', text: fresh('WIKI_EDITED', WIKI_EDITED) }),
             h('div', { class: 'wiki-alert', text: `Ausgelöst von: ${text.host}/${text.service}` }),
             h('ol', { class: 'wiki-steps' }, rb.steps.map((st) => h('li', { text: st }))),
             h('div', { class: 'wiki-warn' }, [h('b', { text: 'Achtung: ' }), rb.warn]),
@@ -524,9 +525,11 @@ export function mountIncidentOverlay(ctx: AppContext): void {
     const finish = () => {
       phase = 'done';
       const score = game.score();
-      const results = resolveIncident(ctx.state, id, score, rates(ctx.state));
       const good = isSolved(score);
-      const ack = h('button', { class: 'btn btn-primary nag-ack nag-close', type: 'button', text: pick(good ? DONE_LABELS.good : DONE_LABELS.bad) });
+      // einmal ziehen, für Karte und Ticketverlauf
+      const comment = good ? fresh(`INCIDENT_TEXT:${id}:good`, text.good) : fresh(`INCIDENT_TEXT:${id}:bad`, text.bad);
+      const results = resolveIncident(ctx.state, id, score, rates(ctx.state), comment);
+      const ack = h('button', { class: 'btn btn-primary nag-ack nag-close', type: 'button', text: good ? fresh('DONE_LABELS:good', DONE_LABELS.good) : fresh('DONE_LABELS:bad', DONE_LABELS.bad) });
       armButton(ack, INCIDENTS.doneArmMs);
       ack.addEventListener('click', () => {
         window.removeEventListener('resize', fit);
@@ -562,7 +565,7 @@ export function mountIncidentOverlay(ctx: AppContext): void {
               h('span', { class: 'mon-perf-bar' }, [h('span', { class: 'mon-perf-fill', style: `width:${pct}%` })]),
               h('b', { text: `${pct} %` }),
             ]),
-            h('p', { class: 'nag-comment', text: pick(good ? text.good : text.bad) }),
+            h('p', { class: 'nag-comment', text: comment }),
             ...results.map((r) => h('div', { class: `effect-line mood-${r.mood}`, text: describeEffect(r) })),
             ack,
           ]),

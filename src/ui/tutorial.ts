@@ -1,6 +1,6 @@
 import { HINT_HEADS, HINT_OK, HINTS, type Hint } from '../content/tutorial';
+import { fresh } from '../core/deck';
 import type { GameState } from '../core/state';
-import { pick } from '../util';
 import { gameBlocked } from './blocked';
 import { h } from './dom';
 
@@ -93,8 +93,8 @@ export function startTutorial(state: GameState): void {
 
   const show = (hint: Hint, el: HTMLElement) => {
     active = { hint, el };
-    head.textContent = pick(HINT_HEADS);
-    ok.textContent = pick(HINT_OK);
+    head.textContent = fresh('HINT_HEADS', HINT_HEADS);
+    ok.textContent = fresh('HINT_OK', HINT_OK);
     spot.hidden = false;
     card.hidden = false;
     text.textContent = hint.text;

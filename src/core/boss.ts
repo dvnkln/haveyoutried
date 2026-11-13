@@ -1,5 +1,6 @@
 import { BOSS_TASKS, type BossKind } from '../content/boss';
 import { pick } from '../util';
+import { draw } from './deck';
 import { bus } from './bus';
 import { quirkMods } from './quirks';
 import { addTickets, type GameState } from './state';
@@ -71,7 +72,7 @@ function newTask(s: GameState, rates: { pps: number; click: number }, rnd: () =>
   s.boss = {
     ...s.boss,
     kind,
-    text: pick(BOSS_TASKS[kind], rnd).replace('{n}', target.toLocaleString('de-DE')),
+    text: draw(s, `boss:${kind}`, BOSS_TASKS[kind], { rnd }).replace('{n}', target.toLocaleString('de-DE')),
     target,
     base: bossMeasure(s, kind),
     until: s.stats.playTimeMs + BOSS.timeMs,

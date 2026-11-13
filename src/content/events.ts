@@ -863,6 +863,188 @@ export const EVENTS: GameEventDef[] = [
     ],
     ignore: o('lossSmall', 'Er hat sich selbst einen Router gekauft. Der hängt am Zigarettenanzünder. Du räumst morgen das Kabel aus dem Kofferraum.'),
   },
+  {
+    id: 'miles500',
+    title: 'Mails nur bis 800 km',
+    text: 'Die Statistik meldet: Mails kommen nur bei Empfängern an, die höchstens etwa 800 km entfernt sind. Sie haben es geprüft. Mit Landkarte und Zirkel.',
+    options: [
+      {
+        label: 'Mailserver ansehen',
+        outcomes: [
+          o('win', 'Nach dem Update steht der Verbindungs-Timeout auf fast null. In drei Millisekunden schafft das Signal knapp 900 km, dann gibt der Server auf. Die Statistik hatte recht. Du glaubst ab jetzt jedem Anwender. Eine Woche lang.', 1, {
+            level: 'ok',
+            text: 'sendmail[25]: connect timeout 0.003s -> 30s. max distance: speed of light, not 800 km.',
+          }),
+        ],
+      },
+      { label: '„Mails haben keine Reichweite.“', outcomes: [o('lossSmall', 'Die Statistik schickt dir ihre Karte. Mit Fehlerbalken. Zwei Tage später findest du den Fehler. Er sieht genauso aus wie auf der Karte.')] },
+    ],
+    ignore: o('lossSmall', 'Keiner hat reagiert. Die Statistik schickt alles über 800 km jetzt per Fax. Das klappt. Leider.'),
+  },
+  {
+    id: 'tuesday',
+    title: 'Drucken geht dienstags nicht',
+    text: 'Die Buchhaltung: „Drucken geht immer. Nur dienstags nicht.“ Alle lachen. Du nicht. Du hast schon seltsamere Fehler gesehen.',
+    weight: (_s, d) => (d.getDay() === 2 ? 4 : 1),
+    options: [
+      {
+        label: 'Druckaufträge vergleichen',
+        outcomes: [
+          o('win', 'Gefunden: Im Kopf jeder Druckdatei steht das Datum. Steht da „Tue“, hält ein uraltes Erkennungsprogramm die Datei für etwas ganz anderes und druckt sie nicht. Ein Patch, und die Buchhaltung bekommt eine Entschuldigung.', 1, {
+            level: 'ok',
+            text: 'cups[631]: job 4711: file type "Tue ..." misdetected. patched. tuesday is safe again.',
+          }),
+        ],
+      },
+      { label: 'Gedruckt wird ab Mittwoch', outcomes: [o('tip', 'Neue Hausregel: dienstags kein Papier. Die Druckkosten sinken um ein Siebtel. Das Controlling hält dich für ein Genie.')] },
+    ],
+    ignore: o('lossSmall', 'Niemand glaubt der Buchhaltung. Nächsten Dienstag ruft sie wieder an. Und übernächsten. Mit Beweisfotos.'),
+  },
+  {
+    id: 'cleaner',
+    title: 'Server fällt freitags aus',
+    text: 'Jeden Freitag um 19:30 Uhr ist der Buchungsserver weg. Genau 20 Minuten lang. Danach läuft er, als wäre nichts gewesen. Das Monitoring zeigt nur ein Loch.',
+    weight: (_s, d) => (d.getDay() === 5 ? 3 : 1),
+    options: [
+      {
+        label: 'Freitagabend im Serverraum warten',
+        outcomes: [o('win', '19:30 Uhr: Die Tür geht auf. Die Reinigungskraft zieht den einzigen freien Stecker, saugt 20 Minuten und steckt ihn wieder ein. Sie bekommt eine eigene Steckdose. Du einen ruhigen Freitag.')],
+      },
+      { label: 'USV davorhängen', outcomes: [o('rush', 'Die USV piept jetzt jeden Freitag 20 Minuten. Der Server läuft durch. Wer da saugt, weißt du bis heute nicht.')] },
+    ],
+    ignore: o('lossSmall', 'Freitags um 19:30 Uhr ist eben Pause. So steht es jetzt im Betriebshandbuch.'),
+  },
+  {
+    id: 'badge',
+    title: 'Ausgesperrt vom eigenen Netz',
+    text: 'Nach einem Netzwerk-Change ist das Firmennetz weg. Zurückdrehen geht nur direkt im Serverraum. Die Türkarten prüfen ihre Berechtigung übers Firmennetz.',
+    options: [
+      { label: 'Hausmeister mit Schlüssel suchen', outcomes: [o('win', 'Der Hausmeister hat einen echten Schlüssel. Aus Metall. Er schließt auf, du drehst zurück. Er erzählt es noch wochenlang in der Kantine.')] },
+      {
+        label: 'Tür aufhebeln',
+        outcomes: [
+          o('rush', 'Die Tür gibt nach, das Netz läuft wieder. Das Immobilienmanagement schickt eine Rechnung. Aber erst nächsten Monat.', 0.5),
+          o('fire', 'Die Tür gibt nicht nach, der Alarm schon. Der Wachdienst kommt. Er hat auch nur eine Türkarte.', 0.5),
+        ],
+      },
+    ],
+    ignore: o('fire', 'Alle warten draußen vor der Tür. Nach drei Stunden fällt jemandem ein, dass das Fenster im Erdgeschoss kippbar ist.'),
+  },
+  {
+    id: 'excelrows',
+    title: 'Neue Kunden fehlen',
+    text: 'Die Kundenliste wird seit Jahren in Excel gepflegt. Heute kamen neue Kunden dazu. Sie tauchen nirgends auf. Die Tabelle hat genau 1.048.576 Zeilen.',
+    options: [
+      { label: 'Eine echte Datenbank aufsetzen', outcomes: [o('win', 'Alle Kunden umgezogen. Die Liste ist jetzt sicher, schnell und hat keine Zeilengrenze. Der Vertrieb vermisst die bunten Zellen.')] },
+      {
+        label: 'Kundenliste_2.xlsx anlegen',
+        outcomes: [
+          o('tip', 'Läuft. Der Vertrieb ist begeistert und legt gleich noch Kundenliste_2_neu.xlsx an. Für später.', 0.5),
+          o('lossSmall', 'Läuft. Bis jemand beide Listen „zusammenführt“. Jetzt hat jeder Kunde einen Zwilling.', 0.5),
+        ],
+      },
+    ],
+    ignore: o('loss', 'Die neuen Kunden bekommen nie eine Rechnung. Das spricht sich rum. Es kommen sehr viele neue Kunden.'),
+  },
+  {
+    id: 'genes',
+    title: 'Gene heißen jetzt Datum',
+    text: 'Die Biologie meldet: In ihren Tabellen heißen Gene plötzlich „1. Sep“ und „1. Mrz“. Excel wollte helfen. Die Doktorandin hat drei Jahre Daten. Und Tränen.',
+    when: atCompany('uni'),
+    options: [
+      { label: 'Automatische Erkennung abschalten', outcomes: [o('win', 'Abgeschaltet, alles als Text neu eingelesen. Die Gene heißen wieder wie Gene. Die Doktorandin backt dir einen Kuchen in Form einer Doppelhelix.')] },
+      { label: 'Abwarten, die Fachwelt regelt das', outcomes: [o('tip', 'Tatsächlich: Die zuständige Kommission benennt die Gene um, damit Excel sie in Ruhe lässt. Das ist wirklich so passiert. Dein Name steht nirgends.')] },
+    ],
+    ignore: o('lossSmall', 'Niemand hat reagiert. Das Paper erscheint mit einem Gen namens „1. März“. Reviewer 2 hat es nicht gemerkt.'),
+  },
+  {
+    id: 'smalltalk',
+    title: 'Smalltalk in der Teeküche',
+    text: 'Der Vertriebsleiter will in der Teeküche über Fußball reden. Mit dir. Von Fußball weißt du nur, dass er rund ist. Vielleicht.',
+    options: [
+      {
+        label: '„Was für ein lächerliches Spiel gestern!“',
+        outcomes: [o('win', 'Funktioniert. Er redet zehn Minuten am Stück, du nickst. Seitdem bekommt die IT als Erste neue Laptops. Der Satz klappt immer, egal wer gespielt hat.')],
+      },
+      { label: 'Zugeben, dass du keine Ahnung hast', outcomes: [o('lossSmall', 'Er erklärt dir die Abseitsregel. Mit Kaffeebechern. Zwanzig Minuten. Du verstehst sie jetzt. Leider.')] },
+    ],
+    ignore: o('none', 'Du hast dich hinter dem Kühlschrank versteckt, bis er weg war. Jetzt redet er mit dem Praktikanten. Der kann Fußball und wird zum Vertriebstreffen eingeladen.'),
+  },
+  {
+    id: 'ranking',
+    title: 'Neues Bewertungssystem',
+    text: 'Der neue Personalchef lächelt wie eine Katze und hat eine Idee: Jede Abteilung meldet ihre schlechtesten 10 %. Laut Organigramm besteht die IT aus dir und dem Drucker.',
+    options: [
+      { label: 'Den Drucker melden', outcomes: [o('win', 'Der Drucker wird zum Entwicklungsgespräch gebeten. Er hat einen Papierstau. Das Gespräch wird vertagt, für immer. Die IT gilt als „voll leistungsfähig“.')] },
+      { label: 'Nachrechnen: 10 % von zwei', outcomes: [o('tip', 'Laut Organigramm sind 10 % von zwei 0,2 Stellen. Gestrichen wird ein Bürostuhlbein. Deins.')] },
+    ],
+    ignore: o('lossSmall', 'Keiner hat geantwortet. Gemeldet wurdest du. Begründung: „Hat nicht geantwortet.“'),
+  },
+  {
+    id: 'mug',
+    title: 'Der Kollege mit der Tasse',
+    text: 'Seit drei Jahren läuft ein Kollege mit einer Kaffeetasse durchs Haus und sieht beschäftigt aus. Was er macht, weiß keiner. Jetzt will er „mal bei der IT reinschnuppern“.',
+    options: [
+      { label: 'Ihm ein Ticket geben', outcomes: [o('lossSmall', 'Er trägt das Ticket mit der Tasse durchs Haus. Es wirkt jetzt sehr beschäftigt. Gelöst ist es nicht.')] },
+      { label: 'Von ihm lernen', outcomes: [o('rush', 'Er verrät den Trick: Wer eine Tasse trägt, wird nie gefragt, wohin er geht. Du gehst mit Tasse zu den Servern und hast eine Stunde Ruhe.')] },
+    ],
+    ignore: o('none', 'Er hat geschnuppert. Er war zufrieden. Er kommt nächstes Jahr wieder. Mit Tasse.'),
+  },
+  {
+    id: 'triangles',
+    title: 'Der Chef hat ein Buch gelesen',
+    text: 'Der Chef hat ein Managementbuch gelesen: „Die verbundenen Dreiecke des Erfolgs“. Er hat sie ans Whiteboard gemalt. Über deine Ticketliste.',
+    options: [
+      { label: 'Fragen, was die Dreiecke bedeuten', outcomes: [o('lossSmall', 'Er erklärt es. Zwei Stunden. Am Ende sind es mehr Dreiecke. Die Ticketliste ist nicht mehr zu retten.')] },
+      { label: 'Ein Gegendiagramm malen', outcomes: [o('win', 'Du malst „Das Viereck der Ticketlage“: Tickets rein, Tickets raus. Der Chef ist beeindruckt und lässt dich in Ruhe. Er sucht jetzt ein Buch über Vierecke.')] },
+    ],
+    ignore: o('none', 'Die Dreiecke bleiben am Whiteboard. Niemand traut sich, sie wegzuwischen. Sie stehen inzwischen unter Denkmalschutz.'),
+  },
+  {
+    id: 'quota',
+    title: 'Postfach voll (48 GB)',
+    text: 'Ein Abteilungsleiter will „unbegrenzten Speicher“. Sein Postfach hat 48 GB. 47 davon sind weitergeleitete Kettenbriefe mit Katzenvideos.',
+    options: [
+      {
+        label: 'Aufräumen, wie die alten Admins',
+        outcomes: [
+          o('win', 'Alles älter als 2019 ist weg. Er merkt nichts, er hat seit 2019 nichts geöffnet. Dafür ist der Mailserver plötzlich schnell.', 0.7, {
+            level: 'warn',
+            text: 'dovecot[143]: expunged 41.3 GB from INBOX. user did not notice. user will never notice.',
+          }),
+          o('lossSmall', 'Alles älter als 2019 ist weg. Darunter die eine Mail, die er wirklich gebraucht hat. Er hat sie natürlich gesucht. Heute.', 0.3),
+        ],
+      },
+      { label: 'Freundlich bitten, aufzuräumen', outcomes: [o('lossSmall', 'Er räumt auf: in einen Ordner „Aufgeräumt“. Im selben Postfach.')] },
+    ],
+    ignore: o('lossSmall', 'Das Postfach läuft voll. Er schickt dir seine Mails jetzt auf USB-Sticks. Per Hauspost.'),
+  },
+  {
+    id: 'gitfolder',
+    title: 'Git ist kaputt',
+    text: 'Ein Entwickler hat Git „kaputt gemacht“. Sein Plan: Ordner löschen, alles neu herunterladen. Drei Wochen Arbeit liegen nur bei ihm lokal.',
+    options: [
+      {
+        label: 'Mit ihm das Reflog durchgehen',
+        outcomes: [o('win', 'Mit dem Reflog ist alles wieder da. Er hält dich jetzt für einen Zauberer. Du hast den Befehl auch erst vor fünf Minuten nachgeschlagen.', 1, {
+          level: 'ok',
+          text: 'git[{pid}]: HEAD@{17}: recovered 3 weeks of work. nobody understands how. nobody asks.',
+        })],
+      },
+      { label: 'Ordner löschen lassen', outcomes: [o('lossSmall', 'Sauber! Und leer. Die drei Wochen gibt es jetzt nur noch in seinem Kopf. Er tippt sie aus dem Gedächtnis nach.')] },
+    ],
+    ignore: o('lossSmall', 'Er hat den Ordner gelöscht. Danach den Papierkorb geleert. Danach angerufen.'),
+  },
+  {
+    id: 'scapegoat',
+    title: 'Chef sucht einen Schuldigen',
+    text: 'Ein Server war über Nacht weg. Der Chef braucht für den Vorstand bis 12 Uhr einen Schuldigen. Er schaut dich an. Dann den Praktikanten. Dann wieder dich.',
+    options: [
+      { label: 'Den Server beschuldigen', outcomes: [o('win', '„Der Server war es.“ Der Chef ist begeistert: Server gehen nicht zum Betriebsrat. Der Server bekommt eine Abmahnung, laminiert, an der Gehäusetür.')] },
+      { label: 'Die Schuld auf dich nehmen', outcomes: [o('lossSmall', 'Der Chef ist gerührt. Er trägt es trotzdem in deine Akte ein. „Vertrauen ist gut, Akte ist besser.“')] },
+    ],
+    ignore: o('none', 'Bis 12 Uhr hat sich niemand gemeldet. Der Chef nennt dem Vorstand „die Zentrale“. Die war nicht da und kann nicht widersprechen.'),
+  },
 ];
 
 /** „!! DRINGEND !!“-Ticket erwischt: Texte je Effekt */
@@ -871,9 +1053,20 @@ export const URGENT_TEXT: Record<string, string[]> = {
     'VIP-Ticket vom Vorstand in 2 Sekunden gelöst. Beförderung: nein. Tickets: ja.',
     'Chef-Ticket erledigt, bevor er aufgelegt hat. Er hält das jetzt für normal.',
     'Erledigt. Der Vorstand hat „Danke“ gesagt. Das Protokoll vermerkt es.',
+    'Der Vorstand antwortet: „Schon erledigt? Unheimlich.“',
+    'Gelöst, bevor die Lesebestätigung zurück war.',
+    'Erledigt. Die Vorstandsassistenz notiert dich als „verlässlich“. Mit Bleistift.',
   ],
-  overtime: ['Adrenalin! Du tippst eine Weile siebenmal so schnell.', 'Puls 140, Finger glühen. Eine Weile tippst du siebenmal so schnell.'],
-  flow: ['Du bist im Flow. Die ganze Abteilung läuft dreifach.', 'Das hat sich rumgesprochen. Alle arbeiten plötzlich dreimal so schnell. Für eine Weile.'],
+  overtime: [
+    'Adrenalin! Du tippst eine Weile siebenmal so schnell.',
+    'Puls 140, Finger glühen. Eine Weile tippst du siebenmal so schnell.',
+    'Vorstand zufrieden, Adrenalin übrig. Eine Weile tippst du siebenmal so schnell.',
+  ],
+  flow: [
+    'Du bist im Flow. Die ganze Abteilung läuft dreifach.',
+    'Das hat sich rumgesprochen. Alle arbeiten plötzlich dreimal so schnell. Für eine Weile.',
+    'Plötzlich will keiner langsamer sein als die IT. Alle arbeiten eine Weile dreimal so schnell.',
+  ],
 };
 
 export const URGENT_LABELS = ['!! DRINGEND !!', '!! VIP !!', '!! CHEF !!', '!! PROD DOWN !!', '!! ASAP !!', '!! GESTERN !!', '!! SEHR WICHTIG !!'];

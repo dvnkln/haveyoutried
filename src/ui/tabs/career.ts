@@ -1,11 +1,11 @@
 import { PRESTIGE } from '../../config';
+import { fresh } from '../../core/deck';
 import { ACHIEVEMENTS } from '../../content/achievements';
 import { companyOf, FAREWELLS } from '../../content/companies';
 import { describeQuirk, quirkEffects } from '../../core/quirks';
 import { achievementCount, achievementMultiplier, ACH_SEEN_FLAG, isUnread, markAllRead, markRead } from '../../core/achievements';
 import { incidentRunning } from '../../core/incidents';
 import { canQuit, experienceBonus, prestigeGain, prestigeMultiplier, quitJob, quitWorth, ticketsForNextPoint } from '../../core/prestige';
-import { pick } from '../../util';
 import type { AppContext, Tab } from '../app';
 import { h, setDisabled, setText } from '../dom';
 import { formatNumber } from '../format';
@@ -135,7 +135,7 @@ export function careerTab(): Tab {
               body: [
                 h('section', { class: 'job-block job-old' }, [
                   h('div', { class: 'job-head' }, [h('span', { class: 'job-kicker', text: 'Tschüss' }), h('b', { text: oldName })]),
-                  h('p', { text: pick(FAREWELLS) }),
+                  h('p', { text: fresh('FAREWELLS', FAREWELLS) }),
                   h('p', { class: 'job-result' }, [
                     'Mitgenommen: ',
                     h('strong', { class: 'hl', text: `+${gained} Berufserfahrung` }),

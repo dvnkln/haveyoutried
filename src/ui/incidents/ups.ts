@@ -1,7 +1,8 @@
 import { INCIDENTS } from '../../config';
+import { fresh } from '../../core/deck';
 import { progressScore } from '../../core/incidents';
 import { UPS_CORE, UPS_CRASH_AFTER, UPS_FRONT } from '../../content/incidents';
-import { pick, shuffle } from '../../util';
+import { shuffle } from '../../util';
 import { h, juice, SHAKE, setText } from '../dom';
 import type { GameApi, Minigame } from './types';
 
@@ -298,7 +299,7 @@ export function upsGame(): Minigame {
         const chain = crashed.filter((x) => x.cause !== root).map((x) => name(x.id));
         const head = `${direct.join(', ')} ${direct.length > 1 ? 'brauchten' : 'brauchte'} ${name(root)} noch: abgestürzt.`;
         const tail = chain.length ? ` ${chain.join(', ')} ${chain.length > 1 ? 'sind' : 'ist'} gleich mit.` : '';
-        setText(reply, `${head}${tail} ${pick(UPS_CRASH_AFTER)}`);
+        setText(reply, `${head}${tail} ${fresh('UPS_CRASH_AFTER', UPS_CRASH_AFTER)}`);
         api?.sfx.error();
         api?.haptic('error');
         for (const x of crashed) juice(units[x.id]!, SHAKE, 260);

@@ -1,4 +1,5 @@
 import { CONFIG, SOLVE } from '../config';
+import { fresh } from '../core/deck';
 import { espressoActive } from '../core/actions';
 import { ticketWork } from '../core/economy';
 import { availableCallers, QUEUE_LINE, type Call, type Line } from '../content/callers';
@@ -281,7 +282,7 @@ const row = (label: string, value: string, cls = '') =>
 const PROGRAMS: Record<Kind, Program> = {
   mail: {
     weight: 3,
-    title: () => pick(MAIL_TITLES),
+    title: () => fresh('MAIL_TITLES', MAIL_TITLES),
     // Verfassen wie in Outlook: großer „Senden“-Knopf vorn, darunter An/Cc/Betreff
     head: (t) => [
       h('div', { class: 'mail-tools' }, [
@@ -291,7 +292,7 @@ const PROGRAMS: Record<Kind, Program> = {
       h('div', { class: 'mail-fields' }, [row('An:', t.who), row('Cc:', '', 'mail-cc'), row('Betreff:', `Re: ${t.full}`)]),
     ],
     lines: (t) => [t.line.answer],
-    extra: () => [h('div', { class: 'mail-sig', text: pick(MAIL_SIGS) })],
+    extra: () => [h('div', { class: 'mail-sig', text: fresh('MAIL_SIGS', MAIL_SIGS) })],
     log: (t, x) => `mail[25]: Re: ${t.subject} → ${t.who}: „${x}“`,
     // Gesendet-Leiste statt Werkzeugleiste (gleicher Platz, nichts springt)
     ready: (t, head) => swap(head.querySelector('.mail-tools'), note(`✓ Gesendet an ${t.who}`)),
@@ -306,7 +307,7 @@ const PROGRAMS: Record<Kind, Program> = {
       h('div', { class: 'tk-card' }, [
         h('div', { class: 'tk-chips' }, [
           h('span', { class: 'tk-id', text: ticketId(t.no) }),
-          h('span', { class: 'tk-status', text: pick(TICKET_OPEN_STATES) }),
+          h('span', { class: 'tk-status', text: fresh('TICKET_OPEN_STATES', TICKET_OPEN_STATES) }),
           h('span', { class: 'tk-prio', text: t.prio }),
         ]),
         h('div', { class: 'tk-who' }, [avatar(t.who, 'small'), h('span', { text: `${t.who} · vor ${randInt(2, 59)} Min.` })]),
@@ -333,7 +334,7 @@ const PROGRAMS: Record<Kind, Program> = {
     head: (t) => [h('div', { class: 'work-comment', text: `# ${t.who}: ${t.full}` })],
     lines: (t) => topicPool(t.line.topic, 'cmds'),
     log: (t, x) => `root@${t.host}:~$ ${x}`,
-    ready: (_t, _head, extra) => extra.append(h('div', { class: 'term-out opt', text: pick(TERM_OUT) }), h('div', { class: 'term-out term-next opt', text: (document.querySelector('.typed-prompt')?.textContent ?? '$ ').trimEnd() })),
+    ready: (_t, _head, extra) => extra.append(h('div', { class: 'term-out opt', text: fresh('TERM_OUT', TERM_OUT) }), h('div', { class: 'term-out term-next opt', text: (document.querySelector('.typed-prompt')?.textContent ?? '$ ').trimEnd() })),
   },
   chat: {
     weight: 2,
@@ -343,7 +344,7 @@ const PROGRAMS: Record<Kind, Program> = {
       h('div', { class: 'chat-app' }, ['Aktivität', 'Chat', 'Teams', 'Anrufe'].map((x) => h('span', { class: `chat-app-tab${x === 'Chat' ? ' on' : ''}`, text: x }))),
       h('div', { class: 'chat-top' }, [
         avatar(t.who),
-        h('span', { class: 'chat-name' }, [t.who, h('span', { class: 'chat-status', text: pick(CHAT_STATES) })]),
+        h('span', { class: 'chat-name' }, [t.who, h('span', { class: 'chat-status', text: fresh('CHAT_STATES', CHAT_STATES) })]),
       ]),
       h('div', { class: 'chat-msg' }, [
         avatar(t.who, 'small'),
@@ -404,7 +405,7 @@ const PROGRAMS: Record<Kind, Program> = {
           h('div', { class: 'rdp-dtitle' }, [h('span', { text: 'Fehler' }), h('span', { text: '×' })]),
           h('div', { class: 'rdp-dbody' }, [
             h('span', { class: 'rdp-x', 'aria-hidden': 'true', text: '✕' }),
-            h('span', { class: 'rdp-err', text: pick(RDP_ERRORS) }),
+            h('span', { class: 'rdp-err', text: fresh('RDP_ERRORS', RDP_ERRORS) }),
             h('span', { class: 'rdp-ok', text: 'OK' }),
           ]),
         ]),
@@ -440,7 +441,7 @@ const PROGRAMS: Record<Kind, Program> = {
     label: 'Wert:',
     extra: () => [
       h('div', { class: 'web-actions' }, [h('span', { class: 'web-btn save', text: 'Speichern' }), h('span', { class: 'web-btn', text: 'Abbrechen' })]),
-      h('div', { class: 'web-foot', text: pick(WEB_FOOTERS) }),
+      h('div', { class: 'web-foot', text: fresh('WEB_FOOTERS', WEB_FOOTERS) }),
     ],
     lines: (t) => (Math.random() < 0.25 || !t.device ? WEB_GENERIC : DEVICE_SETTINGS[t.device]),
     log: (t, x) => `web[80]: ${t.target}: ${x} – gespeichert`,
@@ -454,15 +455,15 @@ const PROGRAMS: Record<Kind, Program> = {
     weight: 1,
     // Web-App: läuft im Browser
     title: (t) => `${t.app} – ${browserName()}`,
-    head: (t) => [browser('chatki.example', true, 'ai', t.app), h('div', { class: 'ai-model', text: `Modell: ${AI_MODEL} ▾` }), aiRow(pick(AI_GREETINGS))],
+    head: (t) => [browser('chatki.example', true, 'ai', t.app), h('div', { class: 'ai-model', text: `Modell: ${AI_MODEL} ▾` }), aiRow(fresh('AI_GREETINGS', AI_GREETINGS))],
     // ganzer Betreff, wenn er nicht zu lang ist; nach „…?“ kein zusätzlicher Punkt
     lines: (t) =>
       AI_PROMPTS.map((p) => fill(p, { subject: t.full.length <= 80 ? t.full : t.subject, who: t.who }).replace(/([.!?…])“\./g, '$1“')),
-    extra: () => [h('div', { class: 'ai-foot', text: pick(AI_FOOTERS) })],
+    extra: () => [h('div', { class: 'ai-foot', text: fresh('AI_FOOTERS', AI_FOOTERS) })],
     log: (t, x) => `ai[{pid}]: Prompt zu ${ticketId(t.no)}: „${x}“`,
     // Antwort kommt als neue Blase unter dem Prompt: selbstbewusst, mit der echten Ursache des Tickets
     ready: (t, head, extra, reply) => {
-      const answer = fill(pick(AI_REPLIES), { cause: t.line.cause });
+      const answer = fill(fresh('AI_REPLIES', AI_REPLIES), { cause: t.line.cause });
       const undo = toHistory(head, h('span', { class: 'me-bubble', text: reply }), [aiRow(answer, true)]);
       // eng: wie früher, die Antwort steht an Stelle der Begrüßung
       const inPlace = () => head.replaceChildren(aiRow(answer, true));
@@ -493,7 +494,7 @@ const PROGRAMS: Record<Kind, Program> = {
       ),
     ],
     lines: (t) => topicPool(t.line.topic, 'searches'),
-    log: (_t, x) => `browser[42]: gesucht: „${x}“ – ${pick(SEARCH_RESULTS)}`,
+    log: (_t, x) => `browser[42]: gesucht: „${x}“ – ${fresh('SEARCH_RESULTS', SEARCH_RESULTS)}`,
     ready: (_t, _head, extra) => {
       extra.querySelector('.search-hits')?.prepend(h('div', { class: 'search-count', text: `Ungefähr ${randInt(2, 900).toLocaleString('de-DE')}.000 Ergebnisse (0,${randInt(10, 99)} Sekunden)` }));
       // angeklickter Treffer (keine Anzeige): wird lila wie besucht
@@ -566,12 +567,13 @@ export function createWork(
   const queued = (current: Call) => {
     const others = availableCallers(ctx.state).filter((c) => !current.who.startsWith(c.who));
     const taken = (l: Line) => recent.includes(l.text) || l.text === current.text || l.text === current.about;
-    let c = pick(others);
-    let line = pick(c.lines);
-    for (let i = 0; i < 8 && taken(line); i++) {
-      c = pick(others);
-      line = pick(c.lines);
-    }
+    // gleicher Stapel wie am Telefon (desk.ts): was jemand schon gesagt hat, kommt auch hier erst in der nächsten Runde
+    const next = () => {
+      const c = pick(others);
+      return { c, line: fresh(`call:${c.who}`, c.lines, { key: (l) => l.text }) };
+    };
+    let { c, line } = next();
+    for (let i = 0; i < 8 && taken(line); i++) ({ c, line } = next());
     return { who: c.who, line };
   };
 
@@ -742,13 +744,13 @@ export function createWork(
       device,
       // Server-Tickets mit Fernwartung: auf einen Server, sonst auf den PC des Anrufers
       target: device ?? (server ? pick(SERVERS) : pcOf(who)),
-      prio: BOSSES.includes(who) && Math.random() < 0.7 ? 'CHEF' : pick(TICKET_PRIOS),
-      app: kind === 'ai' ? pick(AI_TITLES) : '',
+      prio: BOSSES.includes(who) && Math.random() < 0.7 ? 'CHEF' : fresh('TICKET_PRIOS', TICKET_PRIOS),
+      app: kind === 'ai' ? fresh('AI_TITLES', AI_TITLES) : '',
       host: companyOf(ctx.state.prestige.company).host,
       server,
     };
     const prog = PROGRAMS[kind];
-    reply = pick(prog.lines(task));
+    reply = fresh(`reply:${kind}`, prog.lines(task));
     typedLen = 0;
     progress = 0;
     presses = 0;
@@ -817,14 +819,14 @@ export function createWork(
   const celebrate = () => {
     setStreak(streak + 1);
     const lines = STREAK_LINES[streak];
-    const line = lines ? pick(lines) : '';
+    const line = lines ? fresh(`STREAK_LINES:${streak}`, lines) : '';
     setText(stampStreak, streak >= 2 ? `×${streak}` : '');
     const now = performance.now();
     // Espresso löst schneller, als man feiern kann: dann nur der Zähler, solange der letzte Stempel noch steht.
     // Serien-Sprüche kommen immer und bleiben stehen, bis man sie lesen konnte.
     if (line || !espressoActive(ctx.state) || now >= nextCelebrate) {
       nextCelebrate = now + (line ? STAMP_BIG_MS : CONFIG.espresso.celebrateGapMs);
-      setText(stampText, `✓ ${pick(task.line.fix ? FIX_STAMPS : STAMPS)}`);
+      setText(stampText, `✓ ${task.line.fix ? fresh('FIX_STAMPS', FIX_STAMPS) : fresh('STAMPS', STAMPS)}`);
       setText(stampLine, line);
       stampPending = line ? 'big' : 'show';
       invalidate();
@@ -880,13 +882,13 @@ export function createWork(
       who: task.who,
       channel: fill(CHANNELS[task.kind], vars()),
       prio: task.prio,
-      status: pick(TICKET_STATES),
+      status: fresh('TICKET_STATES', TICKET_STATES),
       reply,
       replyLabel: REPLY_LABELS[task.kind],
       cause: task.line.cause,
       // Fragen: Notiz zum Gespräch; Probleme: Notiz zur Reparatur
-      note: fill(pick(task.line.fix ? topicPool(task.line.topic, 'notes') : TALK_NOTES), vars()),
-      solution: fill(pick(DONE_LINES[task.kind]), vars()),
+      note: fill(task.line.fix ? fresh(`notes:${task.line.topic}`, topicPool(task.line.topic, 'notes')) : fresh('TALK_NOTES', TALK_NOTES), vars()),
+      solution: fill(fresh(`DONE_LINES:${task.kind}`, DONE_LINES[task.kind]), vars()),
     });
     celebrate();
     if (wasReady) {
@@ -914,11 +916,11 @@ export function createWork(
       ]);
       const votes = k(randInt(120, 48_000));
       const comments = k(randInt(12, 2_400));
-      const title = h('div', { class: 'meme-title', text: pick(MEME_TITLES) });
+      const title = h('div', { class: 'meme-title', text: fresh('MEME_TITLES', MEME_TITLES) });
       // Forum: Unterforum, Titel, Bild, darunter runde Knöpfe (▲ Zahl ▼ · Kommentare · Teilen)
       if (forum)
         return h('div', { class: 'meme meme-forum' }, [
-          h('div', { class: 'meme-head' }, [h('span', { class: 'meme-src', text: pick(MEME_SUBS) }), h('span', { class: 'meme-meta', text: ` · ${randInt(1, 23)} Std. · ${pick(MEME_USERS)}` })]),
+          h('div', { class: 'meme-head' }, [h('span', { class: 'meme-src', text: fresh('MEME_SUBS', MEME_SUBS) }), h('span', { class: 'meme-meta', text: ` · ${randInt(1, 23)} Std. · ${fresh('MEME_USERS', MEME_USERS)}` })]),
           title,
           img,
           h('div', { class: 'meme-foot' }, [
@@ -1020,14 +1022,14 @@ export function createWork(
     el.dataset.kind = 'memes';
     showSite(Math.random() < 0.5 ? 'forum' : 'gag');
     nextSite();
-    ctx.log.write('info', pick(MEME_ENTER_LINES));
+    ctx.log.write('info', fresh('MEME_ENTER_LINES', MEME_ENTER_LINES));
   };
   /** Memes beenden, ohne neu zu zeichnen */
   const endMemes = () => {
     memes = false;
     clearTimeout(siteTimer);
     stopScrolling();
-    ctx.log.write('info', pick(MEME_LEAVE_LINES));
+    ctx.log.write('info', fresh('MEME_LEAVE_LINES', MEME_LEAVE_LINES));
   };
   const leaveMemes = () => {
     endMemes();

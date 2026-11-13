@@ -1,3 +1,4 @@
+import { fresh } from '../core/deck';
 import {
   BOOT_DARK_HINT,
   BOOT_LIGHTS_LINE,
@@ -8,7 +9,6 @@ import {
   SPLASH_BUTTON,
   SPLASH_GAGS,
 } from '../content/boot';
-import { pick } from '../util';
 import type { Sfx } from './audio';
 import { h } from './dom';
 import type { SysLog } from './log';
@@ -39,7 +39,7 @@ function splash(sfx: Sfx, first: boolean): Promise<void> {
       h('h1', { class: 'splash-title', text: GAME_TITLE }),
       btn,
       h('div', { class: 'splash-label', text: SPLASH_BUTTON }),
-      h('p', { class: 'splash-gag', text: pick(first ? SPLASH_GAGS : [...SPLASH_GAGS, ...SPLASH_BACK_GAGS]) }),
+      h('p', { class: 'splash-gag', text: fresh('SPLASH_GAGS', first ? SPLASH_GAGS : [...SPLASH_GAGS, ...SPLASH_BACK_GAGS]) }),
     ]),
   ]);
   document.body.append(el);

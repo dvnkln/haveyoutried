@@ -1,5 +1,5 @@
 import { SMART_GLITCH_HINT, SMART_GLITCH_LINES, SMART_ON_LINES } from '../content/boot';
-import { pick } from '../util';
+import { fresh } from '../core/deck';
 import type { Sfx } from './audio';
 import type { SysLog } from './log';
 import { h } from './dom';
@@ -138,7 +138,7 @@ export function createPower(app: HTMLElement, sfx: Sfx, log: SysLog): Power {
   let smartDown = false;
   const smartGlitch = (): boolean => {
     smartDown = Math.random() < power.glitchChance;
-    if (smartDown) log.write('warn', pick(SMART_GLITCH_LINES));
+    if (smartDown) log.write('warn', fresh('SMART_GLITCH_LINES', SMART_GLITCH_LINES));
     return smartDown;
   };
   /** Dauer des Licht-an-Flackerns (langsame Fassung beim ersten Start) */
@@ -246,7 +246,7 @@ export function createPower(app: HTMLElement, sfx: Sfx, log: SysLog): Power {
           shade.classList.add('show-hint');
           return;
         }
-        log.write('info', pick(SMART_ON_LINES));
+        log.write('info', fresh('SMART_ON_LINES', SMART_ON_LINES));
         wave();
         autoScreen();
       };

@@ -21,7 +21,7 @@ export interface GameEvents {
   bossDone: { text: string; reward: number };
   bossFailed: { text: string };
   /** abandoned = beim Laden gefunden (Seite während des Incidents geschlossen) */
-  incidentResolved: { id: IncidentId; score: number; results: EffectResult[]; abandoned: boolean };
+  incidentResolved: { id: IncidentId; score: number; results: EffectResult[]; abandoned: boolean; comment?: string };
 }
 
 type Handler<T> = (payload: T) => void;

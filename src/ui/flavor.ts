@@ -1,4 +1,5 @@
 import { CONFIG, GENERATORS } from '../config';
+import { fresh } from '../core/deck';
 import { GENERATOR_TEXT } from '../content/generators';
 import {
   AMBIENT,
@@ -25,7 +26,7 @@ import { BOSS_DONE, BOSS_FAILED } from '../content/boss';
 import { formatNumber } from './format';
 import { availableUpgrades, isUnlocked } from '../core/economy';
 import type { GameState } from '../core/state';
-import { pick, randInt, weightedPick } from '../util';
+import { randInt, weightedPick } from '../util';
 import type { App, AppContext } from './app';
 import { nextAlarmId } from './history';
 import { describeEffect } from './pager';
@@ -38,12 +39,12 @@ export function startFlavor(ctx: AppContext, app: App): void {
   const { state, log, history, sfx, haptic } = ctx;
 
   bus.on('buy', ({ id, owned }) => {
-    log.write('info', pick(GENERATOR_TEXT[id].buyLog), { n: owned });
+    log.write('info', fresh(`buyLog:${id}`, GENERATOR_TEXT[id].buyLog), { n: owned });
     sfx.buy();
   });
 
   bus.on('upgrade', ({ id }) => {
-    log.template(pick(UPGRADE_BUY_LINES), { name: UPGRADE_TEXT[id]?.name ?? id });
+    log.template(fresh('UPGRADE_BUY_LINES', UPGRADE_BUY_LINES), { name: UPGRADE_TEXT[id]?.name ?? id });
     sfx.upgrade();
     app.popCounter();
   });
@@ -93,7 +94,7 @@ export function startFlavor(ctx: AppContext, app: App): void {
     const t = INCIDENT_TEXT[id];
     log.write('crit', `icinga2[2342]: SERVICE ALERT: ${t.host};${t.service};CRITICAL;HARD;3;${t.info}`);
   });
-  bus.on('incidentResolved', ({ id, score, results, abandoned }) => {
+  bus.on('incidentResolved', ({ id, score, results, abandoned, comment }) => {
     const t = INCIDENT_TEXT[id];
     const solved = !abandoned && isSolved(score);
     const effects = results.map(describeEffect).join(', ');
@@ -104,7 +105,7 @@ export function startFlavor(ctx: AppContext, app: App): void {
       channel: 'Monitoring',
       prio: 'CRITICAL',
       status: abandoned ? 'Eskaliert (Admin weg)' : solved ? 'Gelöst' : 'Eskaliert an: Kollege',
-      note: abandoned ? 'Mitten im Incident weg gewesen. Der Kollege hat übernommen und erzählt es allen.' : pick(solved ? t.good : t.bad),
+      note: abandoned ? 'Mitten im Incident weg gewesen. Der Kollege hat übernommen und erzählt es allen.' : comment ?? (solved ? fresh(`INCIDENT_TEXT:${id}:good`, t.good) : fresh(`INCIDENT_TEXT:${id}:bad`, t.bad)),
       solution: `${solved ? `RECOVERY: ${t.okInfo}` : 'Kollege hat übernommen. Und den Ruhm.'} (Leistung ${Math.round(score * 100)} %${effects ? `; ${effects}` : ''})`,
     });
     if (abandoned) {
@@ -182,7 +183,7 @@ export function startFlavor(ctx: AppContext, app: App): void {
     sfx.unlockPing();
   });
   bus.on('bossDone', ({ reward }) => {
-    const line = pick(BOSS_DONE);
+    const line = fresh('BOSS_DONE', BOSS_DONE);
     app.toast(`Aufgabe erledigt: +${formatNumber(reward)} Tickets`, line, 'boss-done');
     log.write('ok', `chef[1]: Aufgabe erledigt. ${line}`);
     sfx.bossDone();
@@ -190,7 +191,7 @@ export function startFlavor(ctx: AppContext, app: App): void {
     app.popCounter();
   });
   bus.on('bossFailed', () => {
-    const line = pick(BOSS_FAILED);
+    const line = fresh('BOSS_FAILED', BOSS_FAILED);
     app.toast('Frist verpasst', line, 'boss-failed');
     log.write('info', `chef[1]: ${line}`);
   });
@@ -212,11 +213,11 @@ export function startFlavor(ctx: AppContext, app: App): void {
     if (running.length > 0 && r < 0.4) {
       // gewichtet nach Bestand
       const g = weightedPick(running, (g) => state.generators[g.id].owned);
-      log.write('info', pick(GENERATOR_TEXT[g.id].ambient));
+      log.write('info', fresh(`ambient:${g.id}`, GENERATOR_TEXT[g.id].ambient));
     } else if (r < 0.52) {
-      log.write('info', `bofh[666]: excuse of the day: ${pick(BOFH_EXCUSES)}`);
+      log.write('info', `bofh[666]: excuse of the day: ${fresh('BOFH_EXCUSES', BOFH_EXCUSES)}`);
     } else {
-      log.template(pick(AMBIENT));
+      log.template(fresh('AMBIENT', AMBIENT));
     }
     setTimeout(ambient, randInt(CONFIG.ambientLogMinMs, CONFIG.ambientLogMaxMs));
   };

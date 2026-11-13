@@ -278,30 +278,56 @@ export const VIP_TICKETS: { who: string; subject: string; topic: Topic; cause: s
 
 /** Meilensteine einer Serie gelöster Tickets: Spruch unter dem Stempel */
 export const STREAK_LINES: Record<number, string[]> = {
-  5: ['Läuft bei dir!', 'Warm getippt.', 'Der Kaffee wirkt.'],
-  10: ['Die Queue sucht sich einen anderen Admin.', 'Das Telefon traut sich nicht zu klingeln.', 'Level 2 fragt, ob du Hilfe brauchst. Nein.'],
-  20: ['Moss wäre stolz.', 'Die Tastatur glüht.', 'Der Chef guckt verdächtig.'],
+  5: ['Läuft bei dir!', 'Warm getippt.', 'Der Kaffee wirkt.', 'Die Queue zuckt.', 'Die Maus kommt kaum hinterher.', 'Das Ticketsystem wird nervös.', 'Fünf. Ohne Neustart.', 'Der Bürostuhl quietscht anerkennend.'],
+  10: ['Die Queue sucht sich einen anderen Admin.', 'Das Telefon traut sich nicht zu klingeln.', 'Level 2 fragt, ob du Hilfe brauchst. Nein.', 'Monitoring: verdächtig grün.', 'Selbst der Drucker ist beeindruckt.', 'Die Kollegen tuscheln. Positiv.', 'Das Ticketsystem bittet um Pause.'],
+  20: ['Moss wäre stolz.', 'Die Tastatur glüht.', 'Der Chef guckt verdächtig.', 'Roy würde jetzt Feierabend machen.', 'Zwanzig. Das ist kein Zufall mehr.', 'Das Wiki will über dich schreiben.', 'Personal fragt, ob du geklont bist.'],
   42: ['Jetzt fehlt nur noch die Frage.', 'Deep Thought brauchte länger.'],
   100: ['Die Tastatur beantragt Urlaub.', 'Du bist jetzt der Server unterm Tisch.'],
 };
 
 /** Fenstertitel des Mailprogramms */
-export const MAIL_TITLES: string[] = ['Posteingang (4.812 ungelesen)', 'Posteingang (∞ ungelesen)', 'Posteingang (Postfach zu 99 % voll)', 'Posteingang (3 neue „Dringend!!“)'];
+export const MAIL_TITLES: string[] = [
+  'Posteingang (4.812 ungelesen)',
+  'Posteingang (∞ ungelesen)',
+  'Posteingang (Postfach zu 99 % voll)',
+  'Posteingang (3 neue „Dringend!!“)',
+  'Posteingang (12× „Kurze Frage“)',
+  'Posteingang (37 Abwesenheitsnotizen)',
+];
 /** Signatur unter Mails */
 export const MAIL_SIGS: string[] = [
   '-- Mit freundlichen Grüßen, Ihre IT (Durchwahl -666)',
   '-- Gesendet aus dem Keller',
   '-- Bitte denken Sie an die Umwelt, bevor Sie diese Mail ausdrucken. Ja, Sie.',
   '-- Ihre IT. Haben Sie es schon aus- und wieder eingeschaltet?',
+  '-- Ihre IT. Erreichbar Mo–Fr, 9:00 bis 9:05 Uhr.',
+  '-- Gesendet von unterwegs. Bitte entschuldigen Sie Kürze und Autokorrektur.',
+  '-- Ihre IT. Wir wissen, wo Ihr Rechner steht.',
+  '-- Diese Mail ist klimaneutral. Der Server dafür nicht.',
 ];
 /** Status im Ticketsystem, bevor man antwortet */
 export const TICKET_OPEN_STATES: string[] = ['Neu', 'Offen', 'In Bearbeitung', 'Zum 3. Mal neu', 'Ping-Pong (7×)', 'Zugewiesen: ?'];
 /** Status-Text im Firmen-Chat */
-export const CHAT_STATES: string[] = ['● online', '● beschäftigt', '● „im Meeting“', '● zuletzt online: gerade eben', '● „Nicht stören (außer IT)“'];
+export const CHAT_STATES: string[] = [
+  '● online',
+  '● beschäftigt',
+  '● „im Meeting“',
+  '● zuletzt online: gerade eben',
+  '● „Nicht stören (außer IT)“',
+  '● „Bin kurz weg“ (seit 2 Std.)',
+  '● tippt … (seit 5 Min.)',
+];
 /** Desktop-Icons in der Fernwartung (der Papierkorb ist immer da und kommt extra dazu) */
 export const RDP_ICONS: string[] = ['Excel (alt)', 'NEU NEU.docx', 'Passwörter.txt', 'Budget(2).xlsx', 'Neuer Ordner (14)', 'Internet', 'Bitte nicht.lnk'];
 /** Fußzeile im Webinterface */
-export const WEB_FOOTERS: string[] = ['© 2009 · Firmware 1.0 · Best viewed with IE 6', '© 2012 · Firmware 2.0.1-final-final · Java erforderlich', '© 2007 · Optimiert für 800×600', '© 2015 · Support endete 2016 · Viel Glück'];
+export const WEB_FOOTERS: string[] = [
+  '© 2009 · Firmware 1.0 · Best viewed with IE 6',
+  '© 2012 · Firmware 2.0.1-final-final · Java erforderlich',
+  '© 2007 · Optimiert für 800×600',
+  '© 2015 · Support endete 2016 · Viel Glück',
+  '© 2004 · Flash Player erforderlich',
+  '© 2011 · Kennwort: siehe Handbuch (Seite fehlt)',
+];
 /** Log beim Abtauchen in die Memes und beim Zurückkommen */
 export const MEME_ENTER_LINES: string[] = ['browser[42]: Pause. Nur ganz kurz Memes.', 'browser[42]: Recherche. Für die Arbeit. Ehrlich.', 'browser[42]: „Weiterbildung“ gestartet.'];
 export const MEME_LEAVE_LINES: string[] = [
@@ -318,6 +344,7 @@ export const AI_GREETINGS: string[] = [
   'Frag mich alles! (Antworten ohne Gewähr)',
   'Ich bin hier, um zu helfen. Und um Tokens zu verbrauchen.',
   'Willkommen zurück! Du hast noch 3 kostenlose Fragen heute.',
+  'Schön, dich zu sehen! (Ich sehe nichts.)',
 ];
 /** {subject} = Betreff des Tickets, {who} = wer es gemeldet hat */
 export const AI_PROMPTS: string[] = [
@@ -345,4 +372,6 @@ export const AI_FOOTERS: string[] = [
   'KI kann Fehler machen. Prüfe wichtige Infos. (Macht keiner.)',
   'Antworten werden zur Verbesserung des Modells verwendet. Und für Werbung.',
   'Kontext: 3 Sätze. Danach weiß es nicht mehr, worum es ging.',
+  'Diese Antwort hat 0,3 l Kühlwasser verbraucht. Prost.',
+  'Ergebnisse können von der Wirklichkeit abweichen.',
 ];

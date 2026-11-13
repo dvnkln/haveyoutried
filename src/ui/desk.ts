@@ -1,4 +1,5 @@
 import { bus } from '../core/bus';
+import { fresh, unused } from '../core/deck';
 import { CONFIG } from '../config';
 import { LOGIN, NEXT_TOOL_HINT, TOOL_HINT } from '../content/boot';
 import { markLoggedIn, needsLogin, needsOsLogin, requireOsLogin } from '../core/login';
@@ -16,7 +17,7 @@ import { espressoActive, pressKey, solveTicket, startEspresso } from '../core/ac
 import { rates, ticketReward } from '../core/economy';
 import { applyEffect, claimUrgent } from '../core/events';
 import { addTickets, bumpFlag, type GameState } from '../core/state';
-import { fill, pick, randInt } from '../util';
+import { fill, randInt } from '../util';
 import type { AppContext } from './app';
 import { h, juice, NUDGE, POP, SHAKE, setFlag, setText } from './dom';
 import { formatNumber } from './format';
@@ -140,7 +141,6 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
   let call: Call | null = null;
   let callerLeft = randInt(CONFIG.callerTicketsMin, CONFIG.callerTicketsMax);
   let callerUntil = 0;
-  const recent: string[] = [];
   /** Zeit des letzten Anschlags (Kaffeetasse nur für Leute, die gerade tippen) */
   let lastHit = 0;
   /**
@@ -254,10 +254,8 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
   const espressoHint = h('div', { class: 'tap-hint espresso-hint', hidden: '', text: '☕︎ Taste halten, der Espresso tippt. Zwei Daumen: doppelt.' });
   const keyboardWrap = h('div', { class: 'keyboard-wrap' }, [hint, espressoHint, keyboard]);
 
-  const fresh = (lines: Line[]) => {
-    const unused = lines.filter((l) => !recent.includes(l.text));
-    return pick(unused.length > 0 ? unused : lines);
-  };
+  /** jede Person sagt erst alle ihre Sätze einmal, bevor sie sich wiederholt */
+  const freshLine = (who: string, lines: Line[]) => fresh(`call:${who}`, lines, { key: (l) => l.text });
 
 
   /** story = false beim Anrufer zum Seitenstart: der zählt nicht als angehört, also auch keine Folge verbrauchen */
@@ -274,7 +272,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
         return {
           ...call,
           who: `${call.who.replace(/ \(Rückruf\)$/, '')} (Rückruf)`,
-          text: pick(CALLBACK_LINES),
+          text: fresh('CALLBACK_LINES', CALLBACK_LINES),
           about: call.about ?? call.text,
           reply: undefined,
         };
@@ -288,14 +286,16 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
       advanceStory(ctx.state, due.id, Date.now());
       return due.call;
     }
-    const situational = situationalCalls(ctx.state, new Date()).filter((c) => !recent.includes(c.text));
-    if (situational.length > 0 && Math.random() < CONFIG.callerSituationalChance) return pick(situational);
+    // nur, was in dieser Runde noch nicht kam: sonst käme ein einzelner Situationsanruf (z. B. Wochenende) immer wieder
+    const situational = unused('situational', situationalCalls(ctx.state, new Date()), { key: (c) => c.text });
+    if (situational.length > 0 && Math.random() < CONFIG.callerSituationalChance) return fresh('situational', situational, { key: (c) => c.text });
 
     // nur Anrufer, die es in dieser Firma (gerade) gibt
     const callers = availableCallers(ctx.state);
-    let caller = pick(callers);
-    while (callers.length > 1 && caller.who === call?.who) caller = pick(callers);
-    return { face: caller.face, who: caller.who, ...fresh(caller.lines) };
+    // reihum: jede Person ruft einmal an, bevor jemand zum zweiten Mal dran ist (nicht direkt nochmal dieselbe)
+    const others = callers.filter((c) => c.who !== call?.who);
+    const caller = fresh('callers', others.length > 0 ? others : callers, { key: (c) => c.who });
+    return { face: caller.face, who: caller.who, ...freshLine(caller.who, caller.lines) };
   };
 
   /**
@@ -349,8 +349,6 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
       bumpFlag(ctx.state, 'callers');
       if (c.who.endsWith('(Rückruf)')) bumpFlag(ctx.state, 'callbacks');
     }
-    recent.push(c.text);
-    if (recent.length > 30) recent.shift();
     setText(face, c.face);
     setText(who, c.who);
     setText(says, c.text);
@@ -384,8 +382,8 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
     const visible = !gameBlocked({ hidden: true });
     if (!visible || urgentEl) return scheduleUrgent(10_000);
 
-    const vip = pick(VIP_TICKETS);
-    const prio = pick(URGENT_LABELS).replace(/!/g, '').trim();
+    const vip = fresh('VIP_TICKETS', VIP_TICKETS);
+    const prio = fresh('URGENT_LABELS', URGENT_LABELS).replace(/!/g, '').trim();
     const el = h('button', { class: 'urgent-note', type: 'button', 'aria-label': `Wichtige Mail von ${vip.who}: ${vip.subject}` }, [
       h('span', { class: 'un-app' }, [h('span', { text: '✉︎ Posteingang' }), h('span', { text: 'jetzt' })]),
       h('span', { class: 'un-from' }, [h('b', { text: vip.who }), h('span', { class: 'un-flag', text: `! ${prio}` })]),
@@ -413,8 +411,8 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
         prio,
         status: 'Sofort gelöst (natürlich)',
         cause: vip.cause,
-        note: fill(pick(topicPool(vip.topic, 'notes')), { who: vip.who }),
-        solution: `${pick(URGENT_TEXT[res.effect] ?? ['VIP-Ticket gelöst.'])} (${describeEffect(res)})`,
+        note: fill(fresh(`notes:${vip.topic}`, topicPool(vip.topic, 'notes')), { who: vip.who }),
+        solution: `${fresh(`URGENT_TEXT:${res.effect}`, URGENT_TEXT[res.effect] ?? ['VIP-Ticket gelöst.'])} (${describeEffect(res)})`,
         vip: true,
       });
       ctx.sfx.unlock();
@@ -493,11 +491,11 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
       caught = true;
       startEspresso(ctx.state);
       // je Tasse eine Melodie, die beim Halten läuft
-      espressoMelody = pick(MELODIES);
+      espressoMelody = fresh('MELODIES', MELODIES);
       const p = fx.rel(cup);
       fx.floater(p.x + p.w / 2, p.y, 'Espresso!', true);
       powerupBanner('☕︎ Doppelter Espresso', `${Math.round(CONFIG.espresso.durationMs / 1_000)} Sekunden: Taste halten, es tippt von selbst. Zwei Daumen: doppelt.`);
-      ctx.log.write('ok', pick(ESPRESSO_LINES));
+      ctx.log.write('ok', fresh('ESPRESSO_LINES', ESPRESSO_LINES));
       ctx.sfx.unlock();
       ctx.sfx.espresso();
       ctx.haptic('milestone');
@@ -529,7 +527,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
   const gag = (key: string, level: 'info' | 'warn', lines: string[], now: number) => {
     if (now - (lastGag[key] ?? -Infinity) < GAG_COOLDOWN_MS) return;
     lastGag[key] = now;
-    ctx.log.write(level, pick(lines));
+    ctx.log.write(level, fresh(`gag:${key}`, lines));
   };
 
   /** auto = Dauerfeuer beim Espresso (gehaltene Taste): ohne Vibration, seltener Schnipsel */
@@ -848,7 +846,7 @@ export function createDesk(ctx: AppContext, fx: Fx, root: () => HTMLElement, scr
         // Melodie im Takt: ein Daumen mit Bass, zwei Daumen schneller mit zweiter Stimme und Schlagzeug
         // nur, wenn wirklich getippt wird (nach Alt+F4 ist das Werkzeug zu, dann schweigt sie)
         if (toolOpen) {
-          espressoMelody ??= pick(MELODIES);
+          espressoMelody ??= fresh('MELODIES', MELODIES);
           ctx.sfx.melody(espressoMelody, thumbs >= 2 ? 2 : 1);
           lastMelodyAt = now;
         } else ctx.sfx.stopMelody();

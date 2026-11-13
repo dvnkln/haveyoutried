@@ -71,6 +71,8 @@ export interface GameState {
   os: { unlocked: Partial<Record<OsId, true>>; pick: Record<string, OsId>; known: Partial<Record<OsId, true>>; shown: OsId | null };
   /** Aufgabe vom Chef (kleines Ziel für die nächsten Minuten) */
   boss: BossState;
+  /** Kartenstapel der Zufallstexte (core/deck.ts): Liste → Fingerabdrücke der schon gezeigten Einträge */
+  decks: Record<string, string[]>;
   stats: { startedAt: number; playTimeMs: number; offlineTickets: number };
   /** wallpaper: 'auto' = Bild der aktuellen Firma, sonst ID aus ui/wallpaper.ts */
   settings: {
@@ -117,6 +119,7 @@ export function createInitialState(now: number): GameState {
     buffs: [],
     incidents: { nextAt: 0, lastId: '', active: '', seen: {}, best: {} },
     boss: emptyBoss(),
+    decks: {},
     stats: { startedAt: now, playTimeMs: 0, offlineTickets: 0 },
     settings: {
       haptics: true,

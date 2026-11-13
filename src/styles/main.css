@@ -4616,7 +4616,8 @@ html.basement {
   transform: scale(1.35);
 }
 
-/* Papierkorb: Papier schaut oben raus, je voller desto mehr */
+/* Papierkorb: Papier schaut oben raus, je voller desto mehr. Maße relativ zur Kachel, damit es in jeder Größe passt
+   (Schreibtisch 36/31 px, Tray 17 px, Dock-Tray 13 px) */
 .app-trash .app-tile {
   position: relative;
   overflow: visible;
@@ -4625,16 +4626,32 @@ html.basement {
 .app-trash .app-tile::before {
   content: '';
   position: absolute;
-  left: 9px;
-  right: 9px;
-  top: -6px;
-  height: 12px;
+  left: 24%;
+  right: 24%;
+  top: -18%;
+  height: 36%;
   border: 1.5px solid var(--ink);
   border-radius: 3px 3px 0 0;
   background: #fff;
   transform-origin: bottom;
-  transform: translateY(calc((1 - var(--fill, 0)) * 8px)) rotate(-6deg) scaleY(var(--fill, 0));
+  /* Prozent im translate beziehen sich auf die Papierhöhe */
+  transform: translateY(calc((1 - var(--fill, 0)) * 70%)) rotate(-6deg) scaleY(var(--fill, 0));
   transition: transform 0.4s;
+  z-index: -1;
+}
+.tray-app.app-trash .app-tile::before {
+  border-width: 1px;
+  border-radius: 2px 2px 0 0;
+}
+/* Hintergrund der Kachel noch einmal als Ebene ÜBER dem Papier: Was vom Papier in der Kachel steckt, ist verdeckt
+   (sonst zeichnet sich der untere Rand als Strich quer über das Symbol). Rundung und Farbe von der Kachel geerbt;
+   die geerbte (äußere) Rundung ist etwas größer als die innere, die Ecken darunter haben dieselbe Farbe. */
+.app-trash .app-tile::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: inherit;
   z-index: -1;
 }
 
@@ -6899,24 +6916,6 @@ html.basement {
 }
 .dust.owned {
   display: block;
-}
-.k-note {
-  display: none;
-}
-.k-note.owned {
-  display: block;
-  position: absolute;
-  z-index: 2;
-  left: calc(50% + 52px);
-  bottom: -2px;
-  max-width: 54px;
-  padding: 1px 3px;
-  border: 1.5px solid var(--ink);
-  border-radius: 1px 1px 5px 1px;
-  background: var(--butter);
-  font: 600 6.5px / 1.15 var(--font-ui);
-  color: var(--ink);
-  rotate: 5deg;
 }
 
 /* ---------- Pager-Dialog: sieht aus wie der Pager selbst ---------- */

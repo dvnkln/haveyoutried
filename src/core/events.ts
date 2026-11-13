@@ -1,6 +1,7 @@
 import { CONFIG, EVENT_EFFECTS, type EventEffectId } from '../config';
 import { EVENTS, type GameEventDef, type Outcome } from '../content/events';
 import { weightedPick } from '../util';
+import { draw } from './deck';
 import { bus } from './bus';
 import { quirkMods, scaledDelay } from './quirks';
 import { addTickets, bumpFlag, type Buff, type GameState } from './state';
@@ -82,9 +83,13 @@ export const INTRO_EVENTS = ['sqlcolor', 'internet', 'coffee'];
 function pickEvent(state: GameState, now: Date): GameEventDef | null {
   const first = !Object.keys(state.flags).some((k) => k.startsWith('ev:'));
   const intro = first ? EVENTS.filter((e) => INTRO_EVENTS.includes(e.id)) : [];
-  if (intro.length > 0) return intro[Math.floor(random() * intro.length)]!;
-  const pool = EVENTS.filter((e) => e.id !== state.events.lastId && (e.when?.(state) ?? true));
-  return pool.length > 0 ? weightedPick(pool, (e) => e.weight?.(state, now) ?? 1, random) : null;
+  // reihum über den Kartenstapel (core/deck.ts): erst kommt jedes Ereignis einmal dran, dann das nächste Mal.
+  // Eigener Stapel statt events.seen: alte Spielstände mit hohen Zählern bevorzugen sonst neue Ereignisse jedes zweite Mal.
+  // Was heute besonders passt (Gewicht > 1, z. B. Freitag), ist innerhalb der Runde wahrscheinlicher dran.
+  const opts = { key: (e: GameEventDef) => e.id, weight: (e: GameEventDef) => e.weight?.(state, now) ?? 1, rnd: random };
+  if (intro.length > 0) return draw(state, 'events', intro, opts);
+  const allowed = EVENTS.filter((e) => e.id !== state.events.lastId && (e.when?.(state) ?? true));
+  return allowed.length > 0 ? draw(state, 'events', allowed, opts) : null;
 }
 
 export function scheduleNext(state: GameState): void {

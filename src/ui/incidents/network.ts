@@ -1,4 +1,5 @@
 import { INCIDENTS } from '../../config';
+import { fresh } from '../../core/deck';
 import { progressScore } from '../../core/incidents';
 import { NET_DISTRACTORS, NET_SCENARIOS, type NetScenario } from '../../content/incidents';
 import { pick, shuffle } from '../../util';
@@ -100,7 +101,7 @@ export function networkGame(): Minigame {
             }
           } else if (res === 'early' || res === 'useless') {
             const d = NET_DISTRACTORS.find((x) => x.id === b.id);
-            setText(reply, d ? d.reply : pick(EARLY_REPLIES));
+            setText(reply, d ? d.reply : fresh('EARLY_REPLIES', EARLY_REPLIES));
             api.sfx.error();
             api.haptic('error');
             api.penalize(CFG.wrongPenaltyMs);

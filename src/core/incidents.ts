@@ -1,5 +1,5 @@
 import { INCIDENT_IDS, INCIDENTS, type IncidentId } from '../config';
-import { pick } from '../util';
+import { draw, fingerprint } from './deck';
 import { bus } from './bus';
 import { quirkMods, scaledDelay } from './quirks';
 import { applyEffect, type EffectResult } from './events';
@@ -47,8 +47,35 @@ export function updateIncidents(state: GameState): void {
     inc.nextAt = t + INCIDENTS.retryMs;
     return;
   }
-  const pool = INCIDENT_IDS.filter((id) => id !== inc.lastId);
-  startIncident(state, pick(pool.length > 0 ? pool : INCIDENT_IDS));
+  startIncident(state, nextIncidentId(state));
+}
+
+/** Spiele, die sich zu ähnlich anfühlen (Kabel stecken): nie direkt nacheinander */
+const ALIKE: readonly (readonly IncidentId[])[] = [['patch', 'untangle']];
+
+/**
+ * Reihum über den Kartenstapel (core/deck.ts): erst jedes Minispiel einmal, dann das nächste Mal.
+ * (Eigener Stapel statt incidents.seen: alte Spielstände mit hohen Zählern würden sonst neue Spiele jedes zweite Mal bringen.)
+ * Nie dasselbe oder ein sehr ähnliches direkt nacheinander, auch nicht an der Rundengrenze.
+ */
+export function nextIncidentId(state: GameState, rnd: () => number = Math.random): IncidentId {
+  const last = state.incidents.lastId;
+  const blocked = new Set<string>([last, ...(ALIKE.find((g) => g.includes(last as IncidentId)) ?? [])]);
+  const allowed = INCIDENT_IDS.filter((id) => !blocked.has(id));
+  const raw = state.decks.incidents;
+  const used = Array.isArray(raw) ? raw : [];
+  const open = INCIDENT_IDS.filter((id) => !used.includes(fingerprint(id)));
+  // Runde fast durch, übrig ist nur ein gerade gesperrtes Spiel: Lückenfüller (am längsten nicht gespielt),
+  // ohne neue Runde. Sonst holt das gesperrte nie auf.
+  if (open.length > 0 && !open.some((id) => allowed.includes(id))) {
+    const age = (id: IncidentId) => used.lastIndexOf(fingerprint(id));
+    const filler = allowed.reduce((a, b) => (age(b) < age(a) ? b : a));
+    state.decks.incidents = [...used.filter((p) => p !== fingerprint(filler)), fingerprint(filler)];
+    return filler;
+  }
+  // Runde komplett: alle wieder offen, auch die gerade gesperrten (die sonst als „schon gespielt“ eine Runde aussetzen)
+  if (open.length === 0) state.decks.incidents = [];
+  return draw(state, 'incidents', allowed, { rnd });
 }
 
 /** Startet einen bestimmten Incident (auch für den Test-Parameter ?incident=…). */
@@ -74,13 +101,14 @@ function settle(
   score: number,
   rates: { pps: number; click: number },
   abandoned: boolean,
+  comment?: string,
 ): EffectResult[] {
   const s = Math.max(0, Math.min(1, score));
   const results = rewardFor(s).effects.map((e) => applyEffect(state, e, rates));
   state.incidents.active = '';
   state.incidents.seen[id] = (state.incidents.seen[id] ?? 0) + 1;
   state.incidents.best[id] = Math.max(state.incidents.best[id] ?? 0, s);
-  bus.emit('incidentResolved', { id, score: s, results, abandoned });
+  bus.emit('incidentResolved', { id, score: s, results, abandoned, comment });
   return results;
 }
 
@@ -93,8 +121,10 @@ export function resolveIncident(
   id: IncidentId,
   score: number,
   rates: { pps: number; click: number },
+  /** Kommentar der Ergebniskarte: landet so auch wörtlich im Ticketverlauf */
+  comment?: string,
 ): EffectResult[] {
-  return settle(state, id, score, rates, false);
+  return settle(state, id, score, rates, false, comment);
 }
 
 /** Ergebniskarte geschlossen: Pager-Events dürfen wieder. */
