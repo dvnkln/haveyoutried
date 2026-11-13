@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 360">
+<defs><linearGradient id="cs" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d9dde0"/><stop offset="1" stop-color="#eef0f0"/></linearGradient>
+<pattern id="brick" width="40" height="20" patternUnits="userSpaceOnUse" patternTransform="skewX(-30) scale(1 .7)"><rect width="40" height="20" fill="#a87866"/><path d="M0 0H40M0 10H40M10 0V10M30 10V20" stroke="#86584a" stroke-width="2"/></pattern></defs>
+<rect width="480" height="360" fill="url(#cs)"/>
+<!-- Gebäude und Bäume im Hintergrund -->
+<rect x="330" y="0" width="150" height="70" fill="#cfc6b6"/><path d="M345 10h20v25h-20zM380 10h20v25h-20zM415 10h20v25h-20zM450 10h20v25h-20z" fill="#9aa3a8"/>
+<path d="M60 0V60M140 0V70M250 0V95" stroke="#3b3029" stroke-width="12"/>
+<path d="M0 0H330V40C300 50 260 30 230 45C200 30 170 50 140 35C110 50 70 30 40 45C25 35 10 40 0 45Z" fill="#8c8a7e" opacity=".55"/>
+<!-- Hecke, Rasen, Pflaster -->
+<path d="M0 90C80 80 200 85 320 75C380 70 440 72 480 70V120H0Z" fill="#4c5c3a"/>
+<path d="M0 100H480V170H0Z" fill="#6c7a52"/>
+<path d="M0 160C120 150 300 150 480 155V360H0Z" fill="#5c6a44"/>
+<path d="M90 360L170 160H480V360Z" fill="url(#brick)"/>
+<!-- Stuhl und Kamera-Stativ -->
+<path d="M240 85h120v10h-120zM250 95v60M350 95v60M240 85l-6 -10M360 85l6 -10" stroke="#2a2a2a" stroke-width="5" fill="none"/>
+<path d="M420 170l20 -40M440 130l18 150M440 130l-12 150M440 130l40 140" stroke="#2a2a2a" stroke-width="5"/><rect x="430" y="115" width="22" height="16" rx="3" fill="#2a2a2a"/>
+<!-- Mann im blauen Pullover, Tasse in der Hand -->
+<path d="M140 210C140 150 160 115 195 110C215 108 245 110 255 120C280 140 285 180 282 210Z" fill="#2f4f9a"/>
+<path d="M150 150C170 130 200 122 225 128" fill="none" stroke="#4669b8" stroke-width="8" stroke-linecap="round"/>
+<path d="M200 112C205 125 225 128 238 115" fill="#f0c7a8"/>
+<path d="M190 72C188 50 200 38 216 38C234 38 244 52 242 72C241 92 232 108 216 110C200 108 191 94 190 72Z" fill="#f0c7a8" stroke="#6d4a37" stroke-width="2"/>
+<path d="M190 60C190 38 205 30 218 30C236 30 246 44 243 62C236 50 225 46 214 47C203 48 195 53 190 60Z" fill="#3a2a22"/>
+<path d="M200 70h12M222 70h12" stroke="#2a1d17" stroke-width="3" stroke-linecap="round"/>
+<path d="M205 92C214 99 226 99 233 90" fill="#fff" stroke="#6d4a37" stroke-width="2"/>
+<path d="M194 84C198 100 210 108 218 108C228 108 238 100 240 84" fill="none" stroke="#5a4033" stroke-width="3" opacity=".5"/>
+<!-- Arm mit Tasse vor dem Gesicht -->
+<path d="M255 130C270 120 275 108 270 98L258 100C258 110 250 118 238 125Z" fill="#2f4f9a"/>
+<rect x="258" y="88" width="24" height="26" rx="3" fill="#1c1c1c"/><path d="M282 94q10 6 0 14" fill="none" stroke="#1c1c1c" stroke-width="4"/><path d="M262 96h14" stroke="#e8e8e8" stroke-width="3"/>
+<circle cx="262" cy="104" r="7" fill="#f0c7a8"/>
+<!-- Tisch -->
+<path d="M120 200L400 188L410 210L128 226Z" fill="#2d2d2d"/>
+<path d="M300 186h60l-6 -6h-48z" fill="#f5f5f5"/><rect x="345" y="170" width="18" height="20" rx="2" fill="#1c1c1c"/><path d="M180 202l40 -4 6 4 -40 4z" fill="#f5f5f5"/>
+<path d="M210 208h40" stroke="#1c1c1c" stroke-width="5" stroke-linecap="round"/>
+<!-- Schild -->
+<path d="M140 222L400 210L404 340L144 352Z" fill="#fbfbfb" stroke="#1c1c1c" stroke-width="3"/>
+<path d="M160 312L384 302" stroke="#1c1c1c" stroke-width="2.5"/>
+<path d="M150 352V360M398 340V360" stroke="#1c1c1c" stroke-width="5"/>
+</svg>

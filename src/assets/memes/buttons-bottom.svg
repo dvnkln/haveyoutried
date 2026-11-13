@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 420">
+<rect width="600" height="420" fill="#4f6a90"/>
+<!-- Innenraum hinten -->
+<path d="M430 0L600 0V420H520C520 300 500 160 430 0Z" fill="#3a5276" stroke="#1d1d2b" stroke-width="4"/>
+<path d="M455 40L600 30M470 80L600 72" stroke="#1d1d2b" stroke-width="3"/>
+<path d="M520 300C540 260 580 250 600 255V420H520Z" fill="#b8cbe6" stroke="#1d1d2b" stroke-width="4"/>
+<!-- roter Anzug, Schultern -->
+<path d="M0 260C60 250 150 300 200 340C250 330 330 335 380 345C430 330 500 340 560 380L600 420H0Z" fill="#d2214f" stroke="#1d1d2b" stroke-width="5" stroke-linejoin="round"/>
+<path d="M300 340C320 370 360 380 400 360" fill="none" stroke="#fff" stroke-width="7"/><path d="M300 340C320 370 360 380 400 360" fill="none" stroke="#1d1d2b" stroke-width="2"/>
+<g transform="translate(350 210) scale(1.22) translate(-360 -175)"><!-- Hals -->
+<path d="M290 300C295 330 310 352 345 355C380 352 400 335 404 310L400 260H295Z" fill="#f6c9b6" stroke="#1d1d2b" stroke-width="4"/>
+<path d="M300 320C330 335 370 336 400 322" fill="none" stroke="#c98c80" stroke-width="5" opacity=".7"/>
+<!-- Kopf, schräg, besorgt -->
+<path d="M262 100C270 50 330 20 385 35C435 50 455 100 448 160C442 200 430 240 400 270C370 300 320 305 295 285C270 265 255 230 252 190C248 160 255 130 262 100Z" fill="#f8d3c2" stroke="#1d1d2b" stroke-width="5" stroke-linejoin="round"/>
+<!-- Haare -->
+<path d="M290 70C310 30 370 15 415 35C445 50 462 85 460 130C455 160 448 180 440 195C445 150 435 110 410 90C385 75 345 70 320 85C305 90 295 85 290 70Z" fill="#b2502a" stroke="#1d1d2b" stroke-width="5" stroke-linejoin="round"/>
+<!-- Ohr -->
+<path d="M440 170C465 160 478 185 468 210C460 228 445 232 436 225" fill="#f2bfae" stroke="#1d1d2b" stroke-width="4"/>
+<!-- Augenbrauen hochgezogen -->
+<path d="M280 156C298 150 316 140 332 128M360 128C380 136 398 144 412 156" fill="none" stroke="#1d1d2b" stroke-width="7" stroke-linecap="round"/><path d="M338 120C342 110 350 108 356 118M326 105C340 98 356 98 368 106" fill="none" stroke="#c98c80" stroke-width="3"/>
+<!-- Augen -->
+<ellipse cx="308" cy="172" rx="14" ry="10" fill="#fff" stroke="#1d1d2b" stroke-width="3"/><circle cx="305" cy="173" r="5" fill="#1d1d2b"/>
+<ellipse cx="385" cy="168" rx="15" ry="10" fill="#fff" stroke="#1d1d2b" stroke-width="3"/><circle cx="380" cy="169" r="5" fill="#1d1d2b"/>
+<path d="M294 186C305 192 318 192 326 186M368 184C380 190 395 190 404 183" fill="none" stroke="#c98c80" stroke-width="3"/>
+<!-- Nase, Wangen -->
+<path d="M345 175C340 200 332 215 340 224C350 230 362 226 366 220" fill="none" stroke="#1d1d2b" stroke-width="4" stroke-linecap="round"/>
+<path d="M410 205C420 215 425 225 422 238" fill="none" stroke="#d98f8f" stroke-width="10" stroke-linecap="round" opacity=".6"/>
+<!-- Mund verzogen -->
+<path d="M298 262C318 244 356 242 380 258C360 270 320 272 298 262Z" fill="#fff" stroke="#1d1d2b" stroke-width="4" stroke-linejoin="round"/><path d="M304 260C330 254 356 254 374 258" stroke="#1d1d2b" stroke-width="2.5"/><path d="M296 262l-8 8M380 258l8 9" stroke="#1d1d2b" stroke-width="4" stroke-linecap="round"/><path d="M318 222C305 235 298 245 296 255M368 220C378 232 384 242 386 252" fill="none" stroke="#c98c80" stroke-width="4"/>
+<path d="M300 280C315 290 335 292 352 288" fill="none" stroke="#c98c80" stroke-width="4"/>
+<!-- Schweißtropfen -->
+<g fill="#cfe9ff" stroke="#1d1d2b" stroke-width="3"><path d="M352 92q8 14 0 20q-8 -6 0 -20z"/><path d="M400 125q8 14 0 20q-8 -6 0 -20z"/><path d="M420 175q7 12 0 18q-7 -6 0 -18z"/><path d="M372 220q6 11 0 16q-6 -5 0 -16z"/></g>
+</g><!-- Arm mit Handschuh und Tuch auf der Stirn -->
+<path d="M0 300C40 280 100 250 150 200C180 170 200 140 215 120L255 150C240 180 210 220 170 270C120 320 60 345 0 355Z" fill="#fff" stroke="#1d1d2b" stroke-width="5" stroke-linejoin="round"/>
+<path d="M0 300C40 290 80 300 110 320C80 345 40 352 0 355Z" fill="#d2214f" stroke="#1d1d2b" stroke-width="5" stroke-linejoin="round"/>
+<path d="M200 105C230 85 275 80 305 95C320 103 318 118 300 120C280 122 268 130 262 145C258 175 250 200 238 225C225 200 215 170 205 150C195 135 190 115 200 105Z" fill="#fff" stroke="#1d1d2b" stroke-width="5" stroke-linejoin="round"/>
+<path d="M230 110C250 105 270 108 285 115M240 140C245 165 242 190 236 210" fill="none" stroke="#b8c6dc" stroke-width="4" stroke-linecap="round"/>
+</svg>

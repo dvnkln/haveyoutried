@@ -13,10 +13,6 @@ import {
   MAIL_TITLES,
   MEME_ENTER_LINES,
   MEME_LEAVE_LINES,
-  MEME_SUBS,
-  MEME_TITLES,
-  MEME_USERS,
-  MEMES,
   RDP_ERRORS,
   RDP_ICONS,
   SEARCH_RESULTS,
@@ -32,6 +28,8 @@ import {
   AI_REPLIES,
   AI_TITLES,
 } from '../content/work';
+import { GAG_SECTION, GAG_TAGS, IMAGE_POSTS, MEME_POSTS, MEME_SUBS, type ImagePost, type MemePost } from '../content/memes';
+import { memeImage } from './memes';
 import { DEVICE_SETTINGS, TALK_NOTES, TOPICS, topicPool, type Device } from '../content/topics';
 import { fill, hhmm, pick, randInt, shuffle, weightedPick } from '../util';
 import type { AppContext } from './app';
@@ -594,28 +592,28 @@ export function createWork(
   // derselbe Browser wie bei den Web-Werkzeugen: alle Tabs offen, readit oder 404GAG aktiv
   const memeTabs = browserTabs('forum');
   const memeAddr = h('span', { class: 'br-addr' });
-  // Kopfleiste der Seite: readit hell mit rundem Logo, Suche und Anmelden; 404GAG schwarz mit Reitern
+  // Kopfleiste der Seite wie beim Vorbild: readit mit orangem Schriftzug, Suche, Anmelden; 404GAG mit Rubriken und blauem „Post“
   const memeSiteHead = h('div', { class: 'meme-site' }, [
-    h('div', { class: 'ms-forum' }, [h('span', { class: 'ms-logo', text: '◕' }), h('b', { text: 'readit' }), h('span', { class: 'ms-search', text: '⌕ Suchen' }), h('span', { class: 'ms-login', text: 'Anmelden' })]),
-    h('div', { class: 'ms-gag' }, [h('span', { class: 'ms-logo', text: '404' }), h('span', { class: 'ms-search', text: '⌕ Suchen' }), h('span', { class: 'ms-login', text: 'Anmelden' })]),
+    h('div', { class: 'ms-forum' }, [h('b', { class: 'ms-logo', text: 'readit' }), h('span', { class: 'ms-search', text: '⌕ Suchen' }), h('span', { class: 'ms-login', text: 'Anmelden' })]),
+    h('div', { class: 'ms-gag' }, [h('b', { class: 'ms-logo', text: '404GAG' }), h('span', { class: 'ms-tab', text: '⤮ Shuffle' }), h('span', { class: 'ms-tab', text: 'Memeland' }), h('span', { class: 'ms-fill' }), h('span', { class: 'ms-search', text: '⌕' }), h('span', { class: 'ms-login', text: '✎ Post' })]),
   ]);
   // Desktop-Ansicht: links Navigation, in der Mitte der schmalere Feed, rechts (wenn Platz) Infokasten
   const sideItems = (items: string[], on: number) => items.map((x, i) => h('span', { class: `side-item${i === on ? ' on' : ''}`, text: x }));
   const memeSideLeft = h('div', { class: 'meme-side meme-side-left' }, [
     h('div', { class: 'side-forum' }, [
-      ...sideItems(['⌂︎ Start', '↗︎ Beliebt', '◎︎ Alle'], 2),
+      ...sideItems(['⌂︎ Startseite', '↗︎ Beliebt', '◎︎ Alle'], 2),
       h('span', { class: 'side-head', text: 'Communitys' }),
       ...sideItems(['r/sysadmin', 'r/homelab', 'r/devops'], -1),
     ]),
     h('div', { class: 'side-gag' }, [
-      ...sideItems(['🔥︎ Hot', '📈︎ Trending', '✨︎ Fresh', '🏆︎ Top'], 0),
-      h('span', { class: 'side-head', text: 'Rubriken' }),
-      ...sideItems(['Arbeit', 'Technik', 'Montag'], -1),
+      ...sideItems(['⌂︎ Home', '▮︎ Top', '↗︎ Trending', '◷︎ Fresh'], 2),
+      h('span', { class: 'side-head', text: 'Interests' }),
+      ...sideItems(['Humor', 'Memes', 'Old Meme', 'Coding'], -1),
     ]),
   ]);
   const memeSideRight = h('div', { class: 'meme-side meme-side-right' }, [
     h('div', { class: 'side-forum' }, [h('b', { text: 'r/all' }), h('span', { text: 'Die beliebtesten Beiträge aus allen Communitys.' }), h('span', { class: 'side-btn', text: 'Beitreten' })]),
-    h('div', { class: 'side-gag' }, [h('b', { text: 'Beliebte Tags' }), h('span', { text: '#montag #drucker #dns #kaffee' })]),
+    h('div', { class: 'side-gag' }, [h('b', { text: 'New to 404GAG?' }), h('span', { text: 'Sign up now to see more content!' }), h('span', { class: 'side-btn', text: 'Sign up' })]),
   ]);
   const memeScroll = h('div', { class: 'meme-scroll' }, [forumFeed, gagFeed]);
   const memePage = h('div', { class: 'meme-page' }, [memeSideLeft, memeScroll, memeSideRight]);
@@ -905,49 +903,58 @@ export function createWork(
 
   // --- Memes beim Nichtstun ---
   const fillFeed = () => {
-    const cards = shuffle(MEMES).slice(0, 2 * MEMES_PER_SITE);
     const k = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1).replace('.', ',')} Tsd.` : String(n));
-    // Forum: hell, Unterforen, Abstimmpfeile; Bilderseite: dunkel
-    const card = (m: (typeof MEMES)[number], i: number, forum: boolean) => {
-      const img = h('div', { class: `meme-img meme-bg-${i % 4}` }, [
-        h('span', { class: 'meme-top', text: m.top }),
-        h('span', { class: 'meme-face', 'aria-hidden': 'true', text: m.face }),
-        h('span', { class: 'meme-bottom', text: m.bottom }),
-      ]);
-      const votes = k(randInt(120, 48_000));
-      const comments = k(randInt(12, 2_400));
-      const title = h('div', { class: 'meme-title', text: fresh('MEME_TITLES', MEME_TITLES) });
-      // Forum: Unterforum, Titel, Bild, darunter runde Knöpfe (▲ Zahl ▼ · Kommentare · Teilen)
-      if (forum)
-        return h('div', { class: 'meme meme-forum' }, [
-          h('div', { class: 'meme-head' }, [h('span', { class: 'meme-src', text: fresh('MEME_SUBS', MEME_SUBS) }), h('span', { class: 'meme-meta', text: ` · ${randInt(1, 23)} Std. · ${fresh('MEME_USERS', MEME_USERS)}` })]),
-          title,
-          img,
-          h('div', { class: 'meme-foot' }, [
-            h('span', { class: 'meme-pill' }, [h('b', { class: 'up', text: '▲' }), ` ${votes} `, h('b', { class: 'down', text: '▼' })]),
-            h('span', { class: 'meme-pill', text: `💬︎ ${comments}` }),
-            h('span', { class: 'meme-pill', text: '↗︎ Teilen' }),
-          ]),
-        ]);
-      // Bilderseite: Rubrik, großer Titel, Bild, darunter runde Knöpfe
-      return h('div', { class: 'meme meme-gag' }, [
-        h('div', { class: 'meme-head' }, [h('span', { class: 'meme-src', text: 'Hot' }), h('span', { class: 'meme-meta', text: ` · ${randInt(1, 59)} Min.` })]),
-        title,
-        img,
+    const kEn = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1)}K` : String(n));
+    const key = (p: MemePost) => p.title;
+    // ein gemeinsamer Stapel für beide Seiten: kein Meme auf readit und gleich danach auf 404GAG.
+    // readit nimmt alles, 404GAG nur Bilder (eigene Teilliste im selben Stapel); innerhalb eines Feeds nichts doppelt,
+    // auch wenn der Stapel mittendrin neu gemischt wird
+    const seen = new Set<string>();
+    const take = <T extends MemePost>(items: readonly T[]): T => {
+      for (let tries = 0; tries < 20; tries++) {
+        const p = fresh('memes', items, { key });
+        if (!seen.has(p.title)) return seen.add(p.title), p;
+      }
+      return items.find((p) => !seen.has(p.title)) ?? items[0]!;
+    };
+    const forumPosts: MemePost[] = [];
+    const gagPosts: ImagePost[] = [];
+    for (let i = 0; i < MEMES_PER_SITE; i++) {
+      forumPosts.push(take(MEME_POSTS));
+      gagPosts.push(take(IMAGE_POSTS));
+    }
+    // readit: Unterforum mit rundem Bild, Zeit, Titel, Flair, Bild oder Text, graue Knöpfe
+    const forumCard = (p: MemePost) =>
+      h('div', { class: `meme meme-forum meme-${p.t}` }, [
+        h('div', { class: 'meme-head' }, [h('span', { class: 'meme-src', text: p.sub ?? fresh('MEME_SUBS', MEME_SUBS) }), h('span', { class: 'meme-meta', text: `• vor ${randInt(1, 23)} Std.` })]),
+        h('div', { class: 'meme-title', text: p.title }),
+        ...(p.t === 'text'
+          ? [...(p.flair ? [h('span', { class: 'meme-flair', text: p.flair })] : []), h('div', { class: 'meme-body', text: p.body })]
+          : [h('div', { class: 'meme-img' }, [memeImage(p)])]),
         h('div', { class: 'meme-foot' }, [
-          h('span', { class: 'meme-pill' }, [h('b', { class: 'up', text: '▲' }), ` ${votes} `, h('b', { class: 'down', text: '▼' })]),
-          h('span', { class: 'meme-pill', text: `💬︎ ${comments}` }),
-          h('span', { class: 'meme-pill', text: '↗︎' }),
+          h('span', { class: 'meme-pill' }, [h('b', { class: 'up', text: '⇧' }), ` ${k(randInt(120, 48_000))} `, h('b', { class: 'down', text: '⇩' })]),
+          h('span', { class: 'meme-pill', text: `💬︎ ${k(randInt(12, 2_400))}` }),
+          h('span', { class: 'meme-pill', text: '↗︎ Teilen' }),
         ]),
       ]);
-    };
+    // 404GAG: Rubrik mit Symbol, Zeit, großer Titel, Bild über die volle Breite, Tags, Knöpfe mit Rahmen
+    const gagCard = (p: ImagePost) =>
+      h('div', { class: `meme meme-gag meme-${p.t}` }, [
+        h('div', { class: 'meme-head' }, [h('span', { class: 'meme-src', text: GAG_SECTION[p.t] }), h('span', { class: 'meme-meta', text: `· ${randInt(1, 23)}h` })]),
+        h('div', { class: 'meme-title', text: p.title }),
+        h('div', { class: 'meme-img' }, [memeImage(p)]),
+        h('div', { class: 'meme-tags' }, [fresh('GAG_TAGS', GAG_TAGS), fresh('GAG_TAGS', GAG_TAGS)].map((t) => h('span', { text: t }))),
+        h('div', { class: 'meme-foot' }, [
+          h('span', { class: 'meme-pill' }, [h('b', { class: 'up', text: '⬆︎' }), ` ${kEn(randInt(120, 48_000))}`]),
+          h('span', { class: 'meme-pill' }, [h('b', { class: 'down', text: '⬇︎' })]),
+          h('span', { class: 'meme-pill', text: `💬︎ ${kEn(randInt(12, 2_400))}` }),
+          h('span', { class: 'meme-pill meme-share', text: '↗︎ Share' }),
+        ]),
+      ]);
     // je Seite einige Karten, doppelt, damit das Endlos-Scrollen nahtlos läuft
-    const renderFeed = (target: HTMLElement, list: typeof cards, forum: boolean) => {
-      const once = list.map((m, i) => card(m, i, forum));
-      target.replaceChildren(...once, ...once.map((n) => n.cloneNode(true)));
-    };
-    renderFeed(forumFeed, cards.slice(0, MEMES_PER_SITE), true);
-    renderFeed(gagFeed, cards.slice(MEMES_PER_SITE), false);
+    const renderFeed = (target: HTMLElement, once: HTMLElement[]) => target.replaceChildren(...once, ...once.map((n) => n.cloneNode(true)));
+    renderFeed(forumFeed, forumPosts.map(forumCard));
+    renderFeed(gagFeed, gagPosts.map(gagCard));
   };
   /** Aktiver Tab: Forum oder Bilderseite; ab und zu wird umgeschaltet (Seite lädt dann von oben) */
   const showSite = (site: 'forum' | 'gag') => {
@@ -988,7 +995,8 @@ export function createWork(
       if (loop > 0 && memeScroll.scrollTop >= loop) memeScroll.scrollTop -= loop;
       const from = memeScroll.scrollTop;
       const next = cards.find((c) => c.offsetTop > from + 12);
-      let target = next ? next.offsetTop - 8 : from + 200;
+      // hohe Beiträge (Pointe unten) in Etappen lesen, nicht zum nächsten springen
+      let target = Math.min(next ? next.offsetTop - 8 : from + 200, from + Math.max(120, Math.round(memeScroll.clientHeight * 0.7)));
       if (from > 80 && Math.random() < 0.12) target = from - randInt(40, 90); // nochmal gucken
       else if (Math.random() < 0.3) target += randInt(-30, 40); // Daumen ist nicht pixelgenau
       const to = Math.max(0, target);

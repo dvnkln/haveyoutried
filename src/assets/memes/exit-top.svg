@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 340">
+<defs><linearGradient id="xs" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5f9fd6"/><stop offset="1" stop-color="#cfe3f2"/></linearGradient></defs>
+<rect width="800" height="340" fill="url(#xs)"/>
+<path d="M0 120C30 80 90 70 130 100C150 70 200 80 210 110L0 130Z" fill="#fff" opacity=".9"/><path d="M590 120C610 80 680 80 700 110C720 90 780 95 800 120V140H580Z" fill="#fff" opacity=".9"/>
+<!-- Brückengeländer -->
+<path d="M0 150H800M0 200H800M0 250H800" stroke="#7d8790" stroke-width="5"/>
+<path d="M0 150L40 200L80 150L120 200L160 150L200 200L600 200L640 150L680 200L720 150L760 200L800 150" fill="none" stroke="#7d8790" stroke-width="3"/>
+<path d="M20 200V250M100 200V250M180 200V250M620 200V250M700 200V250M780 200V250" stroke="#5c656d" stroke-width="5"/>
+<rect x="0" y="255" width="800" height="60" fill="#8a8f8e"/><rect x="0" y="315" width="800" height="25" fill="#3d4244"/>
+<!-- Schild -->
+<rect x="182" y="18" width="110" height="34" rx="3" fill="#f2c335" stroke="#fff" stroke-width="2"/><text x="237" y="43" font-family="Arial" font-weight="700" font-size="17" text-anchor="middle" fill="#1d1d1d">LEFT</text>
+<rect x="182" y="52" width="110" height="34" fill="#1f6655" stroke="#fff" stroke-width="2"/><text x="237" y="77" font-family="Arial" font-size="17" text-anchor="middle" fill="#fff">EXIT 12</text>
+<rect x="182" y="86" width="412" height="182" rx="6" fill="#1f6655" stroke="#f4f4f4" stroke-width="4"/>
+<path d="M332 245V150H318L340 120L362 150H348V245Z" fill="#e8e8e8"/>
+<path d="M348 200C348 170 370 160 392 158V146L414 168L392 190V176C375 178 362 186 360 200V245H348Z" fill="#e8e8e8"/>
+<rect x="690" y="264" width="110" height="18" fill="#1f6655" stroke="#fff"/>
+</svg>

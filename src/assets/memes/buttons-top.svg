@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 420">
+<rect width="600" height="420" fill="#5d7aa0"/>
+<!-- Pult in Schrägansicht -->
+<path d="M0 0H470L560 210L600 220V420H0Z" fill="#a9c4e6" stroke="#1d1d2b" stroke-width="5" stroke-linejoin="round"/>
+<path d="M0 360L560 210L600 220V250L0 420Z" fill="#7f9cc4" stroke="#1d1d2b" stroke-width="5" stroke-linejoin="round"/>
+<path d="M60 395V420M250 345V420M420 300V420" stroke="#1d1d2b" stroke-width="4"/>
+<path d="M470 0L560 210" stroke="#1d1d2b" stroke-width="5"/>
+<path d="M490 0L600 180V0Z" fill="#46638b"/>
+<!-- zwei weiße Platten -->
+<path d="M20 90L230 55L320 260L120 325Z" fill="#fff" stroke="#1d1d2b" stroke-width="5" stroke-linejoin="round"/>
+<path d="M245 50L405 30L480 205L330 250Z" fill="#fff" stroke="#1d1d2b" stroke-width="5" stroke-linejoin="round"/>
+<g fill="#1d1d2b"><circle cx="38" cy="98" r="4"/><circle cx="225" cy="66" r="4"/><circle cx="308" cy="254" r="4"/><circle cx="128" cy="313" r="4"/><circle cx="258" cy="58" r="4"/><circle cx="398" cy="40" r="4"/><circle cx="466" cy="200" r="4"/><circle cx="338" cy="240" r="4"/></g>
+<!-- rote Knöpfe mit Schatten -->
+<ellipse cx="208" cy="208" rx="46" ry="36" fill="#7b8fb3" opacity=".5"/>
+<ellipse cx="198" cy="200" rx="44" ry="36" fill="#c4162a" stroke="#1d1d2b" stroke-width="5"/>
+<ellipse cx="194" cy="192" rx="40" ry="31" fill="#e8283a"/><ellipse cx="180" cy="180" rx="14" ry="8" fill="#ff8a8a" opacity=".8"/>
+<ellipse cx="400" cy="150" rx="40" ry="32" fill="#7b8fb3" opacity=".5"/>
+<ellipse cx="392" cy="142" rx="38" ry="32" fill="#c4162a" stroke="#1d1d2b" stroke-width="5"/>
+<ellipse cx="388" cy="135" rx="34" ry="27" fill="#e8283a"/><ellipse cx="376" cy="125" rx="12" ry="7" fill="#ff8a8a" opacity=".8"/>
+<!-- weißer Handschuh, zögernder Zeigefinger -->
+<path d="M600 300C560 290 520 285 495 280C470 262 430 240 395 222C375 212 362 232 380 244L445 286C430 295 420 300 410 305C385 302 372 322 395 330C410 338 425 345 440 352C445 372 465 385 490 390C530 395 570 400 600 402Z" fill="#fff" stroke="#1d1d2b" stroke-width="5" stroke-linejoin="round"/>
+<path d="M445 286C470 292 490 300 500 312M440 352C455 340 470 335 490 336" fill="none" stroke="#1d1d2b" stroke-width="4" stroke-linecap="round"/>
+<path d="M520 330C540 334 560 334 590 330" fill="none" stroke="#b8c6dc" stroke-width="6" stroke-linecap="round"/>
+</svg>

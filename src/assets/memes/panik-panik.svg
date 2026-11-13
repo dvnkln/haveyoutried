@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 290">
+<defs><radialGradient id="mh" cx=".38" cy=".3" r=".8"><stop offset="0" stop-color="#e7d7c2"/><stop offset=".6" stop-color="#c3ad92"/><stop offset="1" stop-color="#8f7a62"/></radialGradient>
+<linearGradient id="mn" x1="0" x2="1"><stop offset="0" stop-color="#b59f84"/><stop offset="1" stop-color="#7d6a54"/></linearGradient>
+<filter id="mb"><feGaussianBlur stdDeviation="2.5 0.6"/></filter></defs>
+<rect width="320" height="290" fill="#f4f4f4"/>
+<g><g transform="translate(166 0) scale(.86 1.04) translate(-166 -6)">
+<path d="M118 225C116 245 120 262 130 268C160 275 190 272 205 262C210 248 208 232 206 220Z" fill="url(#mn)"/>
+<path d="M90 110C88 55 125 22 168 22C215 22 245 58 242 110C240 150 236 175 228 195C220 215 200 232 175 236C148 240 122 228 108 205C96 185 92 150 90 110Z" fill="url(#mh)"/>
+<path d="M200 105C215 120 225 145 222 160C220 170 214 176 206 176" fill="none" stroke="#7d6a54" stroke-width="3" opacity=".7"/>
+<path d="M210 168C220 172 222 182 212 186" fill="#a8927a"/>
+<path d="M184 196C194 194 204 196 210 200" stroke="#6e5c48" stroke-width="3" stroke-linecap="round"/>
+<path d="M185 104C192 98 204 98 212 104M228 104C232 100 236 100 238 104" stroke="#6e5c48" stroke-width="3" stroke-linecap="round" fill="none"/>
+<ellipse cx="196" cy="116" rx="9" ry="6" fill="#fff"/><circle cx="196" cy="116" r="4" fill="#4d7bc7"/><circle cx="196" cy="116" r="1.6" fill="#111"/>
+<ellipse cx="233" cy="116" rx="5" ry="6" fill="#fff"/><circle cx="234" cy="116" r="3" fill="#4d7bc7"/>
+<path d="M130 60C140 50 160 45 175 47" stroke="#f3e8da" stroke-width="10" stroke-linecap="round" opacity=".6"/>
+<path d="M196 100C204 125 214 150 214 172" stroke="#e3cfb5" stroke-width="5" opacity=".7"/></g>
+<path d="M74 90C68 120 78 155 96 160C112 150 116 120 114 88Z" fill="#e7a283" stroke="#a5654c" stroke-width="2"/><rect x="-6" y="-30" width="12" height="34" rx="6" transform="translate(76 128) rotate(-35)" fill="#e7a283" stroke="#a5654c" stroke-width="2"/><rect x="-6" y="-38" width="13" height="44" rx="6.5" transform="translate(86 99.5) rotate(18)" fill="#e7a283" stroke="#a5654c" stroke-width="2"/><rect x="-6" y="-38" width="13" height="44" rx="6.5" transform="translate(95 94.5) rotate(12)" fill="#e7a283" stroke="#a5654c" stroke-width="2"/><rect x="-6" y="-38" width="13" height="44" rx="6.5" transform="translate(104 94.5) rotate(6)" fill="#e7a283" stroke="#a5654c" stroke-width="2"/><rect x="-6" y="-38" width="13" height="44" rx="6.5" transform="translate(113 99.5) rotate(0)" fill="#e7a283" stroke="#a5654c" stroke-width="2"/><path d="M264 86C270 116 260 151 242 156C226 146 222 116 224 84Z" fill="#e7a283" stroke="#a5654c" stroke-width="2"/><rect x="-6" y="-30" width="12" height="34" rx="6" transform="translate(262 124) rotate(35)" fill="#e7a283" stroke="#a5654c" stroke-width="2"/><rect x="-6" y="-38" width="13" height="44" rx="6.5" transform="translate(252 95.5) rotate(-18)" fill="#e7a283" stroke="#a5654c" stroke-width="2"/><rect x="-6" y="-38" width="13" height="44" rx="6.5" transform="translate(243 90.5) rotate(-12)" fill="#e7a283" stroke="#a5654c" stroke-width="2"/><rect x="-6" y="-38" width="13" height="44" rx="6.5" transform="translate(234 90.5) rotate(-6)" fill="#e7a283" stroke="#a5654c" stroke-width="2"/><rect x="-6" y="-38" width="13" height="44" rx="6.5" transform="translate(225 95.5) rotate(0)" fill="#e7a283" stroke="#a5654c" stroke-width="2"/>
+</g>
+<text x="300" y="250" font-family="Arial" font-weight="700" font-size="30" fill="#111" text-anchor="end" transform="rotate(-8 300 250)">Panik</text>
+</svg>

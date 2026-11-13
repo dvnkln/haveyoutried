@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+<defs>
+<linearGradient id="dy" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e2c20a"/><stop offset="1" stop-color="#cfa900"/></linearGradient>
+<linearGradient id="dj" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ef5a1c"/><stop offset="1" stop-color="#d23c10"/></linearGradient>
+<radialGradient id="ds" cx="0.45" cy="0.4" r="0.7"><stop offset="0" stop-color="#b98058"/><stop offset="1" stop-color="#8a5636"/></radialGradient>
+</defs>
+<rect width="600" height="600" fill="url(#dy)"/>
+<!-- Kapuze hinter dem Kopf -->
+<path d="M210 70C260 30 360 30 420 70C470 110 470 190 450 240L600 300V600H0V330C40 270 110 240 170 240C180 170 180 110 210 70Z" fill="url(#dj)"/>
+<path d="M230 80C290 50 370 55 415 95C440 130 445 180 430 230" fill="none" stroke="#b8360e" stroke-width="10" stroke-linecap="round" opacity=".6"/>
+<path d="M240 120C300 95 360 100 405 135" fill="none" stroke="#ff9152" stroke-width="12" stroke-linecap="round" opacity=".55"/>
+<!-- Steppnähte der Jacke -->
+<g fill="none" stroke="#b8360e" stroke-width="6" stroke-linecap="round" opacity=".55">
+<path d="M440 330C500 340 560 360 600 380"/><path d="M420 430C490 440 550 455 600 470"/><path d="M400 520C470 530 540 545 600 555"/>
+<path d="M30 420C70 400 120 395 170 400"/><path d="M20 510C70 495 120 490 180 495"/>
+</g>
+<g fill="none" stroke="#ff9a5c" stroke-width="10" stroke-linecap="round" opacity=".45">
+<path d="M450 300C510 310 560 325 595 340"/><path d="M430 395C500 405 560 420 600 435"/><path d="M60 380C100 365 140 362 180 365"/>
+</g>
+<!-- Brusttasche -->
+<path d="M500 350L590 330L600 400L520 420Z" fill="#e2551f" stroke="#b8360e" stroke-width="5"/>
+<!-- T-Shirt-Streifen in der Mitte -->
+<path d="M270 420C285 470 290 540 285 600H320C325 540 318 470 300 420Z" fill="#d8cfa8" opacity=".7"/>
+<!-- erhobener Arm: Ärmel von unten links zur Hand -->
+<path d="M0 470C60 420 160 360 250 300L320 330C250 400 150 470 60 560L0 600Z" fill="url(#dj)"/>
+<path d="M30 520C100 460 180 400 260 340" fill="none" stroke="#ff9152" stroke-width="14" stroke-linecap="round" opacity=".5"/>
+<path d="M60 580C130 520 210 455 300 370" fill="none" stroke="#a9300c" stroke-width="8" stroke-linecap="round" opacity=".5"/>
+<!-- Bündchen -->
+<path d="M235 290L330 320L318 350L222 318Z" fill="#c9420f"/>
+<!-- Hand, Handfläche nach vorn, Finger nach oben -->
+<g fill="#b47a52" stroke="#6e4128" stroke-width="4" stroke-linejoin="round">
+<path d="M245 300C235 250 238 215 250 195L262 140C265 125 285 127 284 143L280 200L292 120C295 104 316 106 315 122L305 200L322 128C326 112 346 116 343 132L330 210L346 160C351 146 369 152 366 167L350 245C345 280 330 310 310 330C290 340 255 325 245 300Z"/>
+<path d="M250 230C240 210 225 200 214 205C204 212 214 228 226 245C236 262 242 280 248 300" />
+</g>
+<path d="M272 235C285 250 300 252 318 245" fill="none" stroke="#7a4a2e" stroke-width="3" opacity=".6"/>
+<!-- Hals -->
+<path d="M150 260C160 300 200 320 235 300L230 250Z" fill="#7d4c30"/>
+<!-- Kopf, nach unten zur Seite geneigt -->
+<g transform="translate(-10 -6) scale(1.12) rotate(-14 150 170)">
+<path d="M60 150C55 80 100 30 165 30C230 30 262 85 255 150C252 200 235 250 190 280C160 300 120 295 95 265C70 235 62 200 60 150Z" fill="url(#ds)"/>
+<!-- Ohr -->
+<path d="M240 135C262 128 272 150 265 175C258 195 245 198 238 190Z" fill="#9b6340" stroke="#6e4128" stroke-width="3"/>
+<!-- kurze Haare mit Scheitel-Linie -->
+<path d="M64 100C70 55 110 24 168 24C222 25 255 58 258 108C240 84 215 70 185 66C150 62 112 68 88 82C78 88 70 94 64 100Z" fill="#3a2a20" opacity=".9"/><path d="M64 100C70 55 110 24 168 24C222 25 255 58 258 108" fill="none" stroke="#2b1d16" stroke-width="4"/>
+<path d="M150 30C175 45 192 62 200 85" fill="none" stroke="#a9744f" stroke-width="3" opacity=".8"/>
+<!-- Bart -->
+<path d="M70 190C78 240 110 285 160 290C210 288 240 250 250 175C238 205 222 220 200 222C180 235 140 238 120 228C100 220 82 208 70 190Z" fill="#24170f"/>
+<path d="M120 228C135 220 165 218 185 226" fill="none" stroke="#5a3523" stroke-width="5"/>
+<!-- Augen zugekniffen, Brauen gesenkt -->
+<path d="M80 140C95 128 118 128 130 138" fill="none" stroke="#24170f" stroke-width="9" stroke-linecap="round"/>
+<path d="M160 136C175 126 200 128 215 140" fill="none" stroke="#24170f" stroke-width="9" stroke-linecap="round"/>
+<path d="M88 162C100 156 115 156 125 162" fill="none" stroke="#2a1a12" stroke-width="5" stroke-linecap="round"/>
+<path d="M165 160C178 154 194 155 205 162" fill="none" stroke="#2a1a12" stroke-width="5" stroke-linecap="round"/>
+<!-- Nase -->
+<path d="M140 150C138 175 132 192 140 200C150 206 165 202 170 196" fill="none" stroke="#6e4128" stroke-width="5" stroke-linecap="round"/>
+<!-- Mund verzogen -->
+<path d="M122 222C140 214 165 214 182 222" fill="none" stroke="#5a2a20" stroke-width="6" stroke-linecap="round"/>
+</g>
+</svg>

@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400">
+<defs>
+<filter id="bfb"><feGaussianBlur stdDeviation="7"/></filter><filter id="bfs"><feGaussianBlur stdDeviation="1.6"/></filter>
+<pattern id="plaid" width="26" height="26" patternUnits="userSpaceOnUse" patternTransform="rotate(8)"><rect width="26" height="26" fill="#6f8fc4"/><rect width="26" height="8" fill="#3d5a94" opacity=".8"/><rect width="8" height="26" fill="#3d5a94" opacity=".7"/><path d="M0 17H26M17 0V26" stroke="#dfe8f6" stroke-width="2"/></pattern>
+<linearGradient id="skin" x1="0" x2="1"><stop offset="0" stop-color="#f0c4a2"/><stop offset="1" stop-color="#d79c78"/></linearGradient>
+</defs>
+<!-- unscharfe Straße -->
+<g filter="url(#bfb)">
+<rect width="600" height="400" fill="#e9e3d6"/>
+<rect x="0" y="0" width="120" height="400" fill="#c7c2b2"/><rect x="40" y="40" width="30" height="300" fill="#7b7d6e"/>
+<rect x="160" y="0" width="160" height="230" fill="#f2eee6"/><rect x="250" y="160" width="90" height="40" fill="#e8b4b8"/>
+<rect x="390" y="0" width="210" height="300" fill="#d9cfbd"/><rect x="420" y="60" width="160" height="40" fill="#b9ad98"/><rect x="480" y="120" width="70" height="140" fill="#cfc3a4"/>
+<circle cx="555" cy="130" r="22" fill="#fff"/>
+<rect x="0" y="300" width="600" height="100" fill="#ece7df"/>
+<circle cx="70" cy="220" r="16" fill="#c99a7a"/><rect x="50" y="236" width="40" height="80" fill="#e3ddd2"/>
+<circle cx="545" cy="200" r="14" fill="#c99a7a"/><rect x="528" y="214" width="34" height="80" fill="#7cc58a"/>
+<circle cx="590" cy="190" r="14" fill="#d8b08a"/><rect x="572" y="204" width="34" height="90" fill="#efe6b0"/>
+</g>
+<!-- rechts: Freundin im hellblauen Top, empört --><g transform="translate(500 400) scale(1.12) translate(-500 -400)">
+<path d="M455 400C450 330 452 270 470 245C490 225 520 225 535 245C548 270 548 330 545 400Z" fill="#9dc8de"/>
+<path d="M470 245C465 280 468 300 476 310M535 245C540 270 540 300 536 320" stroke="#dc9e78" stroke-width="10" stroke-linecap="round"/>
+<path d="M455 300C450 330 452 360 460 400" stroke="url(#skin)" stroke-width="18" stroke-linecap="round"/>
+<path d="M455 395H545V400H455Z" fill="#3d5f94"/>
+<path d="M482 150C470 190 466 230 470 280L486 240C484 200 490 180 492 160ZM522 150C540 190 545 240 540 290L520 230Z" fill="#6b3f22"/>
+<path d="M478 160C476 130 490 110 512 112C532 114 542 132 540 156C538 182 528 202 508 205C490 204 480 188 478 160Z" fill="url(#skin)"/>
+<path d="M500 205C500 220 505 232 512 238L520 225C518 215 518 205 518 200Z" fill="#d79c78"/>
+<path d="M478 150C478 120 495 104 515 106C535 108 548 125 545 152C536 136 525 128 510 128C500 135 488 140 478 150Z" fill="#6b3f22"/>
+<path d="M484 150c6 -4 14 -4 18 0M520 148c4 -3 10 -3 14 0" stroke="#4a2c18" stroke-width="3" stroke-linecap="round" fill="none"/>
+<ellipse cx="493" cy="160" rx="5" ry="3.6" fill="#fff"/><circle cx="491" cy="160" r="2.4" fill="#3a2a1c"/>
+<ellipse cx="526" cy="158" rx="4.6" ry="3.4" fill="#fff"/><circle cx="523" cy="158" r="2.2" fill="#3a2a1c"/>
+<path d="M500 162C498 172 496 178 502 180" fill="none" stroke="#b07a5a" stroke-width="2"/>
+<ellipse cx="503" cy="190" rx="6" ry="5" fill="#8a3a3a"/>
+</g><!-- Mitte: Freund im karierten Hemd, dreht sich um -->
+<path d="M280 400C275 320 290 270 310 240C320 215 360 205 405 208C440 212 455 240 458 280C452 330 448 370 445 400Z" fill="url(#plaid)" stroke="#2d3f63" stroke-width="2"/>
+<path d="M448 280C462 320 466 360 462 400H440C442 360 440 320 432 290Z" fill="url(#plaid)" stroke="#2d3f63" stroke-width="2"/>
+<path d="M420 300C430 340 432 370 426 400" stroke="url(#skin)" stroke-width="18" stroke-linecap="round"/>
+<path d="M320 230C335 222 350 222 360 228L352 252Z" fill="#dfe8f6"/>
+<g transform="translate(375 230) scale(1.18) translate(-372 -200)"><path d="M352 170C352 190 354 205 358 222L392 218C388 200 386 186 388 170Z" fill="#d79c78"/>
+<path d="M332 112C330 82 350 62 380 64C405 66 420 86 418 115C416 145 405 172 380 178C356 180 336 160 332 112Z" fill="url(#skin)"/>
+<path d="M410 120C422 116 428 128 422 142C418 150 410 150 406 146Z" fill="#d79c78"/>
+<path d="M330 106C326 76 345 52 378 52C410 52 426 74 422 108C414 92 405 84 392 80C388 70 372 72 368 66C360 74 346 74 342 84C338 92 334 98 330 106Z" fill="#8a5a36"/>
+<path d="M342 104c8 -6 18 -6 24 -2" stroke="#5a3a22" stroke-width="3.5" fill="none" stroke-linecap="round"/><path d="M372 100c6 -2 12 0 16 4" stroke="#5a3a22" stroke-width="3" fill="none" stroke-linecap="round"/>
+<ellipse cx="352" cy="114" rx="5.4" ry="3.8" fill="#fff"/><circle cx="349" cy="114" r="2.6" fill="#3a2a1c"/>
+<ellipse cx="380" cy="113" rx="5" ry="3.6" fill="#fff"/><circle cx="376" cy="113" r="2.4" fill="#3a2a1c"/>
+<path d="M346 120C340 132 338 140 346 144" fill="none" stroke="#b07a5a" stroke-width="2.2"/>
+<ellipse cx="352" cy="156" rx="5" ry="4" fill="#9a4a42"/><path d="M348 150C352 148 358 148 362 152" stroke="#9a5a4a" stroke-width="2" fill="none"/>
+<path d="M360 160C372 170 392 172 404 160" stroke="#7a5a3a" stroke-width="5" stroke-linecap="round" opacity=".4" fill="none"/>
+</g><!-- links: Frau im roten Kleid, unscharf im Vordergrund -->
+<g filter="url(#bfs)" transform="translate(168 400) scale(1.18) translate(-168 -400)">
+<path d="M70 400C65 340 75 300 100 285C130 270 210 268 240 285C265 300 272 340 268 400Z" fill="#e8202a"/>
+<path d="M100 285C80 300 70 340 68 400H40C42 340 55 300 100 285ZM240 285C260 300 272 340 274 400H300C298 340 285 300 240 285Z" fill="url(#skin)"/>
+<path d="M118 120C96 170 92 240 100 290L132 280C126 230 126 180 130 150ZM218 120C242 170 246 240 238 290L206 280C212 230 212 180 208 150Z" fill="#7a4526"/>
+<path d="M140 240C140 260 150 280 168 284C186 280 196 260 196 240Z" fill="#e2a988"/>
+<path d="M118 150C116 105 138 82 168 82C198 82 220 105 218 150C216 195 198 238 168 240C138 238 120 195 118 150Z" fill="url(#skin)"/>
+<path d="M116 150C112 100 136 74 170 74C204 74 224 100 220 150C210 120 200 105 178 100C160 108 140 110 126 130C122 136 118 142 116 150Z" fill="#7a4526"/>
+<path d="M140 156c8 -4 16 -4 22 0M176 156c6 -4 14 -4 22 0" stroke="#4a2c18" stroke-width="3" fill="none"/>
+<circle cx="150" cy="164" r="3" fill="#3a2a1c"/><circle cx="186" cy="164" r="3" fill="#3a2a1c"/>
+<path d="M166 168C164 182 164 188 170 190" fill="none" stroke="#b07a5a" stroke-width="2"/>
+<path d="M152 208C162 216 178 216 188 208" stroke="#b5544a" stroke-width="4" fill="none" stroke-linecap="round"/>
+</g>
+</svg>

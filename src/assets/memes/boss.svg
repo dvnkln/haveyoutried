@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 360">
+<defs><linearGradient id="bw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b9b9b1"/><stop offset="1" stop-color="#8f9592"/></linearGradient>
+<pattern id="bst" width="10" height="10" patternUnits="userSpaceOnUse"><rect width="10" height="10" fill="#d8e2f0"/><path d="M3 0V10" stroke="#8fa6cc" stroke-width="2"/></pattern>
+<pattern id="btie" width="12" height="12" patternUnits="userSpaceOnUse"><rect width="12" height="12" fill="#8c2a2a"/><circle cx="6" cy="6" r="2" fill="#d9b55a"/></pattern></defs>
+<rect width="480" height="360" fill="url(#bw)"/>
+<rect x="0" y="150" width="140" height="210" fill="#7d8c96"/><rect x="340" y="120" width="140" height="240" fill="#7d8c96"/>
+<path d="M0 150H140M340 120H480" stroke="#5f6a72" stroke-width="6"/>
+<!-- Oberkörper: gestreiftes Hemd, Hosenträger, Krawatte -->
+<path d="M100 360C100 290 130 250 180 240C210 236 270 236 300 240C350 250 380 290 380 360Z" fill="url(#bst)" stroke="#4d5a70" stroke-width="2"/>
+<path d="M190 242L170 360M290 242L310 360" stroke="#c43b2e" stroke-width="12"/>
+<path d="M222 236L240 262L258 236Z" fill="#fff" stroke="#4d5a70" stroke-width="2"/>
+<path d="M232 252H248L254 270L246 360H234L226 270Z" fill="url(#btie)" stroke="#4a1a1a" stroke-width="2"/>
+<!-- Hals, Kopf -->
+<path d="M205 200C205 225 215 242 240 244C265 242 275 225 275 200Z" fill="#e3b493"/>
+<path d="M182 120C180 70 205 40 240 40C278 40 300 70 298 120C296 170 278 210 240 214C204 210 184 170 182 120Z" fill="#efc4a4" stroke="#a87a5e" stroke-width="2"/>
+<path d="M180 120C175 70 200 34 242 34C284 34 306 68 300 118C292 92 282 80 262 74C240 70 214 72 196 86C188 94 183 106 180 120Z" fill="#8e8a80"/>
+<path d="M200 76C222 64 260 62 290 82" fill="none" stroke="#b9b5aa" stroke-width="4"/>
+<path d="M178 120c-10 0 -12 24 2 30M302 120c10 0 12 24 -2 30" fill="#e3b493" stroke="#a87a5e" stroke-width="2"/>
+<!-- Brille -->
+<rect x="194" y="108" width="40" height="28" rx="6" fill="#fff" fill-opacity=".25" stroke="#1d1d1d" stroke-width="4"/><rect x="248" y="108" width="40" height="28" rx="6" fill="#fff" fill-opacity=".25" stroke="#1d1d1d" stroke-width="4"/>
+<path d="M234 118h14M194 116l-14 -4M288 116l14 -4" stroke="#1d1d1d" stroke-width="3"/>
+<circle cx="214" cy="123" r="4" fill="#2a2a2a"/><circle cx="268" cy="123" r="4" fill="#2a2a2a"/>
+<path d="M200 102c10 -6 22 -6 30 -2M252 100c10 -4 22 -2 30 4" stroke="#6a6458" stroke-width="4" fill="none" stroke-linecap="round"/>
+<path d="M240 130C236 150 234 160 242 164" fill="none" stroke="#a87a5e" stroke-width="3"/>
+<path d="M218 182C232 188 250 188 262 182" stroke="#8a4a3a" stroke-width="4" fill="none" stroke-linecap="round"/>
+<!-- Tasse -->
+<path d="M330 280C350 280 360 300 352 318C344 330 330 330 320 326" fill="none" stroke="#e3b493" stroke-width="16" stroke-linecap="round"/>
+<rect x="290" y="250" width="50" height="60" rx="6" fill="#f4f4f0" stroke="#4d4d4d" stroke-width="3"/><path d="M340 262q18 10 0 30" fill="none" stroke="#4d4d4d" stroke-width="5"/>
+<path d="M300 270h30" stroke="#2e5aa6" stroke-width="6"/>
+</svg>

@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 500">
+<rect width="680" height="500" fill="#fff"/>
+<!-- Glockenkurve -->
+<path d="M60 458C180 458 230 440 260 330C290 220 310 205 343 205C376 205 396 220 426 330C456 440 506 458 626 458Z" fill="#7fb3e6"/>
+<path d="M270 300V458M343 205V458M416 300V458M200 440V458M486 440V458" stroke="#fff" stroke-width="1.5" opacity=".8"/>
+<path d="M270 295H416M200 440H486" stroke="#5e8fc4" stroke-dasharray="3 3"/>
+<rect x="60" y="458" width="566" height="10" fill="#7fb3e6"/>
+<g font-family="Arial" font-size="15" fill="#333" text-anchor="middle"><text x="290" y="226">34%</text><text x="400" y="226">34%</text><text x="220" y="398">14%</text><text x="468" y="398">14%</text><text x="160" y="444">2%</text><text x="530" y="444">2%</text><text x="100" y="448">0.1%</text><text x="596" y="448">0.1%</text></g>
+<g font-family="Arial" font-size="15" fill="#b5463a" text-anchor="middle"><text x="130" y="488">55</text><text x="200" y="488">70</text><text x="270" y="488">85</text><text x="343" y="488">100</text><text x="416" y="488">115</text><text x="486" y="488">130</text><text x="556" y="488">145</text></g>
+<text x="64" y="486" font-family="Arial" font-size="9" fill="#b5463a">IQ score</text>
+<!-- links: einfacher Wojak, zufrieden -->
+<g fill="none" stroke="#222" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+<path d="M40 410C60 395 75 392 80 380C70 360 66 340 72 320C80 300 110 292 130 296C150 300 162 318 160 340C158 360 150 375 140 385C145 395 160 400 175 410"/>
+<path d="M78 336C72 330 62 332 62 342C62 350 70 352 76 350M156 338C162 332 172 334 170 344C168 352 160 352 156 348"/>
+<path d="M95 318C105 314 125 314 140 318M92 326C104 322 124 322 142 326"/>
+<path d="M98 300l2 -6M108 298l1 -6M118 298l-1 -6M128 300l0 -6"/>
+<circle cx="102" cy="342" r="2" fill="#222"/><circle cx="130" cy="340" r="2" fill="#222"/>
+<path d="M115 345C112 352 112 356 118 358"/><path d="M100 366C110 372 124 370 132 364"/>
+</g>
+<!-- Mitte: weinender Nerd mit Brille -->
+<g stroke="#222" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+<path d="M285 195C300 185 300 165 296 150C290 125 288 100 296 85C310 68 360 68 378 85C388 98 386 120 380 140C376 160 380 180 395 195" fill="#fff"/>
+<path d="M290 92C300 70 360 66 378 86C372 78 365 72 355 70C350 66 345 74 340 68C335 72 330 64 325 70C318 64 312 72 305 68C298 74 294 80 290 92Z" fill="#a0532a"/>
+<path d="M360 90C368 88 374 95 372 102" fill="none"/>
+<circle cx="316" cy="128" r="13" fill="none"/><circle cx="350" cy="128" r="13" fill="none"/><path d="M329 128h8M303 126l-10 -4M363 126l10 -4" fill="none"/>
+<circle cx="316" cy="129" r="3" fill="#222"/><circle cx="350" cy="129" r="3" fill="#222"/>
+<path d="M310 112l12 4M356 112l-12 4" fill="none"/>
+<rect x="312" y="150" width="40" height="20" rx="4" fill="#fff"/><path d="M322 150v20M332 150v20M342 150v20M312 160h40" fill="none" stroke-width="1.6"/>
+</g>
+<path d="M312 142C310 160 314 180 308 195M354 142C356 160 352 180 358 195M318 142v30" fill="none" stroke="#7cc2ff" stroke-width="4" stroke-linecap="round"/>
+<!-- rechts: Mönch in brauner Kutte --><g transform="translate(570 440) scale(.78) translate(-570 -440)">
+<path d="M500 430C495 380 505 330 520 300C535 268 560 255 590 258C620 262 640 290 640 330C640 370 630 400 640 430Z" fill="#8a5a2b" stroke="#3e2712" stroke-width="2.4"/>
+<path d="M520 300C545 285 610 285 625 320C625 360 620 385 615 400H530C522 370 518 335 520 300Z" fill="#5e3a19"/>
+<path d="M535 310C535 296 560 292 580 292C600 292 612 300 612 315C612 340 605 370 575 382C548 375 535 345 535 310Z" fill="#f4f1ec" stroke="#222" stroke-width="2.4"/>
+<path d="M535 318C540 300 560 294 580 294C598 294 610 300 612 318C600 310 590 312 585 300C578 312 560 314 550 304C545 312 540 316 535 318Z" fill="#1d1d1d"/>
+<path d="M550 332l14 2M590 334l14 -2" stroke="#222" stroke-width="3" stroke-linecap="round"/>
+<path d="M575 342c-2 8 -2 12 4 14M565 364c8 2 16 2 22 0" fill="none" stroke="#222" stroke-width="2.2" stroke-linecap="round"/>
+<path d="M500 430C540 410 600 410 650 430V440H495Z" fill="#8a5a2b" stroke="#3e2712" stroke-width="2.4"/>
+</g></svg>

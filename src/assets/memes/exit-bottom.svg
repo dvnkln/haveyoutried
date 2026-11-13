@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 420">
+<defs><linearGradient id="xb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d9dde2"/><stop offset="1" stop-color="#eef0f2"/></linearGradient>
+<filter id="xd"><feGaussianBlur stdDeviation="8"/></filter></defs>
+<rect width="800" height="420" fill="url(#xb)"/>
+<!-- Bäume rechts, Hang -->
+<path d="M240 200C250 120 300 60 360 70C400 20 470 30 500 70C560 40 640 50 680 90C730 60 800 70 800 90V260H240Z" fill="#2f4a2a"/>
+<path d="M420 200C480 190 560 180 640 175L800 170V300H400Z" fill="#4f6b36"/>
+<path d="M0 220H260L250 240H0Z" fill="#6c7570"/>
+<path d="M90 140V230M150 160V230" stroke="#8a8f8e" stroke-width="3"/>
+<!-- Leitpfeile -->
+<g fill="#f2b51c" stroke="#222" stroke-width="2"><path d="M395 170h26v28h-26z"/><path d="M548 140h26v28h-26z"/><path d="M628 135h26v28h-26z"/></g>
+<g fill="#222"><path d="M401 174l12 10 -12 10v-5l6 -5 -6 -5z"/><path d="M554 144l12 10 -12 10v-5l6 -5 -6 -5z"/><path d="M634 139l12 10 -12 10v-5l6 -5 -6 -5z"/></g>
+<!-- Fahrbahn -->
+<path d="M0 260C200 240 450 235 640 250L800 270V420H0Z" fill="#5e6266"/>
+<path d="M630 255C690 270 760 300 800 330V270Z" fill="#9aa1a6"/><path d="M630 248C700 260 760 285 800 300" stroke="#c9cdd0" stroke-width="10"/>
+<path d="M0 380L140 270M90 420L230 300M260 300H320M180 330H260M140 360H220" stroke="#eee" stroke-width="7"/>
+<path d="M540 290C580 320 640 370 700 420" fill="none" stroke="#f4f4f4" stroke-width="8"/>
+<path d="M600 268C640 262 700 270 760 290" fill="none" stroke="#f4f4f4" stroke-width="6"/>
+<!-- Staubwolke -->
+<ellipse cx="270" cy="340" rx="80" ry="30" fill="#f0f0f0" opacity=".8" filter="url(#xd)"/>
+<!-- Auto, blaue Limousine, schräg nach rechts -->
+<g transform="translate(250 230) rotate(6)">
+<path d="M10 90C10 70 20 62 40 60L80 30C100 18 170 15 210 20C230 22 250 40 262 58L310 62C325 64 332 76 330 92L326 106H14Z" fill="#283c78" stroke="#111" stroke-width="3"/>
+<path d="M88 34C110 26 160 24 200 28L228 58H72Z" fill="#9fb0c6" stroke="#111" stroke-width="3"/><path d="M150 26V58" stroke="#111" stroke-width="5"/>
+<path d="M14 80H40M290 74H328" stroke="#c9ccd2" stroke-width="5"/>
+<circle cx="80" cy="106" r="24" fill="#1a1a1a"/><circle cx="80" cy="106" r="10" fill="#9aa"/>
+<circle cx="260" cy="106" r="24" fill="#1a1a1a"/><circle cx="260" cy="106" r="10" fill="#9aa"/>
+</g>
+</svg>

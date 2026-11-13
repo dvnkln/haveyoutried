@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+<defs>
+<linearGradient id="ey" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e2c20a"/><stop offset="1" stop-color="#cfa900"/></linearGradient>
+<linearGradient id="ej" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ef5a1c"/><stop offset="1" stop-color="#d23c10"/></linearGradient>
+<radialGradient id="es" cx="0.5" cy="0.4" r="0.7"><stop offset="0" stop-color="#c08a62"/><stop offset="1" stop-color="#8f5a3a"/></radialGradient>
+</defs>
+<rect width="600" height="600" fill="url(#ey)"/>
+<!-- Jacke offen, Kapuze hinten -->
+<path d="M120 200C160 160 260 150 300 170C340 150 450 160 500 200C560 230 600 300 600 360V600H0V380C20 300 70 230 120 200Z" fill="url(#ej)"/>
+<g fill="none" stroke="#a9300c" stroke-width="6" stroke-linecap="round" opacity=".55">
+<path d="M10 450C50 430 100 425 150 430"/><path d="M0 540C50 520 110 515 160 520"/><path d="M450 330C500 335 560 350 600 365"/><path d="M440 430C500 435 560 450 600 460"/><path d="M430 530C500 535 560 550 600 560"/>
+</g>
+<g fill="none" stroke="#ff9152" stroke-width="10" stroke-linecap="round" opacity=".45">
+<path d="M20 410C60 392 110 388 160 392"/><path d="M455 295C510 300 560 315 595 330"/><path d="M445 395C505 400 560 415 600 425"/>
+</g>
+<!-- weißes T-Shirt mit Springer-Logo -->
+<path d="M235 300C270 320 330 322 370 300L395 600H215Z" fill="#f4f1e6"/>
+<!-- Kragen der Jacke links und rechts vom Hals -->
+<path d="M150 210C180 190 220 200 245 230L235 330C200 300 170 260 150 210Z" fill="#e24a14"/>
+<path d="M450 210C420 190 380 200 355 230L370 330C405 300 430 260 450 210Z" fill="#e24a14"/>
+<path d="M240 240L232 600M362 240L380 600" stroke="#b8360e" stroke-width="5"/>
+<!-- Hals -->
+<path d="M255 230C260 280 280 310 300 312C322 310 342 280 346 230Z" fill="#86522f"/>
+<!-- Kopf frontal, leicht nach hinten geneigt -->
+<g transform="translate(40 -4) rotate(4 300 130) scale(1.12) translate(-32 -14)">
+<path d="M220 110C218 50 255 15 300 15C350 15 385 50 382 110C380 170 360 230 300 245C240 230 222 170 220 110Z" fill="url(#es)"/>
+<path d="M222 82C230 40 262 16 300 16C340 16 372 40 380 82C360 62 335 54 300 54C268 54 242 62 222 82Z" fill="#3a2a20" opacity=".9"/>
+<path d="M215 120C205 120 205 150 220 158M385 120C395 120 395 150 380 158" fill="#9b6340" stroke="#6e4128" stroke-width="3"/>
+<!-- Bart -->
+<path d="M224 150C228 200 255 245 300 248C345 245 372 200 376 150C365 175 350 185 335 186C320 195 280 195 265 186C250 185 235 175 224 150Z" fill="#24170f"/>
+<path d="M268 196C285 208 315 208 332 196" fill="#5a2a20" stroke="#24170f" stroke-width="3"/>
+<!-- Augen genießerisch zu, Brauen entspannt hoch -->
+<path d="M248 112C262 120 278 120 290 112M310 112C322 120 338 120 352 112" fill="none" stroke="#24170f" stroke-width="6" stroke-linecap="round"/>
+<path d="M245 92C260 84 278 84 290 90M310 90C322 84 340 84 355 92" fill="none" stroke="#24170f" stroke-width="7" stroke-linecap="round"/>
+<path d="M300 118C296 140 292 152 300 158C308 160 315 156 316 150" fill="none" stroke="#6e4128" stroke-width="4" stroke-linecap="round"/>
+<path d="M270 175C290 186 312 186 332 175" fill="none" stroke="#5a3523" stroke-width="5" stroke-linecap="round"/>
+</g>
+<!-- Arm mit Zeigegeste nach rechts oben -->
+<path d="M600 470C540 520 470 540 420 520L440 470C480 480 530 460 600 410Z" fill="url(#ej)"/>
+<path d="M600 520C540 560 470 575 410 560L430 515C480 525 540 510 600 470Z" fill="#c9420f" opacity=".6"/>
+<g fill="#b47a52" stroke="#6e4128" stroke-width="4" stroke-linejoin="round">
+<path d="M440 500C410 515 380 505 372 485C366 465 378 448 398 445L440 440L480 395C490 385 504 395 497 406L462 452C470 465 465 485 440 500Z"/>
+<path d="M398 445C390 432 395 420 410 420L445 425"/>
+<path d="M378 470C368 468 362 476 370 484"/>
+</g>
+</svg>

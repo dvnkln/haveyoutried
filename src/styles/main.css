@@ -5721,7 +5721,7 @@ html.basement {
 }
 .br-tab[data-site='gag'] .br-fav {
   border-radius: 2px;
-  background: #1b1b1f;
+  background: #000;
 }
 .br-tab[data-site='ticket'] .br-fav {
   border-radius: 2px;
@@ -5743,7 +5743,7 @@ html.basement {
   min-height: 0;
   display: flex;
   overflow: hidden;
-  background: #dae0e6;
+  background: #fff;
   container-type: inline-size;
 }
 /* Feed in der Mitte, scrollt; Seitenleisten stehen */
@@ -5754,116 +5754,571 @@ html.basement {
   overflow: hidden;
 }
 .meme-window[data-site='gag'] .meme-page {
-  background: #0f0f12;
+  background: #fff;
 }
 .meme-window[data-site='forum'] .meme-feed-gag,
 .meme-window[data-site='gag'] .meme-feed-forum {
   display: none;
 }
-.meme {
-  margin: 8px 7px;
-  border-radius: 8px;
+/* Kopfleiste wie beim Vorbild: readit (orange, Suche als Pille, Anmelden orange), 404GAG (schwarzes Logo, Rubriken, blauer „Post“) */
+.meme-site > div {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  padding: 0 7px;
+  border-bottom: 1px solid #e3e6e8;
+  background: #fff;
+  color: #1c1c1c;
+  font: 600 9px/1 Arial, Helvetica, sans-serif;
+  white-space: nowrap;
   overflow: hidden;
-  font-size: 10px;
 }
-/* Forum (hell): Unterforum, Nutzer, orange Abstimmpfeile */
-.meme-forum {
-  border: 1.5px solid #d7d0e0;
+.meme-window[data-site='forum'] .ms-forum,
+.meme-window[data-site='gag'] .ms-gag {
+  display: flex;
+}
+.ms-forum .ms-logo {
+  color: #ff4500;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+}
+.ms-gag .ms-logo {
+  color: #000;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: -0.4px;
+}
+.ms-search {
+  flex: 1;
+  min-width: 0;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: #e5ebee;
+  color: #5c6c74;
+  font-weight: 400;
+}
+.ms-gag .ms-search {
+  flex: 0 0 auto;
+  padding: 0;
+  background: none;
+  font-size: 11px;
+}
+.ms-fill {
+  flex: 1;
+}
+.ms-login {
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #d93900;
+  color: #fff;
+  font-weight: 700;
+}
+.ms-gag .ms-login {
+  border-radius: 6px;
+  background: #0a7cff;
+}
+.ms-tab {
+  font-weight: 700;
+}
+
+/* Seitenleisten (Desktop-Ansicht): links Navigation, rechts Infokasten */
+.meme-side {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  padding: 6px 0;
+  font: 9px/1.25 Arial, Helvetica, sans-serif;
+  overflow: hidden;
+}
+.meme-side > div {
+  display: none;
+  flex-direction: column;
+  gap: 1px;
+}
+.meme-window[data-site='forum'] .side-forum,
+.meme-window[data-site='gag'] .side-gag {
+  display: flex;
+}
+.meme-side-left {
+  width: 70px;
+  border-right: 1px solid #e3e6e8;
   background: #fff;
   color: #1c1c1c;
 }
-.meme-forum .meme-src {
-  font-weight: 700;
+.meme-side-right {
+  width: 84px;
+  margin: 6px 6px 6px 0;
+  padding: 6px;
+  border-radius: 6px;
+  background: #f6f7f8;
+  color: #1c1c1c;
+  align-self: flex-start;
 }
-.meme-forum .meme-src::before {
-  content: '';
-  display: inline-block;
-  width: 9px;
-  height: 9px;
-  margin-right: 4px;
-  border-radius: 50%;
-  background: #ff5a1f;
-  vertical-align: -1px;
+.meme-side-right > div {
+  gap: 4px;
 }
-.meme-forum .up {
-  color: #ff5a1f;
-}
-.meme-forum .down {
-  color: #7a8bd6;
-}
-/* Bilderseite (dunkel): „404GAG“ */
-.meme-gag {
-  border: 1.5px solid #000;
-  background: #1b1b1f;
-  color: #e9e9ee;
-}
-.meme-gag .meme-src {
-  padding: 0 4px;
-  border-radius: 3px;
-  background: #fff;
-  color: #000;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-}
-.meme-head,
-.meme-foot {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 7px;
+.side-item {
+  padding: 2px 7px;
   white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
+}
+.side-item.on {
+  background: #e5ebee;
+  font-weight: 700;
+}
+.side-gag .side-item {
+  font-weight: 700;
+}
+.side-gag .side-item.on {
+  background: none;
+  color: #0a7cff;
+}
+.side-head {
+  margin: 6px 7px 2px;
+  font-size: 7.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #6b7a83;
+}
+.side-gag .side-head {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 8px;
+}
+.side-btn {
+  align-self: flex-start;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #000;
+  color: #fff;
+  font-weight: 700;
+}
+.side-gag .side-btn {
+  align-self: stretch;
+  text-align: center;
+  background: #0a7cff;
+}
+@container (max-width: 360px) {
+  .meme-side-right {
+    display: none;
+  }
+}
+@container (max-width: 250px) {
+  .meme-side-left {
+    display: none;
+  }
+}
+
+/* Beitrag: readit ohne Kartenrahmen, nur Trennlinie; 404GAG mit großem Titel, Bild über die volle Breite */
+.meme {
+  padding: 6px 8px;
+  border-bottom: 1px solid #e3e6e8;
+  background: #fff;
+  color: #1c1c1c;
+  font: 8.5px/1.3 Arial, Helvetica, sans-serif;
+}
+.meme-head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.meme-src {
+  font-weight: 700;
 }
 .meme-meta {
   overflow: hidden;
   text-overflow: ellipsis;
-  opacity: 0.65;
+  color: #5c6c74;
+}
+.meme-forum .meme-src::before {
+  content: '';
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 4px;
+  border-radius: 50%;
+  background: #ff4500;
+  vertical-align: -2px;
+}
+.meme-gag .meme-src::before {
+  content: '';
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 4px;
+  border-radius: 2px;
+  background: #8b6be0;
+  vertical-align: -2px;
+}
+.meme-title {
+  margin: 3px 0 4px;
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+.meme-gag .meme-title {
+  font-size: 11.5px;
+}
+.meme-flair {
+  display: inline-block;
+  margin-bottom: 4px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #e5ebee;
+  font-size: 7.5px;
+  font-weight: 700;
+}
+.meme-body {
+  color: #333d42;
+}
+.meme-img {
+  overflow: hidden;
+}
+.meme-forum .meme-img {
+  border: 1px solid #e3e6e8;
+  border-radius: 7px;
+}
+.meme-gag .meme-img {
+  margin: 0 -8px;
+}
+.meme-tags {
+  display: flex;
+  gap: 4px;
+  margin-top: 5px;
+}
+.meme-tags span {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: #f0f0f0;
+  color: #333;
+  font-size: 7.5px;
 }
 .meme-foot {
-  font-weight: 600;
-  opacity: 0.8;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 5px;
+  white-space: nowrap;
+  overflow: hidden;
 }
-/* Bildmakro: Großbuchstaben, weiß mit schwarzem Rand, in der Mitte ein Gesicht als „Foto“ */
-.meme-img {
+.meme-pill {
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #e5ebee;
+  font-weight: 700;
+}
+.meme-gag .meme-pill {
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  background: #fff;
+}
+.meme-gag .meme-share {
+  margin-left: auto;
+}
+.meme-forum .up,
+.meme-forum .down {
+  font-weight: 400;
+}
+
+/* --- Templates: Zeichnung (img) + Bildtexte darüber; Positionen in % der Zeichnung --- */
+.mt {
   position: relative;
+  background: #fff;
+  color: #000;
+  font: 700 8px/1.15 Arial, Helvetica, sans-serif;
+}
+.mt-art {
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+}
+.mt-panel {
+  position: relative;
+}
+.mt-cap {
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.mt-cap.b {
+  display: grid;
+  place-items: center;
+  padding: 4px;
+  font-size: 8.5px;
+  font-weight: 400;
+}
+.mt-cap.w,
+.mt-cap.s {
+  position: absolute;
+}
+.mt-cap.w {
+  color: #fff;
+  font-weight: 900;
+  text-shadow: 0 0 1px #000, 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+}
+.mt-cap.s {
+  font-size: 7.5px;
+}
+.at-top {
+  top: 3%;
+  left: 3%;
+  right: 3%;
+}
+.at-bottom {
+  bottom: 3%;
+  left: 3%;
+  right: 3%;
+}
+/* Raster: links Text, rechts Bild (Drake, Gehirn, Panik) */
+.mt-drake,
+.mt-brain,
+.mt-panik {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: #000;
+}
+.mt-drake > *,
+.mt-brain > *,
+.mt-panik > * {
+  background: #fff;
+}
+/* Zwei Knöpfe: Texte auf den schrägen Platten */
+.mt-buttons .p-top {
+  border-bottom: 3px solid #fff;
+}
+.at-btn1,
+.at-btn2 {
+  width: 26%;
+  font-size: 7px;
+  line-height: 1.1;
+}
+.at-btn1 {
+  left: 11%;
+  top: 27%;
+  transform: rotate(-16deg);
+}
+.at-btn2 {
+  left: 48%;
+  top: 17%;
+  transform: rotate(-14deg);
+}
+/* This is fine: zwei Bilder nebeneinander */
+.mt-fine {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  background: #1d120c;
+}
+.at-fire {
+  top: 26%;
+  left: 3%;
+  width: 46%;
+  font-size: 7px;
+}
+.at-dog {
+  bottom: 4%;
+  left: 20%;
+  width: 52%;
+  font-size: 7px;
+}
+.mt-say {
+  position: absolute;
+  left: 24%;
+  top: 6%;
+  width: 70%;
+  font: 7.5px/1 'Patrick Hand', 'Comic Sans MS', cursive;
+  text-align: center;
+  color: #1d120c;
+}
+/* Change my mind: Text über dem Strich auf dem Schild */
+.at-sign {
+  left: 32%;
+  top: 63%;
+  width: 50%;
+  height: 21%;
+  display: grid;
+  place-items: center;
+  transform: rotate(-2.5deg);
+}
+.at-cmm {
+  left: 33%;
+  top: 87%;
+  width: 48%;
+  font-size: 6.5px;
+  letter-spacing: 0.04em;
+  transform: rotate(-2.5deg);
+}
+/* Abgelenkter Freund */
+.at-bf1 {
+  top: 68%;
+  left: 6%;
+  width: 40%;
+}
+.at-bf2 {
+  top: 58%;
+  left: 49%;
+  width: 28%;
+}
+.at-bf3 {
+  top: 68%;
+  left: 76%;
+  width: 23%;
+}
+/* Glockenkurve: Texte bei den drei Figuren */
+.at-b1,
+.at-b3 {
+  top: 44%;
+  width: 26%;
+  font-size: 7px;
+}
+.at-b1 {
+  left: 1%;
+}
+.at-b3 {
+  right: 1%;
+}
+.at-b2 {
+  top: 1%;
+  left: 2%;
+  width: 36%;
+  text-align: left;
+  font-size: 7px;
+}
+/* Ausfahrt: Texte auf dem Schild links und rechts, Auto unten */
+.mt-exit .p-top {
+  border-bottom: 2px solid #000;
+}
+.at-ex1,
+.at-ex2 {
+  top: 34%;
+  width: 17%;
+  font-size: 7px;
+}
+.at-ex1 {
+  left: 24%;
+}
+.at-ex2 {
+  left: 54%;
+}
+.at-car {
+  top: 50%;
+  left: 30%;
+  width: 40%;
+}
+/* Fahrrad: drei Bilder untereinander */
+.mt-bike {
+  display: grid;
+  gap: 2px;
+  padding: 2px;
+  background: #fff;
+}
+.mt-bike .mt-panel {
+  border: 1px solid #555;
+}
+.mt-bike .at-top {
+  font-size: 8px;
+}
+/* altes Bildmakro: Großbuchstaben in Impact */
+.mt-macro .mt-cap.w {
+  font: 900 10px/1.05 Impact, 'Arial Black', sans-serif;
+  text-transform: uppercase;
+}
+
+/* Kurznachricht als Bildschirmfoto */
+.mx-tweet {
+  padding: 7px 8px;
+  background: #fff;
+  color: #0f1419;
+  font: 8.5px/1.35 Arial, Helvetica, sans-serif;
+}
+.meme-gag .mx-tweet {
+  padding: 8px 12px;
+}
+.mx-tw-head {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.mx-tw-ava {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+}
+.mx-tw-who {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
-  gap: 4px;
-  min-height: 108px;
-  padding: 6px 8px;
-  text-align: center;
+  line-height: 1.15;
 }
-.meme-bg-0 {
-  background: radial-gradient(circle at 50% 45%, #7d8fa8, #2f3a4d);
+.mx-tw-who span {
+  color: #536471;
 }
-.meme-bg-1 {
-  background: radial-gradient(circle at 50% 45%, #b08a6a, #4a3326);
+.mx-tw-text {
+  margin: 4px 0;
+  font-size: 9px;
+  white-space: pre-line;
 }
-.meme-bg-2 {
-  background: radial-gradient(circle at 50% 45%, #7aa38b, #24402f);
+.mx-tw-meta {
+  color: #536471;
+  font-size: 7px;
 }
-.meme-bg-3 {
-  background: radial-gradient(circle at 50% 45%, #a07aa8, #3c2645);
+
+/* Code als Bildschirmfoto aus dem Editor */
+.mx-code {
+  background: #1e1e2a;
+  color: #d8dee9;
+  font: 7.5px/1.45 ui-monospace, 'DejaVu Sans Mono', Menlo, monospace;
 }
-.meme-top,
-.meme-bottom {
-  position: relative;
-  z-index: 1;
-  color: #fff;
-  font: 900 12.5px / 1.1 Impact, 'Arial Black', 'Helvetica Neue', sans-serif;
-  text-transform: uppercase;
-  letter-spacing: 0.2px;
-  -webkit-text-stroke: 0.6px #000;
-  text-shadow: 0 0 2px #000, 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+.mx-code-tab {
+  display: flex;
+  gap: 6px;
+  padding: 2px 8px;
+  background: #15151d;
+  color: #c8c8d0;
 }
-.meme-face {
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 22px;
-  line-height: 1;
-  white-space: nowrap;
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+.mx-code-tab span:first-child {
+  padding: 0 4px;
+  border-top: 1.5px solid #7aa2f7;
+}
+.mx-code-x {
+  color: #777;
+}
+.mx-code-body {
+  padding: 4px 0 6px;
+}
+.mx-code-row {
+  display: flex;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.mx-code-no {
+  width: 18px;
+  flex: 0 0 auto;
+  padding-right: 6px;
+  text-align: right;
+  color: #5b5f73;
+}
+.c-kw {
+  color: #c792ea;
+}
+.c-str {
+  color: #c3e88d;
+}
+.c-com {
+  color: #7f8aa8;
+  font-style: italic;
 }
 
 /* Tastatur und Maus nebeneinander */
@@ -9460,74 +9915,6 @@ body:has(.tut-note:not([hidden])) .tap-hint {
   }
 }
 
-/* Kopfleiste der Meme-Seite: readit hell (rundes Logo, Suche, Anmelden), 404GAG schwarz mit Reitern */
-.meme-site > div {
-  display: none;
-  align-items: center;
-  gap: 6px;
-  height: 22px;
-  padding: 0 7px;
-  font-size: 10px;
-  white-space: nowrap;
-  overflow: hidden;
-}
-.meme-window[data-site='forum'] .ms-forum,
-.meme-window[data-site='gag'] .ms-gag {
-  display: flex;
-}
-.ms-forum {
-  border-bottom: 1px solid #d7d0e0;
-  background: #fff;
-  color: #1c1c1c;
-}
-.ms-forum .ms-logo {
-  width: 15px;
-  height: 15px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: #ff5a1f;
-  color: #fff;
-  font-size: 10px;
-}
-.ms-forum b {
-  font-size: 11px;
-}
-.ms-search {
-  flex: 1;
-  min-width: 0;
-  padding: 1px 7px;
-  border-radius: 999px;
-  background: #f0f2f4;
-  color: #878a8c;
-}
-.ms-login {
-  padding: 1px 8px;
-  border-radius: 999px;
-  background: #0079d3;
-  color: #fff;
-  font-weight: 700;
-}
-.ms-gag {
-  background: #000;
-  color: #cfcfd6;
-}
-.ms-gag .ms-logo {
-  padding: 0 4px;
-  border-radius: 3px;
-  background: #fff;
-  color: #000;
-  font-weight: 800;
-}
-.ms-tab {
-  font-weight: 600;
-}
-.ms-tab.on {
-  color: #fff;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
 /* ---------- Werkzeuge mit bekannten Vorbildern ---------- */
 
 /* Mail wie beim Verfassen in Outlook: großer „Senden“-Knopf vorn */
@@ -9733,127 +10120,6 @@ body:has(.tut-note:not([hidden])) .tap-hint {
 
 /* Web-Apps im Browser (Ticketsystem, KI, Suche, Webinterface): wird es eng, bleiben die Tabs, nur Tab-Leiste und
    Adresszeile werden schmaler (Regeln am Dateiende, nach den Höhen der Systeme) */
-
-/* Seitenleisten der Meme-Seiten (Desktop-Ansicht): links Navigation, rechts Infokasten */
-.meme-side {
-  flex: 0 0 auto;
-  display: flex;
-  flex-direction: column;
-  padding: 6px 0;
-  font-size: 9px;
-  overflow: hidden;
-}
-.meme-side > div {
-  display: none;
-  flex-direction: column;
-  gap: 1px;
-}
-.meme-window[data-site='forum'] .side-forum,
-.meme-window[data-site='gag'] .side-gag {
-  display: flex;
-}
-.meme-side-left {
-  width: 70px;
-  border-right: 1px solid #ccd3da;
-  background: #fff;
-  color: #1c1c1c;
-}
-.meme-side-right {
-  width: 84px;
-  margin: 8px 7px 8px 0;
-  padding: 6px;
-  border: 1px solid #ccd3da;
-  border-radius: 6px;
-  background: #fff;
-  color: #1c1c1c;
-  align-self: flex-start;
-}
-.meme-side-right > div {
-  gap: 4px;
-  line-height: 1.3;
-}
-.side-item {
-  padding: 2px 7px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.side-item.on {
-  background: #e9ebed;
-  font-weight: 700;
-}
-.side-head {
-  margin: 6px 7px 2px;
-  font-size: 7.5px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  opacity: 0.6;
-}
-.side-btn {
-  align-self: flex-start;
-  padding: 1px 8px;
-  border-radius: 999px;
-  background: #0079d3;
-  color: #fff;
-  font-weight: 700;
-}
-/* 404GAG: dunkel */
-.meme-window[data-site='gag'] .meme-side-left {
-  border-right-color: #26262c;
-  background: #000;
-  color: #cfcfd6;
-}
-.meme-window[data-site='gag'] .side-item.on {
-  background: #1f1f25;
-  color: #fff;
-}
-.meme-window[data-site='gag'] .meme-side-right {
-  border-color: #26262c;
-  background: #1b1b1f;
-  color: #cfcfd6;
-}
-/* schmaler Feed nur, wenn Platz ist: rechte Leiste erst ab einer gewissen Breite */
-@container (max-width: 360px) {
-  .meme-side-right {
-    display: none;
-  }
-}
-@container (max-width: 250px) {
-  .meme-side-left {
-    display: none;
-  }
-}
-
-/* Beitrag: fetter Titel über dem Bild, darunter runde Knöpfe (beide Seiten) */
-.meme-title {
-  padding: 0 7px 4px;
-  font-size: 11.5px;
-  font-weight: 700;
-  line-height: 1.25;
-}
-.meme-gag .meme-title {
-  font-size: 12.5px;
-}
-.meme-foot {
-  gap: 5px;
-  opacity: 1;
-}
-.meme-pill {
-  padding: 1px 7px;
-  border-radius: 999px;
-  background: #eceef0;
-  font-weight: 700;
-  white-space: nowrap;
-}
-.meme-gag .meme-pill {
-  border: 1px solid #3a3a42;
-  background: #26262c;
-}
-.meme-forum .meme-img {
-  margin: 0 7px;
-  border-radius: 6px;
-}
 
 /* ---------- Betriebssystem Fenster 98: grau, kantig, erhabene Knöpfe, Titelleiste Marine → Blau ----------
    Farben über die --os-*-Variablen (Standard XP, oben bei der Taskleiste), Formen hier. Höhe von Leiste,

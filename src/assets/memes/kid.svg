@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 360">
+<defs><linearGradient id="ks" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fc6e8"/><stop offset="1" stop-color="#d7ecf6"/></linearGradient>
+<radialGradient id="kf" cx=".45" cy=".4" r=".7"><stop offset="0" stop-color="#ffe0c8"/><stop offset="1" stop-color="#e9b896"/></radialGradient>
+<pattern id="kst" width="16" height="16" patternUnits="userSpaceOnUse"><rect width="16" height="16" fill="#f4f4f0"/><rect width="16" height="7" fill="#3f8a54"/></pattern></defs>
+<rect width="480" height="360" fill="url(#ks)"/>
+<path d="M0 140H480V190H0Z" fill="#3e7fb3"/><path d="M0 182C80 176 160 190 240 182S400 176 480 186V200H0Z" fill="#fff" opacity=".7"/>
+<path d="M0 195H480V360H0Z" fill="#e8d3a6"/><circle cx="60" cy="300" r="3" fill="#c8b083"/><circle cx="400" cy="260" r="3" fill="#c8b083"/><circle cx="420" cy="320" r="4" fill="#c8b083"/>
+<!-- Körper im gestreiften Shirt -->
+<path d="M110 360C110 290 140 255 200 248C250 245 300 255 320 290C330 310 332 340 330 360Z" fill="#f4f4f0" stroke="#2d5a3a" stroke-width="2"/><path d="M110 360C110 290 140 255 200 248C215 247 230 247 245 248C230 280 225 320 230 360Z" fill="#2f9a4a"/><path d="M160 256C190 268 230 268 262 254" stroke="#2f9a4a" stroke-width="10" fill="none"/>
+<!-- Kopf, entschlossen -->
+<g transform="translate(200 150) scale(1.12) translate(-200 -160)"><path d="M110 150C108 90 145 52 200 52C255 52 292 90 290 150C288 208 252 250 200 252C148 250 112 208 110 150Z" fill="url(#kf)" stroke="#b07a5a" stroke-width="2.5"/>
+<path d="M130 92C140 60 175 46 205 50C232 52 262 64 276 96C258 78 240 70 220 72C214 64 200 62 192 70C180 64 160 70 150 80C142 84 136 88 130 92Z" fill="#c7935e" opacity=".85"/><path d="M196 52c-4 -8 4 -14 10 -8" stroke="#b07a4a" stroke-width="3" fill="none"/>
+<path d="M104 150c-12 0 -14 30 4 34M296 150c12 0 14 30 -4 34" fill="#f0c4a2" stroke="#b07a5a" stroke-width="2"/>
+<path d="M140 132l40 8M260 130l-40 10" stroke="#9a7458" stroke-width="5" stroke-linecap="round"/>
+<path d="M150 146c8 4 20 4 28 0M226 146c8 4 20 4 28 0" stroke="#3a2a1c" stroke-width="6" stroke-linecap="round"/>
+<path d="M198 160C194 176 194 184 204 186" fill="none" stroke="#b07a5a" stroke-width="3"/>
+<path d="M170 208C190 216 214 214 232 204C220 214 196 222 172 214Z" fill="#c26a62" stroke="#9a4a42" stroke-width="3" stroke-linejoin="round"/>
+<g fill="#cdb07c"><circle cx="176" cy="226" r="3"/><circle cx="190" cy="232" r="2.4"/><circle cx="222" cy="226" r="2.6"/></g>
+<ellipse cx="148" cy="186" rx="16" ry="10" fill="#f2a2a2" opacity=".5"/><ellipse cx="254" cy="184" rx="16" ry="10" fill="#f2a2a2" opacity=".5"/>
+</g><!-- Faust mit Sand vor der Brust -->
+<path d="M330 360C330 320 310 300 290 300" stroke="#f4f4f0" stroke-width="44" fill="none"/>
+<rect x="232" y="262" width="74" height="70" rx="28" fill="url(#kf)" stroke="#b07a5a" stroke-width="2.5"/>
+<path d="M240 282h60M240 298h60M242 314h54" stroke="#b07a5a" stroke-width="2"/>
+<path d="M236 274C224 286 228 304 244 306" fill="#f0c4a2" stroke="#b07a5a" stroke-width="2"/>
+<g fill="#cdb07c"><circle cx="252" cy="280" r="3.4"/><circle cx="278" cy="290" r="3"/><circle cx="266" cy="310" r="3"/><circle cx="292" cy="274" r="2.6"/><circle cx="246" cy="318" r="2.4"/><circle cx="288" cy="318" r="2.8"/></g>
+</svg>
