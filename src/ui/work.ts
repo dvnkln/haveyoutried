@@ -629,7 +629,6 @@ export function createWork(
     memeSiteHead,
     memePage,
   ]);
-  let siteTimer = 0;
   let scrollRaf = 0;
   let scrollWait = 0;
   /** Fenstertitel der aktuellen Aufgabe: einmal gewürfelt, bleibt auch nach der Meme-Pause */
@@ -902,83 +901,90 @@ export function createWork(
   };
 
   // --- Memes beim Nichtstun ---
-  const fillFeed = () => {
-    const k = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1).replace('.', ',')} Tsd.` : String(n));
-    const kEn = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1)}K` : String(n));
-    const key = (p: MemePost) => p.title;
-    // ein gemeinsamer Stapel für beide Seiten: kein Meme auf readit und gleich danach auf 404GAG.
-    // readit nimmt alles, 404GAG nur Bilder (eigene Teilliste im selben Stapel); innerhalb eines Feeds nichts doppelt,
-    // auch wenn der Stapel mittendrin neu gemischt wird
-    const seen = new Set<string>();
-    const take = <T extends MemePost>(items: readonly T[]): T => {
-      for (let tries = 0; tries < 20; tries++) {
-        const p = fresh('memes', items, { key });
-        if (!seen.has(p.title)) return seen.add(p.title), p;
-      }
-      return items.find((p) => !seen.has(p.title)) ?? items[0]!;
-    };
-    const forumPosts: MemePost[] = [];
-    const gagPosts: ImagePost[] = [];
-    for (let i = 0; i < MEMES_PER_SITE; i++) {
-      forumPosts.push(take(MEME_POSTS));
-      gagPosts.push(take(IMAGE_POSTS));
+  type Site = 'forum' | 'gag';
+  /**
+   * Jede Seite ist ein eigener, endloser Feed: unten kommen beim Scrollen neue Beiträge dazu (oben fallen alte weg),
+   * und beim Tab-Wechsel bleibt die Stelle stehen. So kommt beim Zurückwechseln nichts doppelt.
+   * Beide Seiten ziehen aus einem gemeinsamen Stapel: kein Meme auf readit und gleich danach auf 404GAG.
+   */
+  const feeds: Record<Site, { el: HTMLElement; top: number }> = { forum: { el: forumFeed, top: 0 }, gag: { el: gagFeed, top: 0 } };
+  const memeKey = (p: MemePost) => p.title;
+  const k = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1).replace('.', ',')} Tsd.` : String(n));
+  const kEn = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1)}K` : String(n));
+  // readit: Unterforum mit rundem Bild, Zeit, Titel, Flair, Bild oder Text, graue Knöpfe
+  const forumCard = (p: MemePost) =>
+    h('div', { class: `meme meme-forum meme-${p.t}`, 'data-key': p.title }, [
+      h('div', { class: 'meme-head' }, [h('span', { class: 'meme-src', text: p.sub ?? fresh('MEME_SUBS', MEME_SUBS) }), h('span', { class: 'meme-meta', text: `• vor ${randInt(1, 23)} Std.` })]),
+      h('div', { class: 'meme-title', text: p.title }),
+      ...(p.t === 'text'
+        ? [...(p.flair ? [h('span', { class: 'meme-flair', text: p.flair })] : []), h('div', { class: 'meme-body', text: p.body })]
+        : [h('div', { class: 'meme-img' }, [memeImage(p)])]),
+      h('div', { class: 'meme-foot' }, [
+        h('span', { class: 'meme-pill' }, [h('b', { class: 'up', text: '⇧' }), ` ${k(randInt(120, 48_000))} `, h('b', { class: 'down', text: '⇩' })]),
+        h('span', { class: 'meme-pill', text: `💬︎ ${k(randInt(12, 2_400))}` }),
+        h('span', { class: 'meme-pill', text: '↗︎ Teilen' }),
+      ]),
+    ]);
+  // 404GAG: Rubrik mit Symbol, Zeit, großer Titel, Bild über die volle Breite, Tags, Knöpfe mit Rahmen
+  const gagCard = (p: ImagePost) =>
+    h('div', { class: `meme meme-gag meme-${p.t}`, 'data-key': p.title }, [
+      h('div', { class: 'meme-head' }, [h('span', { class: 'meme-src', text: GAG_SECTION[p.t] }), h('span', { class: 'meme-meta', text: `· ${randInt(1, 23)}h` })]),
+      h('div', { class: 'meme-title', text: p.title }),
+      h('div', { class: 'meme-img' }, [memeImage(p)]),
+      h('div', { class: 'meme-tags' }, [fresh('GAG_TAGS', GAG_TAGS), fresh('GAG_TAGS', GAG_TAGS)].map((t) => h('span', { text: t }))),
+      h('div', { class: 'meme-foot' }, [
+        h('span', { class: 'meme-pill' }, [h('b', { class: 'up', text: '⬆︎' }), ` ${kEn(randInt(120, 48_000))}`]),
+        h('span', { class: 'meme-pill' }, [h('b', { class: 'down', text: '⬇︎' })]),
+        h('span', { class: 'meme-pill', text: `💬︎ ${kEn(randInt(12, 2_400))}` }),
+        h('span', { class: 'meme-pill meme-share', text: '↗︎ Share' }),
+      ]),
+    ]);
+  /** Ein paar neue Beiträge unten anhängen; nichts, was gerade auf einer der beiden Seiten steht */
+  const addPosts = (site: Site, n: number) => {
+    const shown = new Set([...forumFeed.children, ...gagFeed.children].map((c) => (c as HTMLElement).dataset.key));
+    const items: readonly MemePost[] = site === 'forum' ? MEME_POSTS : IMAGE_POSTS;
+    for (let i = 0; i < n; i++) {
+      let p = fresh('memes', items, { key: memeKey });
+      for (let tries = 0; shown.has(p.title) && tries < 20; tries++) p = fresh('memes', items, { key: memeKey });
+      if (shown.has(p.title)) p = items.find((x) => !shown.has(x.title)) ?? p;
+      shown.add(p.title);
+      feeds[site].el.append(site === 'forum' ? forumCard(p) : gagCard(p as ImagePost));
     }
-    // readit: Unterforum mit rundem Bild, Zeit, Titel, Flair, Bild oder Text, graue Knöpfe
-    const forumCard = (p: MemePost) =>
-      h('div', { class: `meme meme-forum meme-${p.t}` }, [
-        h('div', { class: 'meme-head' }, [h('span', { class: 'meme-src', text: p.sub ?? fresh('MEME_SUBS', MEME_SUBS) }), h('span', { class: 'meme-meta', text: `• vor ${randInt(1, 23)} Std.` })]),
-        h('div', { class: 'meme-title', text: p.title }),
-        ...(p.t === 'text'
-          ? [...(p.flair ? [h('span', { class: 'meme-flair', text: p.flair })] : []), h('div', { class: 'meme-body', text: p.body })]
-          : [h('div', { class: 'meme-img' }, [memeImage(p)])]),
-        h('div', { class: 'meme-foot' }, [
-          h('span', { class: 'meme-pill' }, [h('b', { class: 'up', text: '⇧' }), ` ${k(randInt(120, 48_000))} `, h('b', { class: 'down', text: '⇩' })]),
-          h('span', { class: 'meme-pill', text: `💬︎ ${k(randInt(12, 2_400))}` }),
-          h('span', { class: 'meme-pill', text: '↗︎ Teilen' }),
-        ]),
-      ]);
-    // 404GAG: Rubrik mit Symbol, Zeit, großer Titel, Bild über die volle Breite, Tags, Knöpfe mit Rahmen
-    const gagCard = (p: ImagePost) =>
-      h('div', { class: `meme meme-gag meme-${p.t}` }, [
-        h('div', { class: 'meme-head' }, [h('span', { class: 'meme-src', text: GAG_SECTION[p.t] }), h('span', { class: 'meme-meta', text: `· ${randInt(1, 23)}h` })]),
-        h('div', { class: 'meme-title', text: p.title }),
-        h('div', { class: 'meme-img' }, [memeImage(p)]),
-        h('div', { class: 'meme-tags' }, [fresh('GAG_TAGS', GAG_TAGS), fresh('GAG_TAGS', GAG_TAGS)].map((t) => h('span', { text: t }))),
-        h('div', { class: 'meme-foot' }, [
-          h('span', { class: 'meme-pill' }, [h('b', { class: 'up', text: '⬆︎' }), ` ${kEn(randInt(120, 48_000))}`]),
-          h('span', { class: 'meme-pill' }, [h('b', { class: 'down', text: '⬇︎' })]),
-          h('span', { class: 'meme-pill', text: `💬︎ ${kEn(randInt(12, 2_400))}` }),
-          h('span', { class: 'meme-pill meme-share', text: '↗︎ Share' }),
-        ]),
-      ]);
-    // je Seite einige Karten, doppelt, damit das Endlos-Scrollen nahtlos läuft
-    const renderFeed = (target: HTMLElement, once: HTMLElement[]) => target.replaceChildren(...once, ...once.map((n) => n.cloneNode(true)));
-    renderFeed(forumFeed, forumPosts.map(forumCard));
-    renderFeed(gagFeed, gagPosts.map(gagCard));
   };
-  /** Aktiver Tab: Forum oder Bilderseite; ab und zu wird umgeschaltet (Seite lädt dann von oben) */
-  const showSite = (site: 'forum' | 'gag') => {
+  const fillFeed = () => {
+    for (const site of ['forum', 'gag'] as const) {
+      feeds[site].el.replaceChildren();
+      feeds[site].top = 0;
+      addPosts(site, MEMES_PER_SITE);
+    }
+  };
+  const currentSite = (): Site => (memeWindow.dataset.site === 'gag' ? 'gag' : 'forum');
+  /** Aktiver Tab: Forum oder Bilderseite; beim Wechsel steht die andere Seite noch da, wo man aufgehört hat */
+  const showSite = (site: Site) => {
+    const old = memeWindow.dataset.site as Site | undefined;
+    if (old && old !== site) feeds[old].top = memeScroll.scrollTop;
     memeWindow.dataset.site = site;
-    // neue Seite lädt von oben, erst mal lesen
-    memeScroll.scrollTop = 0;
-    if (memes) startScrolling();
+    memeScroll.scrollTop = feeds[site].top;
     for (const t of memeTabs) t.classList.toggle('on', t.dataset.site === site);
     memeAddr.replaceChildren(...addrParts(site === 'forum' ? 'readit.example/r/all/hot' : '404gag.example/hot'));
     // Fenstertitel wie bei XP: Seite – Browser
     if (memes) setText(title, `${BROWSER_TABS.find((x) => x.site === site)!.title} – ${browserName()}`);
   };
-  const nextSite = () => {
-    // kein ständiger Hell-dunkel-Wechsel für alle, die weniger Bewegung wollen
-    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
-    siteTimer = window.setTimeout(() => {
-      showSite(memeWindow.dataset.site === 'forum' ? 'gag' : 'forum');
-      nextSite();
-    }, randInt(20_000, 35_000));
+  /** Wann zum anderen Tab gewechselt wird (nur zwischen zwei Wischern, nie mitten im Lesen) */
+  let switchAt = 0;
+  const planSwitch = () => {
+    switchAt = performance.now() + randInt(25_000, 45_000);
   };
   const reducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+  /** Lesezeit nach Textmenge: Bildtexte, Titel, Code – kurze Memes kurz, lange länger */
+  const readMs = (card: HTMLElement | undefined, share: number) => {
+    const chars = (card?.querySelector('.meme-title')?.textContent?.length ?? 0) + (card?.querySelector('.meme-img, .meme-body')?.textContent?.length ?? 0) * share;
+    return Math.min(12_000, Math.max(3_500, 2_200 + chars * 45)) + randInt(0, 1_500);
+  };
   /**
-   * Scrollen wie mit dem Daumen: kurz lesen, zum nächsten Meme wischen (bremst ab),
-   * nicht immer genau auf Kante, ab und zu ein Stück zurück. Endlos dank doppelter Kartenliste.
+   * Scrollen wie mit dem Daumen: einen Beitrag lesen, zum nächsten wischen (bremst ab).
+   * Jeder Halt zeigt den Beitrag von oben (lieber ein Stück vom vorigen mit als oben abgeschnitten);
+   * hohe Beiträge werden in Etappen gelesen, bis ihr Ende zu sehen ist.
    */
   const startScrolling = () => {
     stopScrolling();
@@ -988,23 +994,51 @@ export function createWork(
     };
     const flick = () => {
       if (!memes) return;
-      const cards = [...(memeWindow.dataset.site === 'gag' ? gagFeed : forumFeed).children] as HTMLElement[];
-      const half = cards.length / 2;
-      const loop = half >= 1 ? cards[half]!.offsetTop - cards[0]!.offsetTop : 0;
-      // zweite Hälfte = Kopie der ersten: unbemerkt zurückspringen
-      if (loop > 0 && memeScroll.scrollTop >= loop) memeScroll.scrollTop -= loop;
+      if (!reducedMotion() && performance.now() >= switchAt) {
+        showSite(currentSite() === 'forum' ? 'gag' : 'forum');
+        planSwitch();
+        // die andere Seite steht noch beim zuletzt gelesenen Beitrag: kurz orientieren, dann weiter
+        return read(randInt(1_500, 2_500));
+      }
+      const site = currentSite();
+      const feed = feeds[site].el;
+      const view = memeScroll.clientHeight;
+      let cards = [...feed.children] as HTMLElement[];
+      // unten nachladen, oben Gelesenes wegnehmen (Stelle bleibt dabei optisch gleich)
+      const from0 = memeScroll.scrollTop;
+      if (cards.filter((c) => c.offsetTop > from0 + view).length < 3) addPosts(site, 4);
+      const above = cards.filter((c) => c.offsetTop + c.offsetHeight < from0 - 20);
+      if (above.length > 6) {
+        const gone = above.slice(0, above.length - 4);
+        const shift = gone.at(-1)!.offsetTop + gone.at(-1)!.offsetHeight - gone[0]!.offsetTop;
+        for (const c of gone) c.remove();
+        memeScroll.scrollTop = from0 - shift;
+      }
+      cards = [...feed.children] as HTMLElement[];
       const from = memeScroll.scrollTop;
-      const next = cards.find((c) => c.offsetTop > from + 12);
-      // hohe Beiträge (Pointe unten) in Etappen lesen, nicht zum nächsten springen
-      let target = Math.min(next ? next.offsetTop - 8 : from + 200, from + Math.max(120, Math.round(memeScroll.clientHeight * 0.7)));
-      if (from > 80 && Math.random() < 0.12) target = from - randInt(40, 90); // nochmal gucken
-      else if (Math.random() < 0.3) target += randInt(-30, 40); // Daumen ist nicht pixelgenau
-      const to = Math.max(0, target);
-      // Lesezeit danach: mal schnell weiter, mal länger hängen bleiben
-      const pause = reducedMotion() ? 8_000 : Math.random() < 0.2 ? randInt(7_000, 11_000) : randInt(3_000, 6_000);
+      // Beitrag, der gerade oben steht, und ob sein Ende schon zu sehen ist
+      const cur = cards.filter((c) => c.offsetTop <= from + 12).at(-1);
+      const curEnd = cur ? cur.offsetTop + cur.offsetHeight : 0;
+      const step = Math.max(120, Math.round(view * 0.75));
+      let to: number;
+      let next: HTMLElement | undefined;
+      let share = 1;
+      if (cur && curEnd > from + view + 4) {
+        // Ende noch nicht zu sehen: ein Stück weiter, höchstens bis das Ende unten steht
+        to = Math.min(from + step, curEnd - view + 6);
+        next = cur;
+        share = Math.min(1, view / cur.offsetHeight);
+      } else {
+        next = cards.find((c) => c.offsetTop > from + 12);
+        // nicht pixelgenau, aber nie über den Anfang hinaus
+        to = next ? next.offsetTop - 6 - (Math.random() < 0.3 ? randInt(0, 24) : 0) : from + step;
+        if (next && next.offsetHeight > view) share = view / next.offsetHeight;
+      }
+      to = Math.max(0, to);
+      const pause = readMs(next, share);
       if (reducedMotion()) {
         memeScroll.scrollTop = to;
-        return read(pause);
+        return read(Math.max(pause, 8_000));
       }
       const dur = Math.min(1_100, 380 + Math.abs(to - from) * 1.6);
       const start = performance.now();
@@ -1017,7 +1051,8 @@ export function createWork(
       };
       scrollRaf = requestAnimationFrame(frame);
     };
-    read(randInt(1_500, 3_000));
+    // erster Beitrag: erst mal lesen
+    read(readMs(feeds[currentSite()].el.firstElementChild as HTMLElement | undefined, 1));
   };
   const stopScrolling = () => {
     clearTimeout(scrollWait);
@@ -1028,14 +1063,15 @@ export function createWork(
     memes = true;
     fillFeed();
     el.dataset.kind = 'memes';
+    delete memeWindow.dataset.site;
     showSite(Math.random() < 0.5 ? 'forum' : 'gag');
-    nextSite();
+    planSwitch();
+    startScrolling();
     ctx.log.write('info', fresh('MEME_ENTER_LINES', MEME_ENTER_LINES));
   };
   /** Memes beenden, ohne neu zu zeichnen */
   const endMemes = () => {
     memes = false;
-    clearTimeout(siteTimer);
     stopScrolling();
     ctx.log.write('info', fresh('MEME_LEAVE_LINES', MEME_LEAVE_LINES));
   };
